@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XsdViewer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="menu">
+    <button id="fileMenuBtn" class="menubtn" type="button">File ▾</button>
+    <div id="fileMenu" class="dropdown hidden">
+      <button id="menuOpen" type="button">Open…<span class="kbd">Ctrl+O</span></button>
+      <button id="menuClose" type="button">Close</button>
+    </div>
+  </div>
+  <span id="fileName" class="filename">No file loaded</span>
+  <nav class="tabs">
+    <button class="tab active" data-view="graph" type="button">Graph</button>
+    <button class="tab" data-view="text" type="button">Text</button>
+  </nav>
+  <label class="opt" title="Show XML Schema built-in types (xs:string, xs:int…) in the graph">
+    <input type="checkbox" id="showBuiltins" checked> built-in types
+  </label>
+  <input id="search" type="search" placeholder="Filter objects…" autocomplete="off">
+</header>
+
+<div id="body">
+  <aside id="sidebar">
+    <div id="schemaInfo"></div>
+    <div id="nodeList"></div>
+  </aside>
+
+  <main id="main">
+    <div id="empty" class="view">
+      <div class="emptybox">
+        <div class="big">Open an XSD file</div>
+        <div>File ▸ Open… (Ctrl+O), or drop a file anywhere in this window.</div>
+      </div>
+    </div>
+    <div id="graph" class="view hidden">
+      <div id="graphToolbar">
+        <button id="backBtn" type="button" title="Back to the previous node">← Back</button>
+        <span id="graphTitle"></span>
+        <span class="legend">
+          <span class="lg element">element</span>
+          <span class="lg complexType">complexType</span>
+          <span class="lg simpleType">simpleType</span>
+          <span class="lg group">group</span>
+          <span class="lg attributeGroup">attributeGroup</span>
+          <span class="lg attribute">attribute</span>
+          <span class="lg builtin">built-in</span>
+          <span class="lg external">external</span>
+        </span>
+      </div>
+      <div id="graphCanvas"></div>
+    </div>
+    <div id="text" class="view hidden"></div>
+  </main>
+
+  <aside id="details" class="hidden"></aside>
+</div>
+
+<div id="dropOverlay" class="hidden"><div>Drop the XSD file to open it</div></div>
+<div id="toast" class="hidden"></div>
+<input type="file" id="fileInput" accept=".xsd,.xml,text/xml,application/xml" hidden>
+
+<script src="app.js"></script>
+</body>
+</html>
