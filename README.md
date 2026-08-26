@@ -71,3 +71,5 @@ src/test/java/            parser tests, run against samples/purchaseOrder.xsd
 ```
 
 No runtime dependency: the jar only needs a JDK.
+
+See [architecture.md](architecture.md) for the modules, the data flow and the libraries used.
