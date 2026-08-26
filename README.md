@@ -19,6 +19,12 @@ The file is opened with **File ▸ Open…** (Ctrl+O) or by dropping it anywhere
 Requires Java 21 and Maven.
 
 ```bash
+./run.sh                # builds target/xsdviewer.jar if needed, then starts the tool
+```
+
+or by hand:
+
+```bash
 mvn package
 java -jar target/xsdviewer.jar
 ```
@@ -26,7 +32,7 @@ java -jar target/xsdviewer.jar
 The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
 
 ```
-java -jar target/xsdviewer.jar [--port N] [--host H] [--no-browser] [file.xsd]
+./run.sh [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]
 ```
 
 Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
