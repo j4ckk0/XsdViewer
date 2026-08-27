@@ -52,7 +52,7 @@ Design choices that shape everything else:
    included) and every reference is recorded as an edge *from the global declaration*:
    `type=`, `ref=`, `base=` (extension/restriction), `itemType=`, `memberTypes=`,
    `substitutionGroup=`, `group ref`, `attributeGroup ref`. The label says what the reference
-   is (`type`, `child items`, `attribute partNum`, `extends`, `restricts`, `list of`…).
+   is (`type`, `items` for a nested element, `attribute partNum`, `extends`, `restricts`, `list of`…).
    Names in the XML Schema namespace are resolved immediately to `builtin:X` nodes (unless
    the file itself declares `X`, which happens in schemas using the XSD namespace as default);
    all other targets are kept as `type:X` / `element:X` / … for the next pass.
@@ -73,20 +73,46 @@ Three static files, no build step, no framework.
 
 | File | Role |
 |---|---|
-| `index.html` | Page skeleton: top bar (File menu, tabs, built-in toggle, search), sidebar, main area with the three views (empty / graph / text), details panel, drop overlay, toast. |
+| `index.html` | Page skeleton: top bar (File menu, view tabs, PNG export, built-in toggle), document tab bar, sidebar (schema info, search, object list), main area with the three views (empty / graph / text), details panel, drop overlay, toast. |
 | `style.css` | Layout (flexbox: sidebar – main – details), the colour per kind of object (one CSS variable each, reused by sidebar dots, legend, badges and SVG strokes), text-view syntax colours. |
-| `app.js` | All behaviour. Organised in sections: **state** (the model plus derived indexes `outEdges`, `inEdges`, `lineToNode`), **loading** (read the `File`, `POST /api/parse`, index the answer), **selection** (`select(id)` drives every view, keeps the back history), **sidebar**, **graph**, **details**, **text view**, **UI wiring**. |
+| `app.js` | All behaviour. Organised in sections: **state** (one object per document tab: the model plus derived indexes `outEdges`, `inEdges`, `lineToNode`, the selection, history, view, filter and scroll positions), **loading** (read the `File`, `POST /api/parse`, index the answer), **document tabs**, **selection** (`select(id)` drives every view, keeps the back history), **external declarations** (following a link into another file), **sidebar**, **graph**, **details**, **text view**, **PNG export**, **UI wiring**. |
 
-Rendering is "re-render from state": each `select()` rebuilds the SVG, the details panel and
-the sidebar highlight from `state`. Only the text view is rendered once per file (it can be
+`state` always points at the active tab's object (`tabs[]` holds them all), so every render
+function reads "the current document" without knowing about tabs; `activateTab()` swaps the
+pointer and calls `renderAll()`, which redraws the page from that state. Rendering is
+"re-render from state": each `select()` rebuilds the SVG, the details panel and the sidebar
+highlight from `state`. The text view is rendered once per file or tab switch (it can be
 thousands of lines); selection just toggles a highlight class.
+
+#### Following links into other files
+
+An `external` node carries the namespace it was referenced in (`ns`). `followExternal()`
+first searches the open tabs for a non-external node with the same kind, name and namespace
+(a `type:X` placeholder matches `complexType:X` or `simpleType:X`; a declaration with an
+empty namespace matches too, for chameleon includes). Failing that it lists the
+`schemaLocation`s of the current file that can hold the namespace (`xs:import` with that
+namespace; `xs:include` / `xs:redefine` when it is the file's own namespace) and, if the
+current file has a server-side `path`, walks them breadth-first through `GET /api/open`,
+opening each file in a new tab and following that file's own imports / includes, with a
+visited set on paths. Files opened from the browser have no path (the browser does not reveal
+it), so the user is asked to open the named file; `pendingJump` remembers what was wanted
+and `checkPendingJump()` completes the jump when a file declaring it is loaded.
+
+#### PNG export
+
+Graph: the current SVG is cloned, cropped to its `getBBox()` plus a margin, given a white
+background and a copy of the page's stylesheet (so classes and CSS variables resolve in a
+standalone document), serialised, loaded into an `Image` and drawn on a canvas at 2×. Text:
+the highlighted lines are painted directly on a canvas with the computed colours of each
+token class (a very long file is cut to the lines around the current scroll position, to stay
+within canvas size limits). `canvas.toBlob()` is then saved through a download link.
 
 #### Graph view
 
 An *ego graph* of the selected node: the node in the centre, every neighbour that it links to
 in a column on the right, every neighbour that links to it in a column on the left. Parallel
 edges to one neighbour are merged into one line whose label lists the reasons
-(`child shipTo, child billTo`). A self-reference (recursive type) is drawn as a loop above the
+(`shipTo, billTo`). A self-reference (recursive type) is drawn as a loop above the
 centre. The SVG is generated as a string and inserted with `innerHTML`; there is no layout
 library because the layout is two columns and a cubic Bézier per edge. Clicking a node calls
 `select()` and pushes the previous centre on the history stack.
@@ -105,7 +131,8 @@ node. The selected node's line is highlighted and scrolled into view.
 |---|---|---|
 | `GET /`, `/app.js`, `/style.css` | – | the static asset (classpath `web/`, `Cache-Control: no-cache`). Paths are restricted to `/[A-Za-z0-9._-]+`. |
 | `POST /api/parse` | body: the XSD text (UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema`, …). |
-| `GET /api/initial` | – | `200` + `{"name", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
+| `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
+| `GET /api/open?base=…&location=…` | query: `base` = server path of the referencing file, `location` = its `schemaLocation` | `200` + `{"name", "path", "text"}` of `location` resolved against `base`'s directory; `403` if `base` is not a file the server already served (`/api/initial` or a previous `/api/open`), `400` for a remote location (`://`), `404` if the file does not exist. |
 
 The server binds to `127.0.0.1` unless `--host` says otherwise: it is a local tool, not a
 service, and it parses whatever is posted to it.
@@ -117,15 +144,17 @@ service, and it parses whatever is posted to it.
   "targetNamespace": "http://example.com/po",
   "imports": [ { "tag": "import", "namespace": "…", "schemaLocation": "…" } ],
   "nodes":   [ { "id": "complexType:USAddress", "kind": "complexType", "name": "USAddress",
-                 "line": 36, "doc": "…" } ],
+                 "ns": "http://example.com/po", "line": 36, "doc": "…" } ],
   "edges":   [ { "from": "complexType:PurchaseOrderType", "to": "complexType:USAddress",
-                 "label": "child shipTo" } ]
+                 "label": "shipTo" } ]
 }
 ```
 
 `kind` is one of `element`, `complexType`, `simpleType`, `group`, `attributeGroup`,
-`attribute`, `builtin`, `external`. `line` is 1-based, `0` when the node has no declaration
-in the file.
+`attribute`, `builtin`, `external`. `ns` is the target namespace for a declaration, the
+referenced namespace for an `external` placeholder (used to find the file declaring it), the
+XSD namespace for a `builtin`. `line` is 1-based, `0` when the node has no declaration in the
+file.
 
 ## Libraries and tooling
 
@@ -175,6 +204,7 @@ XsdViewer/
 ├── README.md                     usage
 ├── architecture.md               this file
 ├── samples/purchaseOrder.xsd     small schema exercising every kind of link
+├── samples/import/               order.xsd + the files it imports / includes (link following)
 └── src/
     ├── assembly/                        windows.xml, linux.xml (dist profile)
     ├── dist/                            xsdviewer.bat, xsdviewer.sh launchers

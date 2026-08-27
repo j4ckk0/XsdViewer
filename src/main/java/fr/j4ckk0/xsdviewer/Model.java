@@ -13,8 +13,10 @@ import java.util.Map;
 public final class Model {
 
     /** A global schema object: element, complexType, simpleType, group, attributeGroup, attribute,
-     *  or a placeholder for a built-in XSD type ("builtin") / an object not declared in this file ("external"). */
-    public record Node(String id, String kind, String name, int line, String doc) {}
+     *  or a placeholder for a built-in XSD type ("builtin") / an object not declared in this file ("external").
+     *  {@code ns} is the namespace the name lives in: the target namespace for declarations, the
+     *  referenced namespace for external placeholders (what the client uses to find the file declaring it). */
+    public record Node(String id, String kind, String name, String ns, int line, String doc) {}
 
     /** A direct link from one node to another, e.g. element -> its type, complexType -> a child element's type. */
     public record Edge(String from, String to, String label) {}
@@ -55,6 +57,8 @@ public final class Model {
             Json.string(sb, n.kind());
             sb.append(",\"name\":");
             Json.string(sb, n.name());
+            sb.append(",\"ns\":");
+            Json.string(sb, n.ns());
             sb.append(",\"line\":").append(n.line());
             sb.append(",\"doc\":");
             Json.string(sb, n.doc());

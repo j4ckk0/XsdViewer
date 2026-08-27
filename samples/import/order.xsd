@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Order schema split over several files: imports address.xsd (other namespace), includes items.xsd (same namespace). -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ord="http://example.com/order"
+           xmlns:adr="http://example.com/address"
+           targetNamespace="http://example.com/order"
+           elementFormDefault="qualified">
+
+  <xs:import namespace="http://example.com/address" schemaLocation="address.xsd"/>
+  <xs:include schemaLocation="items.xsd"/>
+
+  <xs:element name="order" type="ord:OrderType"/>
+
+  <xs:complexType name="OrderType">
+    <xs:sequence>
+      <xs:element name="shipTo" type="adr:AddressType"/>
+      <xs:element name="billTo" type="adr:AddressType"/>
+      <xs:element name="items" type="ord:ItemsType"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="ord:OrderId" use="required"/>
+  </xs:complexType>
+</xs:schema>

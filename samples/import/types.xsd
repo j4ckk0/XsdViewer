@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Included by items.xsd (and so, indirectly, by order.xsd). -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/order"
+           elementFormDefault="qualified">
+
+  <xs:simpleType name="OrderId">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="ORD-[0-9]{6}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="Quantity">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:maxInclusive value="999"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

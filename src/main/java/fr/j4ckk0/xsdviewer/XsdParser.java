@@ -37,8 +37,10 @@ public final class XsdParser {
             Set.of("element", "complexType", "simpleType", "group", "attributeGroup", "attribute");
 
     private final Model model = new Model();
-    /** Edges whose target is not resolved yet: "type:X", "element:X", "group:X"... */
-    private final List<Model.Edge> pending = new ArrayList<>();
+    /** An edge whose target is not resolved yet ("type:X", "element:X", "group:X"...), with the namespace of X. */
+    private record Pending(Model.Edge edge, String ns) {}
+
+    private final List<Pending> pending = new ArrayList<>();
     private Map<String, Integer> lines = Map.of();
 
     private XsdParser() {}
@@ -75,7 +77,7 @@ public final class XsdParser {
             }
             if (TOP_KINDS.contains(ln) && c.hasAttribute("name")) {
                 String id = ln + ":" + c.getAttribute("name");
-                model.nodes.put(id, new Model.Node(id, ln, c.getAttribute("name"),
+                model.nodes.put(id, new Model.Node(id, ln, c.getAttribute("name"), model.targetNamespace,
                         lines.getOrDefault(id, 0), documentation(c)));
             }
         }
@@ -89,7 +91,8 @@ public final class XsdParser {
         }
 
         // Pass 3: resolve targets, creating placeholder nodes for what this file does not declare.
-        for (Model.Edge e : pending) {
+        for (Pending p : pending) {
+            Model.Edge e = p.edge();
             String to = e.to();
             if (!model.nodes.containsKey(to)) {
                 int colon = to.indexOf(':');
@@ -100,7 +103,7 @@ public final class XsdParser {
                     else if (model.nodes.containsKey("simpleType:" + name)) to = "simpleType:" + name;
                 }
                 if (!model.nodes.containsKey(to)) {
-                    model.nodes.put(to, new Model.Node(to, "external", name, 0,
+                    model.nodes.put(to, new Model.Node(to, "external", name, p.ns(), 0,
                             "Not declared in this file (" + kind + ")"));
                 }
             }
@@ -114,8 +117,8 @@ public final class XsdParser {
      *
      * @param e     the element being examined
      * @param owner id of the global declaration all links are attributed to
-     * @param self  true when {@code e} is the global declaration itself (its own
-     *              type / substitutionGroup are then labelled differently from a child's)
+     * @param self  true when {@code e} is the global declaration itself (its own type /
+     *              substitutionGroup are then labelled differently from a nested element's)
      */
     private void collect(Element e, String owner, boolean self) {
         if (!XSD_NS.equals(e.getNamespaceURI())) return; // e.g. content of xs:appinfo
@@ -124,12 +127,13 @@ public final class XsdParser {
             case "annotation" -> { return; }
             case "element" -> {
                 if (e.hasAttribute("ref")) {
-                    link(owner, "element", e.getAttribute("ref"), e, self ? "ref" : "child ref");
+                    link(owner, "element", e.getAttribute("ref"), e, "ref");
                     return;
                 }
                 String name = e.getAttribute("name");
                 if (e.hasAttribute("type")) {
-                    linkType(owner, e.getAttribute("type"), e, self ? "type" : "child " + name);
+                    // a nested element is labelled with just its name: "shipTo", not "child shipTo"
+                    linkType(owner, e.getAttribute("type"), e, self ? "type" : name);
                 }
                 if (self && e.hasAttribute("substitutionGroup")) {
                     link(owner, "element", e.getAttribute("substitutionGroup"), e, "substitutes");
@@ -188,18 +192,20 @@ public final class XsdParser {
         boolean declaredHere = model.nodes.containsKey("complexType:" + local) || model.nodes.containsKey("simpleType:" + local);
         if (XSD_NS.equals(ns) && !declaredHere) {
             String id = "builtin:" + local;
-            model.nodes.computeIfAbsent(id, k -> new Model.Node(id, "builtin", local, 0, "XML Schema built-in type"));
+            model.nodes.computeIfAbsent(id, k -> new Model.Node(id, "builtin", local, XSD_NS, 0, "XML Schema built-in type"));
             model.edges.add(new Model.Edge(owner, id, label));
         } else {
-            pending.add(new Model.Edge(owner, "type:" + local, label));
+            pending.add(new Pending(new Model.Edge(owner, "type:" + local, label), ns == null ? "" : ns));
         }
     }
 
     /** A reference (ref=, substitutionGroup=) to a named declaration of a given kind. */
     private void link(String owner, String kind, String qname, Element ctx, String label) {
         int colon = qname.indexOf(':');
+        String prefix = colon < 0 ? null : qname.substring(0, colon);
         String local = colon < 0 ? qname : qname.substring(colon + 1);
-        pending.add(new Model.Edge(owner, kind + ":" + local, label));
+        String ns = ctx.lookupNamespaceURI(prefix);
+        pending.add(new Pending(new Model.Edge(owner, kind + ":" + local, label), ns == null ? "" : ns));
     }
 
     private static String documentation(Element decl) {

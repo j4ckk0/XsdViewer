@@ -13,7 +13,8 @@
     <button id="fileMenuBtn" class="menubtn" type="button">File ▾</button>
     <div id="fileMenu" class="dropdown hidden">
       <button id="menuOpen" type="button">Open…<span class="kbd">Ctrl+O</span></button>
-      <button id="menuClose" type="button">Close</button>
+      <button id="menuNewTab" type="button">New tab</button>
+      <button id="menuClose" type="button">Close file</button>
     </div>
   </div>
   <span id="fileName" class="filename">No file loaded</span>
@@ -21,15 +22,23 @@
     <button class="tab active" data-view="graph" type="button">Graph</button>
     <button class="tab" data-view="text" type="button">Text</button>
   </nav>
+  <button id="exportBtn" class="menubtn" type="button" title="Export the current view as a PNG image" disabled>⤓ PNG</button>
   <label class="opt" title="Show XML Schema built-in types (xs:string, xs:int…) in the graph">
     <input type="checkbox" id="showBuiltins" checked> built-in types
   </label>
-  <input id="search" type="search" placeholder="Filter objects…" autocomplete="off">
 </header>
+
+<div id="tabbar">
+  <div id="tabs"></div>
+  <button id="newTabBtn" type="button" title="New tab">+</button>
+</div>
 
 <div id="body">
   <aside id="sidebar">
     <div id="schemaInfo"></div>
+    <div id="searchBar">
+      <input id="search" type="search" placeholder="Search objects… (Ctrl+F)" autocomplete="off" spellcheck="false">
+    </div>
     <div id="nodeList"></div>
   </aside>
 
@@ -65,7 +74,7 @@
 
 <div id="dropOverlay" class="hidden"><div>Drop the XSD file to open it</div></div>
 <div id="toast" class="hidden"></div>
-<input type="file" id="fileInput" accept=".xsd,.xml,text/xml,application/xml" hidden>
+<input type="file" id="fileInput" accept=".xsd,.xml,text/xml,application/xml" multiple hidden>
 
 <script src="app.js"></script>
 </body>

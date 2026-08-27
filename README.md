@@ -12,7 +12,12 @@ A Java server parses the schema and serves a web page offering two views:
   object's declaration is highlighted; click a highlighted line number to select that
   object.
 
-The file is opened with **File ▸ Open…** (Ctrl+O) or by dropping it anywhere in the window.
+Files are opened with **File ▸ Open…** (Ctrl+O) or by dropping them anywhere in the window.
+Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸ New tab
+opens an empty one, × or a middle click closes one); every tab keeps its own view,
+selection, history and search filter. The **search box** in the left panel (Ctrl+F)
+filters the object list; **⤓ PNG** in the top bar saves the current view (graph or
+text) as a PNG image.
 
 ## Build and run
 
@@ -76,8 +81,8 @@ content (anonymous nested types included):
 | XSD construct | Link label |
 |---|---|
 | `type="T"` on the global element / attribute itself | `type` |
-| `type="T"` on a nested element / attribute | `child name` / `attribute name` |
-| `ref="X"` on an element / attribute | `child ref` / `attribute ref` (`ref` on a global element) |
+| `type="T"` on a nested element / attribute | `name` (the element's name) / `attribute name` |
+| `ref="X"` on an element / attribute | `ref` / `attribute ref` |
 | `group ref` / `attributeGroup ref` | `group` / `attributeGroup` |
 | `extension base` / `restriction base` | `extends` / `restricts` |
 | `list itemType` / `union memberTypes` | `list of` / `union of` |
@@ -85,19 +90,35 @@ content (anonymous nested types included):
 
 XSD built-in types (`xs:string`…) appear as grey dashed nodes (toggle with the
 **built-in types** checkbox). Objects referenced but not declared in the file
-(imported ones) appear as red dashed *external* nodes. Only the opened file is
-read; `xs:import` / `xs:include` are listed in the sidebar but not followed.
+(imported / included ones) appear as red dashed *external* nodes.
+
+## Following links into other files
+
+Selecting an external node looks for its declaration:
+
+1. in the other open tabs (same name and namespace);
+2. else in the file(s) named by the `xs:import` (matching namespace) / `xs:include`
+   / `xs:redefine` of the current file, when the tool knows where the current file is
+   on disk – the file given on the command line, and every file reached this way. The
+   server reads them relative to the current file, following their own imports and
+   includes, and opens each one in a new tab; the declaration is then selected there;
+3. else (file opened from the browser, so its folder is unknown) a message names the
+   file to open; once you open it, the link is followed.
+
+Remote `schemaLocation`s (`http://…`) are never fetched. `samples/import/` is a
+schema split over four files to try this with: `./run.sh samples/import/order.xsd`.
 
 ## Layout
 
 ```
 src/main/java/fr/j4ckk0/xsdviewer/
-  Main.java        HTTP server (JDK com.sun.net.httpserver), static files + /api/parse
+  Main.java        HTTP server (JDK com.sun.net.httpserver), static files + /api/parse, /api/initial, /api/open
   XsdParser.java   XSD text -> Model (DOM for the structure, SAX for line numbers)
   Model.java       nodes / edges / imports, JSON output
   Json.java        string escaping
 src/main/resources/web/   index.html, app.js, style.css – the client, no framework
 src/test/java/            parser tests, run against samples/purchaseOrder.xsd
+samples/                  purchaseOrder.xsd (one file), import/ (order.xsd + imported / included files)
 ```
 
 No runtime dependency: the jar only needs a JDK.

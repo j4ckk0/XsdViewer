@@ -55,10 +55,10 @@ class XsdParserTest {
 
     @Test
     void complexTypeLinks() {
-        assertTrue(hasEdge("complexType:PurchaseOrderType", "complexType:USAddress", "child shipTo"));
-        assertTrue(hasEdge("complexType:PurchaseOrderType", "complexType:USAddress", "child billTo"));
-        assertTrue(hasEdge("complexType:PurchaseOrderType", "element:comment", "child ref"));
-        assertTrue(hasEdge("complexType:PurchaseOrderType", "complexType:Items", "child items"));
+        assertTrue(hasEdge("complexType:PurchaseOrderType", "complexType:USAddress", "shipTo"));
+        assertTrue(hasEdge("complexType:PurchaseOrderType", "complexType:USAddress", "billTo"));
+        assertTrue(hasEdge("complexType:PurchaseOrderType", "element:comment", "ref"));
+        assertTrue(hasEdge("complexType:PurchaseOrderType", "complexType:Items", "items"));
         assertTrue(hasEdge("complexType:PurchaseOrderType", "builtin:date", "attribute orderDate"));
         assertTrue(hasEdge("complexType:PurchaseOrderType", "attributeGroup:AuditAttributes", "attributeGroup"));
         assertTrue(hasEdge("complexType:InternationalAddress", "complexType:USAddress", "extends"));
@@ -66,16 +66,16 @@ class XsdParserTest {
 
     @Test
     void nestedAnonymousTypesAreAttributedToTheGlobalOwner() {
-        assertTrue(hasEdge("complexType:Items", "builtin:string", "child productName"));
+        assertTrue(hasEdge("complexType:Items", "builtin:string", "productName"));
         assertTrue(hasEdge("complexType:Items", "builtin:positiveInteger", "restricts"));
         assertTrue(hasEdge("complexType:Items", "simpleType:SKU", "attribute partNum"));
         assertTrue(hasEdge("complexType:Items", "group:ItemExtras", "group"));
-        assertTrue(hasEdge("complexType:Items", "element:comment", "child ref"));
+        assertTrue(hasEdge("complexType:Items", "element:comment", "ref"));
     }
 
     @Test
     void groupAndAttributeGroupLinks() {
-        assertTrue(hasEdge("group:ItemExtras", "simpleType:Message", "child giftMessage"));
+        assertTrue(hasEdge("group:ItemExtras", "simpleType:Message", "giftMessage"));
         assertTrue(hasEdge("attributeGroup:AuditAttributes", "attribute:version", "attribute ref"));
         assertTrue(hasEdge("attribute:version", "builtin:token", "type"));
     }
@@ -91,7 +91,7 @@ class XsdParserTest {
 
     @Test
     void recursiveTypeLinksToItself() {
-        assertTrue(hasEdge("complexType:Category", "complexType:Category", "child subCategory"));
+        assertTrue(hasEdge("complexType:Category", "complexType:Category", "subCategory"));
     }
 
     @Test
@@ -150,6 +150,6 @@ class XsdParserTest {
                 </schema>""");
         assertTrue(m.edges.contains(new Model.Edge("element:a", "builtin:string", "type")));
         assertTrue(m.edges.contains(new Model.Edge("element:b", "complexType:T", "type")));
-        assertTrue(m.edges.contains(new Model.Edge("complexType:T", "element:a", "child ref")));
+        assertTrue(m.edges.contains(new Model.Edge("complexType:T", "element:a", "ref")));
     }
 }

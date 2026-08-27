@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Included by order.xsd: same namespace. Includes types.xsd in turn. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:ord="http://example.com/order"
+           targetNamespace="http://example.com/order"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="types.xsd"/>
+
+  <xs:complexType name="ItemsType">
+    <xs:sequence>
+      <xs:element name="item" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="productName" type="xs:string"/>
+            <xs:element name="quantity" type="ord:Quantity"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

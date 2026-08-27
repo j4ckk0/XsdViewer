@@ -8,90 +8,159 @@ const KIND_LABELS = {
   attributeGroup: 'Attribute groups', attribute: 'Attributes', builtin: 'Built-in types', external: 'External / undeclared'
 };
 
-const state = {
-  fileName: null,
-  text: '',
-  model: null,        // { targetNamespace, imports, nodes, edges }
-  nodes: new Map(),   // id -> node
-  outEdges: new Map(),// id -> [edge]
-  inEdges: new Map(), // id -> [edge]
-  lineToNode: new Map(),
-  selected: null,
-  history: [],
-  view: 'graph',
-  filter: '',
-  collapsed: new Set(),
-};
+/** One document tab: the file, its graph and the UI state of that tab (view, selection, history...). */
+function newState() {
+  return {
+    fileName: null,
+    path: null,         // file path on the server, when the server read it (initial file, followed links)
+    text: '',
+    model: null,        // { targetNamespace, imports, nodes, edges }
+    nodes: new Map(),   // id -> node
+    outEdges: new Map(),// id -> [edge]
+    inEdges: new Map(), // id -> [edge]
+    lineToNode: new Map(),
+    selected: null,
+    history: [],
+    view: 'graph',
+    filter: '',
+    collapsed: new Set(),
+    scroll: { text: 0, graphTop: 0, graphLeft: 0 },
+  };
+}
+
+let state = newState();   // the active tab
+const tabs = [state];
+/** Set when a link to an external declaration could not be resolved: checked whenever a file gets loaded. */
+let pendingJump = null;
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 // ---- loading --------------------------------------------------------------------------
 
-async function loadFile(file) {
-  if (!file) return;
-  const text = await file.text();
-  await loadText(file.name, text);
+/** Opens files from the file dialog / a drop: the first one in the current tab if it is empty, the others in new tabs. */
+async function openFiles(files) {
+  for (const file of files) {
+    if (state.model) activateTab(newTab());
+    await loadText(file.name, await file.text(), null);
+  }
 }
 
-async function loadText(name, text) {
+/** Loads a schema into the active tab. */
+async function loadText(name, text, path) {
+  if (!(await loadInto(state, name, text, path))) return;
+  renderAll();
+  checkPendingJump(state);
+}
+
+/** Parses the schema and fills the tab {@code st} with it (no rendering). Returns false on error. */
+async function loadInto(st, name, text, path) {
   let resp;
   try {
     resp = await fetch('/api/parse', { method: 'POST', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: text });
   } catch (e) {
     toast('Cannot reach the XsdViewer server: ' + e.message);
-    return;
+    return false;
   }
   const json = await resp.json();
   if (!resp.ok) {
     toast('Cannot parse ' + name + ': ' + (json.error || resp.status));
-    return;
+    return false;
   }
-  state.fileName = name;
-  state.text = text;
-  state.model = json;
-  state.nodes = new Map(json.nodes.map(n => [n.id, n]));
-  state.outEdges = new Map();
-  state.inEdges = new Map();
+  st.fileName = name;
+  st.path = path || null;
+  st.text = text;
+  st.model = json;
+  st.nodes = new Map(json.nodes.map(n => [n.id, n]));
+  st.outEdges = new Map();
+  st.inEdges = new Map();
   for (const e of json.edges) {
-    if (!state.outEdges.has(e.from)) state.outEdges.set(e.from, []);
-    state.outEdges.get(e.from).push(e);
-    if (!state.inEdges.has(e.to)) state.inEdges.set(e.to, []);
-    state.inEdges.get(e.to).push(e);
+    if (!st.outEdges.has(e.from)) st.outEdges.set(e.from, []);
+    st.outEdges.get(e.from).push(e);
+    if (!st.inEdges.has(e.to)) st.inEdges.set(e.to, []);
+    st.inEdges.get(e.to).push(e);
   }
-  state.lineToNode = new Map();
-  for (const n of json.nodes) if (n.line > 0) state.lineToNode.set(n.line, n.id);
-  state.history = [];
-  state.selected = null;
-  state.filter = '';
-  $('search').value = '';
-
-  document.title = name + ' – XsdViewer';
-  $('fileName').textContent = name;
-  $('fileName').title = name;
-  renderSchemaInfo();
-  renderNodeList();
-  renderText();
-
+  st.lineToNode = new Map();
+  for (const n of json.nodes) if (n.line > 0) st.lineToNode.set(n.line, n.id);
+  st.history = [];
+  st.filter = '';
+  st.scroll = { text: 0, graphTop: 0, graphLeft: 0 };
   // Start on the first global element that nothing references (a likely document root), else the first node.
-  const roots = json.nodes.filter(n => n.kind === 'element' && !(state.inEdges.get(n.id) || []).some(e => e.from !== n.id));
+  const roots = json.nodes.filter(n => n.kind === 'element' && !(st.inEdges.get(n.id) || []).some(e => e.from !== n.id));
   const first = roots[0] || json.nodes.find(n => n.kind === 'element') || json.nodes[0];
-  if (first) select(first.id, false); else { renderGraph(); renderDetails(); }
+  st.selected = first ? first.id : null;
+  renderTabs();
+  return true;
+}
+
+/** Redraws everything from the active tab's state. */
+function renderAll() {
+  const loaded = !!state.model;
+  document.title = loaded ? state.fileName + ' – XsdViewer' : 'XsdViewer';
+  $('fileName').textContent = loaded ? state.fileName : 'No file loaded';
+  $('fileName').title = loaded ? (state.path || state.fileName) : '';
+  $('search').value = state.filter;
+  $('backBtn').disabled = state.history.length === 0;
+  if (loaded) {
+    renderSchemaInfo();
+    renderNodeList();
+    renderText();
+    renderGraph();
+    renderDetails();
+    highlightTextLine(false);
+  } else {
+    $('schemaInfo').innerHTML = '';
+    $('nodeList').innerHTML = '';
+    $('text').innerHTML = '';
+    $('graphCanvas').innerHTML = '';
+    $('details').classList.add('hidden');
+  }
+  renderTabs();
   showView(state.view);
+  $('text').scrollTop = state.scroll.text;
+  $('graphCanvas').scrollTop = state.scroll.graphTop;
+  $('graphCanvas').scrollLeft = state.scroll.graphLeft;
 }
 
 function closeFile() {
-  state.fileName = null; state.text = ''; state.model = null;
-  state.nodes = new Map(); state.outEdges = new Map(); state.inEdges = new Map();
-  state.lineToNode = new Map(); state.selected = null; state.history = [];
-  document.title = 'XsdViewer';
-  $('fileName').textContent = 'No file loaded';
-  $('schemaInfo').innerHTML = '';
-  $('nodeList').innerHTML = '';
-  $('text').innerHTML = '';
-  $('graphCanvas').innerHTML = '';
-  $('details').classList.add('hidden');
-  showView(state.view);
+  const view = state.view;
+  Object.assign(state, newState(), { view });
+  renderAll();
+}
+
+// ---- document tabs --------------------------------------------------------------------
+
+function newTab() {
+  const t = newState();
+  t.view = state.view;
+  tabs.push(t);
+  renderTabs();
+  return t;
+}
+
+function activateTab(t) {
+  if (t === state) return;
+  state.scroll = { text: $('text').scrollTop, graphTop: $('graphCanvas').scrollTop, graphLeft: $('graphCanvas').scrollLeft };
+  state = t;
+  renderAll();
+}
+
+function closeTab(t) {
+  if (tabs.length === 1) { closeFile(); return; }
+  const i = tabs.indexOf(t);
+  tabs.splice(i, 1);
+  if (t === state) { state = tabs[Math.min(i, tabs.length - 1)]; renderAll(); } else renderTabs();
+}
+
+function renderTabs() {
+  let html = '';
+  tabs.forEach((t, i) => {
+    const name = t.fileName || 'New tab';
+    html += '<div class="dtab' + (t === state ? ' active' : '') + '" data-i="' + i + '" title="' + esc(t.path || name) + '">'
+      + '<span class="tname">' + esc(name) + '</span>'
+      + '<button class="tclose" type="button" title="Close tab">×</button></div>';
+  });
+  $('tabs').innerHTML = html;
 }
 
 // ---- selection ------------------------------------------------------------------------
@@ -105,6 +174,90 @@ function select(id, pushHistory = true) {
   renderGraph();
   renderDetails();
   highlightTextLine(true);
+  const n = state.nodes.get(id);
+  if (n.kind === 'external' && pushHistory) followExternal(n);
+}
+
+// ---- external declarations ------------------------------------------------------------
+
+/** The kinds of declaration an external placeholder ("type:X", "element:X"...) can resolve to. */
+function kindsOf(node) {
+  const k = node.id.slice(0, node.id.indexOf(':'));
+  return k === 'type' ? ['complexType', 'simpleType'] : [k];
+}
+
+/** Looks for the declaration of {@code name} (one of {@code kinds}, in namespace {@code ns}) in the tab {@code t}. */
+function findIn(t, name, kinds, ns) {
+  if (!t.model) return null;
+  for (const k of kinds) {
+    const n = t.nodes.get(k + ':' + name);
+    // a schema without targetNamespace (chameleon include) takes the namespace of the including one
+    if (n && n.kind !== 'external' && (n.ns === ns || n.ns === '')) return n.id;
+  }
+  return null;
+}
+
+/** The schemaLocations declared by tab {@code t} that may hold namespace {@code ns}. */
+function locationsFor(t, ns) {
+  const out = [];
+  for (const i of t.model.imports) {
+    if (!i.schemaLocation) continue;
+    const hit = i.tag === 'import' ? i.namespace === ns : (ns === t.model.targetNamespace || ns === '');
+    if (hit && !out.includes(i.schemaLocation)) out.push(i.schemaLocation);
+  }
+  return out;
+}
+
+/**
+ * Follows a link to something this file does not declare: in an already open tab, else in the
+ * file(s) named by the xs:import / xs:include (read by the server, relative to this file, when it
+ * knows where this file is), else asks the user to open the file.
+ */
+async function followExternal(node) {
+  const from = state, name = node.name, kinds = kindsOf(node), ns = node.ns || '';
+  for (const t of tabs) {
+    const id = findIn(t, name, kinds, ns);
+    if (id) { activateTab(t); select(id); return; }
+  }
+  const locs = locationsFor(from, ns);
+  if (!locs.length) { toast(name + ' is not declared in this file and no xs:import / xs:include gives a location for it'); return; }
+  if (!from.path) {
+    pendingJump = { name, kinds, ns };
+    toast(name + ' is declared in ' + locs.join(' or ') + ' – open that file (File ▸ Open, or drop it here) to follow the link');
+    return;
+  }
+  // Read the imported files through the server, following their own imports / includes.
+  const visited = new Set(tabs.map(t => t.path).filter(Boolean));
+  const queue = locs.map(location => ({ base: from.path, location }));
+  const opened = [];
+  while (queue.length) {
+    const { base, location } = queue.shift();
+    let resp, json;
+    try {
+      resp = await fetch('/api/open?base=' + encodeURIComponent(base) + '&location=' + encodeURIComponent(location));
+      json = await resp.json();
+    } catch (e) { toast('Cannot reach the XsdViewer server: ' + e.message); return; }
+    if (!resp.ok) { toast('Cannot open ' + location + ': ' + (json.error || resp.status)); continue; }
+    if (visited.has(json.path)) continue;
+    visited.add(json.path);
+    const t = newTab();
+    if (!(await loadInto(t, json.name, json.text, json.path))) { closeTab(t); continue; }
+    opened.push(t);
+    const id = findIn(t, name, kinds, ns);
+    if (id) { activateTab(t); select(id); return; }
+    for (const l of locationsFor(t, ns)) queue.push({ base: t.path, location: l });
+  }
+  toast(name + ' was not found in ' + (opened.length ? opened.map(t => t.fileName).join(', ') : locs.join(', ')));
+}
+
+/** After a file is loaded by the user: jump to the declaration a link was waiting for, if it is in there. */
+function checkPendingJump(t) {
+  if (!pendingJump) return;
+  const id = findIn(t, pendingJump.name, pendingJump.kinds, pendingJump.ns);
+  if (!id) return;
+  pendingJump = null;
+  activateTab(t);
+  select(id);
 }
 
 function goBack() {
@@ -122,6 +275,7 @@ function showView(view) {
   $('graph').classList.toggle('hidden', !loaded || view !== 'graph');
   $('text').classList.toggle('hidden', !loaded || view !== 'text');
   $('details').classList.toggle('hidden', !loaded || !state.selected);
+  $('exportBtn').disabled = !loaded;
   if (loaded && view === 'text') highlightTextLine(true);
 }
 
@@ -392,6 +546,148 @@ function highlightXml(text) {
 // ---- misc UI --------------------------------------------------------------------------
 
 let toastTimer = null;
+// ---- PNG export -----------------------------------------------------------------------
+
+const EXPORT_SCALE = 2;        // device pixels per CSS pixel
+const EXPORT_MAX_DIM = 16000;  // keep canvases within what browsers can allocate
+
+function exportPng() {
+  if (!state.model) return;
+  const base = (state.fileName || 'schema').replace(/\.[^.]+$/, '');
+  if (state.view === 'graph') {
+    if (!state.selected) { toast('Select an object to export its graph'); return; }
+    const name = state.nodes.get(state.selected).name.replace(/[^\w.-]+/g, '_');
+    exportGraphPng(base + '-' + name + '.png');
+  } else {
+    exportTextPng(base + '-text.png');
+  }
+}
+
+/** All CSS of the page, embedded into the SVG so that it renders alone (classes, variables). */
+function pageCss() {
+  let css = '';
+  for (const sheet of document.styleSheets) {
+    try { for (const r of sheet.cssRules) css += r.cssText + '\n'; } catch (e) { /* cross-origin sheet: none expected */ }
+  }
+  return css;
+}
+
+function exportGraphPng(fileName) {
+  const src = $('graphCanvas').querySelector('svg');
+  if (!src) return;
+  // Crop to what is drawn (the SVG itself fills the whole panel) plus a margin.
+  const M = 24, bb = src.getBBox();
+  const x = Math.floor(bb.x - M), y = Math.floor(bb.y - M);
+  const w = Math.ceil(bb.width + 2 * M), h = Math.ceil(bb.height + 2 * M);
+  const svg = src.cloneNode(true);
+  svg.setAttribute('width', w); svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', x + ' ' + y + ' ' + w + ' ' + h);
+  const font = getComputedStyle(document.body).font;
+  const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  style.textContent = pageCss() + '\nsvg { font: ' + font + '; }';
+  svg.insertBefore(style, svg.firstChild);
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bg.setAttribute('x', x); bg.setAttribute('y', y); bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', '#ffffff');
+  svg.insertBefore(bg, style.nextSibling);
+
+  const scale = Math.min(EXPORT_SCALE, EXPORT_MAX_DIM / Math.max(w, h));
+  const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    URL.revokeObjectURL(url);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, w, h);
+    saveCanvas(canvas, fileName);
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('Could not render the graph'); };
+  img.src = url;
+}
+
+function exportTextPng(fileName) {
+  const container = $('text');
+  const lines = [...container.querySelectorAll('.line')];
+  if (!lines.length) return;
+  const cs = getComputedStyle(container);
+  const font = cs.font;
+  const lineH = lines[0].getBoundingClientRect().height || 19;
+  const padTop = parseFloat(cs.paddingTop) || 0;
+  const LN_W = 60, LN_PAD = 12, CODE_PAD = 20;
+  const colorOf = (el) => getComputedStyle(el).color;
+  const bgOf = (el) => getComputedStyle(el).backgroundColor;
+
+  // Text lines: measure first.
+  const meas = document.createElement('canvas').getContext('2d');
+  meas.font = font;
+  let maxCode = 0;
+  for (const l of lines) maxCode = Math.max(maxCode, meas.measureText(l.querySelector('.code').textContent).width);
+  const w = Math.ceil(LN_W + maxCode + CODE_PAD);
+
+  // Height cap: fall back to the lines from the current scroll position.
+  const maxLines = Math.floor((EXPORT_MAX_DIM / EXPORT_SCALE - 2 * padTop) / lineH);
+  let first = 0, count = lines.length;
+  if (count > maxLines) {
+    first = Math.min(Math.floor(container.scrollTop / lineH), count - maxLines);
+    count = maxLines;
+    toast('Text too long for one image: exported lines ' + (first + 1) + ' to ' + (first + count));
+  }
+  const h = Math.ceil(count * lineH + 2 * padTop);
+  const scale = Math.min(EXPORT_SCALE, EXPORT_MAX_DIM / Math.max(w, h));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.font = font;
+  ctx.textBaseline = 'middle';
+
+  const colorCache = new Map();
+  const spanColor = (el) => {
+    const k = el.className || '';
+    if (!colorCache.has(k)) colorCache.set(k, colorOf(el));
+    return colorCache.get(k);
+  };
+  for (let i = 0; i < count; i++) {
+    const l = lines[first + i];
+    const y = padTop + i * lineH, ym = y + lineH / 2;
+    if (l.classList.contains('hl')) { ctx.fillStyle = bgOf(l); ctx.fillRect(0, y, w, lineH); }
+    const ln = l.querySelector('.ln');
+    ctx.textAlign = 'right';
+    ctx.fillStyle = colorOf(ln);
+    ctx.fillText(ln.textContent, LN_W - LN_PAD, ym);
+    ctx.textAlign = 'left';
+    let x = LN_W;
+    const code = l.querySelector('.code');
+    const codeColor = colorOf(code);
+    for (const node of code.childNodes) {
+      const t = node.textContent;
+      if (!t) continue;
+      ctx.fillStyle = node.nodeType === 1 ? spanColor(node) : codeColor;
+      ctx.fillText(t, x, ym);
+      x += ctx.measureText(t).width;
+    }
+  }
+  saveCanvas(canvas, fileName);
+}
+
+function saveCanvas(canvas, fileName) {
+  canvas.toBlob((blob) => {
+    if (!blob) { toast('Could not create the PNG image'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  }, 'image/png');
+}
+
 function toast(msg) {
   const t = $('toast');
   t.textContent = msg;
@@ -406,10 +702,25 @@ function wireEvents() {
   $('fileMenuBtn').addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); });
   document.addEventListener('click', () => menu.classList.add('hidden'));
   $('menuOpen').addEventListener('click', () => { menu.classList.add('hidden'); $('fileInput').click(); });
+  $('menuNewTab').addEventListener('click', () => { menu.classList.add('hidden'); activateTab(newTab()); });
   $('menuClose').addEventListener('click', () => { menu.classList.add('hidden'); closeFile(); });
-  $('fileInput').addEventListener('change', (e) => { loadFile(e.target.files[0]); e.target.value = ''; });
+  $('fileInput').addEventListener('change', (e) => { openFiles([...e.target.files]); e.target.value = ''; });
+
+  // Document tabs
+  $('newTabBtn').addEventListener('click', () => activateTab(newTab()));
+  $('tabs').addEventListener('click', (e) => {
+    const el = e.target.closest('.dtab');
+    if (!el) return;
+    const t = tabs[+el.dataset.i];
+    if (e.target.closest('.tclose')) closeTab(t); else activateTab(t);
+  });
+  $('tabs').addEventListener('auxclick', (e) => {   // middle click closes
+    const el = e.target.closest('.dtab');
+    if (el && e.button === 1) { e.preventDefault(); closeTab(tabs[+el.dataset.i]); }
+  });
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') { e.preventDefault(); $('fileInput').click(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); $('search').focus(); $('search').select(); }
     if (e.key === 'Escape') menu.classList.add('hidden');
     if (e.altKey && e.key === 'ArrowLeft') goBack();
   });
@@ -424,17 +735,20 @@ function wireEvents() {
   window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; $('dropOverlay').classList.add('hidden'); } });
   window.addEventListener('drop', (e) => {
     e.preventDefault(); dragDepth = 0; $('dropOverlay').classList.add('hidden');
-    const file = e.dataTransfer && e.dataTransfer.files[0];
-    if (file) loadFile(file);
+    if (e.dataTransfer && e.dataTransfer.files.length) openFiles([...e.dataTransfer.files]);
   });
 
   // Tabs
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showView(t.dataset.view)));
   $('showBuiltins').addEventListener('change', renderGraph);
   $('backBtn').addEventListener('click', goBack);
+  $('exportBtn').addEventListener('click', exportPng);
 
   // Search
   $('search').addEventListener('input', (e) => { state.filter = e.target.value.trim(); if (state.model) renderNodeList(); });
+  $('search').addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.target.value = ''; state.filter = ''; if (state.model) renderNodeList(); e.target.blur(); }
+  });
 
   // Node list: select / collapse groups
   $('nodeList').addEventListener('click', (e) => {
@@ -471,11 +785,11 @@ async function loadInitialFile() {
   try {
     const resp = await fetch('/api/initial');
     if (!resp.ok) return;
-    const { name, text } = await resp.json();
-    await loadText(name, text);
+    const { name, path, text } = await resp.json();
+    await loadText(name, text, path);
   } catch (e) { /* no initial file */ }
 }
 
 wireEvents();
-showView('graph');
+renderAll();
 loadInitialFile();

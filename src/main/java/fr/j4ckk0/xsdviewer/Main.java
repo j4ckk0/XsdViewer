@@ -8,7 +8,12 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.net.URLDecoder;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -25,6 +30,8 @@ import com.sun.net.httpserver.HttpServer;
 public final class Main {
 
     private static Path initialFile;
+    /** Files this server has read and handed to the page; /api/open only resolves locations relative to one of them. */
+    private static final Set<Path> knownFiles = ConcurrentHashMap.newKeySet();
 
     public static void main(String[] args) throws Exception {
         int port = 8080;
@@ -50,6 +57,7 @@ public final class Main {
         HttpServer server = HttpServer.create(new InetSocketAddress(host, port), 0);
         server.createContext("/api/parse", Main::handleParse);
         server.createContext("/api/initial", Main::handleInitial);
+        server.createContext("/api/open", Main::handleOpen);
         server.createContext("/", Main::handleStatic);
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
@@ -100,10 +108,60 @@ public final class Main {
             send(ex, 404, "application/json", "{\"error\":\"no initial file\"}");
             return;
         }
-        String text = Files.readString(initialFile, StandardCharsets.UTF_8);
+        sendFile(ex, initialFile);
+    }
+
+    /**
+     * {@code GET /api/open?base=<path>&location=<schemaLocation>}: the schema at {@code location},
+     * resolved relative to {@code base}, so the page can follow a link into an imported / included
+     * file. {@code base} must be a file this server has already served (the initial file or one
+     * opened this way); remote locations (http://...) are refused: the tool never goes on the network.
+     */
+    private static void handleOpen(HttpExchange ex) throws IOException {
+        Map<String, String> q = query(ex.getRequestURI().getRawQuery());
+        String base = q.getOrDefault("base", ""), location = q.getOrDefault("location", "");
+        if (base.isEmpty() || location.isEmpty()) {
+            send(ex, 400, "application/json", "{\"error\":\"base and location expected\"}");
+            return;
+        }
+        if (location.contains("://")) {
+            send(ex, 400, "application/json", "{\"error\":" + Json.string("remote schemaLocation not supported: " + location) + "}");
+            return;
+        }
+        Path basePath = Path.of(base).toAbsolutePath().normalize();
+        if (!knownFiles.contains(basePath)) {
+            send(ex, 403, "application/json", "{\"error\":\"unknown base file\"}");
+            return;
+        }
+        Path target = basePath.resolveSibling(location.replace('\\', '/')).normalize();
+        if (!Files.isRegularFile(target)) {
+            send(ex, 404, "application/json", "{\"error\":" + Json.string("file not found: " + target) + "}");
+            return;
+        }
+        sendFile(ex, target);
+    }
+
+    /** {@code {name, path, text}} of a schema file; remembers it as a valid base for /api/open. */
+    private static void sendFile(HttpExchange ex, Path file) throws IOException {
+        Path abs = file.toAbsolutePath().normalize();
+        String text = Files.readString(abs, StandardCharsets.UTF_8);
+        knownFiles.add(abs);
         send(ex, 200, "application/json",
-                "{\"name\":" + Json.string(initialFile.getFileName().toString())
+                "{\"name\":" + Json.string(abs.getFileName().toString())
+                        + ",\"path\":" + Json.string(abs.toString())
                         + ",\"text\":" + Json.string(text) + "}");
+    }
+
+    private static Map<String, String> query(String rawQuery) {
+        Map<String, String> m = new HashMap<>();
+        if (rawQuery == null) return m;
+        for (String part : rawQuery.split("&")) {
+            int eq = part.indexOf('=');
+            if (eq < 0) continue;
+            m.put(URLDecoder.decode(part.substring(0, eq), StandardCharsets.UTF_8),
+                    URLDecoder.decode(part.substring(eq + 1), StandardCharsets.UTF_8));
+        }
+        return m;
     }
 
     private static void handleStatic(HttpExchange ex) throws IOException {
