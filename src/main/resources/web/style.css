@@ -321,7 +321,7 @@ html, body {
 .node.center text.name { font-weight: 700; font-size: 14px; }
 
 .edge { fill: none; stroke: #9aa3af; stroke-width: 1.5; }
-.edge-label { font-size: 11px; fill: #4b5563; }
+.edge-label { font-size: 11px; fill: var(--text); }
 .edge-label-bg { fill: #fff; opacity: .9; }
 
 /* ---- text view --------------------------------------------------------------------- */
@@ -397,7 +397,7 @@ html, body {
   cursor: pointer;
 }
 .link:hover { background: #e7e9ee; }
-.link .lbl { color: var(--muted); font-size: 12px; flex: none; }
+.link .lbl { color: var(--text); font-size: 12px; flex: none; }
 .link .tgt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---- overlays ---------------------------------------------------------------------- */
