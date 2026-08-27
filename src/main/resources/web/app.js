@@ -32,6 +32,9 @@ let state = newState();   // the active tab
 const tabs = [state];
 /** Set when a link to an external declaration could not be resolved: checked whenever a file gets loaded. */
 let pendingJump = null;
+/** Schema files of the folders opened in the browser (File ▸ Open folder…, or a dropped folder),
+ *  by relative path: where links are followed without asking. */
+const library = new Map();  // "folder/sub/x.xsd" -> File
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -69,6 +72,9 @@ async function loadInto(st, name, text, path) {
   }
   st.fileName = name;
   st.path = path || null;
+  st.rel = null;
+  // A file opened in the browser comes without its folder: ask the server where it is (in the background).
+  st.located = path ? null : locate(st, name, text);
   st.text = text;
   st.model = json;
   st.nodes = new Map(json.nodes.map(n => [n.id, n]));
@@ -236,34 +242,120 @@ async function followExternal(node) {
     if (id) { activateTab(t); select(id); return; }
   }
   const locs = locationsFor(from, ns);
-  if (!locs.length) { toast(name + ' is not declared in this file and no xs:import / xs:include gives a location for it'); return; }
-  if (!from.path) {
-    pendingJump = { name, kinds, ns };
-    toast(name + ' is declared in ' + locs.join(' or ') + ' – open that file (File ▸ Open, or drop it here) to follow the link');
+  if (!locs.length) {
+    askForFile(name, kinds, ns, name + ' is not declared in this file and no xs:import / xs:include says where it is: choose the file declaring it');
     return;
   }
-  // Read the imported files through the server, following their own imports / includes.
-  const visited = new Set(tabs.map(t => t.path).filter(Boolean));
-  const queue = locs.map(location => ({ base: from.path, location }));
-  const opened = [];
+  // Read the imported files (from an opened folder or through the server), following their own imports / includes.
+  if (!from.path && from.located) await from.located;
+  const visited = new Set(tabs.map(tabKey).filter(Boolean));
+  const queue = locs.map(location => ({ src: from, location }));
+  const opened = [], missing = [];
   while (queue.length) {
-    const { base, location } = queue.shift();
-    let resp, json;
-    try {
-      resp = await fetch('/api/open?base=' + encodeURIComponent(base) + '&location=' + encodeURIComponent(location));
-      json = await resp.json();
-    } catch (e) { toast('Cannot reach the XsdViewer server: ' + e.message); return; }
-    if (!resp.ok) { toast('Cannot open ' + location + ': ' + (json.error || resp.status)); continue; }
-    if (visited.has(json.path)) continue;
-    visited.add(json.path);
+    const { src, location } = queue.shift();
+    const f = await resolveLocation(src, location);
+    if (!f) { if (!missing.includes(location)) missing.push(location); continue; }
+    if (visited.has(f.key)) continue;
+    visited.add(f.key);
     const t = newTab();
-    if (!(await loadInto(t, json.name, json.text, json.path))) { closeTab(t); continue; }
+    if (!(await loadInto(t, f.name, f.text, f.path))) { closeTab(t); continue; }
+    t.rel = f.rel;
     opened.push(t);
     const id = findIn(t, name, kinds, ns);
     if (id) { activateTab(t); select(id); return; }
-    for (const l of locationsFor(t, ns)) queue.push({ base: t.path, location: l });
+    for (const l of locationsFor(t, ns)) queue.push({ src: t, location: l });
   }
-  toast(name + ' was not found in ' + (opened.length ? opened.map(t => t.fileName).join(', ') : locs.join(', ')));
+  const why = missing.length ? 'could not find ' + missing.join(', ') : name + ' was not found in ' + opened.map(t => t.fileName).join(', ');
+  askForFile(name, kinds, ns, why + ': choose the file declaring ' + name);
+}
+
+/** Asks the server for the path of a file opened in the browser (same name and content on disk); sets {@code st.path}. */
+async function locate(st, name, text) {
+  try {
+    const resp = await fetch('/api/locate?name=' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: text });
+    if (!resp.ok) return;
+    const { path } = await resp.json();
+    if (st.fileName !== name) return;   // the tab was reused meanwhile
+    st.path = path;
+    if (st === state) $('fileName').title = path;
+    renderTabs();
+  } catch (e) { /* server unreachable: reported when something else is fetched */ }
+}
+
+/** Identity of a loaded file for the visited set: server path or library path. */
+function tabKey(t) { return t.path || (t.rel ? 'lib:' + t.rel : null); }
+
+/** "a/b/../c.xsd" -> "a/c.xsd" */
+function normPath(p) {
+  const out = [];
+  for (const seg of p.replace(/\\/g, '/').split('/')) {
+    if (seg === '' || seg === '.') continue;
+    if (seg === '..') out.pop(); else out.push(seg);
+  }
+  return out.join('/');
+}
+
+/**
+ * Finds the schema at {@code location} (a schemaLocation of the file in tab {@code src}):
+ * in the opened folders first (relative to the file's own folder, else anywhere by path suffix),
+ * then through the server. Returns {key, name, text, path, rel} or null.
+ */
+async function resolveLocation(src, location) {
+  if (location.includes('://')) return null;
+  if (library.size) {
+    let rel = src.rel ? normPath(src.rel.replace(/[^/]*$/, '') + location) : null;
+    if (rel && !library.has(rel)) rel = null;
+    if (!rel) {
+      const suffix = normPath(location);
+      for (const k of library.keys()) if (k === suffix || k.endsWith('/' + suffix)) { rel = k; break; }
+    }
+    if (rel) return { key: 'lib:' + rel, name: library.get(rel).name, text: await library.get(rel).text(), path: null, rel };
+  }
+  try {
+    const resp = await fetch('/api/open?base=' + encodeURIComponent(src.path || '') + '&location=' + encodeURIComponent(location));
+    const json = await resp.json();
+    if (resp.ok) return { key: json.path, name: json.name, text: json.text, path: json.path, rel: null };
+  } catch (e) { toast('Cannot reach the XsdViewer server: ' + e.message); }
+  return null;
+}
+
+/** Registers the schema files of an opened / dropped folder. {@code rel} gives a File's path in that folder. */
+function addToLibrary(files, rel) {
+  let n = 0;
+  for (const f of files) {
+    const r = normPath(rel(f));
+    if (!/\.(xsd|xml)$/i.test(r)) continue;
+    library.set(r, f);
+    n++;
+  }
+  return n;
+}
+
+/** Files (recursively) of the entries of a drop, with their path relative to the drop. */
+async function filesOfEntries(entries) {
+  const out = [];
+  async function walk(entry) {
+    if (entry.isFile) {
+      const file = await new Promise((res, rej) => entry.file(res, rej));
+      out.push({ file, rel: entry.fullPath });
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader();
+      for (;;) {   // readEntries returns the children by batches
+        const batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+        if (!batch.length) break;
+        for (const e of batch) await walk(e);
+      }
+    }
+  }
+  for (const e of entries) await walk(e);
+  return out;
+}
+
+/** Opens the file chooser for the file declaring {@code name}; the jump completes when it is loaded. */
+function askForFile(name, kinds, ns, hint) {
+  pendingJump = { name, kinds, ns };
+  toast(hint);
+  $('fileInput').click();   // needs a recent user gesture: fine, this follows a click on the node
 }
 
 /** After a file is loaded by the user: jump to the declaration a link was waiting for, if it is in there. */
@@ -722,6 +814,14 @@ function wireEvents() {
   $('menuClose').addEventListener('click', () => { menu.classList.add('hidden'); closeFile(); });
   $('menuQuit').addEventListener('click', () => { menu.classList.add('hidden'); quit(); });
   $('fileInput').addEventListener('change', (e) => { openFiles([...e.target.files]); e.target.value = ''; });
+  $('fileInput').addEventListener('cancel', () => { pendingJump = null; });
+  $('menuOpenFolder').addEventListener('click', () => { menu.classList.add('hidden'); $('folderInput').click(); });
+  $('folderInput').addEventListener('change', (e) => {
+    const n = addToLibrary([...e.target.files], f => f.webkitRelativePath || f.name);
+    const folder = e.target.files[0] ? (e.target.files[0].webkitRelativePath.split('/')[0] || '') : '';
+    toast(n + ' schema file' + (n === 1 ? '' : 's') + ' of ' + folder + ' available for following links');
+    e.target.value = '';
+  });
 
   // Document tabs
   $('newTabBtn').addEventListener('click', () => activateTab(newTab()));
@@ -752,7 +852,18 @@ function wireEvents() {
   window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; $('dropOverlay').classList.add('hidden'); } });
   window.addEventListener('drop', (e) => {
     e.preventDefault(); dragDepth = 0; $('dropOverlay').classList.add('hidden');
-    if (e.dataTransfer && e.dataTransfer.files.length) openFiles([...e.dataTransfer.files]);
+    if (!e.dataTransfer) return;
+    // Dropped folders feed the library; dropped files open in tabs.
+    const entries = [...e.dataTransfer.items].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+    const dirs = entries.filter(en => en.isDirectory);
+    if (dirs.length) {
+      filesOfEntries(dirs).then(list => {
+        const n = addToLibrary(list.map(x => x.file), f => list.find(x => x.file === f).rel);
+        toast(n + ' schema file' + (n === 1 ? '' : 's') + ' of ' + dirs.map(d => d.name).join(', ') + ' available for following links');
+      });
+    }
+    const files = [...e.dataTransfer.files].filter((f, i) => !entries[i] || entries[i].isFile);
+    if (files.length) openFiles(files);
   });
 
   // Tabs

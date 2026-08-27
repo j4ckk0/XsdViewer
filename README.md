@@ -94,19 +94,28 @@ XSD built-in types (`xs:string`…) appear as grey dashed nodes (toggle with the
 
 ## Following links into other files
 
-Selecting an external node looks for its declaration:
+Selecting an external node looks for its declaration, without asking whenever the file
+can be found:
 
 1. in the other open tabs (same name and namespace);
 2. else in the file(s) named by the `xs:import` (matching namespace) / `xs:include`
-   / `xs:redefine` of the current file, when the tool knows where the current file is
-   on disk – the file given on the command line, and every file reached this way. The
-   server reads them relative to the current file, following their own imports and
-   includes, and opens each one in a new tab; the declaration is then selected there;
-3. else (file opened from the browser, so its folder is unknown) a message names the
-   file to open; once you open it, the link is followed.
+   / `xs:redefine` of the current file, following their own imports and includes;
+   each file found is opened in a new tab and the declaration selected there. A
+   location is looked up
+   - in the folders opened with **File ▸ Open folder…** or dropped on the window (all
+     their `.xsd` files are kept at hand, nothing is opened until needed), then
+   - on disk by the server, relative to the current file when it knows where it is: the
+     file given on the command line, every file reached from it, and files opened from
+     the browser that the server managed to locate (a browser hides the folder of a
+     file it opens, so the server looks for a file with the same name and content under
+     the folders it already knows and its working directory), else relative to those
+     folders;
+3. else a file chooser opens, with a message naming the wanted file; once you pick it,
+   the link is followed.
 
 Remote `schemaLocation`s (`http://…`) are never fetched. `samples/import/` is a
-schema split over four files to try this with: `./run.sh samples/import/order.xsd`.
+schema split over four files to try this with: `./run.sh samples/import/order.xsd`,
+or start the tool from the project folder and open `order.xsd` from the browser.
 
 ## Layout
 

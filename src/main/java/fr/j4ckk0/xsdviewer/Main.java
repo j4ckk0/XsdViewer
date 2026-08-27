@@ -10,7 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.net.URLDecoder;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,6 +61,7 @@ public final class Main {
         server.createContext("/api/parse", Main::handleParse);
         server.createContext("/api/initial", Main::handleInitial);
         server.createContext("/api/open", Main::handleOpen);
+        server.createContext("/api/locate", Main::handleLocate);
         server.createContext("/api/quit", Main::handleQuit);
         server.createContext("/", Main::handleStatic);
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
@@ -115,32 +118,107 @@ public final class Main {
 
     /**
      * {@code GET /api/open?base=<path>&location=<schemaLocation>}: the schema at {@code location},
-     * resolved relative to {@code base}, so the page can follow a link into an imported / included
-     * file. {@code base} must be a file this server has already served (the initial file or one
-     * opened this way); remote locations (http://...) are refused: the tool never goes on the network.
+     * so the page can follow a link into an imported / included file. The location is tried
+     * relative to the directory of {@code base} (when it is a file this server already served),
+     * then to the directories of all the files it served, then to the working directory: a file
+     * opened from the browser has no known path, but its imports usually sit next to something
+     * the server knows. Remote locations (http://...) are refused: the tool never goes on the network.
      */
     private static void handleOpen(HttpExchange ex) throws IOException {
         Map<String, String> q = query(ex.getRequestURI().getRawQuery());
         String base = q.getOrDefault("base", ""), location = q.getOrDefault("location", "");
-        if (base.isEmpty() || location.isEmpty()) {
-            send(ex, 400, "application/json", "{\"error\":\"base and location expected\"}");
+        if (location.isEmpty()) {
+            send(ex, 400, "application/json", "{\"error\":\"location expected\"}");
             return;
         }
         if (location.contains("://")) {
             send(ex, 400, "application/json", "{\"error\":" + Json.string("remote schemaLocation not supported: " + location) + "}");
             return;
         }
-        Path basePath = Path.of(base).toAbsolutePath().normalize();
-        if (!knownFiles.contains(basePath)) {
-            send(ex, 403, "application/json", "{\"error\":\"unknown base file\"}");
+        String rel = location.replace('\\', '/');
+        List<Path> dirs = new ArrayList<>();
+        if (!base.isEmpty()) {
+            Path basePath = Path.of(base).toAbsolutePath().normalize();
+            if (knownFiles.contains(basePath)) dirs.add(basePath.getParent());
+        }
+        for (Path f : knownFiles) dirs.add(f.getParent());
+        dirs.add(Path.of("").toAbsolutePath());
+        for (Path dir : dirs) {
+            if (dir == null) continue;
+            Path target = dir.resolve(rel).normalize();
+            if (Files.isRegularFile(target)) {
+                sendFile(ex, target);
+                return;
+            }
+        }
+        send(ex, 404, "application/json", "{\"error\":" + Json.string("file not found: " + location) + "}");
+    }
+
+    /**
+     * {@code POST /api/locate?name=<file name>}, body = the file's text: finds where a file the
+     * user opened in the browser (which hides its folder) is on disk, so that its imports can be
+     * followed. Looks for a file with that name and the same content under the directories of the
+     * files already served and the working directory (bounded walk), answering {@code {"path"}} or 404.
+     */
+    private static void handleLocate(HttpExchange ex) throws IOException {
+        if (!"POST".equals(ex.getRequestMethod())) {
+            send(ex, 405, "text/plain", "POST expected");
             return;
         }
-        Path target = basePath.resolveSibling(location.replace('\\', '/')).normalize();
-        if (!Files.isRegularFile(target)) {
-            send(ex, 404, "application/json", "{\"error\":" + Json.string("file not found: " + target) + "}");
+        String name = query(ex.getRequestURI().getRawQuery()).getOrDefault("name", "");
+        String text;
+        try (InputStream in = ex.getRequestBody()) {
+            text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        if (name.isEmpty() || name.contains("/") || name.contains("\\")) {
+            send(ex, 400, "application/json", "{\"error\":\"file name expected\"}");
             return;
         }
-        sendFile(ex, target);
+        List<Path> roots = new ArrayList<>();
+        for (Path f : knownFiles) if (f.getParent() != null && !roots.contains(f.getParent())) roots.add(f.getParent());
+        roots.add(Path.of("").toAbsolutePath());
+        String wanted = canonical(text);
+        for (Path root : roots) {
+            Path found = findFile(root, name, wanted);
+            if (found != null) {
+                knownFiles.add(found);
+                send(ex, 200, "application/json", "{\"path\":" + Json.string(found.toString()) + "}");
+                return;
+            }
+        }
+        send(ex, 404, "application/json", "{\"error\":" + Json.string("no file " + name + " with this content found under " + roots) + "}");
+    }
+
+    private static final int LOCATE_MAX_DEPTH = 8, LOCATE_MAX_ENTRIES = 50_000;
+
+    /** A regular file named {@code name} whose content is {@code wanted}, under {@code root}; hidden directories are skipped. */
+    private static Path findFile(Path root, String name, String wanted) {
+        int[] budget = { LOCATE_MAX_ENTRIES };
+        try (var walk = Files.walk(root, LOCATE_MAX_DEPTH)) {
+            var it = walk.filter(p -> {
+                if (--budget[0] < 0) return false;
+                return p.getFileName() != null && p.getFileName().toString().equals(name)
+                        && !hidden(root, p) && Files.isRegularFile(p);
+            }).iterator();
+            while (it.hasNext()) {
+                Path p = it.next();
+                try {
+                    if (canonical(Files.readString(p, StandardCharsets.UTF_8)).equals(wanted)) return p.toAbsolutePath().normalize();
+                } catch (IOException | java.io.UncheckedIOException e) { /* unreadable or not UTF-8: not this one */ }
+            }
+        } catch (IOException | java.io.UncheckedIOException e) { /* unreadable directory */ }
+        return null;
+    }
+
+    private static boolean hidden(Path root, Path p) {
+        for (Path part : root.relativize(p)) if (part.toString().startsWith(".")) return true;
+        return false;
+    }
+
+    /** Text without BOM and with LF line endings, so that a file compares equal however it was read. */
+    private static String canonical(String text) {
+        if (text.startsWith("\uFEFF")) text = text.substring(1);
+        return text.replace("\r\n", "\n");
     }
 
     /** {@code POST /api/quit}: File ▸ Quit in the page. Answers, then stops the server and exits. */

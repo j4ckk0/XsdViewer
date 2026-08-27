@@ -91,12 +91,25 @@ first searches the open tabs for a non-external node with the same kind, name an
 (a `type:X` placeholder matches `complexType:X` or `simpleType:X`; a declaration with an
 empty namespace matches too, for chameleon includes). Failing that it lists the
 `schemaLocation`s of the current file that can hold the namespace (`xs:import` with that
-namespace; `xs:include` / `xs:redefine` when it is the file's own namespace) and, if the
-current file has a server-side `path`, walks them breadth-first through `GET /api/open`,
-opening each file in a new tab and following that file's own imports / includes, with a
-visited set on paths. Files opened from the browser have no path (the browser does not reveal
-it), so the user is asked to open the named file; `pendingJump` remembers what was wanted
-and `checkPendingJump()` completes the jump when a file declaring it is loaded.
+namespace; `xs:include` / `xs:redefine` when it is the file's own namespace) and walks them
+breadth-first, opening each file found in a new tab and following that file's own imports /
+includes, with a visited set. `resolveLocation()` finds a location, in order:
+
+1. in the `library` – the `File`s of the folders opened with File ▸ Open folder…
+   (`<input webkitdirectory>`) or dropped on the window (`webkitGetAsEntry()` + recursive
+   `readEntries`), keyed by relative path; the location is resolved against the folder of the
+   referencing file when it came from the library, else matched by path suffix;
+2. through `GET /api/open`, which tries the location relative to the referencing file's
+   directory (when it is a file the server served), then to the directories of all served
+   files, then to the working directory.
+
+Files opened from the browser come without their folder, so `loadInto()` starts
+`POST /api/locate` in the background: the server looks for a file with that name and the same
+content (BOM and CRLF ignored) under the directories it knows and its working directory
+(bounded walk, hidden directories skipped) and returns its path, which then makes `/api/open`
+work for the file's imports. Only when all of that fails does `askForFile()` open the file
+chooser with a toast naming the wanted file; `pendingJump` remembers what was wanted and
+`checkPendingJump()` completes the jump when a file declaring it is loaded.
 
 #### PNG export
 
@@ -133,7 +146,8 @@ node. The selected node's line is highlighted and scrolled into view.
 | `POST /api/parse` | body: the XSD text (UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema`, …). |
 | `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
 | `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit). |
-| `GET /api/open?base=…&location=…` | query: `base` = server path of the referencing file, `location` = its `schemaLocation` | `200` + `{"name", "path", "text"}` of `location` resolved against `base`'s directory; `403` if `base` is not a file the server already served (`/api/initial` or a previous `/api/open`), `400` for a remote location (`://`), `404` if the file does not exist. |
+| `GET /api/open?base=…&location=…` | query: `base` = server path of the referencing file (may be empty), `location` = its `schemaLocation` | `200` + `{"name", "path", "text"}` of `location` resolved against `base`'s directory (if `base` is a file the server already served), else against the directories of all served files, else against the working directory; `400` for a remote location (`://`), `404` if not found. |
+| `POST /api/locate?name=…` | body: the text of a file opened in the browser | `200` + `{"path"}` of a file with that name and content under the served files' directories or the working directory (depth ≤ 8, ≤ 50 000 entries, hidden directories skipped), `404` otherwise. |
 
 The server binds to `127.0.0.1` unless `--host` says otherwise: it is a local tool, not a
 service, and it parses whatever is posted to it.
