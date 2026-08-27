@@ -889,7 +889,9 @@ function wireEvents() {
   // Graph nodes
   $('graphCanvas').addEventListener('click', (e) => {
     const g = e.target.closest('.node');
-    if (g && g.dataset.id !== state.selected) select(g.dataset.id);
+    if (!g) return;
+    if (g.dataset.id !== state.selected) select(g.dataset.id);
+    else if (state.nodes.get(g.dataset.id).kind === 'external') followExternal(state.nodes.get(g.dataset.id));  // retry (e.g. the file chooser was cancelled)
   });
   window.addEventListener('resize', () => { if (state.model && state.view === 'graph') renderGraph(); });
 
