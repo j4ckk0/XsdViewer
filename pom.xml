@@ -28,6 +28,15 @@
 
   <build>
     <finalName>xsdviewer</finalName>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <excludes>
+          <!-- JRE archives used by the dist profile, not part of the jar -->
+          <exclude>embedded/**</exclude>
+        </excludes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -53,4 +62,88 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <!--
+      mvn package -Pdist
+      Builds the self-contained distributions, each with a bundled JRE
+      (from src/main/resources/embedded/jre) and a launcher script:
+        target/xsdviewer-<version>-windows.zip     xsdviewer.bat
+        target/xsdviewer-<version>-linux.tar.gz    xsdviewer.sh
+    -->
+    <profile>
+      <id>dist</id>
+      <properties>
+        <jre.archives>${project.basedir}/src/main/resources/embedded/jre</jre.archives>
+        <jre.unpacked>${project.build.directory}/jre</jre.unpacked>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <id>unpack-jre</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <fail message="no *windows*.zip in ${jre.archives} (see README: Packaging)">
+                      <condition>
+                        <resourcecount count="0">
+                          <fileset dir="${jre.archives}" includes="*windows*.zip" erroronmissingdir="false"/>
+                        </resourcecount>
+                      </condition>
+                    </fail>
+                    <fail message="no *linux*.tar.gz in ${jre.archives} (see README: Packaging)">
+                      <condition>
+                        <resourcecount count="0">
+                          <fileset dir="${jre.archives}" includes="*linux*.tar.gz" erroronmissingdir="false"/>
+                        </resourcecount>
+                      </condition>
+                    </fail>
+                    <!-- cutdirsmapper strips the archives' top-level "jdk-xx-jre/" directory -->
+                    <unzip dest="${jre.unpacked}/windows">
+                      <fileset dir="${jre.archives}" includes="*windows*.zip"/>
+                      <cutdirsmapper dirs="1"/>
+                    </unzip>
+                    <untar dest="${jre.unpacked}/linux" compression="gzip">
+                      <fileset dir="${jre.archives}" includes="*linux*.tar.gz"/>
+                      <cutdirsmapper dirs="1"/>
+                    </untar>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.7.1</version>
+            <executions>
+              <execution>
+                <id>dist</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <configuration>
+                  <finalName>${project.artifactId}-${project.version}</finalName>
+                  <appendAssemblyId>true</appendAssemblyId>
+                  <descriptors>
+                    <descriptor>src/assembly/windows.xml</descriptor>
+                    <descriptor>src/assembly/linux.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

@@ -151,21 +151,36 @@ Build and test:
 | maven-jar-plugin | 3.4.1 | sets `Main-Class: fr.j4ckk0.xsdviewer.Main` (no shading needed: no dependencies) |
 | maven-surefire-plugin | 3.2.5 | runs the tests |
 | JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, run against `samples/purchaseOrder.xsd` |
-| `run.sh` / `run.cmd` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
+| `run.sh` / `run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
+| `build.sh` / `build.bat` | – | `mvn package` |
+| `package.sh` / `package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
+| maven-antrun-plugin | 3.1.0 | `dist` profile only: unpacks the JRE archives into `target/jre/{windows,linux}` |
+| maven-assembly-plugin | 3.7.1 | `dist` profile only: `src/assembly/{windows,linux}.xml` → zip / tar.gz with the JRE, the jar, a launcher, `samples/` and `README.md` |
+
+`mvn package -Pdist` produces `target/xsdviewer-<version>-windows.zip` and
+`-linux.tar.gz`. The JRE archives under `src/main/resources/embedded/jre/` are
+git-ignored (downloaded by hand, see README) and excluded from the jar's resources;
+the antrun step fails when one is missing. The Linux descriptor restores the
+executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's
+`untar` drops.
 
 ## Repository layout
 
 ```
 XsdViewer/
 ├── pom.xml
-├── run.sh                        build if needed + run (Linux/macOS)
-├── run.cmd                       build if needed + run (Windows)
+├── run.sh, run.bat               build if needed + run
+├── build.sh, build.bat           mvn package
+├── package.sh, package.bat       mvn package -Pdist  (zip / tar.gz with bundled JRE)
 ├── README.md                     usage
 ├── architecture.md               this file
 ├── samples/purchaseOrder.xsd     small schema exercising every kind of link
 └── src/
+    ├── assembly/                        windows.xml, linux.xml (dist profile)
+    ├── dist/                            xsdviewer.bat, xsdviewer.sh launchers
     ├── main/java/fr/j4ckk0/xsdviewer/   Main, XsdParser, Model, Json
     ├── main/resources/web/              index.html, app.js, style.css
+    ├── main/resources/embedded/jre/     JRE archives bundled by the dist profile (git-ignored)
     └── test/java/fr/j4ckk0/xsdviewer/   XsdParserTest
 ```
 

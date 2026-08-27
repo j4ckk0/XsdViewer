@@ -5,3 +5,6 @@ target/
 .settings/
 .classpath
 .project
+
+# JRE archives bundled by "mvn package -Pdist" (see README: Packaging)
+src/main/resources/embedded/jre/

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Linux distribution: tar.gz with the bundled JRE and a .sh launcher. -->
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 http://maven.apache.org/xsd/assembly-2.2.0.xsd">
+  <id>linux</id>
+  <formats>
+    <format>tar.gz</format>
+  </formats>
+  <baseDirectory>${project.artifactId}-${project.version}</baseDirectory>
+
+  <files>
+    <file>
+      <source>${project.build.directory}/${project.build.finalName}.jar</source>
+      <destName>xsdviewer.jar</destName>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <source>src/dist/xsdviewer.sh</source>
+      <lineEnding>unix</lineEnding>
+      <fileMode>0755</fileMode>
+    </file>
+    <file>
+      <source>README.md</source>
+      <lineEnding>unix</lineEnding>
+      <fileMode>0644</fileMode>
+    </file>
+  </files>
+
+  <fileSets>
+    <!-- Ant's untar does not keep permissions: restore the executable bits here. -->
+    <fileSet>
+      <directory>${project.build.directory}/jre/linux</directory>
+      <outputDirectory>jre</outputDirectory>
+      <includes>
+        <include>bin/**</include>
+        <include>lib/jspawnhelper</include>
+        <include>lib/jexec</include>
+      </includes>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+    <fileSet>
+      <directory>${project.build.directory}/jre/linux</directory>
+      <outputDirectory>jre</outputDirectory>
+      <excludes>
+        <exclude>bin/**</exclude>
+        <exclude>lib/jspawnhelper</exclude>
+        <exclude>lib/jexec</exclude>
+      </excludes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+    <fileSet>
+      <directory>samples</directory>
+      <outputDirectory>samples</outputDirectory>
+      <lineEnding>unix</lineEnding>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+  </fileSets>
+</assembly>

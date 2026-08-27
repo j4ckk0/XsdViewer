@@ -20,10 +20,10 @@ Requires Java 21 and Maven.
 
 ```bash
 ./run.sh                # builds target/xsdviewer.jar if needed, then starts the tool
-run.cmd                 # same, on Windows
+run.bat                 # same, on Windows
 ```
 
-or by hand:
+To only build the jar (`./build.sh` / `build.bat`, i.e. `mvn package`), or by hand:
 
 ```bash
 mvn package
@@ -34,11 +34,39 @@ The server listens on <http://127.0.0.1:8080/> and opens it in the default brows
 
 ```
 ./run.sh [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Linux/macOS
-run.cmd  [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Windows
+run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Windows
 ```
 
 Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
 is a small schema exercising every kind of link.
+
+## Packaging
+
+```bash
+./package.sh            # or package.bat on Windows; runs: mvn package -Pdist
+```
+
+builds two self-contained distributions that need no Java installed, each with a
+bundled JRE 21 and a launcher taking the same options as above:
+
+| Archive | Launcher |
+|---|---|
+| `target/xsdviewer-<version>-windows.zip` | `xsdviewer.bat` |
+| `target/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
+
+The JREs are not tracked in git: before packaging, download the Temurin JRE 21
+archives from <https://adoptium.net/temurin/releases/> and put them in
+`src/main/resources/embedded/jre/`:
+
+```
+src/main/resources/embedded/jre/
+├── OpenJDK21U-jre_x64_windows_hotspot_<version>.zip
+└── OpenJDK21U-jre_x64_linux_hotspot_<version>.tar.gz
+```
+
+The build picks the `*windows*.zip` and `*linux*.tar.gz` found there, so upgrading
+is just replacing the archives. Extra arguments (e.g. `-DskipTests`) are passed to
+`mvn` by all four scripts.
 
 ## What counts as a link
 
