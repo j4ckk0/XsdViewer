@@ -125,8 +125,11 @@ within canvas size limits). `canvas.toBlob()` is then saved through a download l
 An *ego graph* of the selected node: the node in the centre, every neighbour that it links to
 in a column on the right, every neighbour that links to it in a column on the left. Parallel
 edges to one neighbour are merged into one line whose label lists the reasons
-(`shipTo, billTo`). A self-reference (recursive type) is drawn as a loop above the
-centre. The SVG is generated as a string and inserted with `innerHTML`; there is no layout
+(`shipTo, billTo`). With the **2 levels** toggle (remembered in `localStorage`) a fourth
+column shows, for every level-1 target, its own targets as a tree: a level-1 node spans as
+many rows as it has children and sits in the middle of them; a node reached by several
+parents is drawn once per parent. A self-reference (recursive type) is drawn as a loop above
+the centre. The SVG is generated as a string and inserted with `innerHTML`; there is no layout
 library because the layout is two columns and a cubic Bézier per edge. Clicking a node calls
 `select()` and pushes the previous centre on the history stack.
 

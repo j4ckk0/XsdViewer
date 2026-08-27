@@ -7,6 +7,8 @@ A Java server parses the schema and serves a web page offering two views:
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
   sits in the middle, what it links to is on the right, what uses it is on the left.
+  **2 levels** adds a further column: what each linked object links to in turn, drawn
+  as a tree (e.g. complexType → element type → its own types and attributes).
   Click any node to make it the centre; **← Back** (or Alt+←) returns to the previous one.
 - **Text** – the schema source with line numbers and syntax colouring. The selected
   object's declaration is highlighted; click a highlighted line number to select that

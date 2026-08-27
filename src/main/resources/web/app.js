@@ -440,7 +440,10 @@ function renderGraph() {
   if (!state.selected) { canvas.innerHTML = ''; return; }
   const center = state.nodes.get(state.selected);
   const showBuiltins = $('showBuiltins').checked;
+  const depth = $('twoLevels').checked ? 2 : 1;
   $('graphTitle').textContent = center.kind + ' ' + center.name;
+  const visible = (n) => n && (showBuiltins || n.kind !== 'builtin');
+  const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name);
 
   // Group the level-1 links by neighbour, merging the labels of parallel edges.
   const neigh = new Map(); // id -> { out: [labels], in: [labels] }
@@ -457,17 +460,39 @@ function renderGraph() {
   const right = [], left = [];
   for (const [id, l] of neigh) {
     const n = state.nodes.get(id);
-    if (!n || (!showBuiltins && n.kind === 'builtin')) continue;
-    (l.out.length ? right : left).push({ n, labels: l });
+    if (!visible(n)) continue;
+    (l.out.length ? right : left).push({ n, labels: l, children: [] });
   }
-  const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name);
   right.sort(byName); left.sort(byName);
 
-  const rows = Math.max(right.length, left.length, 1);
-  const W = Math.max(canvas.clientWidth, 3 * NODE_W + 2 * MIN_GAP + 2 * MARGIN);
+  // Level 2: what each level-1 target links to, drawn as a tree (a node may appear under several parents).
+  if (depth === 2) {
+    for (const r of right) {
+      const kids = new Map(); // id -> [labels]
+      for (const e of state.outEdges.get(r.n.id) || []) {
+        if (e.to === r.n.id) continue;
+        if (!kids.has(e.to)) kids.set(e.to, []);
+        kids.get(e.to).push(e.label);
+      }
+      for (const [id, ls] of kids) {
+        const n = state.nodes.get(id);
+        if (visible(n)) r.children.push({ n, labels: ls });
+      }
+      r.children.sort(byName);
+    }
+  }
+  const span = (r) => Math.max(1, r.children.length);
+  const rightRows = right.reduce((sum, r) => sum + span(r), 0);
+
+  // Columns: incoming | centre | level 1 | (level 2); spread over the canvas width when it is wider than needed.
+  const cols = depth + 2;
+  const W = Math.max(canvas.clientWidth, cols * NODE_W + (cols - 1) * MIN_GAP + 2 * MARGIN);
+  const gap = (W - 2 * MARGIN - cols * NODE_W) / (cols - 1);
+  const colX = (c) => MARGIN + c * (NODE_W + gap);
+  const rows = Math.max(rightRows, left.length, 1);
   const H = Math.max(canvas.clientHeight, rows * ROW + 2 * MARGIN + (selfLabels.length ? 40 : 0));
-  const cx = W / 2, cy = H / 2;
-  const xLeft = MARGIN, xRight = W - MARGIN - NODE_W;
+  const cy = H / 2;
+  const cx = colX(1) + NODE_W / 2, xLeft = colX(0), xR1 = colX(2), xR2 = depth === 2 ? colX(3) : 0;
   const yOf = (i, count) => cy - ((count - 1) * ROW) / 2 + i * ROW;
 
   let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
@@ -476,14 +501,23 @@ function renderGraph() {
 
   const edges = [], labels = [], nodes = [];
 
-  // outgoing: centre -> right column
-  right.forEach((r, i) => {
-    const y = yOf(i, right.length);
-    const x1 = cx + NODE_W / 2, y1 = cy, x2 = xRight, y2 = y;
+  // outgoing: centre -> level 1 (-> level 2)
+  let row = 0;
+  for (const r of right) {
+    const first = yOf(row, rightRows);
+    const y = first + ((span(r) - 1) * ROW) / 2;   // a parent sits in the middle of its children
+    const x1 = cx + NODE_W / 2, y1 = cy, x2 = xR1, y2 = y;
     edges.push(curve(x1, y1, x2, y2));
     labels.push(label(x1, y1, x2, y2, 0.72, r.labels.out.join(', ')));
-    nodes.push(nodeSvg(r.n, xRight, y - NODE_H / 2, false));
-  });
+    nodes.push(nodeSvg(r.n, xR1, y - NODE_H / 2, false));
+    r.children.forEach((c, k) => {
+      const yc = first + k * ROW;
+      edges.push(curve(xR1 + NODE_W, y, xR2, yc));
+      labels.push(label(xR1 + NODE_W, y, xR2, yc, 0.55, c.labels.join(', ')));
+      nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false));
+    });
+    row += span(r);
+  }
   // incoming: left column -> centre
   left.forEach((l, i) => {
     const y = yOf(i, left.length);
@@ -504,9 +538,11 @@ function renderGraph() {
   svg += edges.join('') + labels.join('') + nodes.join('') + '</svg>';
   canvas.innerHTML = svg;
 
-  // keep the centre in view
+  // keep the centre in view; with two levels, show the outgoing tree (never scrolling past the centre node)
   canvas.scrollTop = Math.max(0, cy - canvas.clientHeight / 2);
-  canvas.scrollLeft = Math.max(0, cx - canvas.clientWidth / 2);
+  canvas.scrollLeft = depth === 2
+    ? Math.max(0, Math.min(xR2 + NODE_W + MARGIN - canvas.clientWidth, cx - NODE_W / 2 - MARGIN))
+    : Math.max(0, cx - canvas.clientWidth / 2);
 }
 
 function curve(x1, y1, x2, y2) {
@@ -869,6 +905,11 @@ function wireEvents() {
   // Tabs
   document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => showView(t.dataset.view)));
   $('showBuiltins').addEventListener('change', renderGraph);
+  try { $('twoLevels').checked = localStorage.getItem('xsdviewer.twoLevels') === '1'; } catch (e) { /* storage unavailable */ }
+  $('twoLevels').addEventListener('change', (e) => {
+    try { localStorage.setItem('xsdviewer.twoLevels', e.target.checked ? '1' : '0'); } catch (e2) { /* ignore */ }
+    renderGraph();
+  });
   $('backBtn').addEventListener('click', goBack);
   $('exportBtn').addEventListener('click', exportPng);
 
