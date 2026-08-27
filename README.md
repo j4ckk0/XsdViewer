@@ -20,6 +20,7 @@ Requires Java 21 and Maven.
 
 ```bash
 ./run.sh                # builds target/xsdviewer.jar if needed, then starts the tool
+run.cmd                 # same, on Windows
 ```
 
 or by hand:
@@ -32,7 +33,8 @@ java -jar target/xsdviewer.jar
 The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
 
 ```
-./run.sh [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]
+./run.sh [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Linux/macOS
+run.cmd  [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Windows
 ```
 
 Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`

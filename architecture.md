@@ -151,14 +151,15 @@ Build and test:
 | maven-jar-plugin | 3.4.1 | sets `Main-Class: fr.j4ckk0.xsdviewer.Main` (no shading needed: no dependencies) |
 | maven-surefire-plugin | 3.2.5 | runs the tests |
 | JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, run against `samples/purchaseOrder.xsd` |
-| `run.sh` | – | rebuilds the jar when sources are newer, then runs it |
+| `run.sh` / `run.cmd` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
 
 ## Repository layout
 
 ```
 XsdViewer/
 ├── pom.xml
-├── run.sh                        build if needed + run
+├── run.sh                        build if needed + run (Linux/macOS)
+├── run.cmd                       build if needed + run (Windows)
 ├── README.md                     usage
 ├── architecture.md               this file
 ├── samples/purchaseOrder.xsd     small schema exercising every kind of link
