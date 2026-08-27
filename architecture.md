@@ -126,12 +126,15 @@ within canvas size limits). `canvas.toBlob()` is then saved through a download l
 An *ego graph* of the selected node: the node in the centre, every neighbour that it links to
 in a column on the right, every neighbour that links to it in a column on the left. Parallel
 edges to one neighbour are merged into one line whose label lists the reasons
-(`shipTo, billTo`). With the **2 levels** toggle (remembered in `localStorage`) a fourth
-column shows, for every level-1 target, its own targets as a tree: a level-1 node spans as
-many rows as it has children and sits in the middle of them; a node reached by several
-parents is drawn once per parent. A level-1 `external` node declared in another open tab
-(`findInTabs()`) is drawn with its real kind and file name and expanded from that tab's
-model; its children carry `data-tab`, and clicking one activates that tab before selecting. A self-reference (recursive type) is drawn as a loop above
+(`shipTo, billTo`). With the **2 levels** toggle (remembered in `localStorage`) two more
+columns show, for every level-1 target its own targets, and for every level-1 user its own
+users, as trees: a level-1 node spans as many rows as it has children and sits in the middle
+of them; a node reached by several parents is drawn once per parent. The other open tabs
+take part: a level-1 `external` target declared in another tab (`findInTabs()`) is drawn
+with its real kind and file name and expanded from that tab's model, and nodes of other tabs
+that reference the centre or a level-1 user through an external placeholder
+(`usersInOtherTabs()`) appear on the left. Nodes of another tab carry `data-tab`, and
+clicking one activates that tab before selecting. A self-reference (recursive type) is drawn as a loop above
 the centre. The SVG is generated as a string and inserted with `innerHTML`; there is no layout
 library because the layout is two columns and a cubic Bézier per edge. Clicking a node calls
 `select()` and pushes the previous centre on the history stack.

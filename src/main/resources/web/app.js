@@ -219,6 +219,24 @@ function findIn(t, name, kinds, ns) {
   return null;
 }
 
+/** The nodes of the other open tabs that link to {@code n} (declared in tab {@code home}), where it is an external placeholder: [{n, labels, tab}]. */
+function usersInOtherTabs(n, home) {
+  const extId = (n.kind === 'complexType' || n.kind === 'simpleType' ? 'type:' : n.kind + ':') + n.name;
+  const out = [];
+  for (const t of tabs) {
+    if (t === home || !t.model) continue;
+    const ext = t.nodes.get(extId);
+    if (!ext || ext.kind !== 'external' || !(ext.ns === (n.ns || '') || ext.ns === '' || !n.ns)) continue;
+    const users = new Map();
+    for (const e of t.inEdges.get(extId) || []) {
+      if (!users.has(e.from)) users.set(e.from, []);
+      users.get(e.from).push(e.label);
+    }
+    for (const [id, labels] of users) { const u = t.nodes.get(id); if (u) out.push({ n: u, labels, tab: t }); }
+  }
+  return out;
+}
+
 /** The declaration of {@code name} in any open tab (except {@code skip}): {tab, id} or null. */
 function findInTabs(name, kinds, ns, skip) {
   for (const t of tabs) {
@@ -460,6 +478,7 @@ function renderGraph() {
   $('graphTitle').textContent = center.kind + ' ' + center.name;
   const visible = (n) => n && (showBuiltins || n.kind !== 'builtin');
   const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name);
+  const fileKind = (n, t) => ({ kindText: n.kind + ' · ' + t.fileName });
 
   // Group the level-1 links by neighbour, merging the labels of parallel edges.
   const neigh = new Map(); // id -> { out: [labels], in: [labels] }
@@ -477,13 +496,17 @@ function renderGraph() {
   for (const [id, l] of neigh) {
     const n = state.nodes.get(id);
     if (!visible(n)) continue;
-    (l.out.length ? right : left).push({ n, labels: l, children: [] });
+    (l.out.length ? right : left).push({ n, labels: l, tab: null, children: [], parents: [] });
+  }
+  // Users of the centre in the other open tabs, where it appears as an external placeholder.
+  for (const u of usersInOtherTabs(center, state)) {
+    if (visible(u.n)) left.push({ n: u.n, labels: { in: u.labels, out: [] }, tab: u.tab, children: [], parents: [] });
   }
   right.sort(byName); left.sort(byName);
 
-  // Level 2: what each level-1 target links to, drawn as a tree (a node may appear under several parents).
-  // An external target declared in another open tab is expanded from that tab's model.
+  // Level 2, drawn as trees (a node may appear under several parents).
   if (depth === 2) {
+    // right: what each level-1 target links to; an external target declared in another tab is expanded from there
     for (const r of right) {
       let src = state, id = r.n.id;
       if (r.n.kind === 'external') {
@@ -504,20 +527,42 @@ function renderGraph() {
       }
       r.children.sort(byName);
     }
+    // left: what uses each level-1 user, in its own file and in the other open tabs
+    for (const l of left) {
+      const src = l.tab || state;
+      const par = new Map();
+      for (const e of src.inEdges.get(l.n.id) || []) {
+        if (e.from === l.n.id) continue;
+        if (!par.has(e.from)) par.set(e.from, []);
+        par.get(e.from).push(e.label);
+      }
+      for (const [pid, ls] of par) {
+        const n = src.nodes.get(pid);
+        if (visible(n)) l.parents.push({ n, labels: ls, tab: l.tab });
+      }
+      if (l.n.kind !== 'external') {
+        for (const u of usersInOtherTabs(l.n, src)) if (visible(u.n)) l.parents.push({ n: u.n, labels: u.labels, tab: u.tab });
+      }
+      l.parents.sort(byName);
+    }
   }
-  const span = (r) => Math.max(1, r.children.length);
-  const rightRows = right.reduce((sum, r) => sum + span(r), 0);
+  const spanR = (r) => Math.max(1, r.children.length);
+  const spanL = (l) => Math.max(1, l.parents.length);
+  const rightRows = right.reduce((sum, r) => sum + spanR(r), 0);
+  const leftRows = left.reduce((sum, l) => sum + spanL(l), 0);
 
-  // Columns: incoming | centre | level 1 | (level 2); spread over the canvas width when it is wider than needed.
-  const cols = depth + 2;
+  // Columns: (level 2 in) | incoming | centre | level 1 out | (level 2 out); spread over the canvas width when wider than needed.
+  const cols = 2 * depth + 1, ci = depth;   // ci: index of the centre column
   const W = Math.max(canvas.clientWidth, cols * NODE_W + (cols - 1) * MIN_GAP + 2 * MARGIN);
   const gap = (W - 2 * MARGIN - cols * NODE_W) / (cols - 1);
   const colX = (c) => MARGIN + c * (NODE_W + gap);
-  const rows = Math.max(rightRows, left.length, 1);
+  const rows = Math.max(rightRows, leftRows, 1);
   const H = Math.max(canvas.clientHeight, rows * ROW + 2 * MARGIN + (selfLabels.length ? 40 : 0));
   const cy = H / 2;
-  const cx = colX(1) + NODE_W / 2, xLeft = colX(0), xR1 = colX(2), xR2 = depth === 2 ? colX(3) : 0;
+  const cx = colX(ci) + NODE_W / 2, xLeft = colX(ci - 1), xR1 = colX(ci + 1);
+  const xL2 = depth === 2 ? colX(0) : 0, xR2 = depth === 2 ? colX(ci + 2) : 0;
   const yOf = (i, count) => cy - ((count - 1) * ROW) / 2 + i * ROW;
+  const tabOpt = (t, n) => t ? Object.assign({ tab: tabs.indexOf(t) }, fileKind(n, t)) : null;
 
   let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
     + '<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
@@ -529,29 +574,38 @@ function renderGraph() {
   let row = 0;
   for (const r of right) {
     const first = yOf(row, rightRows);
-    const y = first + ((span(r) - 1) * ROW) / 2;   // a parent sits in the middle of its children
+    const y = first + ((spanR(r) - 1) * ROW) / 2;   // a parent sits in the middle of its children
     const x1 = cx + NODE_W / 2, y1 = cy, x2 = xR1, y2 = y;
     edges.push(curve(x1, y1, x2, y2));
     labels.push(label(x1, y1, x2, y2, 0.72, r.labels.out.join(', ')));
     nodes.push(r.resolved
-      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, { id: r.n.id, kindText: r.resolved.n.kind + ' · ' + r.resolved.tab.fileName })
+      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id }, fileKind(r.resolved.n, r.resolved.tab)))
       : nodeSvg(r.n, xR1, y - NODE_H / 2, false));
     r.children.forEach((c, k) => {
       const yc = first + k * ROW;
       edges.push(curve(xR1 + NODE_W, y, xR2, yc));
       labels.push(label(xR1 + NODE_W, y, xR2, yc, 0.55, c.labels.join(', ')));
-      nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, c.tab ? { tab: tabs.indexOf(c.tab) } : null));
+      nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, tabOpt(c.tab, c.n)));
     });
-    row += span(r);
+    row += spanR(r);
   }
-  // incoming: left column -> centre
-  left.forEach((l, i) => {
-    const y = yOf(i, left.length);
+  // incoming: (level 2 ->) level 1 -> centre
+  row = 0;
+  for (const l of left) {
+    const first = yOf(row, leftRows);
+    const y = first + ((spanL(l) - 1) * ROW) / 2;
     const x1 = xLeft + NODE_W, y1 = y, x2 = cx - NODE_W / 2, y2 = cy;
     edges.push(curve(x1, y1, x2, y2));
     labels.push(label(x1, y1, x2, y2, 0.28, l.labels.in.join(', ')));
-    nodes.push(nodeSvg(l.n, xLeft, y - NODE_H / 2, false));
-  });
+    nodes.push(nodeSvg(l.n, xLeft, y - NODE_H / 2, false, tabOpt(l.tab, l.n)));
+    l.parents.forEach((p, k) => {
+      const yp = first + k * ROW;
+      edges.push(curve(xL2 + NODE_W, yp, xLeft, y));
+      labels.push(label(xL2 + NODE_W, yp, xLeft, y, 0.45, p.labels.join(', ')));
+      nodes.push(nodeSvg(p.n, xL2, yp - NODE_H / 2, false, tabOpt(p.tab, p.n)));
+    });
+    row += spanL(l);
+  }
   // self reference (recursive type)
   if (selfLabels.length) {
     const top = cy - NODE_H / 2;
@@ -564,11 +618,9 @@ function renderGraph() {
   svg += edges.join('') + labels.join('') + nodes.join('') + '</svg>';
   canvas.innerHTML = svg;
 
-  // keep the centre in view; with two levels, show the outgoing tree (never scrolling past the centre node)
+  // keep the centre in view
   canvas.scrollTop = Math.max(0, cy - canvas.clientHeight / 2);
-  canvas.scrollLeft = depth === 2
-    ? Math.max(0, Math.min(xR2 + NODE_W + MARGIN - canvas.clientWidth, cx - NODE_W / 2 - MARGIN))
-    : Math.max(0, cx - canvas.clientWidth / 2);
+  canvas.scrollLeft = Math.max(0, cx - canvas.clientWidth / 2);
 }
 
 function curve(x1, y1, x2, y2) {
