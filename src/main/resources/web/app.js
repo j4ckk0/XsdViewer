@@ -219,6 +219,16 @@ function findIn(t, name, kinds, ns) {
   return null;
 }
 
+/** The declaration of {@code name} in any open tab (except {@code skip}): {tab, id} or null. */
+function findInTabs(name, kinds, ns, skip) {
+  for (const t of tabs) {
+    if (t === skip) continue;
+    const id = findIn(t, name, kinds, ns);
+    if (id) return { tab: t, id };
+  }
+  return null;
+}
+
 /** The schemaLocations declared by tab {@code t} that may hold namespace {@code ns}. */
 function locationsFor(t, ns) {
   const out = [];
@@ -247,25 +257,31 @@ async function followExternal(node) {
     return;
   }
   // Read the imported files (from an opened folder or through the server), following their own imports / includes.
+  // A file already open in a tab is not loaded again, but its own imports / includes are followed too.
   if (!from.path && from.located) await from.located;
-  const visited = new Set(tabs.map(tabKey).filter(Boolean));
+  const visited = new Set([tabKey(from)].filter(Boolean));
   const queue = locs.map(location => ({ src: from, location }));
-  const opened = [], missing = [];
+  const examined = [], missing = [];
   while (queue.length) {
     const { src, location } = queue.shift();
     const f = await resolveLocation(src, location);
     if (!f) { if (!missing.includes(location)) missing.push(location); continue; }
     if (visited.has(f.key)) continue;
     visited.add(f.key);
-    const t = newTab();
-    if (!(await loadInto(t, f.name, f.text, f.path))) { closeTab(t); continue; }
-    t.rel = f.rel;
-    opened.push(t);
+    let t = tabs.find(x => tabKey(x) === f.key);
+    if (!t) {
+      t = newTab();
+      if (!(await loadInto(t, f.name, f.text, f.path))) { closeTab(t); continue; }
+      t.rel = f.rel;
+    }
+    examined.push(t);
     const id = findIn(t, name, kinds, ns);
     if (id) { activateTab(t); select(id); return; }
     for (const l of locationsFor(t, ns)) queue.push({ src: t, location: l });
   }
-  const why = missing.length ? 'could not find ' + missing.join(', ') : name + ' was not found in ' + opened.map(t => t.fileName).join(', ');
+  const why = missing.length ? 'could not find ' + missing.join(', ')
+    : examined.length ? name + ' was not found in ' + examined.map(t => t.fileName).join(', ')
+    : name + ' was not found';
   askForFile(name, kinds, ns, why + ': choose the file declaring ' + name);
 }
 
@@ -466,17 +482,25 @@ function renderGraph() {
   right.sort(byName); left.sort(byName);
 
   // Level 2: what each level-1 target links to, drawn as a tree (a node may appear under several parents).
+  // An external target declared in another open tab is expanded from that tab's model.
   if (depth === 2) {
     for (const r of right) {
+      let src = state, id = r.n.id;
+      if (r.n.kind === 'external') {
+        const found = findInTabs(r.n.name, kindsOf(r.n), r.n.ns || '', state);
+        if (!found) continue;
+        src = found.tab; id = found.id;
+        r.resolved = { n: src.nodes.get(id), tab: src };
+      }
       const kids = new Map(); // id -> [labels]
-      for (const e of state.outEdges.get(r.n.id) || []) {
-        if (e.to === r.n.id) continue;
+      for (const e of src.outEdges.get(id) || []) {
+        if (e.to === id) continue;
         if (!kids.has(e.to)) kids.set(e.to, []);
         kids.get(e.to).push(e.label);
       }
-      for (const [id, ls] of kids) {
-        const n = state.nodes.get(id);
-        if (visible(n)) r.children.push({ n, labels: ls });
+      for (const [kid, ls] of kids) {
+        const n = src.nodes.get(kid);
+        if (visible(n)) r.children.push({ n, labels: ls, tab: src === state ? null : src });
       }
       r.children.sort(byName);
     }
@@ -509,12 +533,14 @@ function renderGraph() {
     const x1 = cx + NODE_W / 2, y1 = cy, x2 = xR1, y2 = y;
     edges.push(curve(x1, y1, x2, y2));
     labels.push(label(x1, y1, x2, y2, 0.72, r.labels.out.join(', ')));
-    nodes.push(nodeSvg(r.n, xR1, y - NODE_H / 2, false));
+    nodes.push(r.resolved
+      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, { id: r.n.id, kindText: r.resolved.n.kind + ' · ' + r.resolved.tab.fileName })
+      : nodeSvg(r.n, xR1, y - NODE_H / 2, false));
     r.children.forEach((c, k) => {
       const yc = first + k * ROW;
       edges.push(curve(xR1 + NODE_W, y, xR2, yc));
       labels.push(label(xR1 + NODE_W, y, xR2, yc, 0.55, c.labels.join(', ')));
-      nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false));
+      nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, c.tab ? { tab: tabs.indexOf(c.tab) } : null));
     });
     row += span(r);
   }
@@ -568,14 +594,21 @@ function textWithBg(x, y, text) {
     + '<text class="edge-label" x="' + x + '" y="' + (y + 2) + '" text-anchor="middle"><title>' + esc(text) + '</title>' + esc(t) + '</text>';
 }
 
-function nodeSvg(n, x, y, isCenter) {
+/**
+ * @param opts optional: {id} to select on click (default n.id), {tab} index of the tab the node
+ *             belongs to (another file), {kindText} text shown instead of the kind
+ */
+function nodeSvg(n, x, y, isCenter, opts) {
+  const o = opts || {};
   const maxChars = isCenter ? 24 : 26;
   const name = n.name.length > maxChars ? n.name.slice(0, maxChars - 1) + '…' : n.name;
-  return '<g class="node ' + n.kind + (isCenter ? ' center' : '') + '" data-id="' + esc(n.id) + '" transform="translate(' + x + ',' + y + ')">'
-    + '<title>' + esc(n.kind + ' ' + n.name) + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
+  const kindText = o.kindText || n.kind;
+  return '<g class="node ' + n.kind + (isCenter ? ' center' : '') + '" data-id="' + esc(o.id || n.id) + '"'
+    + (o.tab != null ? ' data-tab="' + o.tab + '"' : '') + ' transform="translate(' + x + ',' + y + ')">'
+    + '<title>' + esc(kindText + ' ' + n.name) + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
     + '<rect width="' + NODE_W + '" height="' + NODE_H + '"/>'
     + '<text class="name" x="10" y="' + (NODE_H / 2 + 1) + '">' + esc(name) + '</text>'
-    + '<text class="kind" x="' + (NODE_W - 8) + '" y="' + (NODE_H - 6) + '" text-anchor="end">' + esc(n.kind) + '</text>'
+    + '<text class="kind" x="' + (NODE_W - 8) + '" y="' + (NODE_H - 6) + '" text-anchor="end">' + esc(kindText.length > 30 ? kindText.slice(0, 29) + '…' : kindText) + '</text>'
     + '</g>';
 }
 
@@ -931,7 +964,8 @@ function wireEvents() {
   $('graphCanvas').addEventListener('click', (e) => {
     const g = e.target.closest('.node');
     if (!g) return;
-    if (g.dataset.id !== state.selected) select(g.dataset.id);
+    if (g.dataset.tab != null) { activateTab(tabs[+g.dataset.tab]); select(g.dataset.id); }   // level-2 node of another file
+    else if (g.dataset.id !== state.selected) select(g.dataset.id);
     else if (state.nodes.get(g.dataset.id).kind === 'external') followExternal(state.nodes.get(g.dataset.id));  // retry (e.g. the file chooser was cancelled)
   });
   window.addEventListener('resize', () => { if (state.model && state.view === 'graph') renderGraph(); });

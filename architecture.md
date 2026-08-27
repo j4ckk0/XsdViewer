@@ -92,8 +92,9 @@ first searches the open tabs for a non-external node with the same kind, name an
 empty namespace matches too, for chameleon includes). Failing that it lists the
 `schemaLocation`s of the current file that can hold the namespace (`xs:import` with that
 namespace; `xs:include` / `xs:redefine` when it is the file's own namespace) and walks them
-breadth-first, opening each file found in a new tab and following that file's own imports /
-includes, with a visited set. `resolveLocation()` finds a location, in order:
+breadth-first, opening each file found in a new tab (a file already open in a tab is reused,
+its own imports / includes still followed) and following that file's own imports / includes,
+with a visited set. `resolveLocation()` finds a location, in order:
 
 1. in the `library` – the `File`s of the folders opened with File ▸ Open folder…
    (`<input webkitdirectory>`) or dropped on the window (`webkitGetAsEntry()` + recursive
@@ -128,7 +129,9 @@ edges to one neighbour are merged into one line whose label lists the reasons
 (`shipTo, billTo`). With the **2 levels** toggle (remembered in `localStorage`) a fourth
 column shows, for every level-1 target, its own targets as a tree: a level-1 node spans as
 many rows as it has children and sits in the middle of them; a node reached by several
-parents is drawn once per parent. A self-reference (recursive type) is drawn as a loop above
+parents is drawn once per parent. A level-1 `external` node declared in another open tab
+(`findInTabs()`) is drawn with its real kind and file name and expanded from that tab's
+model; its children carry `data-tab`, and clicking one activates that tab before selecting. A self-reference (recursive type) is drawn as a loop above
 the centre. The SVG is generated as a string and inserted with `innerHTML`; there is no layout
 library because the layout is two columns and a cubic Bézier per edge. Clicking a node calls
 `select()` and pushes the previous centre on the history stack.
