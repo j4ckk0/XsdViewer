@@ -17,7 +17,7 @@ Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸
 opens an empty one, × or a middle click closes one); every tab keeps its own view,
 selection, history and search filter. The **search box** in the left panel (Ctrl+F)
 filters the object list; **⤓ PNG** in the top bar saves the current view (graph or
-text) as a PNG image.
+text) as a PNG image. **File ▸ Quit** stops the server and closes the page.
 
 ## Build and run
 

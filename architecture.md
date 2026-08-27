@@ -132,6 +132,7 @@ node. The selected node's line is highlighted and scrolled into view.
 | `GET /`, `/app.js`, `/style.css` | – | the static asset (classpath `web/`, `Cache-Control: no-cache`). Paths are restricted to `/[A-Za-z0-9._-]+`. |
 | `POST /api/parse` | body: the XSD text (UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema`, …). |
 | `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
+| `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit). |
 | `GET /api/open?base=…&location=…` | query: `base` = server path of the referencing file, `location` = its `schemaLocation` | `200` + `{"name", "path", "text"}` of `location` resolved against `base`'s directory; `403` if `base` is not a file the server already served (`/api/initial` or a previous `/api/open`), `400` for a remote location (`://`), `404` if the file does not exist. |
 
 The server binds to `127.0.0.1` unless `--host` says otherwise: it is a local tool, not a

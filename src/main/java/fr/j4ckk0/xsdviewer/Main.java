@@ -30,6 +30,7 @@ import com.sun.net.httpserver.HttpServer;
 public final class Main {
 
     private static Path initialFile;
+    private static HttpServer server;
     /** Files this server has read and handed to the page; /api/open only resolves locations relative to one of them. */
     private static final Set<Path> knownFiles = ConcurrentHashMap.newKeySet();
 
@@ -54,10 +55,11 @@ public final class Main {
             System.exit(1);
         }
 
-        HttpServer server = HttpServer.create(new InetSocketAddress(host, port), 0);
+        server = HttpServer.create(new InetSocketAddress(host, port), 0);
         server.createContext("/api/parse", Main::handleParse);
         server.createContext("/api/initial", Main::handleInitial);
         server.createContext("/api/open", Main::handleOpen);
+        server.createContext("/api/quit", Main::handleQuit);
         server.createContext("/", Main::handleStatic);
         server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         server.start();
@@ -139,6 +141,20 @@ public final class Main {
             return;
         }
         sendFile(ex, target);
+    }
+
+    /** {@code POST /api/quit}: File ▸ Quit in the page. Answers, then stops the server and exits. */
+    private static void handleQuit(HttpExchange ex) throws IOException {
+        if (!"POST".equals(ex.getRequestMethod())) {
+            send(ex, 405, "text/plain", "POST expected");
+            return;
+        }
+        send(ex, 200, "application/json", "{\"ok\":true}");
+        System.out.println("Quit requested from the page, stopping");
+        Thread.ofPlatform().start(() -> {
+            server.stop(1);   // finish in-flight exchanges (1 s max), then exit
+            System.exit(0);
+        });
     }
 
     /** {@code {name, path, text}} of a schema file; remembers it as a valid base for /api/open. */

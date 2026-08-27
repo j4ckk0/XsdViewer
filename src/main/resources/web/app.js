@@ -128,6 +128,22 @@ function closeFile() {
   renderAll();
 }
 
+/** File ▸ Quit: stops the server, then closes the page (browsers only let a script close a
+ *  window it opened, so a "stopped" notice is shown for the other case). */
+async function quit() {
+  if (!confirm('Stop the XsdViewer server and close this page?')) return;
+  try {
+    const resp = await fetch('/api/quit', { method: 'POST' });
+    if (!resp.ok) throw new Error('status ' + resp.status);
+  } catch (e) {
+    toast('Cannot stop the server: ' + e.message);
+    return;
+  }
+  document.body.innerHTML = '<div id="empty" class="view"><div class="emptybox">'
+    + '<div class="big">XsdViewer stopped</div><div>The server has been shut down; you can close this window.</div></div></div>';
+  window.close();
+}
+
 // ---- document tabs --------------------------------------------------------------------
 
 function newTab() {
@@ -704,6 +720,7 @@ function wireEvents() {
   $('menuOpen').addEventListener('click', () => { menu.classList.add('hidden'); $('fileInput').click(); });
   $('menuNewTab').addEventListener('click', () => { menu.classList.add('hidden'); activateTab(newTab()); });
   $('menuClose').addEventListener('click', () => { menu.classList.add('hidden'); closeFile(); });
+  $('menuQuit').addEventListener('click', () => { menu.classList.add('hidden'); quit(); });
   $('fileInput').addEventListener('change', (e) => { openFiles([...e.target.files]); e.target.value = ''; });
 
   // Document tabs
