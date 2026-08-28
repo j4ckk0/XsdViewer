@@ -126,7 +126,7 @@ or start the tool from the project folder and open `order.xsd` from the browser.
 ## Layout
 
 ```
-src/main/java/fr/j4ckk0/xsdviewer/
+src/main/java/org/jtools/xsdviewer/
   Main.java        HTTP server (JDK com.sun.net.httpserver), static files + /api/parse, /api/initial, /api/open
   XsdParser.java   XSD text -> Model (DOM for the structure, SAX for line numbers)
   Model.java       nodes / edges / imports, JSON output

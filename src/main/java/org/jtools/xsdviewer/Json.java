@@ -1,4 +1,4 @@
-package fr.j4ckk0.xsdviewer;
+package org.jtools.xsdviewer;
 
 /** Minimal JSON string encoding; the model is simple enough not to need a library. */
 final class Json {

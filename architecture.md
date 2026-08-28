@@ -33,7 +33,7 @@ Design choices that shape everything else:
 
 ## Modules
 
-### Server – `src/main/java/fr/j4ckk0/xsdviewer/`
+### Server – `src/main/java/org/jtools/xsdviewer/`
 
 | Class | Role |
 |---|---|
@@ -201,7 +201,7 @@ Build and test:
 |---|---|---|
 | Maven | 3.9 | build; `mvn package` produces `target/xsdviewer.jar` |
 | maven-compiler-plugin | 3.13.0 | `--release 21` |
-| maven-jar-plugin | 3.4.1 | sets `Main-Class: fr.j4ckk0.xsdviewer.Main` (no shading needed: no dependencies) |
+| maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.Main` (no shading needed: no dependencies) |
 | maven-surefire-plugin | 3.2.5 | runs the tests |
 | JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, run against `samples/purchaseOrder.xsd` |
 | `run.sh` / `run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
@@ -232,10 +232,10 @@ XsdViewer/
 └── src/
     ├── assembly/                        windows.xml, linux.xml (dist profile)
     ├── dist/                            xsdviewer.bat, xsdviewer.sh launchers
-    ├── main/java/fr/j4ckk0/xsdviewer/   Main, XsdParser, Model, Json
+    ├── main/java/org/jtools/xsdviewer/   Main, XsdParser, Model, Json
     ├── main/resources/web/              index.html, app.js, style.css
     ├── main/resources/embedded/jre/     JRE archives bundled by the dist profile (git-ignored)
-    └── test/java/fr/j4ckk0/xsdviewer/   XsdParserTest
+    └── test/java/org/jtools/xsdviewer/   XsdParserTest
 ```
 
 ## Extension points

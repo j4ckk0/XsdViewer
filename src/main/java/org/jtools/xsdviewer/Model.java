@@ -1,4 +1,4 @@
-package fr.j4ckk0.xsdviewer;
+package org.jtools.xsdviewer;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

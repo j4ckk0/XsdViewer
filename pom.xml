@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>fr.j4ckk0</groupId>
+  <groupId>org.jtools</groupId>
   <artifactId>xsdviewer</artifactId>
   <version>1.4.0</version>
   <packaging>jar</packaging>
@@ -55,7 +55,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>fr.j4ckk0.xsdviewer.Main</mainClass>
+              <mainClass>org.jtools.xsdviewer.Main</mainClass>
             </manifest>
           </archive>
         </configuration>

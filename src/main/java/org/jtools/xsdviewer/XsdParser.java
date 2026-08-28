@@ -1,4 +1,4 @@
-package fr.j4ckk0.xsdviewer;
+package org.jtools.xsdviewer;
 
 import java.io.StringReader;
 import java.util.ArrayList;

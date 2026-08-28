@@ -1,4 +1,4 @@
-package fr.j4ckk0.xsdviewer;
+package org.jtools.xsdviewer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
