@@ -79,18 +79,16 @@ export function closeTab(tab) {
   return true;
 }
 
-/** Closes every tab of {@code ws} and forgets it (the last workspace is emptied instead). Returns true when the active tab changed. */
+/** Closes every tab of {@code ws} and forgets it; closing the last workspace leaves a fresh empty one. Returns true when the active tab changed. */
 export function closeWorkspace(ws) {
-  const view = session.active.view;
+  if (session.workspaces.length === 1) {
+    closeAllTabs();
+    return true;
+  }
   const wasActive = session.active.workspace === ws;
   session.tabs = session.tabs.filter(tab => tab.workspace !== ws);
   forgetWorkspace(ws);
-  if (session.workspaces.length > 1) {
-    session.workspaces.splice(session.workspaces.indexOf(ws), 1);
-  } else {
-    ws.path = null;
-    session.tabs.push(emptyTabOf(ws, view));
-  }
+  session.workspaces.splice(session.workspaces.indexOf(ws), 1);
   if (!wasActive) return false;
   session.active = session.tabs[0];
   return true;
