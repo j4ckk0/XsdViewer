@@ -70,6 +70,12 @@ export function renderNodeList() {
   $(ID.NODE_LIST).innerHTML = html || '<div class="' + CLS.ITEM + ' ' + CLS.NO_MATCH + '">' + esc(t(MSG.LIST_NO_MATCH)) + '</div>';
 }
 
+/** Expands every group of the object list, or collapses them all. */
+export function setAllGroupsExpanded(expanded) {
+  session.active.collapsed = expanded ? new Set() : new Set(KINDS);
+  if (session.active.model) renderNodeList();
+}
+
 /** Moves the highlight to the selected node without rebuilding the list. */
 export function renderNodeListSelection() {
   const selected = session.active.selected;

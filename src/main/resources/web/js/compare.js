@@ -155,6 +155,14 @@ export async function toggleDetail(row) {
   row.after(detail);
 }
 
+/** Opens the differences of every expandable row, or closes them all. */
+export async function setAllDetails(open) {
+  for (const row of [...$(ID.COMPARE_TABLE).querySelectorAll('.' + CLS.EXPANDABLE)]) {
+    const isOpen = row.classList.contains(CLS.OPEN);
+    if (open !== isOpen) await toggleDetail(row);
+  }
+}
+
 function schemaDiffHtml(pair) {
   if (!pair.left.model || !pair.right.model) return '<p class="' + CLS.META + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</p>';
   const d = diffModels(pair.left.model, pair.right.model);

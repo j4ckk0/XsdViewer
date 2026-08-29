@@ -2,18 +2,18 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { initOptions, rememberOptions, renderCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
+import { initOptions, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
-import { fileListClick, initFiles, toggleFiles } from './file-list.js';
+import { fileListClick, initFiles, setAllUnfolded, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, select } from './navigation.js';
 import { renderPage, showView } from './page.js';
 import { exportPng } from './png-export.js';
-import { initSchemaInfo, renderNodeList, toggleGroup, toggleSchemaInfo } from './sidebar.js';
+import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, toggleSchemaInfo } from './sidebar.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
@@ -166,6 +166,13 @@ function wireViews() {
   $(ID.SCHEMA_INFO_TOGGLE).addEventListener('click', toggleSchemaInfo);
   initFiles();
   $(ID.FILES_TOGGLE).addEventListener('click', toggleFiles);
+  // expand all / collapse all, on each tree
+  $(ID.FILES_EXPAND_ALL).addEventListener('click', () => setAllUnfolded(true));
+  $(ID.FILES_COLLAPSE_ALL).addEventListener('click', () => setAllUnfolded(false));
+  $(ID.OBJECTS_EXPAND_ALL).addEventListener('click', () => setAllGroupsExpanded(true));
+  $(ID.OBJECTS_COLLAPSE_ALL).addEventListener('click', () => setAllGroupsExpanded(false));
+  $(ID.COMPARE_EXPAND_ALL).addEventListener('click', () => setAllDetails(true));
+  $(ID.COMPARE_COLLAPSE_ALL).addEventListener('click', () => setAllDetails(false));
   $(ID.FILES_CONTENT).addEventListener('click', async (e) => {   // the Files panel: a file or an object shows its tab, opened when needed
     const hit = fileListClick(e.target);
     if (!hit) return;

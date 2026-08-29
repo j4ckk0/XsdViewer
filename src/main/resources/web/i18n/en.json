@@ -79,6 +79,8 @@
   "group.builtin": "Built-in types",
   "group.external": "External / undeclared",
 
+  "tree.expandAll": "Expand all",
+  "tree.collapseAll": "Collapse all",
   "files.title": "Files",
   "files.collapse": "Fold the file list",
   "files.expand": "Unfold the file list",

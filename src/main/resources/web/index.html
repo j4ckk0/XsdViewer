@@ -56,7 +56,8 @@
 <div id="body">
   <aside id="sidebar">
     <div id="files">
-      <div class="panel-head"><span><span data-i18n="files.title">Files</span> <span id="filesCount" class="count"></span></span><button id="filesToggle" class="panel-toggle" type="button" data-i18n-title="files.collapse">▾</button></div>
+      <div class="panel-head"><span><span data-i18n="files.title">Files</span> <span id="filesCount" class="count"></span></span>
+        <span class="panel-tools"><button id="filesExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="filesCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button><button id="filesToggle" class="panel-toggle" type="button" data-i18n-title="files.collapse">▾</button></span></div>
       <div id="filesContent" class="tree"></div>
     </div>
     <div id="schemaInfo" class="hidden">
@@ -65,6 +66,7 @@
     </div>
     <div id="searchBar">
       <input id="search" type="search" data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false">
+      <span class="panel-tools"><button id="objectsExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="objectsCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span>
     </div>
     <div id="nodeList"></div>
   </aside>
@@ -111,6 +113,7 @@
         <label class="opt" data-i18n-title="compare.diffOnly.title">
           <input type="checkbox" id="diffOnly"> <span data-i18n="compare.diffOnly">differences only</span>
         </label>
+        <span class="panel-tools"><button id="compareExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="compareCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span>
         <button id="compareClose" type="button" class="menubtn" data-i18n="compare.close">Close</button>
       </div>
       <div id="compareBody"><table id="compareTable"></table></div>

@@ -79,6 +79,8 @@
   "group.builtin": "Types prédéfinis",
   "group.external": "Externes / non déclarés",
 
+  "tree.expandAll": "Tout déplier",
+  "tree.collapseAll": "Tout replier",
   "files.title": "Fichiers",
   "files.collapse": "Replier la liste des fichiers",
   "files.expand": "Déplier la liste des fichiers",

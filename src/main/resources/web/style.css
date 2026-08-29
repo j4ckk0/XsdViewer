@@ -388,6 +388,9 @@ table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0
   color: var(--text);
   margin-bottom: 4px;
 }
+.panel-tools { display: inline-flex; align-items: center; gap: 2px; }
+#searchBar { display: flex; align-items: center; gap: 4px; }
+#searchBar #search { flex: 1; min-width: 0; }
 .panel-toggle {
   width: 20px;
   height: 20px;

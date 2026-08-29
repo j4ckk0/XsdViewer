@@ -14,11 +14,13 @@ const COLLAPSE_GLYPH = '▾', EXPAND_GLYPH = '▸';
 /** Folders folded by the user (their path in the tree), and the files the user unfolded / folded (key -> true / false); a session-long memory. */
 const foldedDirs = new Set();
 const fileUnfolded = new Map();
+/** What "expand all" / "collapse all" decided for the files not folded / unfolded one by one since; null = the shown file only. */
+let allFilesUnfolded = null;
 /** The workspace files beneath each folder of the last drawn tree, by folder path (for "open as workspace"). */
 const dirEntries = new Map();
 
 /** A file shows its objects when the user said so, else when it is the one shown. */
-const showsObjects = (entry, active) => (fileUnfolded.has(fileKeys(entry)[0]) ? fileUnfolded.get(fileKeys(entry)[0]) : active);
+const showsObjects = (entry, active) => (fileUnfolded.has(fileKeys(entry)[0]) ? fileUnfolded.get(fileKeys(entry)[0]) : allFilesUnfolded ?? active);
 const KIND_ORDER = new Map(KINDS.map((k, i) => [k, i]));
 const declared = (n) => n.kind !== NODE_KIND.BUILTIN && n.kind !== NODE_KIND.EXTERNAL;
 
@@ -127,6 +129,15 @@ export function fileListClick(target) {
     return null;
   }
   return { entry };
+}
+
+/** Unfolds every folder and every file's objects, or folds them all. */
+export function setAllUnfolded(unfolded) {
+  foldedDirs.clear();
+  if (!unfolded) for (const path of dirEntries.keys()) foldedDirs.add(path);
+  fileUnfolded.clear();
+  allFilesUnfolded = unfolded;
+  renderFileList();
 }
 
 export function setFilesCollapsed(collapsed) {
