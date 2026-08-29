@@ -1,46 +1,67 @@
 /**
- * The Files panel of the sidebar: the files of the active workspace as a tree by folder (paths
- * relative to their common root), the active file highlighted; clicking one shows its tab.
+ * The Files panel of the sidebar: every file the active workspace knows (open in a tab or not)
+ * as a tree by folder (paths relative to their common root), each file unfoldable to its global
+ * objects; the shown file is highlighted. Clicking a file or an object shows its tab, opening it
+ * when needed (events.js).
  */
-import { PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
+import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
+import { fileKeys, tabOfFile } from './workspace-files.js';
 
 const SEPARATORS = /[\\/]/;
 const COLLAPSE_GLYPH = '▾', EXPAND_GLYPH = '▸';
-/** Folders folded by the user (their path in the tree); a session-long memory. */
+/** Folders and files folded by the user (their path in the tree / their key); a session-long memory. */
 const foldedDirs = new Set();
+const unfoldedFiles = new Set();
+const KIND_ORDER = new Map(KINDS.map((k, i) => [k, i]));
+const declared = (n) => n.kind !== NODE_KIND.BUILTIN && n.kind !== NODE_KIND.EXTERNAL;
 
-/** The path a tab is listed under: on disk, in its folder, or just its name. */
-const pathOf = (tab) => (tab.path || tab.rel || tab.fileName || t(MSG.TAB_UNTITLED)).split(SEPARATORS).filter(Boolean);
+/** The rows to list: the workspace's files, plus its tabs showing no file (empty tabs). */
+function rows() {
+  const ws = session.active.workspace;
+  const out = ws.files.map(entry => ({ entry, tab: tabOfFile(entry), name: entry.name, path: entry.path || entry.rel || entry.name }));
+  for (const tab of session.tabs) {
+    if (tab.workspace === ws && !tab.file) out.push({ entry: null, tab, name: tab.fileName || t(MSG.TAB_UNTITLED), path: tab.fileName || t(MSG.TAB_UNTITLED) });
+  }
+  return out;
+}
 
 /** The directories every listed path shares, dropped from the display. */
 function commonPrefix(paths) {
   const withDirs = paths.filter(p => p.length > 1);
-  if (withDirs.length < 1) return 0;
+  if (!withDirs.length) return 0;
   let n = 0;
   while (withDirs.every(p => p.length - 1 > n && p[n] === withDirs[0][n])) n++;
   return n;
 }
 
-/** Builds the tree {dirs: Map(name -> node), files: [{name, tab}]} of the active workspace's tabs. */
-function tree() {
-  const tabs = session.tabs.filter(tab => tab.workspace === session.active.workspace);
-  const paths = tabs.map(pathOf);
+/** Builds the tree {dirs: Map(name -> node), files: [row]} of the rows. */
+function tree(list) {
+  const paths = list.map(r => r.path.split(SEPARATORS).filter(Boolean));
   const skip = commonPrefix(paths);
   const root = { dirs: new Map(), files: [] };
-  tabs.forEach((tab, i) => {
+  list.forEach((r, i) => {
     const parts = paths[i].length > 1 ? paths[i].slice(skip) : paths[i];
     let node = root;
     for (const dir of parts.slice(0, -1)) {
       if (!node.dirs.has(dir)) node.dirs.set(dir, { dirs: new Map(), files: [] });
       node = node.dirs.get(dir);
     }
-    node.files.push({ name: parts[parts.length - 1], tab });
+    node.files.push(Object.assign({ shown: parts[parts.length - 1] }, r));
   });
   return root;
+}
+
+const byKindThenName = (a, b) => (KIND_ORDER.get(a.kind) - KIND_ORDER.get(b.kind)) || a.name.localeCompare(b.name);
+
+function objectsHtml(entry) {
+  if (!entry.model) return entry.failed ? '<div class="' + CLS.ITEM + ' ' + CLS.EMPTY + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</div>' : '';
+  return entry.model.nodes.filter(declared).sort(byKindThenName).map(n =>
+    '<div class="' + CLS.ITEM + ' ' + CLS.OBJECT + '"' + dataAttr(DATA.ID, n.id) + ' title="' + esc(n.id) + '">'
+    + '<span class="' + CLS.DOT + ' ' + n.kind + '"></span><span>' + esc(n.name) + '</span></div>').join('');
 }
 
 function nodeHtml(node, dirPath) {
@@ -50,21 +71,30 @@ function nodeHtml(node, dirPath) {
     html += '<div class="' + CLS.GROUP_HEADER + ' ' + CLS.DIR + (foldedDirs.has(path) ? ' ' + CLS.COLLAPSED : '') + '"' + dataAttr(DATA.DIR, path) + '>'
       + '<span>' + esc(name) + '</span></div><div class="' + CLS.GROUP_ITEMS + '">' + nodeHtml(child, path) + '</div>';
   }
-  for (const f of node.files.sort((a, b) => a.name.localeCompare(b.name))) {
-    html += '<div class="' + CLS.ITEM + (f.tab === session.active ? ' ' + CLS.SELECTED : '') + '"'
-      + dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(f.tab)) + ' title="' + esc(f.tab.path || f.tab.rel || f.name) + '">'
-      + '<span class="' + CLS.FILE + (f.tab.model ? '' : ' ' + CLS.EMPTY) + '">' + esc(f.name) + '</span></div>';
+  for (const f of node.files.sort((a, b) => a.shown.localeCompare(b.shown))) {
+    const active = f.tab === session.active;
+    const key = f.entry ? fileKeys(f.entry)[0] : '';
+    const unfolded = f.entry && (unfoldedFiles.has(key) || (active && !unfoldedFiles.has(key) && !foldedDirs.has(key)));
+    html += '<div class="' + CLS.ITEM + ' ' + CLS.FILE + (active ? ' ' + CLS.SELECTED : '') + (f.tab ? ' ' + CLS.OPEN : '') + '"'
+      + (f.entry ? dataAttr(DATA.FILE, session.active.workspace.files.indexOf(f.entry)) : dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(f.tab)))
+      + ' title="' + esc(f.path) + '">'
+      + (f.entry ? '<span class="' + CLS.EXPANDER + '">' + (unfolded ? COLLAPSE_GLYPH : EXPAND_GLYPH) + '</span>' : '')
+      + '<span class="' + (f.entry ? '' : CLS.EMPTY) + '">' + esc(f.shown) + '</span></div>';
+    if (f.entry && unfolded) html += '<div class="' + CLS.GROUP_ITEMS + ' ' + CLS.OBJECTS + '">' + objectsHtml(f.entry) + '</div>';
   }
   return html;
 }
 
 export function renderFileList() {
-  const root = tree();
-  $(ID.FILES_COUNT).textContent = session.tabs.filter(tab => tab.workspace === session.active.workspace).length;
-  $(ID.FILES_CONTENT).innerHTML = nodeHtml(root, '');
+  const list = rows();
+  $(ID.FILES_COUNT).textContent = list.length;
+  $(ID.FILES_CONTENT).innerHTML = nodeHtml(tree(list), '');
 }
 
-/** Click in the panel: a folder header folds / unfolds; a file is the caller's to activate (returns its tab, or null). */
+/**
+ * A click in the panel. A folder header or a file's expander folds / unfolds (handled here, null
+ * returned); otherwise {entry} for a file, {entry, id} for one of its objects, {tab} for an empty tab.
+ */
 export function fileListClick(target) {
   const header = target.closest('.' + CLS.DIR);
   if (header) {
@@ -74,7 +104,22 @@ export function fileListClick(target) {
     return null;
   }
   const item = target.closest('.' + CLS.ITEM);
-  return item ? session.tabs[+item.dataset[DATA.TAB_INDEX]] : null;
+  if (!item) return null;
+  const files = session.active.workspace.files;
+  if (item.classList.contains(CLS.OBJECT)) {
+    const fileRow = item.parentElement.previousElementSibling;
+    return { entry: files[+fileRow.dataset[DATA.FILE]], id: item.dataset[DATA.ID] };
+  }
+  if (item.dataset[DATA.FILE] == null) return { tab: session.tabs[+item.dataset[DATA.TAB_INDEX]] };
+  const entry = files[+item.dataset[DATA.FILE]];
+  if (target.closest('.' + CLS.EXPANDER)) {
+    const key = fileKeys(entry)[0];
+    const unfolded = item.nextElementSibling && item.nextElementSibling.classList.contains(CLS.OBJECTS);
+    if (unfolded) { unfoldedFiles.delete(key); foldedDirs.add(key); } else { unfoldedFiles.add(key); foldedDirs.delete(key); }
+    renderFileList();
+    return null;
+  }
+  return { entry };
 }
 
 export function setFilesCollapsed(collapsed) {

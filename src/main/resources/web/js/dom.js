@@ -106,6 +106,9 @@ export const CLS = {
   NO_MATCH: 'nomatch',
   DIR: 'dir',
   FILE: 'file',
+  OBJECT: 'obj',
+  OBJECTS: 'objects',
+  EXPANDER: 'expander',
   EMPTY: 'empty',
   DOT: 'dot',
   COUNT: 'count',
@@ -149,6 +152,7 @@ export const DATA = {
   TAB_INDEX: 'i',
   WORKSPACE_INDEX: 'ws',
   DIR: 'dir',
+  FILE: 'file',
   ROW_INDEX: 'row',
   VIEW: 'view',
 };

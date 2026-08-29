@@ -21,8 +21,8 @@ const PATH_SEPARATORS = /[\\/]/;
 
 export const tabsOf = (ws) => session.tabs.filter(tab => tab.workspace === ws);
 export const activeWorkspace = () => session.active.workspace;
-/** An unsaved workspace holding no file: it can take the next workspace opened. */
-export const isEmptyWorkspace = (ws) => !ws.path && tabsOf(ws).every(tab => !tab.model);
+/** An unsaved workspace knowing no file: it can take the next workspace opened. */
+export const isEmptyWorkspace = (ws) => !ws.path && !ws.files.length && tabsOf(ws).every(tab => !tab.model);
 
 /** The workspace file's name without its suffix, else the name it was given (an opened folder), else "Workspace n". */
 export function workspaceName(ws) {

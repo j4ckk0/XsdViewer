@@ -7,6 +7,7 @@ import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-action
 import { closeActiveWorkspace, openBrowserFolder, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { fileListClick, initFiles, toggleFiles } from './file-list.js';
+import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, select } from './navigation.js';
@@ -161,9 +162,14 @@ function wireViews() {
   $(ID.SCHEMA_INFO_TOGGLE).addEventListener('click', toggleSchemaInfo);
   initFiles();
   $(ID.FILES_TOGGLE).addEventListener('click', toggleFiles);
-  $(ID.FILES_CONTENT).addEventListener('click', (e) => {   // the Files panel: a file shows its tab
-    const tab = fileListClick(e.target);
-    if (tab) { const changed = activateTab(tab); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
+  $(ID.FILES_CONTENT).addEventListener('click', async (e) => {   // the Files panel: a file or an object shows its tab, opened when needed
+    const hit = fileListClick(e.target);
+    if (!hit) return;
+    const tab = hit.tab || await ensureTab(hit.entry);
+    if (!tab) return;
+    const changed = activateTab(tab);
+    if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage();
+    if (hit.id) select(hit.id);
   });
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   window.addEventListener('resize', () => { const st = session.active; if (st.model && st.view === VIEW.GRAPH) renderGraph(); });

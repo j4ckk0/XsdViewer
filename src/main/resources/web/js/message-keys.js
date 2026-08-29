@@ -32,6 +32,7 @@ export const MSG = {
   GROUP_PREFIX: 'group.',
 
   FILES_COLLAPSE: 'files.collapse',
+  FILES_NOT_A_SCHEMA: 'files.notASchema',
   FILES_EXPAND: 'files.expand',
   INFO_TITLE: 'info.title',
   INFO_COLLAPSE: 'info.collapse',
@@ -63,9 +64,12 @@ export const MSG = {
   WORKSPACE_LOADED_ONE: 'workspace.loaded.one',
   WORKSPACE_LOADED_OTHER: 'workspace.loaded.other',
   WORKSPACE_MISSING: 'workspace.missing',
+  WORKSPACE_LISTED: 'workspace.listed',
   WORKSPACE_ALREADY_OPEN: 'workspace.alreadyOpen',
   LINKED_OPENED_ONE: 'linked.opened.one',
   LINKED_OPENED_OTHER: 'linked.opened.other',
+  LINKED_LISTED_ONE: 'linked.listed.one',
+  LINKED_LISTED_OTHER: 'linked.listed.other',
   CANNOT_PARSE: 'toast.cannotParse',
   CANNOT_STOP: 'toast.cannotStop',
   QUIT_CONFIRM: 'quit.confirm',
@@ -82,6 +86,7 @@ export const MSG = {
   FOLDER_OPENED_OTHER: 'folder.opened.other',
   FOLDER_EMPTY: 'folder.empty',
   FOLDER_TRUNCATED: 'folder.truncated',
+  FOLDER_LISTED: 'folder.listed',
 
   EXPORT_SELECT_FIRST: 'export.selectFirst',
   EXPORT_RENDER_FAILED: 'export.renderFailed',

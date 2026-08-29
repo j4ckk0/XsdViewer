@@ -77,8 +77,12 @@ export const REMOTE_LOCATION_MARK = '://';
 export const SCHEMA_FILE_PATTERN = /\.(xsd|xml)$/i;
 /** Files of an opened folder that are opened as tabs. */
 export const XSD_FILE_PATTERN = /\.xsd$/i;
-/** At most this many schemas of a folder opened in the browser are opened as tabs. */
+/** At most this many schemas of a folder opened in the browser are listed. */
 export const MAX_FOLDER_FILES = 200;
+/** A folder, a workspace or a set of linked schemas larger than this is only listed in the Files panel: one tab opens. */
+export const MAX_AUTO_OPEN = 10;
+/** Prefix of the identity of a file known only by its name (opened in the browser, not located yet). */
+export const NAME_KEY_PREFIX = 'name:';
 /** Suffix of a workspace file (Workspace.FILE_SUFFIX on the server); a workspace is named after the rest. */
 export const WORKSPACE_FILE_SUFFIX = '.xsdviewer.json';
 /** Prefix of the identity of a file that came from an opened folder (as opposed to a server path). */

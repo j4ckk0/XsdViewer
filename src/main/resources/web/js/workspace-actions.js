@@ -1,15 +1,16 @@
 /** The File menu on workspaces: new / open / save / close a workspace, and opening a folder as one. */
 import { chooseFolder, openWorkspaceFile, saveWorkspaceFile } from './api.js';
-import { MAX_FOLDER_FILES, PATH_SEPARATOR, TEXT, XSD_FILE_PATTERN } from './constants.js';
+import { MAX_AUTO_OPEN, MAX_FOLDER_FILES, PATH_SEPARATOR, TEXT, XSD_FILE_PATTERN } from './constants.js';
+import { ensureTab, parseInBackground } from './file-tabs.js';
+import { registerFile } from './workspace-files.js';
 import { $, ID } from './dom.js';
 import { addToLibrary, normPath } from './folder-library.js';
 import { plural, t } from './i18n.js';
 import { openLinkedSchemas } from './linked-schemas.js';
 import { MSG } from './message-keys.js';
 import { renderPage } from './page.js';
-import { loadInto } from './schema-loader.js';
 import { session } from './state.js';
-import { activateTab, activeWorkspace, closeTab, closeWorkspace, isEmptyWorkspace, newTab, newWorkspace, renderTabBar, tabsOf, workspaceName } from './tabs.js';
+import { activateTab, activeWorkspace, closeWorkspace, isEmptyWorkspace, newTab, newWorkspace, renderTabBar, tabsOf, workspaceName } from './tabs.js';
 import { toast, toastServerError } from './toast.js';
 
 /** File ▸ New workspace: an empty one, made active. */
@@ -70,14 +71,17 @@ export async function applyWorkspace(answer) {
   }
   const ws = takeOverOrNewWorkspace();
   ws.path = answer.workspace;
-  const opened = await openInWorkspace(ws, answer.files);
+  const entries = answer.files.map(f => registerFile(ws, f));
+  const few = entries.length <= MAX_AUTO_OPEN;
+  const opened = await openInWorkspace(ws, few ? entries : entries.slice(answer.active, answer.active + 1));
   if (!tabsOf(ws).length) newTab(ws);
-  const activeFile = answer.files[answer.active];
-  const active = (activeFile && opened.find(tab => tab.path === activeFile.path)) || opened[0] || tabsOf(ws)[0];
+  const active = (entries[answer.active] && opened.find(tab => tab.file === entries[answer.active])) || opened[0] || tabsOf(ws)[0];
   activateTab(active);
   renderPage();
-  toast(plural(opened.length, MSG.WORKSPACE_LOADED_ONE, MSG.WORKSPACE_LOADED_OTHER, workspaceName(ws))
+  toast((few ? plural(opened.length, MSG.WORKSPACE_LOADED_ONE, MSG.WORKSPACE_LOADED_OTHER, workspaceName(ws))
+    : t(MSG.WORKSPACE_LISTED, workspaceName(ws), entries.length, opened.length))
     + (answer.missing.length ? TEXT.TOAST_SEPARATOR + t(MSG.WORKSPACE_MISSING, answer.missing.join(TEXT.LIST_SEPARATOR)) : ''));
+  if (!few) parseInBackground(ws);
   for (const tab of opened) openLinkedSchemas(tab);
 }
 
@@ -108,30 +112,36 @@ export async function openBrowserFolder(files, relOf, folderName) {
   await openFolderAsWorkspace(folderName, read, schemas.length > kept.length);
 }
 
-/** Opens files ({name, path, text}) as a new workspace named {@code name}. */
+/**
+ * Lists files ({name, path, text, rel?}) as a new workspace named {@code name} and opens them —
+ * all of them when there are at most MAX_AUTO_OPEN, else only the first: the others wait in the
+ * Files panel, parsed in the background so that their objects can be browsed.
+ */
 async function openFolderAsWorkspace(name, files, truncated) {
   if (!files.length) { toast(t(MSG.FOLDER_EMPTY, name)); return; }
   const ws = takeOverOrNewWorkspace();
   ws.label = name;
-  const opened = await openInWorkspace(ws, files);
+  const entries = files.map(f => registerFile(ws, f));
+  const few = entries.length <= MAX_AUTO_OPEN;
+  const opened = await openInWorkspace(ws, few ? entries : entries.slice(0, 1));
   if (!tabsOf(ws).length) newTab(ws);
   activateTab(opened[0] || tabsOf(ws)[0]);
   renderPage();
-  toast(plural(opened.length, MSG.FOLDER_OPENED_ONE, MSG.FOLDER_OPENED_OTHER, name)
+  toast((few ? plural(opened.length, MSG.FOLDER_OPENED_ONE, MSG.FOLDER_OPENED_OTHER, name) : t(MSG.FOLDER_LISTED, entries.length, name, opened.length))
     + (truncated ? TEXT.TOAST_SEPARATOR + t(MSG.FOLDER_TRUNCATED, files.length) : ''));
+  if (!few) parseInBackground(ws);
   for (const tab of opened) openLinkedSchemas(tab);
 }
 
 /** The workspace a new set of files goes to: the active one when it is empty and unsaved, else a new one. */
 const takeOverOrNewWorkspace = () => (isEmptyWorkspace(activeWorkspace()) ? activeWorkspace() : newWorkspace());
 
-/** Loads files ({name, path, text, rel?}) into tabs of {@code ws} (its empty tabs first); returns the tabs loaded, in order. */
-async function openInWorkspace(ws, files) {
+/** Opens workspace files (entries of {@code ws.files}) in tabs; returns the tabs opened, in order (files that fail to parse are skipped). */
+async function openInWorkspace(ws, entries) {
   const tabs = [];
-  for (const f of files) {
-    const tab = tabsOf(ws).find(x => !x.model) || newTab(ws);
-    if (await loadInto(tab, f.name, f.text, f.path)) { tab.rel = f.rel || null; tabs.push(tab); }
-    else if (tab !== session.active) closeTab(tab);
+  for (const entry of entries) {
+    const tab = await ensureTab(entry);
+    if (tab) tabs.push(tab);
   }
   return tabs;
 }

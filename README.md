@@ -127,9 +127,13 @@ what uses what across the set right away.
 
 ### Workspaces
 
-The **Files** panel at the top of the sidebar lists the files of the active workspace as a
-tree by folder (the folders they all share are left out), the shown file highlighted; clicking
-a file switches to its tab, clicking a folder folds it.
+The **Files** panel at the top of the sidebar lists every file the active workspace knows as a
+tree by folder (the folders they all share are left out) — open in a tab (bold) or only listed
+—, the shown file highlighted; each file unfolds to its global objects (the ▸ before it).
+Clicking a file or one of its objects shows its tab, opening it when needed, and selects the
+object. Large sets stay light: a folder or a workspace holding more than 10 schemas, or more
+than 10 linked schemas found at once, are only listed (parsed in the background) and a single
+tab is opened; the others open on demand from the panel.
 
 A **workspace is a group of tabs**: the workspace bar, above the tabs, shows one chip per
 workspace (click it to switch to that workspace — the tab you last had there comes back —,
@@ -140,9 +144,10 @@ world: links are followed, linked schemas auto-loaded and "used by" looked up am
 tabs only, so two workspaces holding the same file do not see each other (that is what makes
 them comparable, later). The File menu:
 
-- **Open folder…** — opens every `.xsd` of a folder and its sub-folders (up to 200) as a
+- **Open folder…** — lists every `.xsd` of a folder and its sub-folders (up to 200) as a
   workspace named after the folder (through the server's folder chooser; the browser's when
-  the server has no display). Dropping a folder on the window does the same.
+  the server has no display), opening them all when there are at most 10, else the first one.
+  Dropping a folder on the window does the same.
 - **New workspace** — an empty group of tabs, made active.
 - **Open workspace…** — opens a `<name>.xsdviewer.json` as a new group next to the workspaces
   already open (an empty unsaved one is taken over; a workspace already open is brought to

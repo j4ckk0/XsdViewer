@@ -11,6 +11,7 @@ export function newTabState() {
     rel: null,          // path in an opened folder, when the file came from the library
     located: null,      // promise of the server's search for the path of a file opened in the browser
     workspace: null,    // the workspace (see newWorkspaceState) the tab belongs to; always set
+    file: null,         // the workspace file (an entry of workspace.files) the tab shows, when it shows one
     text: '',
     model: null,        // { targetNamespace, imports, nodes, edges } as answered by /api/parse
     nodes: new Map(),   // id -> node
@@ -36,6 +37,8 @@ export function newWorkspaceState(number) {
     path: null,        // its file, once saved or opened from one
     label: null,       // a name given at creation (an opened folder), used while unsaved
     lastActive: null,  // the tab shown when the workspace was last active
+    /** The schema files of the workspace, open in a tab or not: {name, path, rel, text, model, failed} (see workspace-files.js). */
+    files: [],
   };
 }
 

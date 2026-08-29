@@ -8,10 +8,12 @@ import { t } from './i18n.js';
 import { holdsKey, tabKeys } from './folder-library.js';
 import { MSG } from './message-keys.js';
 import { renderPage } from './page.js';
-import { loadInto, resolveLocation } from './schema-loader.js';
+import { ensureTab } from './file-tabs.js';
+import { resolveLocation } from './schema-loader.js';
+import { registerFile } from './workspace-files.js';
 import { renderNodeListSelection } from './sidebar.js';
 import { session } from './state.js';
-import { activateTab, closeTab, newTab, renderTabBar, tabsOf } from './tabs.js';
+import { activateTab, tabsOf } from './tabs.js';
 import { highlightTextLine } from './text-view.js';
 import { toast } from './toast.js';
 
@@ -73,9 +75,8 @@ export async function followExternal(node) {
     visited.add(f.key);
     let tab = tabsOf(from.workspace).find(x => holdsKey(x, f.key));
     if (!tab) {
-      tab = newTab(from.workspace);
-      if (!(await loadInto(tab, f.name, f.text, f.path))) { closeTab(tab); renderTabBar(); continue; }
-      tab.rel = f.rel;
+      tab = await ensureTab(registerFile(from.workspace, { name: f.name, path: f.path, rel: f.rel, text: f.text }));
+      if (!tab) continue;
     }
     examined.push(tab);
     const id = findIn(tab, name, kinds, ns);

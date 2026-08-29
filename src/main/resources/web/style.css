@@ -336,8 +336,13 @@ table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0
 .tree .group-h::before { content: "▾ "; color: var(--muted); }
 .tree .group-h.collapsed::before { content: "▸ "; }
 .tree .group-items { padding-left: 12px; }
-.tree .item .file::before { content: "▫ "; color: var(--muted); }
-.tree .item .empty { color: var(--muted); font-style: italic; }
+.tree .item.file { gap: 4px; color: var(--muted); }
+.tree .item.file.open { color: var(--text); font-weight: 600; }
+.tree .item.file .expander { display: inline-block; width: 12px; color: var(--muted); font-weight: 400; }
+.tree .item .empty { color: var(--muted); font-style: italic; font-weight: 400; }
+.tree .objects { padding-left: 22px; }
+.tree .objects .item { padding: 1px 12px; font-size: 12px; }
+.tree .objects .item.empty { color: var(--muted); font-style: italic; }
 
 #schemaInfo {
   padding: 6px 12px 10px;
