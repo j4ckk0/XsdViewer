@@ -133,6 +133,8 @@
   "workspace.alreadyOpen": "{0} est déjà ouvert",
   "workspace.untitled": "Espace de travail {0}",
   "workspace.close": "Fermer l'espace de travail {0} et ses onglets",
+  "workspace.selectHint": "Ctrl+clic : sélectionner pour une comparaison",
+  "compare.hint": "Ctrl+clic sur deux espaces de travail pour les comparer",
   "compare.button": "⇄ Comparer",
   "compare.button.title": "Comparer deux espaces de travail : Ctrl+clic sur leurs pastilles pour les sélectionner, puis comparer (fichiers appariés par nom)",
   "compare.needTwo": "Ctrl+clic sur deux pastilles d'espace de travail pour les sélectionner, puis comparer",

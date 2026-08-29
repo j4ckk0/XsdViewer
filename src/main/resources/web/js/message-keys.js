@@ -13,6 +13,7 @@ export const MSG = {
   TAB_CLOSE: 'tab.close',
   WORKSPACE_UNTITLED: 'workspace.untitled',
   WORKSPACE_CLOSE: 'workspace.close',
+  WORKSPACE_SELECT_HINT: 'workspace.selectHint',
   COMPARE_NEED_TWO: 'compare.needTwo',
   COMPARE_TITLE: 'compare.title',
   COMPARE_SUMMARY: 'compare.summary',

@@ -133,6 +133,8 @@
   "workspace.alreadyOpen": "{0} is already open",
   "workspace.untitled": "Workspace {0}",
   "workspace.close": "Close the workspace {0} and its tabs",
+  "workspace.selectHint": "Ctrl+click: select for a comparison",
+  "compare.hint": "Ctrl+click two workspaces to compare them",
   "compare.button": "⇄ Compare",
   "compare.button.title": "Compare two workspaces: Ctrl+click their chips to select them, then compare (files paired by name)",
   "compare.needTwo": "Ctrl+click two workspace chips to select them, then compare",

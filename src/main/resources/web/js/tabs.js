@@ -137,7 +137,7 @@ export function renderNavigation() {
     const name = workspaceName(ws);
     chips += '<div class="' + CLS.WORKSPACE_GROUP + (ws === session.active.workspace ? ' ' + CLS.ACTIVE : '')
       + (session.compareSelection.includes(ws) ? ' ' + CLS.SELECTED : '') + '"' + dataAttr(DATA.WORKSPACE_INDEX, w) + '>'
-      + '<span class="' + CLS.WORKSPACE_NAME + '" title="' + esc(ws.path || name) + '">' + esc(name)
+      + '<span class="' + CLS.WORKSPACE_NAME + '" title="' + esc((ws.path || name) + '\n' + t(MSG.WORKSPACE_SELECT_HINT)) + '">' + esc(name)
       + '<button class="' + CLS.WORKSPACE_CLOSE + '" type="button" title="' + esc(t(MSG.WORKSPACE_CLOSE, name)) + '">×</button></span></div>';
   });
   $(ID.WORKSPACES).innerHTML = chips;
@@ -150,6 +150,8 @@ export function renderNavigation() {
       + '<button class="' + CLS.DOC_TAB_CLOSE + '" type="button" title="' + esc(t(MSG.TAB_CLOSE)) + '">×</button></div>';
   }
   $(ID.TABS).innerHTML = tabs;
-  $(ID.COMPARE_BUTTON).disabled = session.compareSelection.length !== 2;
+  const selected = session.compareSelection.length;
+  $(ID.COMPARE_BUTTON).disabled = selected !== 2;
+  $(ID.COMPARE_HINT).classList.toggle(CLS.HIDDEN, selected === 2 || session.workspaces.length < 2);   // shown once there is something to compare
   renderFileList();
 }

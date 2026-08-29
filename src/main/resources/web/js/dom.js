@@ -37,6 +37,7 @@ export const ID = {
   WORKSPACES: 'workspaces',
   NEW_TAB_BUTTON: 'newTabBtn',
   COMPARE_BUTTON: 'compareBtn',
+  COMPARE_HINT: 'compareHint',
   COMPARE: 'compare',
   COMPARE_TITLE: 'compareTitle',
   COMPARE_SUMMARY: 'compareSummary',
