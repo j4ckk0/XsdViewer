@@ -1,4 +1,6 @@
 {
+  "language.name": "English",
+  "language.title": "Language of the page",
   "app.title": "XsdViewer",
   "app.titleWithFile": "{0} – XsdViewer",
 

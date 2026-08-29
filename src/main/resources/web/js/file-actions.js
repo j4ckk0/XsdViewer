@@ -22,6 +22,11 @@ export async function initCapabilities() {
   } catch (e) {
     session.dialogs = false;
   }
+  applyCapabilities();
+}
+
+/** Enables the workspace commands when the server has dialogs, else disables them and says why. */
+export function applyCapabilities() {
   for (const id of [ID.MENU_OPEN_WORKSPACE, ID.MENU_SAVE_WORKSPACE]) {
     $(id).disabled = !session.dialogs;
     if (!session.dialogs) $(id).title = t(MSG.DIALOGS_UNAVAILABLE);

@@ -39,8 +39,10 @@ export function setDetailsCollapsed(collapsed) {
   try { localStorage.setItem(STORAGE_KEY.DETAILS_COLLAPSED, collapsed ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
 }
 
+export const isDetailsCollapsed = () => $(ID.DETAILS).classList.contains(CLS.COLLAPSED);
+
 export function toggleDetails() {
-  setDetailsCollapsed(!$(ID.DETAILS).classList.contains(CLS.COLLAPSED));
+  setDetailsCollapsed(!isDetailsCollapsed());
 }
 
 /** Restores the collapsed state remembered in the browser. */

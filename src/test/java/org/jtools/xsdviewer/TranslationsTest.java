@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.PropertyResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
@@ -54,6 +55,24 @@ class TranslationsTest {
         Set<String> base = bundleKeys("messages.properties");
         assertEquals(messageKeyConstants(), base, "MessageKey constants vs messages.properties");
         assertEquals(base, bundleKeys("messages_fr.properties"), "messages.properties vs messages_fr.properties");
+    }
+
+    @Test
+    void requestLocaleSelectsTheBundle() {
+        try {
+            Messages.setRequestLocale(Locale.FRENCH);
+            assertEquals("POST attendu", Messages.get(MessageKey.POST_EXPECTED));
+            Messages.setRequestLocale(Locale.ENGLISH);
+            assertEquals("POST expected", Messages.get(MessageKey.POST_EXPECTED));
+            Messages.setRequestLocale(Locale.GERMAN);   // no file: the base file, not the JVM's language
+            assertEquals("POST expected", Messages.get(MessageKey.POST_EXPECTED));
+        } finally {
+            Messages.clearRequestLocale();
+        }
+        assertEquals("fr", Messages.localeOf("fr-FR,fr;q=0.9,en;q=0.8").getLanguage());
+        assertEquals("en", Messages.localeOf("en").getLanguage());
+        assertEquals(null, Messages.localeOf(null));
+        assertEquals(null, Messages.localeOf(" "));
     }
 
     @Test

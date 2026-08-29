@@ -99,6 +99,18 @@ html, body {
 
 /* ---- layout ------------------------------------------------------------------------ */
 
+#language {
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 4px;
+  cursor: pointer;
+}
+#language:hover { border-color: var(--border); color: var(--text); }
+
 #body {
   display: flex;
   flex: 1;

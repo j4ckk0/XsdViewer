@@ -1,6 +1,9 @@
 /** Keys of the texts in i18n/<language>.json (see i18n.js). Constants ending with '.' are prefixes completed by a node kind. */
 export const MSG = {
   APP_TITLE: 'app.title',
+  /** The language's name in its own language, in each i18n file. */
+  LANGUAGE_NAME: 'language.name',
+  LANGUAGE_TITLE: 'language.title',
   APP_TITLE_WITH_FILE: 'app.titleWithFile',
   STATUS_NO_FILE: 'status.noFile',
 

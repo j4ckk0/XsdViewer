@@ -29,8 +29,10 @@ export function setSchemaInfoCollapsed(collapsed) {
   try { localStorage.setItem(STORAGE_KEY.SCHEMA_INFO_COLLAPSED, collapsed ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
 }
 
+export const isSchemaInfoCollapsed = () => $(ID.SCHEMA_INFO).classList.contains(CLS.COLLAPSED);
+
 export function toggleSchemaInfo() {
-  setSchemaInfoCollapsed(!$(ID.SCHEMA_INFO).classList.contains(CLS.COLLAPSED));
+  setSchemaInfoCollapsed(!isSchemaInfoCollapsed());
 }
 
 /** Restores the folded state remembered in the browser. */

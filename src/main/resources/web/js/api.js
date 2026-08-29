@@ -1,5 +1,6 @@
 /** The calls to the XsdViewer server (paths: constants.js API, handlers: the server package). */
 import { API, API_PARAM, HTTP } from './constants.js';
+import { language } from './i18n.js';
 
 /** The server did not answer at all (stopped, or the page was loaded from elsewhere). */
 export class ServerUnreachableError extends Error {
@@ -9,9 +10,11 @@ export class ServerUnreachableError extends Error {
   }
 }
 
-async function request(url, init) {
+/** fetch with the page's language, so that the server answers (errors, generated documentation) in it. */
+async function request(url, init = {}) {
+  const headers = Object.assign({ [HTTP.ACCEPT_LANGUAGE_HEADER]: language }, init.headers || {});
   try {
-    return await fetch(url, init);
+    return await fetch(url, Object.assign({}, init, { headers }));
   } catch (e) {
     throw new ServerUnreachableError(e);
   }

@@ -61,6 +61,7 @@ export const HTTP = {
   CONTENT_TYPE_HEADER: 'Content-Type',
   TEXT_PLAIN_UTF8: 'text/plain; charset=utf-8',
   JSON: 'application/json',
+  ACCEPT_LANGUAGE_HEADER: 'Accept-Language',
 };
 
 // ---- files ----
@@ -77,6 +78,7 @@ export const STORAGE_KEY = {
   TWO_LEVELS: 'xsdviewer.twoLevels',
   DETAILS_COLLAPSED: 'xsdviewer.detailsCollapsed',
   SCHEMA_INFO_COLLAPSED: 'xsdviewer.schemaInfoCollapsed',
+  LANGUAGE: 'xsdviewer.language',
 };
 export const STORAGE_TRUE = '1';
 export const STORAGE_FALSE = '0';

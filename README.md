@@ -171,8 +171,10 @@ src/test/java/            parser, JSON, command line and translation tests (samp
 samples/                  purchaseOrder.xsd (one file), import/ (order.xsd + imported / included files)
 ```
 
-The page is shown in the browser's language when a `web/i18n/<language>.json` exists (English
-otherwise; `?lang=fr` forces one); the server's own messages follow the JVM locale.
+The page is shown in the language chosen in the drop-list at the right of the top bar
+(remembered by the browser; initially the browser's language when a `web/i18n/<language>.json`
+exists, English otherwise; `?lang=fr` forces one). The server answers the page in that language
+too; only its console messages follow the JVM locale.
 
 No runtime dependency: the jar only needs a JDK.
 

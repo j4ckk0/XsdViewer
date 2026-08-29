@@ -5,15 +5,19 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
 
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.jtools.xsdviewer.Messages;
 
 /**
  * The HTTP server of the tool: the static page under {@code /} and the API under {@code /api/*}
- * (one handler class per path, see {@link ApiPath}). Requests run on virtual threads.
+ * (one handler class per path, see {@link ApiPath}). Requests run on virtual threads, and the
+ * messages of each request follow the language the page sends in {@code Accept-Language}.
  */
 public final class XsdViewerServer {
 
     private static final String URL_SCHEME = "http://";
+    private static final String ACCEPT_LANGUAGE_HEADER = "Accept-Language";
     /** Seconds given to in-flight exchanges when stopping (the quit answer itself, mostly). */
     private static final int STOP_DELAY_SECONDS = 1;
 
@@ -30,19 +34,31 @@ public final class XsdViewerServer {
         HttpServer http = HttpServer.create(new InetSocketAddress(host, port), 0);
         XsdViewerServer server = new XsdViewerServer(http, host);
         ServedSchemaFiles files = new ServedSchemaFiles();
-        http.createContext(ApiPath.PARSE, new ParseSchemaHandler());
-        http.createContext(ApiPath.INITIAL, new InitialFileHandler(files, initialFile));
-        http.createContext(ApiPath.OPEN, new OpenSchemaLocationHandler(files));
-        http.createContext(ApiPath.LOCATE, new LocateSchemaFileHandler(files, new SchemaFileFinder()));
-        http.createContext(ApiPath.QUIT, new QuitHandler(server::stopAndExit));
-        http.createContext(ApiPath.CAPABILITIES, new CapabilitiesHandler());
-        http.createContext(ApiPath.CHOOSE, new ChooseFilesHandler(files));
-        http.createContext(ApiPath.WORKSPACE_SAVE, new SaveWorkspaceHandler());
-        http.createContext(ApiPath.WORKSPACE_OPEN, new OpenWorkspaceHandler(files));
-        http.createContext(ApiPath.ROOT, new StaticResourceHandler());
+        http.createContext(ApiPath.PARSE, localized(new ParseSchemaHandler()));
+        http.createContext(ApiPath.INITIAL, localized(new InitialFileHandler(files, initialFile)));
+        http.createContext(ApiPath.OPEN, localized(new OpenSchemaLocationHandler(files)));
+        http.createContext(ApiPath.LOCATE, localized(new LocateSchemaFileHandler(files, new SchemaFileFinder())));
+        http.createContext(ApiPath.QUIT, localized(new QuitHandler(server::stopAndExit)));
+        http.createContext(ApiPath.CAPABILITIES, localized(new CapabilitiesHandler()));
+        http.createContext(ApiPath.CHOOSE, localized(new ChooseFilesHandler(files)));
+        http.createContext(ApiPath.WORKSPACE_SAVE, localized(new SaveWorkspaceHandler()));
+        http.createContext(ApiPath.WORKSPACE_OPEN, localized(new OpenWorkspaceHandler(files)));
+        http.createContext(ApiPath.ROOT, localized(new StaticResourceHandler()));
         http.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         http.start();
         return server;
+    }
+
+    /** The handler with the request's {@code Accept-Language} applied to {@link Messages} for its duration. */
+    private static HttpHandler localized(HttpHandler handler) {
+        return ex -> {
+            Messages.setRequestLocale(Messages.localeOf(ex.getRequestHeaders().getFirst(ACCEPT_LANGUAGE_HEADER)));
+            try {
+                handler.handle(ex);
+            } finally {
+                Messages.clearRequestLocale();
+            }
+        };
     }
 
     /** The address of the page, e.g. {@code http://127.0.0.1:8080/}. */

@@ -102,7 +102,7 @@ Static files, no build step, no framework: `index.html`, `style.css`, ES modules
 | `i18n/en.json`, `i18n/fr.json` | The texts of the page, one flat JSON file per language (same keys in each, checked by `TranslationsTest`). |
 | `js/app.js` | Start-up: `await initI18n()`, `wireEvents()`, `renderPage()`, `loadInitialFile()`. |
 | `js/constants.js`, `js/dom.js`, `js/message-keys.js` | The strings of the client: the API contract and vocabulary shared with the server (kinds, paths, storage keys); element ids, CSS classes and data attributes; the keys of the texts. |
-| `js/i18n.js`, `js/kind-labels.js` | Language choice (`?lang=`, else the browser's), loading of `i18n/<lang>.json`, `t(key, …args)`, `plural()`, `translate(root)` for the `data-i18n*` bindings; labels of node kinds. |
+| `js/i18n.js`, `js/language-selector.js`, `js/kind-labels.js` | Language choice (`?lang=`, remembered choice, else the browser's), loading of `i18n/<lang>.json`, `t(key, …args)`, `plural()`, `translate(root)` for the `data-i18n*` bindings, `setLanguage()`; the drop-list; labels of node kinds. |
 | `js/state.js` | `newTabState()` (one object per document tab: the model plus derived indexes `outEdges`, `inEdges`, `lineToNode`, the selection, history, view, filter and scroll positions) and `session` (the tabs, the active one, the pending jump, the folder library). |
 | `js/api.js` | The `fetch` calls to `/api/*`, one function per path. |
 | `js/schema-index.js`, `js/declarations.js` | Indexing a parsed schema into a tab; finding declarations across tabs (`findIn`, `findInTabs`, `usersInOtherTabs`, `locationsFor`). |
@@ -133,13 +133,19 @@ Two rules apply to both tiers:
   constants, not translated.
 - **User-visible texts come from resource files, one per language.** Server side,
   `Messages.get(MessageKey.X, args…)` reads `messages.properties` (English, the base file) or
-  `messages_<language>.properties` for the JVM locale (`MessageFormat` patterns). Client side,
-  `t(MSG.X, args…)` reads `i18n/<language>.json`, chosen from `?lang=` or the browser's
-  languages, English as fallback; static labels of `index.html` are bound with `data-i18n*`
-  attributes and filled by `translate()`. To add a language: copy `en.json` to `<code>.json`,
-  add the code to `LANGUAGES` in `i18n.js`, and (server) add `messages_<code>.properties`.
-  `TranslationsTest` checks that every language file has the same keys, that every key the
-  code uses exists, and that no key is left unused.
+  `messages_<language>.properties` (`MessageFormat` patterns) for the locale of the request
+  being handled — the page sends its language in `Accept-Language`, `XsdViewerServer`
+  applies it to `Messages` for the duration of the request (a `ThreadLocal`, one virtual
+  thread per request); console messages use the JVM locale. A language without a file gets
+  the base file, never the JVM's language. Client side, `t(MSG.X, args…)` reads
+  `i18n/<language>.json`, chosen from `?lang=`, else the choice remembered from the top-bar
+  drop-list (`js/language-selector.js`), else the browser's languages, English as fallback;
+  each file names its language under `language.name`, which is what the drop-list shows.
+  Switching re-binds the static labels (`data-i18n*` attributes, `translate()`) and redraws
+  the page. To add a language: copy `en.json` to `<code>.json`, translate, add the code to
+  `LANGUAGES` in `i18n.js`, and (server) add `messages_<code>.properties`. `TranslationsTest`
+  checks that every language file has the same keys, that every key the code uses exists,
+  and that no key is left unused.
 
 #### Following links into other files
 

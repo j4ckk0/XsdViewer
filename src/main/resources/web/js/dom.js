@@ -20,6 +20,7 @@ export const ID = {
   FILE_NAME: 'fileName',
   EXPORT_BUTTON: 'exportBtn',
   SHOW_BUILTINS: 'showBuiltins',
+  LANGUAGE: 'language',
   TABS: 'tabs',
   NEW_TAB_BUTTON: 'newTabBtn',
   SCHEMA_INFO: 'schemaInfo',
