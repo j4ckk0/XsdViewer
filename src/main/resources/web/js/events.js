@@ -4,7 +4,7 @@ import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { closeCompare, initOptions, rememberOptions, renderCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
-import { closeActiveWorkspace, openBrowserFolder, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
+import { closeActiveWorkspace, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { fileListClick, initFiles, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
@@ -169,6 +169,7 @@ function wireViews() {
   $(ID.FILES_CONTENT).addEventListener('click', async (e) => {   // the Files panel: a file or an object shows its tab, opened when needed
     const hit = fileListClick(e.target);
     if (!hit) return;
+    if (hit.entries) { openEntriesAsWorkspace(hit.folder, hit.entries); return; }
     const tab = hit.tab || await ensureTab(hit.entry);
     if (!tab) return;
     const changed = activateTab(tab);

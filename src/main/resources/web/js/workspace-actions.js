@@ -102,6 +102,19 @@ export async function openBrowserFolder(files, relOf, folderName) {
   await openFolderAsWorkspace(folderName, read, schemas.length > kept.length);
 }
 
+/** A sub-folder of the Files panel opened as its own workspace: the files beneath it, with their text and model already at hand. */
+export async function openEntriesAsWorkspace(name, entries) {
+  const ws = newWorkspace();
+  ws.label = name;
+  const copies = entries.map(e => registerFile(ws, { name: e.name, path: e.path, rel: e.rel, text: e.text, model: e.model }));
+  const opened = await openInWorkspace(ws, copies.length <= MAX_AUTO_OPEN ? copies : copies.slice(0, 1));
+  if (!tabsOf(ws).length) newTab(ws);
+  activateTab(opened[0] || tabsOf(ws)[0]);
+  renderPage();
+  toast(copies.length <= MAX_AUTO_OPEN ? plural(opened.length, MSG.FOLDER_OPENED_ONE, MSG.FOLDER_OPENED_OTHER, name) : t(MSG.FOLDER_LISTED, copies.length, name, opened.length));
+  if (copies.length > MAX_AUTO_OPEN) parseInBackground(ws);
+}
+
 /** Lists files as a new workspace named {@code name}; opens them all up to MAX_AUTO_OPEN, else only the first (the others wait in the Files panel, parsed in the background). */
 async function openFolderAsWorkspace(name, files, truncated) {
   if (!files.length) { toast(t(MSG.FOLDER_EMPTY, name)); return; }

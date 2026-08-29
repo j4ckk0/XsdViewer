@@ -337,9 +337,26 @@ table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0
 #files .count { color: var(--muted); font-weight: 500; }
 #files.collapsed #filesContent { display: none; }
 .tree { margin: 0 -12px; }
-.tree .group-h { text-transform: none; letter-spacing: 0; font-size: 12px; padding: 3px 12px 1px; margin-top: 2px; }
-.tree .group-h::before { content: "▾ "; color: var(--muted); }
-.tree .group-h.collapsed::before { content: "▸ "; }
+/* a folder row: the arrow, then its name in light grey, left-aligned */
+.tree .group-h { justify-content: flex-start; gap: 4px; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 600; color: var(--muted); padding: 3px 12px 1px; margin-top: 2px; }
+.tree .group-h::before { content: "▾"; display: inline-block; width: 12px; font-weight: 400; }
+.tree .group-h .wsopen {
+  margin-left: auto;
+  font: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  width: 20px; height: 18px;
+  line-height: 16px;
+  padding: 0;
+  cursor: pointer;
+  visibility: hidden;
+}
+.tree .group-h:hover .wsopen { visibility: visible; }
+.tree .group-h .wsopen:hover { background: #e7e9ee; color: var(--text); }
+.tree .group-h.collapsed::before { content: "▸"; }
 .tree .group-items { padding-left: 12px; }
 .tree .item.file { gap: 4px; color: var(--muted); }
 .tree .item.file.open { color: var(--text); font-weight: 600; }

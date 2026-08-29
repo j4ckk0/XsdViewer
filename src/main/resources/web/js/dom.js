@@ -88,6 +88,7 @@ export const CLS = {
   WORKSPACE_GROUP: 'wsgroup',
   WORKSPACE_NAME: 'wsname',
   WORKSPACE_CLOSE: 'wsclose',
+  WORKSPACE_OPEN: 'wsopen',
   // comparison
   COMPARE_ROW: 'crow',
   COMPARE_DETAIL: 'cdetail',

@@ -139,7 +139,7 @@ The **Files** panel at the top of the sidebar lists every file the active worksp
 tree by folder (the folders they all share are left out) — open in a tab (bold) or only listed
 —, the shown file highlighted; each file unfolds to its global objects (the ▸ before it).
 Clicking a file or one of its objects shows its tab, opening it when needed, and selects the
-object. Large sets stay light: a folder or a workspace holding more than 10 schemas, or more
+object; the ⧉ button of a folder row (on hover) opens that sub-folder as a workspace of its own. Large sets stay light: a folder or a workspace holding more than 10 schemas, or more
 than 10 linked schemas found at once, are only listed (parsed in the background) and a single
 tab is opened; the others open on demand from the panel.
 

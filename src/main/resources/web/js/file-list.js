@@ -14,6 +14,8 @@ const COLLAPSE_GLYPH = '▾', EXPAND_GLYPH = '▸';
 /** Folders folded by the user (their path in the tree), and the files the user unfolded / folded (key -> true / false); a session-long memory. */
 const foldedDirs = new Set();
 const fileUnfolded = new Map();
+/** The workspace files beneath each folder of the last drawn tree, by folder path (for "open as workspace"). */
+const dirEntries = new Map();
 
 /** A file shows its objects when the user said so, else when it is the one shown. */
 const showsObjects = (entry, active) => (fileUnfolded.has(fileKeys(entry)[0]) ? fileUnfolded.get(fileKeys(entry)[0]) : active);
@@ -44,13 +46,14 @@ function commonPrefix(paths) {
 function tree(list) {
   const paths = list.map(r => r.path.split(SEPARATORS).filter(Boolean));
   const skip = commonPrefix(paths);
-  const root = { dirs: new Map(), files: [] };
+  const root = { dirs: new Map(), files: [], entries: [] };
   list.forEach((r, i) => {
     const parts = paths[i].length > 1 ? paths[i].slice(skip) : paths[i];
     let node = root;
     for (const dir of parts.slice(0, -1)) {
-      if (!node.dirs.has(dir)) node.dirs.set(dir, { dirs: new Map(), files: [] });
+      if (!node.dirs.has(dir)) node.dirs.set(dir, { dirs: new Map(), files: [], entries: [] });
       node = node.dirs.get(dir);
+      if (r.entry) node.entries.push(r.entry);
     }
     node.files.push(Object.assign({ shown: parts[parts.length - 1] }, r));
   });
@@ -70,8 +73,11 @@ function nodeHtml(node, dirPath) {
   let html = '';
   for (const [name, child] of [...node.dirs].sort((a, b) => a[0].localeCompare(b[0]))) {
     const path = dirPath + PATH_SEPARATOR + name;
+    dirEntries.set(path, { name, entries: child.entries });
     html += '<div class="' + CLS.GROUP_HEADER + ' ' + CLS.DIR + (foldedDirs.has(path) ? ' ' + CLS.COLLAPSED : '') + '"' + dataAttr(DATA.DIR, path) + '>'
-      + '<span>' + esc(name) + '</span></div><div class="' + CLS.GROUP_ITEMS + '">' + nodeHtml(child, path) + '</div>';
+      + '<span>' + esc(name) + '</span>'
+      + '<button class="' + CLS.WORKSPACE_OPEN + '" type="button" title="' + esc(t(MSG.FILES_OPEN_AS_WORKSPACE, name)) + '">⧉</button>'
+      + '</div><div class="' + CLS.GROUP_ITEMS + '">' + nodeHtml(child, path) + '</div>';
   }
   for (const f of node.files.sort((a, b) => a.shown.localeCompare(b.shown))) {
     const active = f.tab === session.active;
@@ -87,14 +93,19 @@ function nodeHtml(node, dirPath) {
 }
 
 export function renderFileList() {
+  dirEntries.clear();
   const list = rows();
   $(ID.FILES_COUNT).textContent = list.length;
   $(ID.FILES_CONTENT).innerHTML = nodeHtml(tree(list), '');
 }
 
-/** A click in the panel: folds are handled here (null); else what was hit — {entry}, {entry, id} for an object, {tab} for an empty tab. */
+/** A click in the panel: folds are handled here (null); else what was hit — {entry}, {entry, id} for an object, {tab} for an empty tab, {folder, entries} for a folder's "open as workspace". */
 export function fileListClick(target) {
   const header = target.closest('.' + CLS.DIR);
+  if (header && target.closest('.' + CLS.WORKSPACE_OPEN)) {
+    const dir = dirEntries.get(header.dataset[DATA.DIR]);
+    return dir ? { folder: dir.name, entries: dir.entries } : null;
+  }
   if (header) {
     const path = header.dataset[DATA.DIR];
     if (foldedDirs.has(path)) foldedDirs.delete(path); else foldedDirs.add(path);

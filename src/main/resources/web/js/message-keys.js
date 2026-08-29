@@ -35,6 +35,7 @@ export const MSG = {
 
   FILES_COLLAPSE: 'files.collapse',
   FILES_NOT_A_SCHEMA: 'files.notASchema',
+  FILES_OPEN_AS_WORKSPACE: 'files.openAsWorkspace',
   FILES_EXPAND: 'files.expand',
   INFO_TITLE: 'info.title',
   INFO_COLLAPSE: 'info.collapse',

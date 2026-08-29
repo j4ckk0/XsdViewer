@@ -81,6 +81,7 @@
   "files.collapse": "Replier la liste des fichiers",
   "files.expand": "Déplier la liste des fichiers",
   "files.notASchema": "pas un schéma XML",
+  "files.openAsWorkspace": "Ouvrir le dossier {0} comme un espace de travail à part",
   "info.title": "Schéma",
   "info.collapse": "Replier l'en-tête du schéma",
   "info.expand": "Déplier l'en-tête du schéma",
