@@ -5,6 +5,7 @@ rem
 rem The server runs in the background (javaw.exe): no console window stays open, the page opens
 rem in the browser, File > Quit stops it. A start-up failure is shown in a dialog.
 rem   xsdviewer.bat --console ...   runs it in this window instead, with its messages (for diagnostics)
+rem For a start with no console window at all (a .bat always flashes one), use XsdViewer.exe.
 setlocal EnableDelayedExpansion
 set "DIR=%~dp0"
 set "CONSOLE=0"

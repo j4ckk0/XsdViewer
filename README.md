@@ -64,7 +64,7 @@ previous builds, whatever their version, are deleted from `target/` first):
 
 | Archive | Launcher |
 |---|---|
-| `target/xsdviewer-<version>-windows.zip` | `xsdviewer.bat` — runs the server in the background (`javaw.exe`), so no console window stays open; `xsdviewer.bat --console …` keeps one, with the server's messages |
+| `target/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled JRE, no console window at all. The exe is built with launch4j from any OS. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
 | `target/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
 
 When started without a console (the Windows launcher, a double-clicked jar), a start-up

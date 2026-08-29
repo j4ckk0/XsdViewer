@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Windows distribution: zip with the bundled JRE and a .bat launcher. -->
+<!-- Windows distribution: zip with the bundled JRE, XsdViewer.exe (no console) and xsdviewer.bat (console). -->
 <assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 http://maven.apache.org/xsd/assembly-2.2.0.xsd">
@@ -13,6 +13,9 @@
     <file>
       <source>${project.build.directory}/${project.build.finalName}.jar</source>
       <destName>xsdviewer.jar</destName>
+    </file>
+    <file>
+      <source>${project.build.directory}/XsdViewer.exe</source>
     </file>
     <file>
       <source>src/dist/xsdviewer.bat</source>

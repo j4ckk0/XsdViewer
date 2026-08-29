@@ -279,7 +279,8 @@ Build and test:
 | maven-surefire-plugin | 3.2.5 | runs the tests |
 | JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest` and `SchemaGraphJsonWriterTest` (against `samples/purchaseOrder.xsd`), `JsonWriterTest`, `CommandLineOptionsTest`, `TranslationsTest` |
 | `run.sh` / `run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
-| `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; the Windows one starts `javaw.exe` in the background (no console; `--console` to keep one) |
+| `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; on Windows the `.bat` starts `javaw.exe` from a command line (`--console` to keep one) |
+| launch4j-maven-plugin | 2.7.0 | `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
 | `build.sh` / `build.bat` | – | `mvn package` |
 | `package.sh` / `package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
 | maven-clean-plugin | 3.2.0 | `dist` profile only: deletes the previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` and `target/jre` before the build |

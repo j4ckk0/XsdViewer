@@ -168,6 +168,7 @@
                       <includes>
                         <include>${project.artifactId}-*-windows.zip</include>
                         <include>${project.artifactId}-*-linux.tar.gz</include>
+                        <include>XsdViewer.exe</include>
                         <include>jre/**</include>
                       </includes>
                     </fileset>
@@ -213,6 +214,47 @@
                       <cutdirsmapper dirs="1"/>
                     </untar>
                   </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <!-- XsdViewer.exe: a Windows launcher without a console (GUI subsystem) that runs the
+                 bundled jre\ with xsdviewer.jar; built from any OS. xsdviewer.bat keeps the console. -->
+            <groupId>com.akathist.maven.plugins.launch4j</groupId>
+            <artifactId>launch4j-maven-plugin</artifactId>
+            <version>2.7.0</version>
+            <executions>
+              <execution>
+                <id>windows-launcher</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>launch4j</goal>
+                </goals>
+                <configuration>
+                  <headerType>gui</headerType>
+                  <outfile>${project.build.directory}/XsdViewer.exe</outfile>
+                  <dontWrapJar>true</dontWrapJar>
+                  <jar>xsdviewer.jar</jar>
+                  <chdir>.</chdir>
+                  <errTitle>XsdViewer</errTitle>
+                  <jre>
+                    <path>jre</path>
+                    <requiresJdk>false</requiresJdk>
+                    <requires64Bit>true</requires64Bit>
+                    <minVersion>21</minVersion>
+                  </jre>
+                  <versionInfo>
+                    <fileVersion>${project.version}.0</fileVersion>
+                    <txtFileVersion>${project.version}</txtFileVersion>
+                    <fileDescription>XsdViewer - web-based viewer for XML Schema files</fileDescription>
+                    <copyright>jtools.org</copyright>
+                    <productVersion>${project.version}.0</productVersion>
+                    <txtProductVersion>${project.version}</txtProductVersion>
+                    <productName>XsdViewer</productName>
+                    <internalName>xsdviewer</internalName>
+                    <originalFilename>XsdViewer.exe</originalFilename>
+                  </versionInfo>
                 </configuration>
               </execution>
             </executions>
