@@ -134,6 +134,9 @@ world: links are followed, linked schemas auto-loaded and "used by" looked up am
 tabs only, so two workspaces holding the same file do not see each other (that is what makes
 them comparable, later). The File menu:
 
+- **Open folder…** — opens every `.xsd` of a folder and its sub-folders (up to 200) as a
+  workspace named after the folder (through the server's folder chooser; the browser's when
+  the server has no display). Dropping a folder on the window does the same.
 - **New workspace** — an empty group of tabs, made active.
 - **Open workspace…** — opens a `<name>.xsdviewer.json` as a new group next to the workspaces
   already open (an empty unsaved one is taken over; a workspace already open is brought to
@@ -169,8 +172,8 @@ can be found:
    / `xs:redefine` of the current file, following their own imports and includes;
    each file found is opened in a new tab and the declaration selected there. A
    location is looked up
-   - in the folders opened with **File ▸ Open folder…** or dropped on the window (all
-     their `.xsd` files are kept at hand, nothing is opened until needed), then
+   - in the folders opened with **File ▸ Open folder…** or dropped on the window through
+     the browser (their `.xsd` / `.xml` files are kept at hand), then
    - on disk by the server, relative to the current file when it knows where it is: the
      file given on the command line, every file reached from it, and files opened from
      the browser that the server managed to locate (a browser hides the folder of a

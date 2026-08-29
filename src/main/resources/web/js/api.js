@@ -71,6 +71,11 @@ export async function chooseFiles() {
   return (await post(API.CHOOSE)).files;
 }
 
+/** POST /api/choose-folder: {folder, files: [{name, path, text}], truncated} of the folder picked in the server's dialog, or {cancelled}. */
+export async function chooseFolder() {
+  return post(API.CHOOSE_FOLDER);
+}
+
 /**
  * POST /api/workspace/save: {path} of the workspace written through the server's "save as" dialog, or {cancelled}.
  * {@code suggested} is the workspace file proposed by the dialog (the last one opened), or null.

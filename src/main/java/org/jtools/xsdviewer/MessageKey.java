@@ -52,6 +52,7 @@ public final class MessageKey {
 
     // native file dialogs
     public static final String DIALOG_OPEN_SCHEMA = "dialog.openSchema";
+    public static final String DIALOG_OPEN_FOLDER = "dialog.openFolder";
     public static final String DIALOG_OPEN_WORKSPACE = "dialog.openWorkspace";
     public static final String DIALOG_SAVE_WORKSPACE = "dialog.saveWorkspace";
 

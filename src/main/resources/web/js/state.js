@@ -31,7 +31,7 @@ export function newTabState() {
  * then it is named after {@code number}. Links are followed and users looked up within a workspace only.
  */
 export function newWorkspaceState(number) {
-  return { number, path: null };
+  return { number, path: null, label: null };   // label: a name given at creation (an opened folder), used while unsaved
 }
 
 /** Everything the page holds: the workspaces, their tabs (grouped, in workspace order), the active tab, and what is shared. */

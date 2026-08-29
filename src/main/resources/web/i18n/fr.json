@@ -7,7 +7,7 @@
   "menu.file": "Fichier ▾",
   "menu.open": "Ouvrir…",
   "menu.openFolder": "Ouvrir un dossier…",
-  "menu.openFolder.title": "Rendre tous les schémas d'un dossier disponibles pour suivre les liens",
+  "menu.openFolder.title": "Ouvrir tous les schémas (*.xsd) d'un dossier et de ses sous-dossiers comme un espace de travail portant le nom du dossier",
   "menu.open.title": "Choisir des fichiers de schéma (par la boîte de dialogue du serveur quand il a un affichage : leur emplacement est alors connu et les liens peuvent être suivis)",
   "menu.newWorkspace": "Nouvel espace de travail",
   "menu.newWorkspace.title": "Commencer un espace de travail vide : un nouveau groupe d'onglets",
@@ -108,8 +108,10 @@
   "external.notFound": "{0} n'a pas été trouvé",
   "external.chooseFile": "{0} : choisissez le fichier qui déclare {1}",
 
-  "library.added.one": "{0} fichier de schéma de {1} disponible pour suivre les liens",
-  "library.added.other": "{0} fichiers de schéma de {1} disponibles pour suivre les liens",
+  "folder.opened.one": "{0} schéma de {1} ouvert",
+  "folder.opened.other": "{0} schémas de {1} ouverts",
+  "folder.empty": "Aucun fichier .xsd dans {0}",
+  "folder.truncated": "seuls les {0} premiers ont été ouverts",
 
   "linked.opened.one": "{0} schéma lié ouvert : {1}",
   "linked.opened.other": "{0} schémas liés ouverts : {1}",

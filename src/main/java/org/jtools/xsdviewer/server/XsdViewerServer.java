@@ -61,6 +61,7 @@ public final class XsdViewerServer {
         http.createContext(ApiPath.QUIT, localized(new QuitHandler(server::stopAndExit)));
         http.createContext(ApiPath.CAPABILITIES, localized(new CapabilitiesHandler()));
         http.createContext(ApiPath.CHOOSE, localized(new ChooseFilesHandler(files)));
+        http.createContext(ApiPath.CHOOSE_FOLDER, localized(new ChooseFolderHandler(files)));
         http.createContext(ApiPath.WORKSPACE_SAVE, localized(new SaveWorkspaceHandler()));
         http.createContext(ApiPath.WORKSPACE_OPEN, localized(new OpenWorkspaceHandler(files)));
         http.createContext(ApiPath.ROOT, localized(new StaticResourceHandler()));

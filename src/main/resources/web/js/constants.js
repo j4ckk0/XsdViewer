@@ -57,6 +57,7 @@ export const API = {
   QUIT: '/api/quit',
   CAPABILITIES: '/api/capabilities',
   CHOOSE: '/api/choose',
+  CHOOSE_FOLDER: '/api/choose-folder',
   WORKSPACE_SAVE: '/api/workspace/save',
   WORKSPACE_OPEN: '/api/workspace/open',
 };
@@ -72,8 +73,12 @@ export const HTTP = {
 // ---- files ----
 /** A schemaLocation with a scheme (http://...) is never fetched. */
 export const REMOTE_LOCATION_MARK = '://';
-/** Files of an opened folder worth keeping. */
+/** Files of an opened folder worth keeping at hand for following links. */
 export const SCHEMA_FILE_PATTERN = /\.(xsd|xml)$/i;
+/** Files of an opened folder that are opened as tabs. */
+export const XSD_FILE_PATTERN = /\.xsd$/i;
+/** At most this many schemas of a folder opened in the browser are opened as tabs. */
+export const MAX_FOLDER_FILES = 200;
 /** Suffix of a workspace file (Workspace.FILE_SUFFIX on the server); a workspace is named after the rest. */
 export const WORKSPACE_FILE_SUFFIX = '.xsdviewer.json';
 /** Prefix of the identity of a file that came from an opened folder (as opposed to a server path). */

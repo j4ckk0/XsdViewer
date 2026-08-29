@@ -22,9 +22,9 @@ export const activeWorkspace = () => session.active.workspace;
 /** An unsaved workspace holding no file: it can take the next workspace opened. */
 export const isEmptyWorkspace = (ws) => !ws.path && tabsOf(ws).every(tab => !tab.model);
 
-/** The workspace file's name without its suffix, or "Workspace n" while unsaved. */
+/** The workspace file's name without its suffix, else the name it was given (an opened folder), else "Workspace n". */
 export function workspaceName(ws) {
-  if (!ws.path) return t(MSG.WORKSPACE_UNTITLED, ws.number);
+  if (!ws.path) return ws.label || t(MSG.WORKSPACE_UNTITLED, ws.number);
   const base = ws.path.split(PATH_SEPARATORS).pop();
   return base.endsWith(WORKSPACE_FILE_SUFFIX) ? base.slice(0, -WORKSPACE_FILE_SUFFIX.length) : base;
 }

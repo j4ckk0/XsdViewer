@@ -76,8 +76,10 @@ export const MSG = {
   EXTERNAL_NOT_FOUND: 'external.notFound',
   EXTERNAL_CHOOSE_FILE: 'external.chooseFile',
 
-  LIBRARY_ADDED_ONE: 'library.added.one',
-  LIBRARY_ADDED_OTHER: 'library.added.other',
+  FOLDER_OPENED_ONE: 'folder.opened.one',
+  FOLDER_OPENED_OTHER: 'folder.opened.other',
+  FOLDER_EMPTY: 'folder.empty',
+  FOLDER_TRUNCATED: 'folder.truncated',
 
   EXPORT_SELECT_FIRST: 'export.selectFirst',
   EXPORT_RENDER_FAILED: 'export.renderFailed',

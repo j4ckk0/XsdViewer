@@ -5,7 +5,7 @@
  */
 import { renderGraph } from './graph.js';
 import { plural } from './i18n.js';
-import { tabKey } from './library.js';
+import { tabKeys } from './library.js';
 import { MSG } from './message-keys.js';
 import { loadInto, resolveLocation } from './schema-loader.js';
 import { session } from './state.js';
@@ -26,8 +26,8 @@ export function openLinkedSchemas(root) {
 }
 
 async function open(root) {
-  if (!root.model || !tabKey(root)) return;
-  const visited = new Set(tabsOf(root.workspace).map(tabKey).filter(Boolean));
+  if (!root.model || !tabKeys(root).length) return;
+  const visited = new Set(tabsOf(root.workspace).flatMap(tabKeys));
   const queue = [root];
   const opened = [];
   while (queue.length && opened.length < MAX_LINKED_SCHEMAS) {

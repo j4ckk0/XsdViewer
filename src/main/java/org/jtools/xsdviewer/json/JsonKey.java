@@ -56,6 +56,9 @@ public final class JsonKey {
     public static final String WORKSPACE = "workspace";
     public static final String MISSING = "missing";
     public static final String CANCELLED = "cancelled";
+    // folders (/api/choose-folder)
+    public static final String FOLDER = "folder";
+    public static final String TRUNCATED = "truncated";
     /** Marker property of a workspace file, holding the format version. */
     public static final String WORKSPACE_MARKER = "xsdviewer";
 

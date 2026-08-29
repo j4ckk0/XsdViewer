@@ -1,8 +1,9 @@
 /** The File menu and the drop zone: opening files, folders and workspaces, saving a workspace, closing, quitting, the start-up file. */
-import { ServerUnreachableError, chooseFiles, fetchCapabilities, fetchInitialFile, openWorkspaceFile, quitServer, saveWorkspaceFile } from './api.js';
+import { ServerUnreachableError, chooseFiles, chooseFolder, fetchCapabilities, fetchInitialFile, openWorkspaceFile, quitServer, saveWorkspaceFile } from './api.js';
+import { MAX_FOLDER_FILES, PATH_SEPARATOR, XSD_FILE_PATTERN } from './constants.js';
 import { $, CLS, ID, esc } from './dom.js';
 import { plural, t } from './i18n.js';
-import { addToLibrary } from './library.js';
+import { addToLibrary, normPath } from './library.js';
 import { openLinkedSchemas } from './linked-schemas.js';
 import { MSG } from './message-keys.js';
 import { checkPendingJump } from './navigation.js';
@@ -101,10 +102,56 @@ export function closeActiveWorkspace() {
   renderPage();
 }
 
-/** Registers the schema files of an opened / dropped folder and says how many. */
-export function addFolder(files, relOf, folderLabel) {
-  const n = addToLibrary(files, relOf);
-  toast(plural(n, MSG.LIBRARY_ADDED_ONE, MSG.LIBRARY_ADDED_OTHER, folderLabel));
+/** File ▸ Open folder…: the server's folder chooser when it has a display (files come with their location), else the browser's. */
+export async function openFolder() {
+  if (!session.dialogs) { $(ID.FOLDER_INPUT).click(); return; }
+  try {
+    const r = await chooseFolder();
+    if (r.cancelled) return;
+    const name = r.folder.split(PATH_SEPARATOR).filter(Boolean).pop() || r.folder;
+    await openFolderAsWorkspace(name, r.files, r.truncated);
+  } catch (e) {
+    toast(serverError(e));
+  }
+}
+
+/**
+ * A folder opened or dropped in the browser: its schema files are kept at hand for following
+ * links (the library) and its .xsd files are opened as a workspace named after the folder.
+ * {@code relOf} gives a File's path in the folder.
+ */
+export async function openBrowserFolder(files, relOf, folderName) {
+  addToLibrary(files, relOf);
+  const schemas = files.filter(f => XSD_FILE_PATTERN.test(relOf(f))).sort((a, b) => relOf(a).localeCompare(relOf(b)));
+  const kept = schemas.slice(0, MAX_FOLDER_FILES);
+  const read = [];
+  for (const f of kept) read.push({ name: f.name, path: null, text: await f.text(), rel: normPath(relOf(f)) });   // rel: what links resolve to in the library
+  await openFolderAsWorkspace(folderName, read, schemas.length > kept.length);
+}
+
+/** Opens files ({name, path, text}) as a new workspace named {@code name} (an empty unsaved active workspace is taken over). */
+async function openFolderAsWorkspace(name, files, truncated) {
+  if (!files.length) { toast(t(MSG.FOLDER_EMPTY, name)); return; }
+  const ws = isEmptyWorkspace(activeWorkspace()) ? activeWorkspace() : newWorkspace();
+  ws.label = name;
+  const opened = await openInWorkspace(ws, files);
+  if (!tabsOf(ws).length) newTab(ws);
+  activateTab(opened[0] || tabsOf(ws)[0]);
+  renderPage();
+  toast(plural(opened.length, MSG.FOLDER_OPENED_ONE, MSG.FOLDER_OPENED_OTHER, name)
+    + (truncated ? TOAST_SEPARATOR + t(MSG.FOLDER_TRUNCATED, files.length) : ''));
+  for (const tab of opened) openLinkedSchemas(tab);
+}
+
+/** Loads files ({name, path, text, rel?}) into tabs of {@code ws} (its empty tabs first); returns the tabs loaded, in order. */
+async function openInWorkspace(ws, files) {
+  const tabs = [];
+  for (const f of files) {
+    const tab = tabsOf(ws).find(x => !x.model) || newTab(ws);
+    if (await loadInto(tab, f.name, f.text, f.path)) { tab.rel = f.rel || null; tabs.push(tab); }
+    else if (tab !== session.active) closeTab(tab);
+  }
+  return tabs;
 }
 
 /** File ▸ Save workspace…: the active workspace (the locations of its files), written where the server's "save as" dialog says; its own file is proposed. */
@@ -153,20 +200,10 @@ export async function applyWorkspace(answer) {
   }
   const ws = isEmptyWorkspace(activeWorkspace()) ? activeWorkspace() : newWorkspace();
   ws.path = answer.workspace;
-  const tabs = [];            // one per answer.files entry, null when it could not be loaded
-  const opened = [];
-  for (const f of answer.files) {
-    const tab = tabsOf(ws).find(x => !x.model) || newTab(ws);
-    if (await loadInto(tab, f.name, f.text, f.path)) {
-      opened.push(tab);
-      tabs.push(tab);
-    } else {
-      if (tab !== session.active) closeTab(tab);
-      tabs.push(null);
-    }
-  }
+  const opened = await openInWorkspace(ws, answer.files);
   if (!tabsOf(ws).length) newTab(ws);
-  const active = tabs[answer.active] || tabs.find(Boolean) || tabsOf(ws)[0];
+  const activeFile = answer.files[answer.active];
+  const active = (activeFile && opened.find(tab => tab.path === activeFile.path)) || opened[0] || tabsOf(ws)[0];
   activateTab(active);
   renderPage();
   toast(plural(opened.length, MSG.WORKSPACE_LOADED_ONE, MSG.WORKSPACE_LOADED_OTHER, workspaceName(ws))

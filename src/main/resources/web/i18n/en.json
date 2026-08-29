@@ -7,7 +7,7 @@
   "menu.file": "File ▾",
   "menu.open": "Open…",
   "menu.openFolder": "Open folder…",
-  "menu.openFolder.title": "Make every schema of a folder available for following links",
+  "menu.openFolder.title": "Open every schema (*.xsd) of a folder and its sub-folders as a workspace named after the folder",
   "menu.open.title": "Choose schema files (through the server's own dialog when it has a display, so that their location is known and links can be followed)",
   "menu.newWorkspace": "New workspace",
   "menu.newWorkspace.title": "Start an empty workspace: a new group of tabs",
@@ -108,8 +108,10 @@
   "external.notFound": "{0} was not found",
   "external.chooseFile": "{0}: choose the file declaring {1}",
 
-  "library.added.one": "{0} schema file of {1} available for following links",
-  "library.added.other": "{0} schema files of {1} available for following links",
+  "folder.opened.one": "{0} schema of {1} opened",
+  "folder.opened.other": "{0} schemas of {1} opened",
+  "folder.empty": "No .xsd file in {0}",
+  "folder.truncated": "only the first {0} were opened",
 
   "linked.opened.one": "{0} linked schema opened: {1}",
   "linked.opened.other": "{0} linked schemas opened: {1}",

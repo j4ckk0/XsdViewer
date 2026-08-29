@@ -5,7 +5,7 @@ import { renderDetails } from './details.js';
 import { $, ID } from './dom.js';
 import { renderGraph } from './graph.js';
 import { t } from './i18n.js';
-import { tabKey } from './library.js';
+import { holdsKey, tabKeys } from './library.js';
 import { MSG } from './message-keys.js';
 import { renderPage } from './page.js';
 import { loadInto, resolveLocation } from './schema-loader.js';
@@ -63,7 +63,7 @@ export async function followExternal(node) {
   // Read the imported files (from an opened folder or through the server), following their own imports / includes.
   // A file already open in a tab is not loaded again, but its own imports / includes are followed too.
   if (!from.path && from.located) await from.located;
-  const visited = new Set([tabKey(from)].filter(Boolean));
+  const visited = new Set(tabKeys(from));
   const queue = locs.map(location => ({ src: from, location }));
   const examined = [], missing = [];
   while (queue.length) {
@@ -72,7 +72,7 @@ export async function followExternal(node) {
     if (!f) { if (!missing.includes(location)) missing.push(location); continue; }
     if (visited.has(f.key)) continue;
     visited.add(f.key);
-    let tab = tabsOf(from.workspace).find(x => tabKey(x) === f.key);
+    let tab = tabsOf(from.workspace).find(x => holdsKey(x, f.key));
     if (!tab) {
       tab = newTab(from.workspace);
       if (!(await loadInto(tab, f.name, f.text, f.path))) { closeTab(tab); renderTabBar(); continue; }

@@ -39,6 +39,8 @@ public final class ApiPath {
     public static final String CAPABILITIES = "/api/capabilities";
     /** {@code POST}: native "open files" dialog, answers the chosen schemas. */
     public static final String CHOOSE = "/api/choose";
+    /** {@code POST}: native folder chooser, answers the schemas of the folder and its sub-folders. */
+    public static final String CHOOSE_FOLDER = "/api/choose-folder";
     /** {@code POST} a workspace: native "save as" dialog, writes the workspace file. */
     public static final String WORKSPACE_SAVE = "/api/workspace/save";
     /** {@code POST}: native "open" dialog, answers the workspace and its schemas. */

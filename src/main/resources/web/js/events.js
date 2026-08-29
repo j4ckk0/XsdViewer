@@ -3,7 +3,7 @@ import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, P
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { closeCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
-import { addFolder, closeActiveWorkspace, closeAll, closeFile, openFiles, openSchemas, openWorkspace, quit, saveWorkspace, startWorkspace } from './file-actions.js';
+import { closeActiveWorkspace, closeAll, closeFile, openBrowserFolder, openFiles, openFolder, openSchemas, openWorkspace, quit, saveWorkspace, startWorkspace } from './file-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './library.js';
@@ -66,11 +66,11 @@ function wireFileMenu() {
   $(ID.MENU_QUIT).addEventListener('click', () => { closeMenu(); quit(); });
   $(ID.FILE_INPUT).addEventListener('change', (e) => { openFiles([...e.target.files]); e.target.value = ''; });
   $(ID.FILE_INPUT).addEventListener('cancel', () => { session.pendingJump = null; });
-  $(ID.MENU_OPEN_FOLDER).addEventListener('click', () => { closeMenu(); $(ID.FOLDER_INPUT).click(); });
+  $(ID.MENU_OPEN_FOLDER).addEventListener('click', () => { closeMenu(); openFolder(); });
   $(ID.FOLDER_INPUT).addEventListener('change', (e) => {
     const files = [...e.target.files];
     const folder = files[0] ? (files[0].webkitRelativePath.split(PATH_SEPARATOR)[0] || '') : '';
-    addFolder(files, f => f.webkitRelativePath || f.name, folder);
+    openBrowserFolder(files, f => f.webkitRelativePath || f.name, folder);
     e.target.value = '';
   });
 }
@@ -131,7 +131,7 @@ function wireDragAndDrop() {
     const dirs = entries.filter(en => en.isDirectory);
     if (dirs.length) {
       filesOfEntries(dirs).then(list => {
-        addFolder(list.map(x => x.file), f => list.find(x => x.file === f).rel, dirs.map(d => d.name).join(LIST_SEPARATOR));
+        openBrowserFolder(list.map(x => x.file), f => list.find(x => x.file === f).rel, dirs.map(d => d.name).join(LIST_SEPARATOR));
       });
     }
     const files = [...e.dataTransfer.files].filter((f, i) => !entries[i] || entries[i].isFile);
