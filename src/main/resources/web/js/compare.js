@@ -13,7 +13,8 @@ import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
 import { diffModels } from './schema-diff.js';
 import { session } from './state.js';
-import { activateTab, newTab, tabsOf, workspaceName } from './tabs.js';
+import { ensureModel } from './file-tabs.js';
+import { activateTab, newTab, workspaceName } from './tabs.js';
 
 export const COMPARED_WORKSPACES = 2;
 /** Equal runs longer than FOLD_ABOVE are folded to one line in the text diff, FOLD_KEEP lines kept on each side; with "differences only", one line of context. */
@@ -91,12 +92,14 @@ export function startCompare() {
   return true;
 }
 
-/** The loaded tabs of a workspace by file name (the first one when a name appears twice). */
+/** Every file a workspace knows (open in a tab or only listed) by file name; the first one when a name appears twice. */
 function filesOf(ws) {
   const byName = new Map();
-  for (const tab of tabsOf(ws)) if (tab.model && !byName.has(tab.fileName)) byName.set(tab.fileName, tab);
+  for (const f of ws.files) if (!byName.has(f.name)) byName.set(f.name, f);
   return byName;
 }
+
+const shownPath = (f) => f.path || f.rel || f.name;
 
 const canonical = (text) => text.replace(LINE_BREAK, '\n');
 
@@ -128,27 +131,32 @@ export function renderCompare() {
     const side = p.status === STATUS.ONLY_LEFT ? ln : p.status === STATUS.ONLY_RIGHT ? rn : '';
     html += '<tr class="' + CLS.COMPARE_ROW + ' ' + p.status + (p.status === STATUS.DIFFERENT || p.status === STATUS.MOVED ? ' ' + CLS.EXPANDABLE : '') + '"' + dataAttr(DATA.ROW_INDEX, i) + '>'
       + '<td class="' + CLS.COMPARE_NAME + '">' + esc(p.name) + '</td>'
-      + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.left ? p.left.path || '' : '') + '">' + esc(p.left ? p.left.path || p.left.fileName : '') + '</td>'
+      + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.left ? shownPath(p.left) : '') + '">' + esc(p.left ? shownPath(p.left) : '') + '</td>'
       + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side)) + '</td>'
-      + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.right ? p.right.path || '' : '') + '">' + esc(p.right ? p.right.path || p.right.fileName : '') + '</td></tr>';
+      + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.right ? shownPath(p.right) : '') + '">' + esc(p.right ? shownPath(p.right) : '') + '</td></tr>';
   });
   $(ID.COMPARE_TABLE).innerHTML = html + '</tbody>';
 }
 
-/** Click on a row: shows / hides the differences of that pair under it. */
-export function toggleDetail(row) {
+/** Click on a row: shows / hides the differences of that pair under it (the files are parsed first when they were only listed). */
+export async function toggleDetail(row) {
   const pair = pairs[+row.dataset[DATA.ROW_INDEX]];
   if (!pair || (pair.status !== STATUS.DIFFERENT && pair.status !== STATUS.MOVED)) return;
   const next = row.nextElementSibling;
   if (next && next.classList.contains(CLS.COMPARE_DETAIL)) { next.remove(); row.classList.remove(CLS.OPEN); return; }
+  if (row.classList.contains(CLS.OPEN)) return;   // being opened
+  row.classList.add(CLS.OPEN);
+  await ensureModel(pair.left, false);
+  await ensureModel(pair.right, false);
+  if (!row.isConnected) return;   // the table was redrawn meanwhile
   const detail = document.createElement('tr');
   detail.className = CLS.COMPARE_DETAIL;
   detail.innerHTML = '<td colspan="4">' + schemaDiffHtml(pair) + textDiffHtml(pair) + '</td>';
   row.after(detail);
-  row.classList.add(CLS.OPEN);
 }
 
 function schemaDiffHtml(pair) {
+  if (!pair.left.model || !pair.right.model) return '<p class="' + CLS.META + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</p>';
   const d = diffModels(pair.left.model, pair.right.model);
   if (d.same) return '<p class="' + CLS.META + '">' + esc(t(MSG.COMPARE_SAME_MODEL)) + '</p>';
   const ln = workspaceName(session.active.compare.left), rn = workspaceName(session.active.compare.right);

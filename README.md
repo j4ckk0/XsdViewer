@@ -174,7 +174,8 @@ Opening and saving need the server's dialogs, i.e. a display.
 ### Comparing two workspaces
 
 **Ctrl+click** two workspace chips to select them (orange ring), then **⇄ Compare** in the tab
-bar: a folder-comparison view lists the files of both workspaces **paired by name**, each
+bar: a folder-comparison view lists every file the two workspaces know — open in a tab or
+only listed — **paired by name**, each
 marked *identical* (same text, line endings aside), *different*, or *only in* one of them, with
 a summary line. A *different* row expands to what changed in the schema — declarations and
 links (cardinality included) present on one side only — and to a side-by-side line

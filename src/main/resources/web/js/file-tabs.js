@@ -7,8 +7,8 @@ import { newTab, renderNavigation, tabsOf } from './tabs.js';
 import { toast } from './toast.js';
 import { tabOfFile, workspaceOfFile } from './workspace-files.js';
 
-/** Parses the entry when it has no model yet; false when the server refuses it (reported). */
-async function ensureModel(entry, report) {
+/** Parses the entry when it has no model yet; false when the server refuses it (reported when asked). */
+export async function ensureModel(entry, report = true) {
   if (entry.model) return true;
   try {
     entry.model = await parseSchema(entry.text);
