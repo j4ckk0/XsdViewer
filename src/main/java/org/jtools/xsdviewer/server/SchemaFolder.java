@@ -21,14 +21,19 @@ package org.jtools.xsdviewer.server;
  */
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
-/** The schema files of a folder and its sub-folders (bounded walk, hidden directories skipped), sorted by path. */
+import org.jtools.xsdviewer.Log;
+
+/** The schema files of a folder and its sub-folders (bounded walk, hidden and unreadable directories skipped), sorted by path. */
 final class SchemaFolder {
 
     static final int MAX_DEPTH = 8;
@@ -43,11 +48,24 @@ final class SchemaFolder {
 
     static Listing list(Path folder) throws IOException {
         List<Path> all = new ArrayList<>();
-        try (var walk = Files.walk(folder, MAX_DEPTH)) {
-            walk.filter(p -> Files.isRegularFile(p) && isSchema(p) && !hidden(folder, p)).forEach(all::add);
-        } catch (UncheckedIOException e) {
-            throw e.getCause();
-        }
+        Files.walkFileTree(folder, Set.of(), MAX_DEPTH, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+                return dir.equals(folder) || !hidden(folder, dir) ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                if (attrs.isRegularFile() && isSchema(file) && !hidden(folder, file)) all.add(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException e) {
+                Log.warn(file + ": " + e);   // unreadable: skipped, the rest of the folder is still listed
+                return FileVisitResult.CONTINUE;
+            }
+        });
         all.sort(null);
         boolean truncated = all.size() > MAX_FILES;
         return new Listing(truncated ? all.subList(0, MAX_FILES) : all, truncated);

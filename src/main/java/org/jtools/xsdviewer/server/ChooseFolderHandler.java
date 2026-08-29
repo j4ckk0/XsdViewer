@@ -52,7 +52,9 @@ final class ChooseFolderHandler implements HttpHandler {
             return;
         }
         SchemaFolder.Listing listing = SchemaFolder.list(folder);
-        JsonWriter w = new JsonWriter(4096).beginObject().property(JsonKey.FOLDER, folder.toString());
+        JsonWriter w = new JsonWriter(4096).beginObject()
+                .property(JsonKey.FOLDER, folder.toString())
+                .property(JsonKey.NAME, folder.getFileName() == null ? folder.toString() : folder.getFileName().toString());
         w.name(JsonKey.FILES).beginArray();
         for (Path p : listing.files()) files.writeFile(w, p);
         w.endArray().property(JsonKey.TRUNCATED, listing.truncated());

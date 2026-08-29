@@ -20,6 +20,7 @@ package org.jtools.xsdviewer.server;
  * #L%
  */
 
+import java.awt.EventQueue;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.GraphicsEnvironment;
@@ -32,6 +33,10 @@ import java.util.function.Supplier;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+
+import org.jtools.xsdviewer.Log;
+import org.jtools.xsdviewer.MessageKey;
+import org.jtools.xsdviewer.Messages;
 
 /**
  * Native file dialogs, shown by the server on the machine it runs on: the only way to learn where a
@@ -67,29 +72,42 @@ final class FileDialogs {
         return files.length == 0 ? null : files[0].toPath().toAbsolutePath().normalize();
     }
 
-    /** The folder chosen in a "choose folder" dialog (a Swing chooser: the native dialog cannot pick folders), or null when cancelled. */
+    /**
+     * The folder chosen in a "choose folder" dialog (a Swing chooser, on the event thread as Swing
+     * requires: the native dialog cannot pick folders), or null when cancelled.
+     *
+     * @throws IllegalStateException when the chooser itself fails (logged)
+     */
     static synchronized Path chooseFolder(String title) {
-        return onPlatformThread(() -> {
-            JFrame owner = new JFrame();   // an invisible always-on-top owner, so the chooser comes over the browser
-            owner.setUndecorated(true);
-            owner.setSize(0, 0);
-            owner.setLocationRelativeTo(null);
-            try {
-                owner.setAlwaysOnTop(true);
-            } catch (SecurityException ignored) { /* then the chooser may open behind */ }
-            owner.setVisible(true);
-            try {
-                JFileChooser chooser = new JFileChooser(lastDirectory);
-                chooser.setDialogTitle(title);
-                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                if (chooser.showOpenDialog(owner) != JFileChooser.APPROVE_OPTION || chooser.getSelectedFile() == null) return null;
-                Path chosen = chooser.getSelectedFile().toPath().toAbsolutePath().normalize();
-                lastDirectory = chosen.toString();
-                return chosen;
-            } finally {
-                owner.dispose();
-            }
-        });
+        Path[] chosen = { null };
+        try {
+            EventQueue.invokeAndWait(() -> {
+                JFrame owner = new JFrame();   // an invisible always-on-top owner, so the chooser comes over the browser
+                owner.setUndecorated(true);
+                owner.setSize(0, 0);
+                owner.setLocationRelativeTo(null);
+                try {
+                    owner.setAlwaysOnTop(true);
+                } catch (SecurityException ignored) { /* then the chooser may open behind */ }
+                owner.setVisible(true);
+                try {
+                    JFileChooser chooser = new JFileChooser(lastDirectory);
+                    chooser.setDialogTitle(title);
+                    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                    if (chooser.showOpenDialog(owner) == JFileChooser.APPROVE_OPTION && chooser.getSelectedFile() != null) {
+                        chosen[0] = chooser.getSelectedFile().toPath().toAbsolutePath().normalize();
+                        lastDirectory = chosen[0].toString();
+                    }
+                } finally {
+                    owner.dispose();
+                }
+            });
+        } catch (Exception e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            Log.warn(Messages.get(MessageKey.DIALOG_FAILED, cause), cause);
+            throw new IllegalStateException(Messages.get(MessageKey.DIALOG_FAILED, cause), cause);
+        }
+        return chosen[0];
     }
 
     /** Shows the dialog and waits for it: the files chosen (none when cancelled). */

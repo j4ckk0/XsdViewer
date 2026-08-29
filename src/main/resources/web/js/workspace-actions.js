@@ -1,6 +1,6 @@
 /** The File menu on workspaces: new / open / save / close a workspace, and opening a folder as one. */
 import { chooseFolder, openWorkspaceFile, saveWorkspaceFile } from './api.js';
-import { MAX_AUTO_OPEN, MAX_FOLDER_FILES, PATH_SEPARATOR, TEXT, XSD_FILE_PATTERN } from './constants.js';
+import { MAX_AUTO_OPEN, MAX_FOLDER_FILES, TEXT, XSD_FILE_PATTERN } from './constants.js';
 import { ensureTab, parseInBackground } from './file-tabs.js';
 import { registerFile } from './workspace-files.js';
 import { $, ID } from './dom.js';
@@ -86,8 +86,7 @@ export async function openFolder() {
   try {
     const r = await chooseFolder();
     if (r.cancelled) return;
-    const name = r.folder.split(PATH_SEPARATOR).filter(Boolean).pop() || r.folder;
-    await openFolderAsWorkspace(name, r.files, r.truncated);
+    await openFolderAsWorkspace(r.name || r.folder, r.files, r.truncated);
   } catch (e) {
     toastServerError(e);
   }
