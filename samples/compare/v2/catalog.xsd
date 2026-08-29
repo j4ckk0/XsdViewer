@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Catalog, version 2: the root element; includes product.xsd, imports common.xsd.
+     Same declarations and links as version 1: only the documentation changed. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:cat="http://example.com/catalog"
+           xmlns:cmn="http://example.com/common"
+           targetNamespace="http://example.com/catalog"
+           elementFormDefault="qualified">
+
+  <xs:import namespace="http://example.com/common" schemaLocation="common.xsd"/>
+  <xs:include schemaLocation="product.xsd"/>
+
+  <xs:element name="catalog" type="cat:CatalogType">
+    <xs:annotation>
+      <xs:documentation>Root element of a catalog document (one per publisher and season).</xs:documentation>
+    </xs:annotation>
+  </xs:element>
+
+  <xs:complexType name="CatalogType">
+    <xs:annotation><xs:documentation>The publisher and the products, in display order.</xs:documentation></xs:annotation>
+    <xs:sequence>
+      <xs:element name="publisher" type="cmn:Address" minOccurs="0"/>
+      <xs:element ref="cat:product" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="issued" type="xs:date" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

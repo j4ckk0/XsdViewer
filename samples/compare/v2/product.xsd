@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Products, version 2. Included by catalog.xsd (same namespace). -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:cat="http://example.com/catalog"
+           xmlns:cmn="http://example.com/common"
+           targetNamespace="http://example.com/catalog"
+           elementFormDefault="qualified">
+
+  <xs:import namespace="http://example.com/common" schemaLocation="common.xsd"/>
+
+  <xs:element name="product" type="cat:ProductType"/>
+
+  <xs:complexType name="ProductType">
+    <xs:annotation><xs:documentation>A product of the catalog.</xs:documentation></xs:annotation>
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="description" type="xs:string"/>
+      <xs:element name="price" type="cmn:Money"/>
+      <xs:element name="discount" type="cmn:Percentage" minOccurs="0"/>
+      <xs:element name="weight" type="cat:Weight" minOccurs="0"/>
+      <xs:element name="tag" type="xs:string" minOccurs="0" maxOccurs="10"/>
+    </xs:sequence>
+    <xs:attribute name="sku" type="cmn:Code" use="required"/>
+    <xs:attribute name="category" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="Weight">
+    <xs:annotation><xs:documentation>A weight with its unit (new in version 2).</xs:documentation></xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:decimal">
+        <xs:attribute name="unit" type="cat:Unit" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="Unit">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="g"/>
+      <xs:enumeration value="kg"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

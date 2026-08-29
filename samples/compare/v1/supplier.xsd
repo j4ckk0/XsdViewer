@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Suppliers: present in version 1 only (dropped in version 2). -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:sup="http://example.com/supplier"
+           xmlns:cmn="http://example.com/common"
+           targetNamespace="http://example.com/supplier"
+           elementFormDefault="qualified">
+
+  <xs:import namespace="http://example.com/common" schemaLocation="common.xsd"/>
+
+  <xs:element name="supplier" type="sup:SupplierType"/>
+
+  <xs:complexType name="SupplierType">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="address" type="cmn:Address"/>
+      <xs:element name="rating" type="cmn:Percentage" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="code" type="cmn:Code" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

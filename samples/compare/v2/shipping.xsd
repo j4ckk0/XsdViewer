@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Shipping: new in version 2. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:shp="http://example.com/shipping"
+           xmlns:cmn="http://example.com/common"
+           targetNamespace="http://example.com/shipping"
+           elementFormDefault="qualified">
+
+  <xs:import namespace="http://example.com/common" schemaLocation="common.xsd"/>
+
+  <xs:element name="shipment" type="shp:ShipmentType"/>
+
+  <xs:complexType name="ShipmentType">
+    <xs:sequence>
+      <xs:element name="destination" type="cmn:Address"/>
+      <xs:element name="carrier" type="xs:string"/>
+      <xs:element name="cost" type="cmn:Money"/>
+      <xs:choice>
+        <xs:element name="trackingNumber" type="xs:string"/>
+        <xs:element name="pickupPoint" type="xs:string"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="express" type="xs:boolean" default="false"/>
+  </xs:complexType>
+
+</xs:schema>

@@ -155,7 +155,9 @@ marked *identical* (same text, line endings aside), *different*, or *only in* on
 a summary line. A *different* row expands to what changed in the schema — declarations and
 links (cardinality included) present on one side only — and to a side-by-side line
 comparison (long identical stretches folded). Clicking a tab or a chip leaves the comparison;
-closing a compared workspace ends it.
+closing a compared workspace ends it. To try it: `./run.sh samples/compare/v1.xsdviewer.json`,
+then File ▸ Open workspace… `samples/compare/v2.xsdviewer.json` (what differs is listed in
+`samples/compare/README.md`).
 
 ## Following links into other files
 
@@ -200,7 +202,8 @@ src/main/java/org/jtools/xsdviewer/
 src/main/resources/org/jtools/xsdviewer/   messages.properties (English), messages_fr.properties – server texts
 src/main/resources/web/   index.html, style.css, js/ (ES modules, one per concern), i18n/en.json, i18n/fr.json – the client, no framework
 src/test/java/            parser, JSON, command line and translation tests (samples/purchaseOrder.xsd)
-samples/                  purchaseOrder.xsd (one file), import/ (order.xsd + imported / included files)
+samples/                  purchaseOrder.xsd (one file), import/ (order.xsd + imported / included files),
+                          compare/ (two versions of a schema set, v1 and v2, with a workspace each: see its README)
 ```
 
 The page is shown in the language chosen in the drop-list at the right of the top bar
