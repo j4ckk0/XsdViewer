@@ -58,7 +58,8 @@ is a small schema exercising every kind of link.
 ```
 
 builds two self-contained distributions that need no Java installed, each with a
-bundled JRE 21 and a launcher taking the same options as above:
+bundled JRE 21 and a launcher taking the same options as above (the archives of previous
+builds, whatever their version, are deleted from `target/` first):
 
 | Archive | Launcher |
 |---|---|

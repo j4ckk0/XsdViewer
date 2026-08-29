@@ -271,6 +271,7 @@ Build and test:
 | `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; the Windows one starts `javaw.exe` in the background (no console; `--console` to keep one) |
 | `build.sh` / `build.bat` | – | `mvn package` |
 | `package.sh` / `package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
+| maven-clean-plugin | 3.2.0 | `dist` profile only: deletes the previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` and `target/jre` before the build |
 | maven-antrun-plugin | 3.1.0 | `dist` profile only: unpacks the JRE archives into `target/jre/{windows,linux}` |
 | maven-assembly-plugin | 3.7.1 | `dist` profile only: `src/assembly/{windows,linux}.xml` → zip / tar.gz with the JRE, the jar, a launcher, `samples/` and `README.md` |
 

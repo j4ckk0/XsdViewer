@@ -79,6 +79,35 @@
       </properties>
       <build>
         <plugins>
+          <!-- Previous distributions (any version) and the unpacked JREs are removed first,
+               so that target/ only ever holds the archives of this build. -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.2.0</version>
+            <executions>
+              <execution>
+                <id>clean-previous-distributions</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+                <configuration>
+                  <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                  <filesets>
+                    <fileset>
+                      <directory>${project.build.directory}</directory>
+                      <includes>
+                        <include>${project.artifactId}-*-windows.zip</include>
+                        <include>${project.artifactId}-*-linux.tar.gz</include>
+                        <include>jre/**</include>
+                      </includes>
+                    </fileset>
+                  </filesets>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
