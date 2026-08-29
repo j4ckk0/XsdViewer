@@ -1,8 +1,4 @@
-/**
- * The files of a workspace (workspace.files): every schema it knows, open in a tab or only listed
- * in the Files panel. An entry is {name, path, rel, text, model, failed}: path on disk when the
- * server read it, rel (its path in an opened folder) when the browser did, model once parsed.
- */
+/** The files a workspace knows (workspace.files), open in a tab or only listed: {name, path (on disk), rel (in an opened folder), text, model, failed}. */
 import { LIBRARY_KEY_PREFIX, NAME_KEY_PREFIX } from './constants.js';
 import { session } from './state.js';
 

@@ -25,13 +25,8 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 /**
- * The texts the server shows or sends to the page (console, API errors, generated documentation),
- * read from {@code messages.properties} (English, the base file) or {@code messages_<language>.properties}.
- * Keys are the constants of {@link MessageKey}.
- *
- * <p>The locale is the one of the request being handled when the page said which language it
- * shows ({@code Accept-Language}, see {@link #setRequestLocale}), else the JVM's default. A
- * language without a file falls back to the base file, never to the JVM's language.
+ * The texts the server shows or sends to the page, from {@code messages_<language>.properties}
+ * (English base file) in the language the request asked for, else the JVM's. Keys: {@link MessageKey}.
  */
 public final class Messages {
 

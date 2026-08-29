@@ -21,9 +21,8 @@ package org.jtools.xsdviewer.schema;
  */
 
 /**
- * Labels of the edges of a {@link SchemaGraph}: the nature of the reference from one declaration
- * to another. They are part of the model handed to the page (not user-interface texts), and mirror
- * the XSD vocabulary; a nested element's type link is labelled with the element's name instead.
+ * Labels of the edges of a {@link SchemaGraph}: the nature of a reference. Model vocabulary handed
+ * to the page, not user-interface text (a nested element's type link is labelled with the element's name).
  */
 public final class LinkLabel {
 

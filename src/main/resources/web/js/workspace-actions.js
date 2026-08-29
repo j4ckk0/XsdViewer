@@ -55,12 +55,7 @@ export async function openWorkspace() {
   }
 }
 
-/**
- * Opens a workspace answered by the server ({workspace, active, files, missing}) as its own group
- * of tabs, next to the workspaces already open (an empty unsaved active workspace is taken over).
- * A workspace already open is only brought to front. Workspaces are independent: the same file
- * may be open in two of them.
- */
+/** Opens a workspace answered by the server as its own group of tabs (an empty unsaved workspace is taken over; one already open is brought to front). */
 export async function applyWorkspace(answer) {
   const already = session.workspaces.find(w => w.path === answer.workspace);
   if (already) {
@@ -98,11 +93,7 @@ export async function openFolder() {
   }
 }
 
-/**
- * A folder opened or dropped in the browser: its schema files are kept at hand for following
- * links (the library) and its .xsd files are opened as a workspace named after the folder.
- * {@code relOf} gives a File's path in the folder.
- */
+/** A folder opened or dropped in the browser: its files feed the library, its .xsd files become a workspace named after it ({@code relOf}: a File's path in the folder). */
 export async function openBrowserFolder(files, relOf, folderName) {
   addToLibrary(files, relOf);
   const schemas = files.filter(f => XSD_FILE_PATTERN.test(relOf(f))).sort((a, b) => relOf(a).localeCompare(relOf(b)));
@@ -112,11 +103,7 @@ export async function openBrowserFolder(files, relOf, folderName) {
   await openFolderAsWorkspace(folderName, read, schemas.length > kept.length);
 }
 
-/**
- * Lists files ({name, path, text, rel?}) as a new workspace named {@code name} and opens them —
- * all of them when there are at most MAX_AUTO_OPEN, else only the first: the others wait in the
- * Files panel, parsed in the background so that their objects can be browsed.
- */
+/** Lists files as a new workspace named {@code name}; opens them all up to MAX_AUTO_OPEN, else only the first (the others wait in the Files panel, parsed in the background). */
 async function openFolderAsWorkspace(name, files, truncated) {
   if (!files.length) { toast(t(MSG.FOLDER_EMPTY, name)); return; }
   const ws = takeOverOrNewWorkspace();

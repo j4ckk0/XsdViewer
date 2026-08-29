@@ -15,7 +15,6 @@ export const NODE_KIND = {
   BUILTIN: 'builtin',
   EXTERNAL: 'external',
 };
-/** Display order of the kinds (sidebar groups). */
 export const KINDS = [
   NODE_KIND.ELEMENT, NODE_KIND.COMPLEX_TYPE, NODE_KIND.SIMPLE_TYPE, NODE_KIND.GROUP,
   NODE_KIND.ATTRIBUTE_GROUP, NODE_KIND.ATTRIBUTE, NODE_KIND.BUILTIN, NODE_KIND.EXTERNAL,
@@ -45,7 +44,6 @@ export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };
 /** Tags of the schema's imports (SchemaGraph.Import.tag). */
 export const IMPORT_TAG = { IMPORT: 'import', INCLUDE: 'include', REDEFINE: 'redefine' };
 
-/** The two views of a document tab (also the data-view of the view buttons). */
 export const VIEW = { GRAPH: 'graph', TEXT: 'text' };
 
 // ---- server API (ApiPath on the server) ----
@@ -105,6 +103,5 @@ export const SVG_NS = 'http://www.w3.org/2000/svg';
 export const DATA_TRANSFER_FILES = 'Files';
 export const DROP_EFFECT_COPY = 'copy';
 export const KEY = { ESCAPE: 'Escape', ARROW_LEFT: 'ArrowLeft', OPEN: 'o', FIND: 'f', SAVE: 's' };
-/** Punctuation of the texts the page composes. */
 export const TEXT = { LIST_SEPARATOR: ', ', TOAST_SEPARATOR: ' — ' };
 export const MIDDLE_BUTTON = 1;

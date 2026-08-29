@@ -28,12 +28,7 @@ import java.util.Map;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 
-/**
- * Minimal JSON parser, the counterpart of {@link JsonWriter}: objects become {@code Map<String, Object>}
- * (insertion order kept), arrays {@code List<Object>}, strings {@code String}, numbers {@code Long}
- * or {@code Double}, booleans {@code Boolean}, null {@code null}. Enough for the workspace files
- * and the small requests of the page.
- */
+/** Minimal JSON parser (objects → {@code Map}, arrays → {@code List}, numbers → {@code Long} / {@code Double}), enough for the workspace files and the page's requests: no library dependency. */
 public final class JsonReader {
 
     private final String text;
@@ -93,7 +88,7 @@ public final class JsonReader {
 
     private Map<String, Object> readObject() {
         Map<String, Object> map = new LinkedHashMap<>();
-        pos++;   // {
+        pos++;
         skipWhitespace();
         if (peek() == '}') { pos++; return map; }
         for (;;) {
@@ -113,7 +108,7 @@ public final class JsonReader {
 
     private List<Object> readArray() {
         List<Object> list = new ArrayList<>();
-        pos++;   // [
+        pos++;
         skipWhitespace();
         if (peek() == ']') { pos++; return list; }
         for (;;) {

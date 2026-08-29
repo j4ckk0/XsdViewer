@@ -38,10 +38,7 @@ export async function locateFile(name, text) {
   return (await resp.json()).path;
 }
 
-/**
- * GET /api/open: {name, path, text} of the schema at {@code location} relative to {@code basePath}, or null.
- * With {@code strict}, only the directory of {@code basePath} is tried.
- */
+/** GET /api/open: the schema at {@code location} relative to {@code basePath} (only there when {@code strict}), or null. */
 export async function openLocation(basePath, location, strict = false) {
   const params = { [API_PARAM.BASE]: basePath || '', [API_PARAM.LOCATION]: location };
   if (strict) params[API_PARAM.STRICT] = String(true);
@@ -76,10 +73,7 @@ export async function chooseFolder() {
   return post(API.CHOOSE_FOLDER);
 }
 
-/**
- * POST /api/workspace/save: {path} of the workspace written through the server's "save as" dialog, or {cancelled}.
- * {@code suggested} is the workspace file proposed by the dialog (the last one opened), or null.
- */
+/** POST /api/workspace/save: writes the workspace where the server's "save as" dialog says ({@code suggested} proposed); {path} or {cancelled}. */
 export async function saveWorkspaceFile(files, active, suggested) {
   return post(API.WORKSPACE_SAVE, suggested ? { files, active, path: suggested } : { files, active });
 }

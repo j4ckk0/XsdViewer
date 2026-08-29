@@ -30,11 +30,7 @@ import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
-/**
- * {@code POST /api/choose-folder}: shows the native folder chooser and answers the schemas of the
- * chosen folder and its sub-folders: {@code {"folder": path, "files": [{name, path, text}...],
- * "truncated": bool}}, {@code {"cancelled": true}} when the user cancels, 409 without a display.
- */
+/** {@code POST /api/choose-folder}: the native folder chooser, answering the schemas of the folder and its sub-folders. 409 without a display. */
 final class ChooseFolderHandler implements HttpHandler {
 
     private final ServedSchemaFiles files;

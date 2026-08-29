@@ -1,8 +1,6 @@
 /**
- * Automatic discovery of the schemas a file links to: its xs:import / xs:include / xs:redefine
- * whose schemaLocation resolves relative to the file's own location, and theirs in turn. The
- * files found join the workspace's Files panel; they are opened as tabs only when there are at
- * most MAX_AUTO_OPEN of them. Nothing is guessed: a file without a known location links nowhere.
+ * Discovery of the schemas a file links to (its imports / includes resolved relative to its own
+ * location, recursively): they join the workspace's Files panel and open as tabs only when at most MAX_AUTO_OPEN.
  */
 import { parseSchema } from './api.js';
 import { MAX_AUTO_OPEN, TEXT } from './constants.js';

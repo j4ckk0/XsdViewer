@@ -1,8 +1,6 @@
 /**
- * Texts of the page, read from i18n/<language>.json (one file per language, each naming itself
- * under "language.name"). The language is, in order: the "lang" query parameter, the choice
- * remembered from the drop-list, the machine's locale (as the server reports it) when it has
- * a file, English. Missing keys fall back to English, then to the key itself.
+ * The page's texts, from i18n/<language>.json: ?lang=, else the remembered choice, else the
+ * machine's locale, else English; missing keys fall back to English.
  */
 import { STORAGE_KEY } from './constants.js';
 import { MSG } from './message-keys.js';

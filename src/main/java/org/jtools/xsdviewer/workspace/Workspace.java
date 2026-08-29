@@ -32,16 +32,11 @@ import org.jtools.xsdviewer.json.JsonReader;
 import org.jtools.xsdviewer.json.JsonWriter;
 
 /**
- * A workspace: the schema files open in the page and which one is shown. Saved as a small JSON
- * file, {@code <name>.xsdviewer.json}, with the paths relative to that file when they share its
- * root (so that a folder of schemas and its workspace can move together), absolute otherwise.
+ * A workspace as saved in {@code <name>.xsdviewer.json}: its schema files and which one is shown,
+ * with paths relative to that file when they share its root (a folder and its workspace move together).
  *
- * <pre>
- *   { "xsdviewer": 1, "files": ["order.xsd", "common/types.xsd"], "active": 0 }
- * </pre>
- *
- * @param files  absolute paths of the schema files, in tab order
- * @param active index in {@code files} of the tab shown, 0 when none applies
+ * @param files  absolute paths, in tab order
+ * @param active index in {@code files} of the file shown
  */
 public record Workspace(List<Path> files, int active) {
 

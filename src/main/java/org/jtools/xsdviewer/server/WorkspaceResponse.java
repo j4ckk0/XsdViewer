@@ -30,11 +30,7 @@ import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.workspace.Workspace;
 
-/**
- * The answer describing an opened workspace: {@code {"workspace": path, "active": n,
- * "files": [{name, path, text}...], "missing": [paths...]}}. Files that no longer exist are
- * listed under {@code missing} instead of failing the whole workspace.
- */
+/** The answer describing an opened workspace: its schemas, the files that no longer exist listed apart rather than failing the whole workspace. */
 final class WorkspaceResponse {
 
     private WorkspaceResponse() {}

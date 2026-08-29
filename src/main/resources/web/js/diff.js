@@ -8,11 +8,7 @@ export const OP = { EQUAL: '=', DELETE: '-', INSERT: '+' };
 
 export const splitLines = (text) => text.split(LINE_BREAK);
 
-/**
- * The edit script turning {@code a} into {@code b} (arrays of lines): [{op, a, b}] with the 0-based
- * indexes of the lines involved ({@code a} for EQUAL / DELETE, {@code b} for EQUAL / INSERT).
- * Null when the texts differ too much to be aligned within MAX_CELLS.
- */
+/** The edit script turning lines {@code a} into {@code b}: [{op, a, b}] with the line indexes; null when they are too different to align within MAX_CELLS. */
 export function diffLines(a, b) {
   let start = 0;
   while (start < a.length && start < b.length && a[start] === b[start]) start++;

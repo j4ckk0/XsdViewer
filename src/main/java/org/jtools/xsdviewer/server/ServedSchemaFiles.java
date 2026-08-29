@@ -33,11 +33,7 @@ import com.sun.net.httpserver.HttpExchange;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
-/**
- * The schema files this server has read from disk and handed to the page. Their directories are
- * the only places {@code /api/open} and {@code /api/locate} look into: the page cannot make the
- * server read arbitrary paths.
- */
+/** The files the server has read for the page: the only directories {@code /api/open} and {@code /api/locate} look into, so that the page cannot make the server read arbitrary paths. */
 final class ServedSchemaFiles {
 
     private final Set<Path> files = ConcurrentHashMap.newKeySet();

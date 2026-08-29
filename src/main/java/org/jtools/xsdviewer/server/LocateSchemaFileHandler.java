@@ -32,10 +32,8 @@ import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
 /**
- * {@code POST /api/locate?name=<file name>}, body = the file's text: finds where a file the
- * user opened in the browser (which hides its folder) is on disk, so that its imports can be
- * followed. Looks for a file with that name and the same content under the directories of the
- * files already served and the working directory, answering {@code {"path"}} or 404.
+ * {@code POST /api/locate?name=}: finds on disk a file the user opened in the browser (which hides
+ * its folder), by name and content under the served directories, so that its imports can be followed.
  */
 final class LocateSchemaFileHandler implements HttpHandler {
 

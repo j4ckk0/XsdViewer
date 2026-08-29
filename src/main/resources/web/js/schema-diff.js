@@ -10,11 +10,7 @@ const declared = (n) => n.kind !== NODE_KIND.BUILTIN && n.kind !== NODE_KIND.EXT
 /** Identity of a link, cardinality included: a changed minOccurs shows as one link gone and one added. */
 const edgeKey = (e) => [e.from, e.to, e.label, cardinalityText(e)].join(KEY_SEPARATOR);
 
-/**
- * @param left  the model (as answered by /api/parse) of the left file
- * @param right the model of the right file
- * @return {nodesOnlyLeft, nodesOnlyRight, edgesOnlyLeft, edgesOnlyRight, same}: nodes and edges of the models
- */
+/** The declarations and links present in only one of two parsed models: {nodesOnlyLeft, nodesOnlyRight, edgesOnlyLeft, edgesOnlyRight, same}. */
 export function diffModels(left, right) {
   const leftIds = new Set(left.nodes.filter(declared).map(n => n.id));
   const rightIds = new Set(right.nodes.filter(declared).map(n => n.id));

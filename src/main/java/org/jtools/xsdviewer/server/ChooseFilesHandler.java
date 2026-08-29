@@ -32,11 +32,7 @@ import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
-/**
- * {@code POST /api/choose}: shows the native "open files" dialog and answers
- * {@code {"files": [{name, path, text}...]}} (empty when cancelled), so that files opened by the
- * user come with their location. 409 when the server has no display.
- */
+/** {@code POST /api/choose}: the native "open files" dialog, so that the files chosen come with their location. 409 without a display. */
 final class ChooseFilesHandler implements HttpHandler {
 
     private static final String SCHEMA_EXTENSION = ".xsd";

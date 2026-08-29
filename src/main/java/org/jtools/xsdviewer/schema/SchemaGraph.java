@@ -36,19 +36,16 @@ public final class SchemaGraph {
     public static final char ID_SEPARATOR = ':';
 
     /**
-     * A global schema object: a declaration ({@link NodeKind#GLOBAL_DECLARATIONS}), or a
-     * placeholder for a built-in XSD type ({@link NodeKind#BUILTIN}) / an object not declared in
-     * this file ({@link NodeKind#EXTERNAL}). {@code ns} is the namespace the name lives in: the
-     * target namespace for declarations, the referenced namespace for external placeholders (what
-     * the client uses to find the file declaring it). {@code line} is 1-based, 0 when unknown.
+     * A global schema object: a declaration, or a placeholder ({@link NodeKind#BUILTIN}, {@link NodeKind#EXTERNAL}).
+     * {@code ns}: the namespace the name lives in (for a placeholder, where the client looks for the
+     * declaring file); {@code line}: 1-based, 0 when unknown.
      */
     public record Node(String id, String kind, String name, String ns, int line, String doc) {}
 
     /**
-     * How many times the target of a link occurs in its owner: {@code minOccurs..maxOccurs} of a
-     * nested element or group reference, adjusted by the enclosing sequence / all / choice (a
-     * choice makes its branches optional) and counted from the nearest enclosing element; the
-     * {@code use} of an attribute. Type links (extends, restricts, list of...) have none.
+     * How many times a link's target occurs in its owner: minOccurs..maxOccurs through the enclosing
+     * sequence / all / choice (a choice makes its branches optional), counted from the nearest
+     * enclosing element; an attribute's {@code use}. Type links have none.
      */
     public record Cardinality(int min, int max) {
         /** {@code max} of an unbounded occurrence. */
@@ -73,10 +70,7 @@ public final class SchemaGraph {
         }
     }
 
-    /**
-     * A direct link from one node to another, e.g. element -> its type; {@code label} is a
-     * {@link LinkLabel}; {@code cardinality} is null when the link has none (type links).
-     */
+    /** A direct link from one node to another ({@code label}: a {@link LinkLabel}); {@code cardinality} is null for type links. */
     public record Edge(String from, String to, String label, Cardinality cardinality) {
         public Edge(String from, String to, String label) {
             this(from, to, label, null);

@@ -1,8 +1,7 @@
 /**
- * Comparing two workspaces, folder-comparison style: Ctrl+click two workspace chips to select
- * them, then Compare. Files are paired by name and marked identical / different / only on one
- * side; a different pair expands to the schema differences (declarations and links on one
- * side only) and a side-by-side line diff.
+ * Comparing two workspaces (selected with Ctrl+click on their chips), folder-comparison style:
+ * files paired by name and marked identical / different / only on one side, a different pair
+ * expandable to its schema and line differences.
  */
 import { cardinalityText } from './cardinality.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';

@@ -1,11 +1,7 @@
 /**
- * The graph view: the selected object in the centre, what it links to on the right, what uses it on
- * the left, and optionally a second level on the right (what the targets link to in turn),
- * drawn as an SVG with bezier edges.
- * One arrow per link: an object linked twice (shipTo and billTo to the same type) is drawn twice,
- * each copy captioned with the link's name and cardinality; the arrows themselves carry no text,
- * but an optional link (minOccurs 0, optional attribute, choice branch) is dashed. At level 2 an
- * object is expanded only the first time it appears in a column: its later copies stay leaves.
+ * The graph view: the selected object in the centre, what it links to on the right (one arrow per
+ * link, its name and cardinality above the target, dashed when optional), what uses it on the
+ * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
 import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT } from './constants.js';
 import { findInTabs, kindsOf, usersInOtherTabs } from './declarations.js';
@@ -165,12 +161,7 @@ function textWithBg(x, y, text) {
     + '<text class="' + CLS.EDGE_LABEL + '" x="' + x + '" y="' + (y + 2) + '" text-anchor="middle"><title>' + esc(text) + '</title>' + esc(shown) + '</text>';
 }
 
-/**
- * The name of a link above a node, followed by its cardinality when it has one ("items 1..*"):
- * an element / attribute name in the page's text style (lighter when the link is optional), the
- * XSD words (type, extends, list of…) small and muted. The word "attribute" of the model's
- * labels ("attribute x", "attribute ref") is dropped: the node's kind already says it.
- */
+/** The caption above a node: the link's name (an XSD word small and muted, the word "attribute" dropped) and its cardinality. */
 function captionSvg(edge) {
   const label = edge.label;
   const card = cardinalityText(edge);
@@ -186,11 +177,7 @@ function captionSvg(edge) {
 /** The link as written in a tooltip: "shipTo 1 → complexType USAddress". */
 const linkTitle = (edge) => edge.label + (cardinalityText(edge) ? ' ' + cardinalityText(edge) : '');
 
-/**
- * @param opts optional: {id} to select on click (default n.id), {tab} index of the tab the node
- *             belongs to (another file), {kindText} text shown instead of the kind,
- *             {link} the edge the node is reached by: its name and cardinality are written above it
- */
+/** @param opts {id} selected on click, {tab} index of the node's tab when it is another file's, {kindText} replaces the kind, {link} the edge captioned above the node */
 function nodeSvg(n, x, y, isCenter, opts) {
   const o = opts || {};
   const name = shorten(n.name, isCenter ? NAME_MAX_CHARS_CENTER : NAME_MAX_CHARS);

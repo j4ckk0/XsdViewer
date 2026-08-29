@@ -35,12 +35,9 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 /**
- * Turns the text of an XSD into a {@link SchemaGraph}: one node per global declaration,
- * one edge per direct reference from a declaration to another one.
- *
- * <p>Only the given file is read; objects it references but does not declare
- * (imported / included ones) become {@link NodeKind#EXTERNAL} nodes, XSD built-in types
- * become {@link NodeKind#BUILTIN} nodes.
+ * Turns the text of an XSD into a {@link SchemaGraph}: one node per global declaration, one edge
+ * per direct reference. Only this file is read: what it references without declaring becomes a
+ * placeholder node ({@link NodeKind#EXTERNAL}, {@link NodeKind#BUILTIN}).
  */
 public final class XsdParser {
 
@@ -131,13 +128,9 @@ public final class XsdParser {
     /**
      * Walks a declaration and records every reference it makes.
      *
-     * @param e         the element being examined
-     * @param owner     id of the global declaration all links are attributed to
-     * @param self      true when {@code e} is the global declaration itself (its own type /
-     *                  substitutionGroup are then labelled differently from a nested element's)
-     * @param enclosing occurrences of the enclosing particles (sequence / choice / all) since the
-     *                  nearest enclosing element: what a nested element's own minOccurs / maxOccurs
-     *                  are multiplied by
+     * @param owner     id of the global declaration the links are attributed to
+     * @param self      {@code e} is the global declaration itself (its own type link is labelled differently)
+     * @param enclosing occurrences of the enclosing particles since the nearest element: multiplies a nested element's own
      */
     private void collect(Element e, String owner, boolean self, Cardinality enclosing) {
         if (!XsdVocabulary.NAMESPACE.equals(e.getNamespaceURI())) return; // e.g. content of xs:appinfo

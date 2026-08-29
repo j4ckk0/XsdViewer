@@ -30,11 +30,7 @@ import org.jtools.xsdviewer.json.JsonWriter;
 
 import java.util.Locale;
 
-/**
- * {@code GET /api/capabilities}: {@code {"dialogs": bool, "language": "fr", "version": "1.7.0",
- * "javaVersion": "21.0.12"}} — whether the server can show native file dialogs, the language of
- * the machine's locale (the page's default), and what Help > About shows.
- */
+/** {@code GET /api/capabilities}: what the page adapts to — native dialogs available, the machine's language, the versions for Help ▸ About. */
 final class CapabilitiesHandler implements HttpHandler {
 
     @Override

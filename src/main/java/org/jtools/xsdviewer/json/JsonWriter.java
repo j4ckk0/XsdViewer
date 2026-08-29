@@ -23,14 +23,7 @@ package org.jtools.xsdviewer.json;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-/**
- * Minimal streaming JSON writer (objects, arrays, strings, numbers, booleans): enough for the
- * flat model this tool exchanges with the page, without a library dependency.
- *
- * <pre>
- *   new JsonWriter().beginObject().name("ok").value(true).endObject().toString()  // {"ok":true}
- * </pre>
- */
+/** Minimal streaming JSON writer, enough for the flat model exchanged with the page: no library dependency. */
 public final class JsonWriter {
 
     private final StringBuilder sb;

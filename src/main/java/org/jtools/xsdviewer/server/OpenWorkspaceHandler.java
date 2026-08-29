@@ -34,11 +34,7 @@ import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.workspace.Workspace;
 
-/**
- * {@code POST /api/workspace/open}: shows the native "open" dialog for a workspace file and
- * answers it with its schemas (see {@link WorkspaceResponse}), {@code {"cancelled": true}} when
- * the user cancels, 400 when the file is not a workspace, 409 without a display.
- */
+/** {@code POST /api/workspace/open}: the native "open" dialog for a workspace file, answered with its schemas. 409 without a display. */
 final class OpenWorkspaceHandler implements HttpHandler {
 
     private final ServedSchemaFiles files;

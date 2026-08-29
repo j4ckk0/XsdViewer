@@ -37,12 +37,7 @@ import org.jtools.xsdviewer.json.JsonReader;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.workspace.Workspace;
 
-/**
- * {@code POST /api/workspace/save}, body {@code {"files": [paths...], "active": n, "path": ...}}:
- * shows the native "save as" dialog (proposing {@code path}, the workspace last opened, when
- * given) and writes the workspace file there. Answers {@code {"path": ...}},
- * {@code {"cancelled": true}} when the user cancels, 400 for a bad body, 409 without a display.
- */
+/** {@code POST /api/workspace/save}: writes the workspace the page describes where the native "save as" dialog says (its own file proposed). 409 without a display. */
 final class SaveWorkspaceHandler implements HttpHandler {
 
     @Override

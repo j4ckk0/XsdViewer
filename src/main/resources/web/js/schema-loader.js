@@ -11,11 +11,7 @@ import { renderNavigation } from './tabs.js';
 import { toast } from './toast.js';
 import { registerFile } from './workspace-files.js';
 
-/**
- * Parses the schema, fills the tab {@code st} with it and registers the file in the tab's
- * workspace (no rendering besides the tab bar). Returns false on error.
- * {@code rel}: the file's path in an opened folder, when it came from one.
- */
+/** Parses the schema into the tab and registers the file in its workspace; false (reported) when the server refuses it. {@code rel}: its path in an opened folder. */
 export async function loadInto(st, name, text, path, rel = null) {
   let json;
   try {
@@ -59,11 +55,7 @@ async function locate(st, name, text) {
   }
 }
 
-/**
- * Finds the schema at {@code location} (a schemaLocation of the file in tab {@code src}):
- * in the opened folders first, then through the server. With {@code strict}, only relative to
- * the file's own location (nothing when that location is unknown). Returns {key, name, text, path, rel} or null.
- */
+/** The file a schemaLocation of {@code src} points to: in the opened folders, then through the server; {@code strict} = relative to {@code src} only. Null when none. */
 export async function resolveLocation(src, location, strict = false) {
   if (location.includes(REMOTE_LOCATION_MARK)) return null;
   const fromLibrary = await findInLibrary(src, location, strict);

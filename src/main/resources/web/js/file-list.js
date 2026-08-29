@@ -1,8 +1,6 @@
 /**
- * The Files panel of the sidebar: every file the active workspace knows (open in a tab or not)
- * as a tree by folder (paths relative to their common root), each file unfoldable to its global
- * objects; the shown file is highlighted. Clicking a file or an object shows its tab, opening it
- * when needed (events.js).
+ * The Files panel: every file the active workspace knows, as a tree by folder, each unfoldable to
+ * its objects; a click shows the file's tab (events.js opens it when needed).
  */
 import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
@@ -94,10 +92,7 @@ export function renderFileList() {
   $(ID.FILES_CONTENT).innerHTML = nodeHtml(tree(list), '');
 }
 
-/**
- * A click in the panel. A folder header or a file's expander folds / unfolds (handled here, null
- * returned); otherwise {entry} for a file, {entry, id} for one of its objects, {tab} for an empty tab.
- */
+/** A click in the panel: folds are handled here (null); else what was hit — {entry}, {entry, id} for an object, {tab} for an empty tab. */
 export function fileListClick(target) {
   const header = target.closest('.' + CLS.DIR);
   if (header) {

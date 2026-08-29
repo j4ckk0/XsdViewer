@@ -43,12 +43,7 @@ export function jumpTo(tab, id) {
   select(id);
 }
 
-/**
- * Follows a link to something this file does not declare: in an already open tab of the same
- * workspace, else in the file(s) named by the xs:import / xs:include (read by the server, relative
- * to this file, when it knows where this file is), opened in that workspace, else asks the user
- * to open the file.
- */
+/** Follows a link to something this file does not declare: an open tab of the workspace, else the files its imports / includes name (opened on the way), else the user's file chooser. */
 export async function followExternal(node) {
   const from = session.active, name = node.name, kinds = kindsOf(node), ns = node.ns || '';
   for (const tab of tabsOf(from.workspace)) {
@@ -60,8 +55,7 @@ export async function followExternal(node) {
     askForFile(name, kinds, ns, t(MSG.EXTERNAL_NO_LOCATION, name));
     return;
   }
-  // Read the imported files (from an opened folder or through the server), following their own imports / includes.
-  // A file already open in a tab is not loaded again, but its own imports / includes are followed too.
+  // The imported files are read (opened folder or server) and their own imports / includes followed.
   if (!from.path && from.located) await from.located;
   const visited = new Set(fileKeys(from));
   const queue = locs.map(location => ({ src: from, location }));

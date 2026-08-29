@@ -34,9 +34,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 
 /**
- * Native file dialogs shown by the server, on the machine it runs on: the browser never reveals
- * where a chosen file is, the operating system's dialog does. One dialog at a time; each call
- * blocks until the user answers. Unavailable when the JVM is headless (no display).
+ * Native file dialogs, shown by the server on the machine it runs on: the only way to learn where a
+ * chosen file is. One at a time, each call blocking; unavailable when the JVM is headless.
  */
 final class FileDialogs {
 

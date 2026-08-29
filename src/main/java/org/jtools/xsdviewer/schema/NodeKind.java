@@ -41,10 +41,7 @@ public final class NodeKind {
     /** An object referenced but not declared in this file (imported / included). */
     public static final String EXTERNAL = "external";
 
-    /**
-     * Kind used in the id of a reference to a named type ({@code type:X}) while it is not known
-     * whether X is a complexType or a simpleType; stays in the id of an external type.
-     */
+    /** Kind of a type reference ({@code type:X}) not yet known to be a complexType or a simpleType; kept for an external type. */
     public static final String TYPE_REFERENCE = "type";
 
     /** The kinds of global declaration (the XSD elements allowed under xs:schema that have a name). */

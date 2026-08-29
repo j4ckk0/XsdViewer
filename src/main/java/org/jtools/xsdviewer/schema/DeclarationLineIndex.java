@@ -33,9 +33,8 @@ import org.xml.sax.Locator;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Line number of each global declaration of a schema: maps the node id ({@code kind:name}) to the
- * line where its start tag opens. The SAX locator reports the position of the end of the start
- * tag, so we walk back from there to the '<' to also handle start tags spread over several lines.
+ * The line where each global declaration's start tag opens, by node id. The SAX locator points
+ * after the start tag, so the '<' is looked for backwards: a tag spread over several lines gets its first.
  */
 final class DeclarationLineIndex {
 

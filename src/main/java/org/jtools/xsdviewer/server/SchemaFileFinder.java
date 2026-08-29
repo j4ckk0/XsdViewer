@@ -26,11 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/**
- * Finds, under a directory, a file with a given name and content: how the server learns where
- * a file the user opened in the browser (which hides its folder) sits on disk. The walk is
- * bounded in depth and in number of entries, and skips hidden directories.
- */
+/** Finds a file under a directory by name and content: how the server locates a file the browser opened without telling its folder. Bounded walk. */
 final class SchemaFileFinder {
 
     private static final int MAX_DEPTH = 8;

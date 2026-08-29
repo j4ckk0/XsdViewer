@@ -10,13 +10,13 @@ export function newTabState() {
     path: null,         // file path on the server, when the server read it (initial file, followed links)
     rel: null,          // path in an opened folder, when the file came from the library
     located: null,      // promise of the server's search for the path of a file opened in the browser
-    workspace: null,    // the workspace (see newWorkspaceState) the tab belongs to; always set
-    file: null,         // the workspace file (an entry of workspace.files) the tab shows, when it shows one
+    workspace: null,    // always set
+    file: null,         // the entry of workspace.files shown, when the tab shows one
     text: '',
-    model: null,        // { targetNamespace, imports, nodes, edges } as answered by /api/parse
-    nodes: new Map(),   // id -> node
-    outEdges: new Map(),// id -> [edge]
-    inEdges: new Map(), // id -> [edge]
+    model: null,
+    nodes: new Map(),
+    outEdges: new Map(),
+    inEdges: new Map(),
     lineToNode: new Map(),
     selected: null,
     history: [],
@@ -27,10 +27,7 @@ export function newTabState() {
   };
 }
 
-/**
- * A workspace: a group of tabs. {@code path} is its file once saved or opened from one; until
- * then it is named after {@code number}. Links are followed and users looked up within a workspace only.
- */
+/** A workspace: a group of tabs, named after its file once saved or opened, after its number until then; links are followed within it only. */
 export function newWorkspaceState(number) {
   return {
     number,
@@ -44,12 +41,10 @@ export function newWorkspaceState(number) {
 
 /** Everything the page holds: the workspaces, their tabs (grouped, in workspace order), the active tab, and what is shared. */
 export const session = {
-  /** The tab being displayed; its workspace is the active workspace. */
   active: null,
   /** Every tab, grouped by workspace in the order of {@code workspaces}. */
   tabs: [],
   workspaces: [],
-  /** Numbers the unsaved workspaces. */
   workspaceCounter: 0,
   /** Workspaces selected with Ctrl+click on their chip, oldest first (at most two). */
   compareSelection: [],

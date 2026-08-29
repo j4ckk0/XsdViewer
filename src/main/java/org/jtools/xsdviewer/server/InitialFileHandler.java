@@ -32,11 +32,7 @@ import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.workspace.Workspace;
 
-/**
- * {@code GET /api/initial}: the file given on the command line, so the page can open it at
- * start-up: {@code {name, path, text}} for a schema, the workspace answer (see
- * {@link WorkspaceResponse}) for a {@code *.xsdviewer.json} workspace file.
- */
+/** {@code GET /api/initial}: the file given on the command line — a schema, or a workspace with its schemas — so that the page opens it at start-up. */
 final class InitialFileHandler implements HttpHandler {
 
     private final ServedSchemaFiles files;

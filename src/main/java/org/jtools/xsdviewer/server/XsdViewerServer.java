@@ -29,11 +29,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import org.jtools.xsdviewer.Messages;
 
-/**
- * The HTTP server of the tool: the static page under {@code /} and the API under {@code /api/*}
- * (one handler class per path, see {@link ApiPath}). Requests run on virtual threads, and the
- * messages of each request follow the language the page sends in {@code Accept-Language}.
- */
+/** The HTTP server: the page under {@code /}, the API under {@code /api/*} (one handler per {@link ApiPath}); virtual threads, answers in the language the page sends. */
 public final class XsdViewerServer {
 
     private static final String URL_SCHEME = "http://";

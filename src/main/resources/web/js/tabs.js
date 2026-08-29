@@ -1,8 +1,4 @@
-/**
- * Workspaces and their document tabs: creating, switching, closing, and the two bars — the
- * workspace bar (one chip per workspace) and the tab bar (the tabs of the active workspace).
- * Callers redraw the page (renderPage) after a switch.
- */
+/** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. */
 import { WORKSPACE_FILE_SUFFIX } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { renderFileList } from './file-list.js';

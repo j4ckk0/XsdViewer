@@ -29,12 +29,7 @@ import com.sun.net.httpserver.HttpHandler;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 
-/**
- * Serves the page (HTML, scripts, styles, translations) from the {@code web/} directory of the
- * classpath. Paths are restricted to plain names and sub-directories ({@code /js/app.js}); anything
- * else, including {@code ..}, is a 404. Answers are marked {@code no-cache} so that a rebuilt jar
- * is picked up by a simple reload.
- */
+/** Serves the page from the classpath's {@code web/}: plain names and sub-directories only ({@code ..} is a 404), no-cache so that a rebuilt jar shows on reload. */
 final class StaticResourceHandler implements HttpHandler {
 
     private static final String RESOURCE_ROOT = "/web";

@@ -32,14 +32,9 @@ import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 
 /**
- * {@code GET /api/open?base=<path>&location=<schemaLocation>}: the schema at {@code location},
- * so the page can follow a link into an imported / included file. The location is tried
- * relative to the directory of {@code base} (when it is a file this server already served),
- * then to the directories of all the files it served, then to the working directory: a file
- * opened from the browser has no known path, but its imports usually sit next to something
- * the server knows. With {@code strict=true} only the directory of {@code base} is tried (the
- * location must be relative to the referencing file). Remote locations (http://...) are refused:
- * the tool never goes on the network.
+ * {@code GET /api/open?base=&location=}: the schema an xs:import / xs:include points to, resolved
+ * against the referencing file's directory — then, unless {@code strict}, the other served
+ * directories and the working directory. Remote locations are refused: the tool never goes on the network.
  */
 final class OpenSchemaLocationHandler implements HttpHandler {
 

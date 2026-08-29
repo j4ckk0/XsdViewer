@@ -48,11 +48,7 @@ export async function filesOfEntries(entries) {
   return out;
 }
 
-/**
- * The library file at {@code location} (a schemaLocation of the file in tab {@code src}): relative
- * to the file's own folder when known, else (unless {@code strict}) anywhere by path suffix.
- * {key, name, text, path, rel} or null.
- */
+/** The library file a schemaLocation of {@code src} points to: relative to its folder, else (unless {@code strict}) by path suffix; null when none. */
 export async function findInLibrary(src, location, strict = false) {
   if (!session.library.size) return null;
   let rel = src.rel ? normPath(src.rel.replace(LAST_SEGMENT, '') + location) : null;
