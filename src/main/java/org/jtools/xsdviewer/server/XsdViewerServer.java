@@ -27,6 +27,8 @@ import java.util.concurrent.Executors;
 
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.jtools.xsdviewer.Log;
+import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 
 /** The HTTP server: the page under {@code /}, the API under {@code /api/*} (one handler per {@link ApiPath}); virtual threads, answers in the language the page sends. */
@@ -66,12 +68,15 @@ public final class XsdViewerServer {
         return server;
     }
 
-    /** The handler with the request's {@code Accept-Language} applied to {@link Messages} for its duration. */
+    /** The handler with the request's {@code Accept-Language} applied to {@link Messages}, and a failure logged and answered as a 500 instead of a dropped connection. */
     private static HttpHandler localized(HttpHandler handler) {
         return ex -> {
             Messages.setRequestLocale(Messages.localeOf(ex.getRequestHeaders().getFirst(ACCEPT_LANGUAGE_HEADER)));
             try {
                 handler.handle(ex);
+            } catch (Exception | Error e) {
+                Log.warn(Messages.get(MessageKey.REQUEST_FAILED, ex.getRequestMethod(), ex.getRequestURI()), e);
+                HttpResponses.error(ex, HttpStatus.INTERNAL_ERROR, Messages.get(MessageKey.INTERNAL_ERROR, String.valueOf(e)));
             } finally {
                 Messages.clearRequestLocale();
             }

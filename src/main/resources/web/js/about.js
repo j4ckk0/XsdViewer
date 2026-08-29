@@ -10,6 +10,7 @@ const UNKNOWN = '?';
 export function showAbout() {
   $(ID.ABOUT_VERSION).textContent = t(MSG.ABOUT_VERSION, session.serverVersion || UNKNOWN);
   $(ID.ABOUT_JAVA).textContent = t(MSG.ABOUT_JAVA, session.javaVersion || UNKNOWN);
+  $(ID.ABOUT_LOG).textContent = session.logFile ? t(MSG.ABOUT_LOG, session.logFile) : '';
   $(ID.ABOUT_PROJECT_LINK).href = PROJECT_URL;
   $(ID.ABOUT_PROJECT_LINK).textContent = PROJECT_URL;
   $(ID.ABOUT_LICENSE_LINK).href = LICENSE_URL;

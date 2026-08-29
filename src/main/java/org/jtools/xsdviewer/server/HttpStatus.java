@@ -30,4 +30,5 @@ final class HttpStatus {
     static final int METHOD_NOT_ALLOWED = 405;
     /** The request is fine but the server cannot do it here (no display for a dialog). */
     static final int CONFLICT = 409;
+    static final int INTERNAL_ERROR = 500;
 }

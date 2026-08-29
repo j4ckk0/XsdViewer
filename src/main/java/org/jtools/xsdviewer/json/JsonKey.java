@@ -69,6 +69,7 @@ public final class JsonKey {
     /** Version of the tool and of the Java runtime (Help > About). */
     public static final String VERSION = "version";
     public static final String JAVA_VERSION = "javaVersion";
+    public static final String LOG_FILE = "logFile";
 
     // status answers
     public static final String ERROR = "error";

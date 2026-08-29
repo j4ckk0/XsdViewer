@@ -8,6 +8,7 @@ export const MSG = {
   STATUS_NO_FILE: 'status.noFile',
   ABOUT_VERSION: 'about.version',
   ABOUT_JAVA: 'about.java',
+  ABOUT_LOG: 'about.log',
 
   TAB_UNTITLED: 'tab.untitled',
   TAB_CLOSE: 'tab.close',

@@ -62,6 +62,8 @@ export const session = {
   /** Version of the tool and of its Java runtime, as the server reports them (Help > About). */
   serverVersion: null,
   javaVersion: null,
+  /** The server's log file, for Help > About; null when it has none. */
+  logFile: null,
 };
 const firstWorkspace = newWorkspaceState(++session.workspaceCounter);
 session.workspaces.push(firstWorkspace);

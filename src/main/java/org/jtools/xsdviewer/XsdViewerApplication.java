@@ -70,12 +70,13 @@ public final class XsdViewerApplication {
             server = XsdViewerServer.start(options.host(), options.port(), options.initialFile());
         } catch (IOException e) {
             String message = Messages.get(MessageKey.CANNOT_START, options.host(), String.valueOf(options.port()), e.getMessage());
-            System.err.println(message);
+            Log.warn(message, e);
             reportWithoutConsole(message);
             System.exit(EXIT_CANNOT_START);
             return;
         }
-        System.out.println(Messages.get(MessageKey.SERVER_LISTENING, server.url()));
+        Log.info(Messages.get(MessageKey.SERVER_LISTENING, server.url()));
+        if (Log.file() != null) Log.info(Messages.get(MessageKey.LOG_FILE, Log.file()));
         if (options.openBrowser()) BrowserLauncher.open(server.url());
     }
 

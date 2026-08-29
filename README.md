@@ -109,7 +109,15 @@ XSD built-in types (`xs:string`…) appear as grey dashed nodes (toggle with the
 (imported / included ones) appear as red dashed *external* nodes.
 
 **Help ▸ About XsdViewer…** shows the version (from the jar's manifest), the Java runtime, the
-licence and the project page.
+log file, the licence and the project page.
+
+## Logs
+
+The server logs what it does and what fails on its console and in `xsdviewer.0.log` in the
+system's temporary directory (`/tmp` on Linux, `%TEMP%` on Windows; two rotating files of
+1 MB — the path is shown in Help ▸ About and printed at start-up). A request that fails is
+logged with its stack trace and answered to the page as an error message, so a problem shows
+both in the page (toast) and in the log.
 
 ## Where the files are
 

@@ -47,6 +47,7 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 | `XsdViewerApplication` | Entry point: reads the `CommandLineOptions`, checks the initial file, starts the `XsdViewerServer`, prints the URL and opens the browser. |
 | `CommandLineOptions` | Record of the options (`--port`, `--host`, `--no-browser`, `-h`, optional `file.xsd`) and their parser. |
 | `BrowserLauncher` | Opens a URL with `java.awt.Desktop`, falling back to `xdg-open`. |
+| `Log` | The log (`java.util.logging`): console and `xsdviewer.%g.log` in the temporary directory; every handler failure is logged with its stack trace by `XsdViewerServer` and answered as a 500 with a message. |
 | `Messages`, `MessageKey` | The texts the server prints or sends to the page (console, API errors, generated documentation of placeholder nodes), read from `messages.properties` (English) / `messages_fr.properties` for the JVM locale; `MessageKey` holds the keys. |
 | `schema.XsdParser` | The only class that knows XSD. Turns the schema text into a `SchemaGraph` in three passes (see below) with the JDK DOM parser. |
 | `schema.DeclarationLineIndex` | SAX pass locating the start tag of each global declaration (line numbers). |

@@ -29,6 +29,7 @@
   "about.title": "XsdViewer",
   "about.version": "Version {0}",
   "about.java": "Java {0}",
+  "about.log": "Log file: {0}",
   "about.description": "Web-based viewer for XML Schema files: the graph of the schema objects and their links, and the source text.",
   "about.license": "Apache License 2.0",
   "about.copyright": "Copyright 2026 jtools.org",

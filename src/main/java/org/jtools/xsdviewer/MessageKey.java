@@ -35,6 +35,9 @@ public final class MessageKey {
     // console
     public static final String SERVER_LISTENING = "server.listening";
     public static final String SERVER_QUIT_REQUESTED = "server.quitRequested";
+    public static final String LOG_FILE = "server.logFile";
+    public static final String LOG_FILE_UNAVAILABLE = "server.logFileUnavailable";
+    public static final String REQUEST_FAILED = "server.requestFailed";
 
     // HTTP / API errors
     public static final String POST_EXPECTED = "http.postExpected";
@@ -46,6 +49,8 @@ public final class MessageKey {
     public static final String FILE_NAME_EXPECTED = "api.fileNameExpected";
     public static final String NO_FILE_WITH_CONTENT = "api.noFileWithContent";
     public static final String NO_DISPLAY = "api.noDisplay";
+    public static final String INTERNAL_ERROR = "api.internalError";
+    public static final String DIALOG_FAILED = "api.dialogFailed";
     public static final String NOT_A_WORKSPACE = "api.notAWorkspace";
     public static final String WORKSPACE_EXPECTED = "api.workspaceExpected";
     public static final String INVALID_JSON = "json.invalid";

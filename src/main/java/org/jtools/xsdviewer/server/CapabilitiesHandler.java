@@ -25,6 +25,7 @@ import java.io.IOException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.jtools.xsdviewer.BuildInfo;
+import org.jtools.xsdviewer.Log;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
@@ -40,6 +41,7 @@ final class CapabilitiesHandler implements HttpHandler {
                 .property(JsonKey.LANGUAGE, Locale.getDefault().getLanguage())
                 .property(JsonKey.VERSION, BuildInfo.version())
                 .property(JsonKey.JAVA_VERSION, BuildInfo.javaVersion())
+                .property(JsonKey.LOG_FILE, Log.file() == null ? "" : Log.file().toString())
                 .endObject().toString());
     }
 }

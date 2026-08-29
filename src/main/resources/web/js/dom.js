@@ -25,6 +25,7 @@ export const ID = {
   ABOUT_DIALOG: 'aboutDialog',
   ABOUT_VERSION: 'aboutVersion',
   ABOUT_JAVA: 'aboutJava',
+  ABOUT_LOG: 'aboutLog',
   ABOUT_PROJECT_LINK: 'aboutProjectLink',
   ABOUT_LICENSE_LINK: 'aboutLicenseLink',
   ABOUT_CLOSE: 'aboutClose',

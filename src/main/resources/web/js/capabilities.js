@@ -13,6 +13,7 @@ export async function loadCapabilities() {
     session.serverLanguage = caps.language || null;
     session.serverVersion = caps.version || null;
     session.javaVersion = caps.javaVersion || null;
+    session.logFile = caps.logFile || null;
   } catch (e) {
     session.dialogs = false;
     session.serverLanguage = null;
