@@ -140,6 +140,7 @@
   "compare.button": "⇄ Comparer",
   "compare.button.title": "Comparer deux espaces de travail : Ctrl+clic sur leurs pastilles pour les sélectionner, puis comparer (fichiers appariés par nom)",
   "compare.needTwo": "Ctrl+clic sur deux pastilles d'espace de travail pour les sélectionner, puis comparer",
+  "compare.tab": "{0} ⇄ {1}",
   "compare.title": "Comparaison de {0} avec {1}",
   "compare.summary": "{0} fichiers : {1} identiques, {2} différents, {3} seulement dans {4}, {5} seulement dans {6}",
   "compare.file": "Fichier",

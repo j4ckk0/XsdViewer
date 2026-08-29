@@ -140,6 +140,7 @@
   "compare.button": "⇄ Compare",
   "compare.button.title": "Compare two workspaces: Ctrl+click their chips to select them, then compare (files paired by name)",
   "compare.needTwo": "Ctrl+click two workspace chips to select them, then compare",
+  "compare.tab": "{0} ⇄ {1}",
   "compare.title": "Comparing {0} with {1}",
   "compare.summary": "{0} files: {1} identical, {2} different, {3} only in {4}, {5} only in {6}",
   "compare.file": "File",

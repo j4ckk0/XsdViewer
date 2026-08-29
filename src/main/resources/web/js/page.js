@@ -8,15 +8,16 @@ import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { renderNodeList, renderSchemaInfo } from './sidebar.js';
 import { session } from './state.js';
-import { renderNavigation } from './tabs.js';
+import { compareTitle, renderNavigation } from './tabs.js';
 import { highlightTextLine, renderText } from './text-view.js';
 
 /** Redraws everything from the active tab's state. */
 export function renderPage() {
   const st = session.active;
   const loaded = !!st.model;
-  document.title = loaded ? t(MSG.APP_TITLE_WITH_FILE, st.fileName) : t(MSG.APP_TITLE);
-  $(ID.FILE_NAME).textContent = loaded ? st.fileName : t(MSG.STATUS_NO_FILE);
+  const shown = st.compare ? compareTitle(st) : loaded ? st.fileName : null;
+  document.title = shown ? t(MSG.APP_TITLE_WITH_FILE, shown) : t(MSG.APP_TITLE);
+  $(ID.FILE_NAME).textContent = shown || t(MSG.STATUS_NO_FILE);
   $(ID.FILE_NAME).title = loaded ? (st.path || st.fileName) : '';
   $(ID.SEARCH).value = st.filter;
   $(ID.BACK_BUTTON).disabled = st.history.length === 0;
@@ -36,7 +37,7 @@ export function renderPage() {
     $(ID.DETAILS).classList.add(CLS.HIDDEN);
   }
   renderNavigation();
-  if (session.compare) renderCompare();
+  if (st.compare) renderCompare();
   showView(st.view);
   $(ID.TEXT).scrollTop = st.scroll.text;
   $(ID.GRAPH_CANVAS).scrollTop = st.scroll.graphTop;
@@ -48,7 +49,7 @@ export function showView(view) {
   const st = session.active;
   st.view = view;
   document.querySelectorAll(selector(CLS.VIEW_TAB)).forEach(b => b.classList.toggle(CLS.ACTIVE, b.dataset[DATA.VIEW] === view));
-  const loaded = !!st.model, comparing = !!session.compare;
+  const loaded = !!st.model, comparing = !!st.compare;
   $(ID.COMPARE).classList.toggle(CLS.HIDDEN, !comparing);
   $(ID.SIDEBAR).classList.toggle(CLS.HIDDEN, comparing);
   $(ID.EMPTY).classList.toggle(CLS.HIDDEN, loaded || comparing);

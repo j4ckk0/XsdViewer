@@ -2,7 +2,7 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { closeCompare, initOptions, rememberOptions, renderCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
+import { initOptions, rememberOptions, renderCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
@@ -88,7 +88,7 @@ function wireDocumentTabs() {
     const tab = tabOf(e);
     if (!tab) return;
     if (e.target.closest(selector(CLS.DOC_TAB_CLOSE))) close(tab);
-    else { const changed = activateTab(tab); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
+    else if (activateTab(tab)) renderPage();
   });
   $(ID.TABS).addEventListener('auxclick', (e) => {   // middle click closes
     const tab = tabOf(e);
@@ -100,17 +100,17 @@ function wireDocumentTabs() {
     if (!ws) return;
     if (e.target.closest(selector(CLS.WORKSPACE_CLOSE))) closeGroup(ws);
     else if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderNavigation(); }   // select for comparison
-    else { const changed = activateTab(tabToShow(ws)); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
+    else if (activateTab(tabToShow(ws))) renderPage();
   });
   $(ID.WORKSPACES).addEventListener('auxclick', (e) => {
     const ws = workspaceOf(e);
     if (ws && e.button === MIDDLE_BUTTON) { e.preventDefault(); closeGroup(ws); }
   });
   $(ID.COMPARE_BUTTON).addEventListener('click', () => { if (startCompare()) renderPage(); else toast(t(MSG.COMPARE_NEED_TWO)); });
-  $(ID.COMPARE_CLOSE).addEventListener('click', () => { closeCompare(); renderPage(); });
+  $(ID.COMPARE_CLOSE).addEventListener('click', () => { if (session.active.compare) closeTab(session.active); renderPage(); });
   initOptions();
   for (const id of [ID.COMPARE_BUSINESS_ONLY, ID.COMPARE_DIFF_ONLY]) {
-    $(id).addEventListener('change', () => { rememberOptions(); if (session.compare) renderCompare(); });
+    $(id).addEventListener('change', () => { rememberOptions(); if (session.active.compare) renderCompare(); });
   }
   $(ID.COMPARE_TABLE).addEventListener('click', (e) => { const row = e.target.closest(selector(CLS.COMPARE_ROW)); if (row) toggleDetail(row); });
 }
@@ -172,8 +172,7 @@ function wireViews() {
     if (hit.entries) { openEntriesAsWorkspace(hit.folder, hit.entries); return; }
     const tab = hit.tab || await ensureTab(hit.entry);
     if (!tab) return;
-    const changed = activateTab(tab);
-    if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage();
+    if (activateTab(tab)) renderPage();
     if (hit.id) select(hit.id);
   });
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);

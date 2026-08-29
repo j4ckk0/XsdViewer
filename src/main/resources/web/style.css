@@ -272,6 +272,7 @@ table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0
 .dtab:hover { background: #f0f2f5; }
 .dtab.active { background: var(--bg); border-color: var(--border); color: var(--text); margin-bottom: -1px; height: 29px; }
 .dtab .tname { overflow: hidden; text-overflow: ellipsis; }
+.dtab.ctab .tname::before { content: "⇄ "; color: var(--accent); }
 .dtab .tclose {
   font: inherit;
   color: inherit;

@@ -180,8 +180,10 @@ comparison (long identical stretches folded). **Business lines only** (on by def
 remembered) ignores what does not define the schema — XML comments, `xs:annotation` blocks,
 blank lines and indentation — both for the status and in the line comparison, which keeps the
 original line numbers. **Differences only** hides the identical files and reduces a file's
-comparison to its changed lines with one line of context. Clicking a tab or a chip leaves the
-comparison; closing a compared workspace ends it. To try it: `./run.sh samples/compare/v1.xsdviewer.json`,
+comparison to its changed lines with one line of context. The comparison is a tab of its own
+(`v1 ⇄ v2`) in the workspace it was started from: switch to and from it like any tab, close
+it with its `×`; closing one of the compared workspaces closes it too, and comparing the same
+pair again brings it back to front. To try it: `./run.sh samples/compare/v1.xsdviewer.json`,
 then File ▸ Open workspace… `samples/compare/v2.xsdviewer.json` (what differs is listed in
 `samples/compare/README.md`).
 

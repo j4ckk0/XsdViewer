@@ -12,6 +12,7 @@ export function newTabState() {
     located: null,      // promise of the server's search for the path of a file opened in the browser
     workspace: null,    // always set
     file: null,         // the entry of workspace.files shown, when the tab shows one
+    compare: null,      // {left, right} workspaces when the tab is a comparison
     text: '',
     model: null,
     nodes: new Map(),
@@ -48,8 +49,6 @@ export const session = {
   workspaceCounter: 0,
   /** Workspaces selected with Ctrl+click on their chip, oldest first (at most two). */
   compareSelection: [],
-  /** The comparison being shown, {left, right} workspaces, or null. */
-  compare: null,
   /** Set when a link to an external declaration could not be resolved: checked whenever a file gets loaded. */
   pendingJump: null,
   /** Schema files of the folders opened in the browser (File ▸ Open folder…, or a dropped folder),

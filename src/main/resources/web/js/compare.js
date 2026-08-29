@@ -13,7 +13,7 @@ import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
 import { diffModels } from './schema-diff.js';
 import { session } from './state.js';
-import { tabsOf, workspaceName } from './tabs.js';
+import { activateTab, newTab, tabsOf, workspaceName } from './tabs.js';
 
 export const COMPARED_WORKSPACES = 2;
 /** Equal runs longer than FOLD_ABOVE are folded to one line in the text diff, FOLD_KEEP lines kept on each side; with "differences only", one line of context. */
@@ -69,16 +69,17 @@ export function toggleSelection(ws) {
 
 export const canCompare = () => session.compareSelection.length === COMPARED_WORKSPACES;
 
-/** Starts comparing the two selected workspaces (the caller redraws the page). Returns false when two are not selected. */
+/** Opens (or brings to front) the comparison tab of the two selected workspaces; the caller redraws the page. Returns false when two are not selected. */
 export function startCompare() {
   if (!canCompare()) return false;
   const [left, right] = session.compareSelection;
-  session.compare = { left, right };
+  let tab = session.tabs.find(x => x.compare && x.compare.left === left && x.compare.right === right);
+  if (!tab) {
+    tab = newTab();
+    tab.compare = { left, right };
+  }
+  activateTab(tab);
   return true;
-}
-
-export function closeCompare() {
-  session.compare = null;
 }
 
 /** The loaded tabs of a workspace by file name (the first one when a name appears twice). */
@@ -102,7 +103,7 @@ function pairFiles(left, right) {
 }
 
 export function renderCompare() {
-  const { left, right } = session.compare;
+  const { left, right } = session.active.compare;
   const ln = workspaceName(left), rn = workspaceName(right);
   pairs = pairFiles(left, right);
   const count = (s) => pairs.filter(p => p.status === s).length;
@@ -137,7 +138,7 @@ export function toggleDetail(row) {
 function schemaDiffHtml(pair) {
   const d = diffModels(pair.left.model, pair.right.model);
   if (d.same) return '<p class="' + CLS.META + '">' + esc(t(MSG.COMPARE_SAME_MODEL)) + '</p>';
-  const ln = workspaceName(session.compare.left), rn = workspaceName(session.compare.right);
+  const ln = workspaceName(session.active.compare.left), rn = workspaceName(session.active.compare.right);
   const node = (n) => '<li><span class="' + CLS.DOT + ' ' + n.kind + '"></span>' + esc(kindLabel(n.kind) + ' ' + n.name) + '</li>';
   const edge = (e) => '<li>' + esc(e.from + ARROW + e.label + (cardinalityText(e) ? ' ' + cardinalityText(e) : '') + ARROW + e.to) + '</li>';
   const block = (title, items, render) => items.length ? '<h4>' + esc(title) + '</h4><ul>' + items.map(render).join('') + '</ul>' : '';

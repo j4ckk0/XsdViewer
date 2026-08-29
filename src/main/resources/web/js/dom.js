@@ -85,6 +85,7 @@ export const CLS = {
   DOC_TAB: 'dtab',
   DOC_TAB_NAME: 'tname',
   DOC_TAB_CLOSE: 'tclose',
+  COMPARE_TAB: 'ctab',
   WORKSPACE_GROUP: 'wsgroup',
   WORKSPACE_NAME: 'wsname',
   WORKSPACE_CLOSE: 'wsclose',

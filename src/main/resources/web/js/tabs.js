@@ -6,11 +6,31 @@ import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { newTabState, newWorkspaceState, session } from './state.js';
 
-/** A workspace being closed leaves the comparison selection and ends a comparison it took part in. */
-function forgetWorkspace(ws) {
-  const i = session.compareSelection.indexOf(ws);
-  if (i >= 0) session.compareSelection.splice(i, 1);
-  if (session.compare && (session.compare.left === ws || session.compare.right === ws)) session.compare = null;
+/** The name of a comparison tab: "v1 ⇄ v2". */
+export const compareTitle = (tab) => t(MSG.COMPARE_TAB, workspaceName(tab.compare.left), workspaceName(tab.compare.right));
+
+/**
+ * After tabs went: comparisons of a gone workspace go too, a workspace left without tabs goes
+ * (the last one gets an empty tab), a gone active tab is replaced by the one at {@code at}.
+ * Returns true when the active tab changed.
+ */
+function settle(at) {
+  const view = session.active.view;
+  for (;;) {
+    const alive = new Set(session.workspaces);
+    const before = session.tabs.length + session.workspaces.length;
+    session.tabs = session.tabs.filter(tab => !(tab.compare && (!alive.has(tab.compare.left) || !alive.has(tab.compare.right))));
+    for (const ws of [...session.workspaces]) {
+      if (tabsOf(ws).length) continue;
+      if (session.workspaces.length > 1) session.workspaces.splice(session.workspaces.indexOf(ws), 1);
+      else session.tabs.push(emptyTabOf(ws, view));
+    }
+    if (before === session.tabs.length + session.workspaces.length) break;
+  }
+  session.compareSelection = session.compareSelection.filter(ws => session.workspaces.includes(ws));
+  if (session.tabs.includes(session.active)) return false;
+  session.active = session.tabs[Math.min(at, session.tabs.length - 1)];
+  return true;
 }
 
 const PATH_SEPARATORS = /[\\/]/;
@@ -18,7 +38,7 @@ const PATH_SEPARATORS = /[\\/]/;
 export const tabsOf = (ws) => session.tabs.filter(tab => tab.workspace === ws);
 export const activeWorkspace = () => session.active.workspace;
 /** An unsaved workspace knowing no file: it can take the next workspace opened. */
-export const isEmptyWorkspace = (ws) => !ws.path && !ws.files.length && tabsOf(ws).every(tab => !tab.model);
+export const isEmptyWorkspace = (ws) => !ws.path && !ws.files.length && tabsOf(ws).every(tab => !tab.model && !tab.compare);
 
 /** The workspace file's name without its suffix, else the name it was given (an opened folder), else "Workspace n". */
 export function workspaceName(ws) {
@@ -63,20 +83,13 @@ export const tabToShow = (ws) => (tabsOf(ws).includes(ws.lastActive) ? ws.lastAc
  * tab instead). Returns true when the active tab's content changed.
  */
 export function closeTab(tab) {
-  const ws = tab.workspace;
   if (session.tabs.length === 1) {
     resetTab(tab);
     return true;
   }
   const i = session.tabs.indexOf(tab);
   session.tabs.splice(i, 1);
-  if (!tabsOf(ws).length) {
-    if (session.workspaces.length > 1) { session.workspaces.splice(session.workspaces.indexOf(ws), 1); forgetWorkspace(ws); }
-    else session.tabs.push(emptyTabOf(ws, tab.view));
-  }
-  if (tab !== session.active) return false;
-  session.active = session.tabs[Math.min(i, session.tabs.length - 1)];
-  return true;
+  return settle(i);
 }
 
 /** Closes every tab of {@code ws} and forgets it; closing the last workspace leaves a fresh empty one. Returns true when the active tab changed. */
@@ -85,13 +98,9 @@ export function closeWorkspace(ws) {
     closeAllTabs();
     return true;
   }
-  const wasActive = session.active.workspace === ws;
   session.tabs = session.tabs.filter(tab => tab.workspace !== ws);
-  forgetWorkspace(ws);
   session.workspaces.splice(session.workspaces.indexOf(ws), 1);
-  if (!wasActive) return false;
-  session.active = session.tabs[0];
-  return true;
+  return settle(0);
 }
 
 /** Closes everything (File ▸ Close all tabs): one unsaved workspace with one empty tab remains, with the current view. */
@@ -101,14 +110,13 @@ export function closeAllTabs() {
   const ws = newWorkspaceState(++session.workspaceCounter);
   session.workspaces = [ws];
   session.compareSelection = [];
-  session.compare = null;
   session.tabs = [emptyTabOf(ws, view)];
   session.active = session.tabs[0];
   session.pendingJump = null;
   return session.active;
 }
 
-/** Empties a tab (File ▸ Close), keeping its view and workspace. */
+/** Empties a tab (File ▸ Close), keeping its view and workspace; a comparison tab becomes an empty tab. */
 export function resetTab(tab) {
   Object.assign(tab, newTabState(), { view: tab.view, workspace: tab.workspace });
 }
@@ -137,8 +145,8 @@ export function renderNavigation() {
   $(ID.WORKSPACES).innerHTML = chips;
   let tabs = '';
   for (const tab of tabsOf(session.active.workspace)) {
-    const tabName = tab.fileName || t(MSG.TAB_UNTITLED);
-    tabs += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + '"'
+    const tabName = tab.compare ? compareTitle(tab) : tab.fileName || t(MSG.TAB_UNTITLED);
+    tabs += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + (tab.compare ? ' ' + CLS.COMPARE_TAB : '') + '"'
       + dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(tab)) + ' title="' + esc(tab.path || tabName) + '">'
       + '<span class="' + CLS.DOC_TAB_NAME + '">' + esc(tabName) + '</span>'
       + '<button class="' + CLS.DOC_TAB_CLOSE + '" type="button" title="' + esc(t(MSG.TAB_CLOSE)) + '">×</button></div>';
