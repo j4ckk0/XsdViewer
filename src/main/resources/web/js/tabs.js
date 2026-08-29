@@ -35,6 +35,17 @@ export function closeTab(tab) {
   return true;
 }
 
+/** Closes every tab (File ▸ Close all tabs, opening a workspace): one empty tab remains, with the current view. */
+export function closeAllTabs() {
+  const first = newTabState();
+  first.view = session.active.view;
+  session.tabs.length = 0;
+  session.tabs.push(first);
+  session.active = first;
+  session.pendingJump = null;
+  return first;
+}
+
 /** Empties a tab (File ▸ Close), keeping its view. */
 export function resetTab(tab) {
   Object.assign(tab, newTabState(), { view: tab.view });

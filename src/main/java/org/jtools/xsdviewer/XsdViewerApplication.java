@@ -1,6 +1,10 @@
 package org.jtools.xsdviewer;
 
+import java.awt.GraphicsEnvironment;
+import java.io.IOException;
 import java.nio.file.Files;
+
+import javax.swing.JOptionPane;
 
 import org.jtools.xsdviewer.server.XsdViewerServer;
 
@@ -13,8 +17,11 @@ import org.jtools.xsdviewer.server.XsdViewerServer;
  */
 public final class XsdViewerApplication {
 
+    public static final String APP_NAME = "XsdViewer";
+
     private static final int EXIT_BAD_FILE = 1;
     private static final int EXIT_BAD_USAGE = 2;
+    private static final int EXIT_CANNOT_START = 3;
 
     private XsdViewerApplication() {}
 
@@ -38,8 +45,27 @@ public final class XsdViewerApplication {
             return;
         }
 
-        XsdViewerServer server = XsdViewerServer.start(options.host(), options.port(), options.initialFile());
+        XsdViewerServer server;
+        try {
+            server = XsdViewerServer.start(options.host(), options.port(), options.initialFile());
+        } catch (IOException e) {
+            String message = Messages.get(MessageKey.CANNOT_START, options.host(), String.valueOf(options.port()), e.getMessage());
+            System.err.println(message);
+            reportWithoutConsole(message);
+            System.exit(EXIT_CANNOT_START);
+            return;
+        }
         System.out.println(Messages.get(MessageKey.SERVER_LISTENING, server.url()));
         if (options.openBrowser()) BrowserLauncher.open(server.url());
+    }
+
+    /** Started without a console (javaw, a double-clicked launcher): the message would be lost, so show it in a dialog. */
+    private static void reportWithoutConsole(String message) {
+        if (System.console() != null || GraphicsEnvironment.isHeadless()) return;
+        try {
+            JOptionPane.showMessageDialog(null, message, APP_NAME, JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ignored) {
+            // no usable display after all: the message went to stderr
+        }
     }
 }

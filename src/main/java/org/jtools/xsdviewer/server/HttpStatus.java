@@ -8,4 +8,6 @@ final class HttpStatus {
     static final int BAD_REQUEST = 400;
     static final int NOT_FOUND = 404;
     static final int METHOD_NOT_ALLOWED = 405;
+    /** The request is fine but the server cannot do it here (no display for a dialog). */
+    static final int CONFLICT = 409;
 }

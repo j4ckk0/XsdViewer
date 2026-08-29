@@ -25,6 +25,18 @@ export const ID_SEPARATOR = ':';
 export const nodeId = (kind, name) => kind + ID_SEPARATOR + name;
 export const kindOfId = (id) => id.slice(0, id.indexOf(ID_SEPARATOR));
 
+/** Edge labels that name an XSD construct rather than an element / attribute (LinkLabel on the server). */
+export const LINK_LABEL = {
+  TYPE: 'type', REF: 'ref', ATTRIBUTE_REF: 'attribute ref', SUBSTITUTES: 'substitutes', GROUP: 'group',
+  ATTRIBUTE_GROUP: 'attributeGroup', EXTENDS: 'extends', RESTRICTS: 'restricts', LIST_OF: 'list of', UNION_OF: 'union of',
+  /** "attribute <name>": a nested attribute's type link. */
+  ATTRIBUTE_PREFIX: 'attribute ',
+};
+export const STRUCTURAL_LINK_LABELS = new Set([
+  LINK_LABEL.TYPE, LINK_LABEL.REF, LINK_LABEL.ATTRIBUTE_REF, LINK_LABEL.SUBSTITUTES, LINK_LABEL.GROUP,
+  LINK_LABEL.ATTRIBUTE_GROUP, LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.LIST_OF, LINK_LABEL.UNION_OF,
+]);
+
 /** Tags of the schema's imports (SchemaGraph.Import.tag). */
 export const IMPORT_TAG = { IMPORT: 'import', INCLUDE: 'include', REDEFINE: 'redefine' };
 
@@ -38,12 +50,17 @@ export const API = {
   OPEN: '/api/open',
   LOCATE: '/api/locate',
   QUIT: '/api/quit',
+  CAPABILITIES: '/api/capabilities',
+  CHOOSE: '/api/choose',
+  WORKSPACE_SAVE: '/api/workspace/save',
+  WORKSPACE_OPEN: '/api/workspace/open',
 };
-export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location' };
+export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location', STRICT: 'strict' };
 export const HTTP = {
   POST: 'POST',
   CONTENT_TYPE_HEADER: 'Content-Type',
   TEXT_PLAIN_UTF8: 'text/plain; charset=utf-8',
+  JSON: 'application/json',
 };
 
 // ---- files ----
@@ -56,7 +73,11 @@ export const LIBRARY_KEY_PREFIX = 'lib:';
 export const PATH_SEPARATOR = '/';
 
 // ---- browser ----
-export const STORAGE_KEY = { TWO_LEVELS: 'xsdviewer.twoLevels' };
+export const STORAGE_KEY = {
+  TWO_LEVELS: 'xsdviewer.twoLevels',
+  DETAILS_COLLAPSED: 'xsdviewer.detailsCollapsed',
+  SCHEMA_INFO_COLLAPSED: 'xsdviewer.schemaInfoCollapsed',
+};
 export const STORAGE_TRUE = '1';
 export const STORAGE_FALSE = '0';
 export const MIME = { PNG: 'image/png', SVG: 'image/svg+xml;charset=utf-8' };
@@ -64,5 +85,5 @@ export const SVG_NS = 'http://www.w3.org/2000/svg';
 /** dataTransfer.types entry of a drag that carries files. */
 export const DATA_TRANSFER_FILES = 'Files';
 export const DROP_EFFECT_COPY = 'copy';
-export const KEY = { ESCAPE: 'Escape', ARROW_LEFT: 'ArrowLeft', OPEN: 'o', FIND: 'f' };
+export const KEY = { ESCAPE: 'Escape', ARROW_LEFT: 'ArrowLeft', OPEN: 'o', FIND: 'f', SAVE: 's' };
 export const MIDDLE_BUTTON = 1;

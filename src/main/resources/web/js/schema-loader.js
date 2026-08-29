@@ -33,27 +33,32 @@ export async function loadInto(st, name, text, path) {
   return true;
 }
 
-/** Asks the server for the path of a file opened in the browser (same name and content on disk); sets {@code st.path}. */
+/** Asks the server for the path of a file opened in the browser (same name and content on disk); sets {@code st.path}. Resolves to the path or null. */
 async function locate(st, name, text) {
   try {
     const path = await locateFile(name, text);
-    if (!path || st.fileName !== name) return;   // not found, or the tab was reused meanwhile
+    if (!path || st.fileName !== name) return null;   // not found, or the tab was reused meanwhile
     st.path = path;
     if (st === session.active) $(ID.FILE_NAME).title = path;
     renderTabBar();
-  } catch (e) { /* server unreachable: reported when something else is fetched */ }
+    return path;
+  } catch (e) {
+    return null;   // server unreachable: reported when something else is fetched
+  }
 }
 
 /**
  * Finds the schema at {@code location} (a schemaLocation of the file in tab {@code src}):
- * in the opened folders first, then through the server. Returns {key, name, text, path, rel} or null.
+ * in the opened folders first, then through the server. With {@code strict}, only relative to
+ * the file's own location (nothing when that location is unknown). Returns {key, name, text, path, rel} or null.
  */
-export async function resolveLocation(src, location) {
+export async function resolveLocation(src, location, strict = false) {
   if (location.includes(REMOTE_LOCATION_MARK)) return null;
-  const fromLibrary = await findInLibrary(src, location);
+  const fromLibrary = await findInLibrary(src, location, strict);
   if (fromLibrary) return fromLibrary;
+  if (strict && !src.path) return null;
   try {
-    const f = await openLocation(src.path, location);
+    const f = await openLocation(src.path, location, strict);
     return f ? { key: f.path, name: f.name, text: f.text, path: f.path, rel: null } : null;
   } catch (e) {
     toast(t(MSG.SERVER_UNREACHABLE, e.message));

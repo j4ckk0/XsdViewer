@@ -19,6 +19,7 @@ export function renderPage() {
   $(ID.FILE_NAME).title = loaded ? (st.path || st.fileName) : '';
   $(ID.SEARCH).value = st.filter;
   $(ID.BACK_BUTTON).disabled = st.history.length === 0;
+  $(ID.SCHEMA_INFO).classList.toggle(CLS.HIDDEN, !loaded);
   if (loaded) {
     renderSchemaInfo();
     renderNodeList();
@@ -27,7 +28,7 @@ export function renderPage() {
     renderDetails();
     highlightTextLine(false);
   } else {
-    $(ID.SCHEMA_INFO).innerHTML = '';
+    $(ID.SCHEMA_INFO_CONTENT).innerHTML = '';
     $(ID.NODE_LIST).innerHTML = '';
     $(ID.TEXT).innerHTML = '';
     $(ID.GRAPH_CANVAS).innerHTML = '';

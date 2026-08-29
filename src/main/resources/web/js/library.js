@@ -50,13 +50,14 @@ export async function filesOfEntries(entries) {
 
 /**
  * The library file at {@code location} (a schemaLocation of the file in tab {@code src}): relative
- * to the file's own folder when known, else anywhere by path suffix. {key, name, text, path, rel} or null.
+ * to the file's own folder when known, else (unless {@code strict}) anywhere by path suffix.
+ * {key, name, text, path, rel} or null.
  */
-export async function findInLibrary(src, location) {
+export async function findInLibrary(src, location, strict = false) {
   if (!session.library.size) return null;
   let rel = src.rel ? normPath(src.rel.replace(LAST_SEGMENT, '') + location) : null;
   if (rel && !session.library.has(rel)) rel = null;
-  if (!rel) {
+  if (!rel && !strict) {
     const suffix = normPath(location);
     for (const k of session.library.keys()) if (k === suffix || k.endsWith(PATH_SEPARATOR + suffix)) { rel = k; break; }
   }

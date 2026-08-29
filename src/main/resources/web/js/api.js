@@ -35,11 +35,47 @@ export async function locateFile(name, text) {
   return (await resp.json()).path;
 }
 
-/** GET /api/open: {name, path, text} of the schema at {@code location} relative to {@code basePath}, or null. */
-export async function openLocation(basePath, location) {
-  const resp = await request(API.OPEN + query({ [API_PARAM.BASE]: basePath || '', [API_PARAM.LOCATION]: location }));
+/**
+ * GET /api/open: {name, path, text} of the schema at {@code location} relative to {@code basePath}, or null.
+ * With {@code strict}, only the directory of {@code basePath} is tried.
+ */
+export async function openLocation(basePath, location, strict = false) {
+  const params = { [API_PARAM.BASE]: basePath || '', [API_PARAM.LOCATION]: location };
+  if (strict) params[API_PARAM.STRICT] = String(true);
+  const resp = await request(API.OPEN + query(params));
   if (!resp.ok) return null;
   return await resp.json();
+}
+
+/** GET /api/capabilities: {dialogs} — what the server can do for the page. */
+export async function fetchCapabilities() {
+  const resp = await request(API.CAPABILITIES);
+  return resp.ok ? await resp.json() : {};
+}
+
+/** The JSON answer of a POST, or an Error carrying the server's message. */
+async function post(url, body) {
+  const init = body === undefined ? { method: HTTP.POST }
+    : { method: HTTP.POST, headers: { [HTTP.CONTENT_TYPE_HEADER]: HTTP.JSON }, body: JSON.stringify(body) };
+  const resp = await request(url, init);
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json.error || String(resp.status));
+  return json;
+}
+
+/** POST /api/choose: the schemas picked in the server's native dialog, [{name, path, text}] (empty when cancelled). */
+export async function chooseFiles() {
+  return (await post(API.CHOOSE)).files;
+}
+
+/** POST /api/workspace/save: {path} of the workspace written through the server's "save as" dialog, or {cancelled}. */
+export async function saveWorkspaceFile(files, active) {
+  return post(API.WORKSPACE_SAVE, { files, active });
+}
+
+/** POST /api/workspace/open: {workspace, active, files: [{name, path, text}], missing} of the workspace picked in the server's dialog, or {cancelled}. */
+export async function openWorkspaceFile() {
+  return post(API.WORKSPACE_OPEN);
 }
 
 /** GET /api/initial: {name, path, text} of the file given on the command line, or null. */

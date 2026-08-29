@@ -62,8 +62,11 @@ bundled JRE 21 and a launcher taking the same options as above:
 
 | Archive | Launcher |
 |---|---|
-| `target/xsdviewer-<version>-windows.zip` | `xsdviewer.bat` |
+| `target/xsdviewer-<version>-windows.zip` | `xsdviewer.bat` — runs the server in the background (`javaw.exe`), so no console window stays open; `xsdviewer.bat --console …` keeps one, with the server's messages |
 | `target/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
+
+When started without a console (the Windows launcher, a double-clicked jar), a start-up
+failure such as a port already in use is shown in a dialog instead of being lost.
 
 The JREs are not tracked in git: before packaging, download the Temurin JRE 21
 archives from <https://adoptium.net/temurin/releases/> and put them in
@@ -97,6 +100,29 @@ content (anonymous nested types included):
 XSD built-in types (`xs:string`…) appear as grey dashed nodes (toggle with the
 **built-in types** checkbox). Objects referenced but not declared in the file
 (imported / included ones) appear as red dashed *external* nodes.
+
+## Where the files are
+
+A browser never tells a page where a chosen file sits on disk, but the server runs on the same
+machine: **File ▸ Open…** (Ctrl+O) therefore goes through the server's own, native file dialog
+whenever it has a display, and the files it returns come with their location. Without a
+display (headless server), the browser's dialog is used and the server tries to locate the file
+by name and content under the folders it already knows. Dropped files always go through the
+browser.
+
+Once a file's location is known, the schemas it links to — its `xs:import` / `xs:include` /
+`xs:redefine` whose `schemaLocation` resolves **relative to that file** — are opened
+automatically in background tabs, and theirs in turn (up to 50 files), so the graph shows
+what uses what across the set right away.
+
+### Workspaces
+
+**File ▸ Save workspace…** (Ctrl+S) writes a `<name>.xsdviewer.json` holding the location of
+the open files (relative to the workspace file when they share its root) and which tab is
+shown; files whose location is unknown are left out and named in the message.
+**File ▸ Open workspace…** replaces the open tabs with the workspace's files (missing ones are
+reported). A workspace file can also be given on the command line:
+`./run.sh samples/all.xsdviewer.json`. Both need the server's dialogs, i.e. a display.
 
 ## Following links into other files
 
@@ -133,8 +159,11 @@ src/main/java/org/jtools/xsdviewer/
                          NodeKind / LinkLabel / XsdVocabulary constants
   server/                XsdViewerServer (JDK com.sun.net.httpserver) + one handler per path:
                          ParseSchemaHandler, InitialFileHandler, OpenSchemaLocationHandler,
-                         LocateSchemaFileHandler, QuitHandler, StaticResourceHandler
-  json/                  JsonWriter, JsonStrings, JsonKey
+                         LocateSchemaFileHandler, ChooseFilesHandler, SaveWorkspaceHandler,
+                         OpenWorkspaceHandler, CapabilitiesHandler, QuitHandler, StaticResourceHandler;
+                         FileDialogs (native java.awt.FileDialog)
+  workspace/             Workspace (the *.xsdviewer.json format)
+  json/                  JsonWriter, JsonReader, JsonStrings, JsonKey
 src/main/resources/org/jtools/xsdviewer/   messages.properties (English), messages_fr.properties – server texts
 src/main/resources/web/   index.html, style.css, js/ (ES modules, one per concern), i18n/en.json, i18n/fr.json – the client, no framework
 src/test/java/            parser, JSON, command line and translation tests (samples/purchaseOrder.xsd)

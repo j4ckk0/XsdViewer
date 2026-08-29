@@ -17,7 +17,9 @@ import org.jtools.xsdviewer.Messages;
  * relative to the directory of {@code base} (when it is a file this server already served),
  * then to the directories of all the files it served, then to the working directory: a file
  * opened from the browser has no known path, but its imports usually sit next to something
- * the server knows. Remote locations (http://...) are refused: the tool never goes on the network.
+ * the server knows. With {@code strict=true} only the directory of {@code base} is tried (the
+ * location must be relative to the referencing file). Remote locations (http://...) are refused:
+ * the tool never goes on the network.
  */
 final class OpenSchemaLocationHandler implements HttpHandler {
 
@@ -42,7 +44,8 @@ final class OpenSchemaLocationHandler implements HttpHandler {
             return;
         }
         String rel = location.replace('\\', '/');
-        for (Path dir : searchDirectories(base)) {
+        boolean strict = ApiPath.TRUE.equals(q.get(ApiPath.PARAM_STRICT));
+        for (Path dir : searchDirectories(base, strict)) {
             Path target = dir.resolve(rel).normalize();
             if (Files.isRegularFile(target)) {
                 files.send(ex, target);
@@ -52,12 +55,13 @@ final class OpenSchemaLocationHandler implements HttpHandler {
         HttpResponses.error(ex, HttpStatus.NOT_FOUND, Messages.get(MessageKey.FILE_NOT_FOUND, location));
     }
 
-    private List<Path> searchDirectories(String base) {
+    private List<Path> searchDirectories(String base, boolean strict) {
         List<Path> dirs = new ArrayList<>();
         if (!base.isEmpty()) {
             Path basePath = Path.of(base).toAbsolutePath().normalize();
             if (files.contains(basePath) && basePath.getParent() != null) dirs.add(basePath.getParent());
         }
+        if (strict) return dirs;
         dirs.addAll(files.directories());
         dirs.add(Path.of("").toAbsolutePath());
         return dirs;

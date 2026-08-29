@@ -1,13 +1,14 @@
 /** Wiring of the page's controls to the actions: menu, tabs, keyboard, drag and drop, clicks in the views. */
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
-import { addFolder, closeFile, openFiles, quit } from './file-actions.js';
+import { addFolder, closeAll, closeFile, openFiles, openSchemas, openWorkspace, quit, saveWorkspace } from './file-actions.js';
+import { initDetails, toggleDetails } from './details.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './library.js';
 import { followExternal, goBack, select } from './navigation.js';
 import { renderPage, showView } from './page.js';
 import { exportPng } from './png-export.js';
-import { renderNodeList, toggleGroup } from './sidebar.js';
+import { initSchemaInfo, renderNodeList, toggleGroup, toggleSchemaInfo } from './sidebar.js';
 import { session } from './state.js';
 import { activateTab, closeTab, newTab, renderTabBar } from './tabs.js';
 
@@ -29,9 +30,12 @@ function wireFileMenu() {
   $(ID.FILE_MENU_BUTTON).addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle(CLS.HIDDEN); });
   document.addEventListener('click', closeMenu);
   document.addEventListener('keydown', (e) => { if (e.key === KEY.ESCAPE) closeMenu(); });
-  $(ID.MENU_OPEN).addEventListener('click', () => { closeMenu(); $(ID.FILE_INPUT).click(); });
+  $(ID.MENU_OPEN).addEventListener('click', () => { closeMenu(); openSchemas(); });
+  $(ID.MENU_OPEN_WORKSPACE).addEventListener('click', () => { closeMenu(); openWorkspace(); });
+  $(ID.MENU_SAVE_WORKSPACE).addEventListener('click', () => { closeMenu(); saveWorkspace(); });
   $(ID.MENU_NEW_TAB).addEventListener('click', () => { closeMenu(); activateTab(newTab()); renderPage(); });
   $(ID.MENU_CLOSE).addEventListener('click', () => { closeMenu(); closeFile(); });
+  $(ID.MENU_CLOSE_ALL).addEventListener('click', () => { closeMenu(); closeAll(); });
   $(ID.MENU_QUIT).addEventListener('click', () => { closeMenu(); quit(); });
   $(ID.FILE_INPUT).addEventListener('change', (e) => { openFiles([...e.target.files]); e.target.value = ''; });
   $(ID.FILE_INPUT).addEventListener('cancel', () => { session.pendingJump = null; });
@@ -63,7 +67,8 @@ function wireDocumentTabs() {
 function wireKeyboard() {
   document.addEventListener('keydown', (e) => {
     const ctrl = e.ctrlKey || e.metaKey;
-    if (ctrl && e.key.toLowerCase() === KEY.OPEN) { e.preventDefault(); $(ID.FILE_INPUT).click(); }
+    if (ctrl && e.key.toLowerCase() === KEY.OPEN) { e.preventDefault(); openSchemas(); }
+    if (ctrl && e.key.toLowerCase() === KEY.SAVE) { e.preventDefault(); saveWorkspace(); }
     if (ctrl && e.key.toLowerCase() === KEY.FIND) { e.preventDefault(); $(ID.SEARCH).focus(); $(ID.SEARCH).select(); }
     if (e.altKey && e.key === KEY.ARROW_LEFT) goBack();
   });
@@ -104,6 +109,10 @@ function wireViews() {
     renderGraph();
   });
   $(ID.BACK_BUTTON).addEventListener('click', goBack);
+  initDetails();
+  $(ID.DETAILS_TOGGLE).addEventListener('click', toggleDetails);
+  initSchemaInfo();
+  $(ID.SCHEMA_INFO_TOGGLE).addEventListener('click', toggleSchemaInfo);
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   window.addEventListener('resize', () => { const st = session.active; if (st.model && st.view === VIEW.GRAPH) renderGraph(); });
 }

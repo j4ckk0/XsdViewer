@@ -42,13 +42,20 @@ final class ServedSchemaFiles {
 
     /** Answers {@code {name, path, text}} for a schema file and remembers it. */
     void send(HttpExchange ex, Path file) throws IOException {
+        JsonWriter w = new JsonWriter(4096);
+        writeFile(w, file);
+        HttpResponses.json(ex, HttpStatus.OK, w.toString());
+    }
+
+    /** Writes {@code {name, path, text}} of a schema file into {@code w} and remembers the file. */
+    void writeFile(JsonWriter w, Path file) throws IOException {
         Path abs = file.toAbsolutePath().normalize();
         String text = Files.readString(abs, StandardCharsets.UTF_8);
         remember(abs);
-        HttpResponses.json(ex, HttpStatus.OK, new JsonWriter(text.length() + 256).beginObject()
+        w.beginObject()
                 .property(JsonKey.NAME, abs.getFileName().toString())
                 .property(JsonKey.PATH, abs.toString())
                 .property(JsonKey.TEXT, text)
-                .endObject().toString());
+                .endObject();
     }
 }

@@ -1,5 +1,5 @@
 /** The left panel: the schema header (namespace, imports, counts) and the searchable list of objects by kind. */
-import { KINDS, NODE_KIND } from './constants.js';
+import { KINDS, NODE_KIND, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { t } from './i18n.js';
 import { groupLabel } from './kind-labels.js';
@@ -15,7 +15,29 @@ export function renderSchemaInfo() {
       + (i.schemaLocation && i.namespace ? '<br><span>' + esc(i.namespace) + '</span>' : '') + '</div>';
   }
   html += '<div>' + esc(t(MSG.INFO_COUNTS, m.nodes.length, m.edges.length)) + '</div>';
-  $(ID.SCHEMA_INFO).innerHTML = html;
+  $(ID.SCHEMA_INFO_CONTENT).innerHTML = html;
+}
+
+const COLLAPSE_GLYPH = '▾', EXPAND_GLYPH = '▸';
+
+/** Folds the schema header (namespace, imports, counts) to its title line, or unfolds it; remembered across sessions. */
+export function setSchemaInfoCollapsed(collapsed) {
+  $(ID.SCHEMA_INFO).classList.toggle(CLS.COLLAPSED, collapsed);
+  const toggle = $(ID.SCHEMA_INFO_TOGGLE);
+  toggle.textContent = collapsed ? EXPAND_GLYPH : COLLAPSE_GLYPH;
+  toggle.title = t(collapsed ? MSG.INFO_EXPAND : MSG.INFO_COLLAPSE);
+  try { localStorage.setItem(STORAGE_KEY.SCHEMA_INFO_COLLAPSED, collapsed ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
+}
+
+export function toggleSchemaInfo() {
+  setSchemaInfoCollapsed(!$(ID.SCHEMA_INFO).classList.contains(CLS.COLLAPSED));
+}
+
+/** Restores the folded state remembered in the browser. */
+export function initSchemaInfo() {
+  let collapsed = false;
+  try { collapsed = localStorage.getItem(STORAGE_KEY.SCHEMA_INFO_COLLAPSED) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
+  setSchemaInfoCollapsed(collapsed);
 }
 
 export function renderNodeList() {

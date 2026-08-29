@@ -35,6 +35,10 @@ export const session = {
   /** Schema files of the folders opened in the browser (File ▸ Open folder…, or a dropped folder),
    *  by relative path "folder/sub/x.xsd" -> File: where links are followed without asking. */
   library: new Map(),
+  /** Whether the server can show native file dialogs (it has a display): files then come with their location. */
+  dialogs: false,
+  /** Path of the workspace last saved or opened, null when none. */
+  workspacePath: null,
 };
 session.active = newTabState();
 session.tabs.push(session.active);

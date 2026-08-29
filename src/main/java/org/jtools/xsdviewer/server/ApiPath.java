@@ -15,6 +15,14 @@ public final class ApiPath {
     public static final String LOCATE = "/api/locate";
     /** {@code POST}: stop the server. */
     public static final String QUIT = "/api/quit";
+    /** {@code GET}: what the server can do for the page ({@code {"dialogs": bool}}). */
+    public static final String CAPABILITIES = "/api/capabilities";
+    /** {@code POST}: native "open files" dialog, answers the chosen schemas. */
+    public static final String CHOOSE = "/api/choose";
+    /** {@code POST} a workspace: native "save as" dialog, writes the workspace file. */
+    public static final String WORKSPACE_SAVE = "/api/workspace/save";
+    /** {@code POST}: native "open" dialog, answers the workspace and its schemas. */
+    public static final String WORKSPACE_OPEN = "/api/workspace/open";
     /** Everything else: the static files of the page. */
     public static final String ROOT = "/";
 
@@ -22,4 +30,7 @@ public final class ApiPath {
     public static final String PARAM_BASE = "base";
     public static final String PARAM_LOCATION = "location";
     public static final String PARAM_NAME = "name";
+    /** {@code /api/open}: resolve only against the directory of {@code base}. */
+    public static final String PARAM_STRICT = "strict";
+    public static final String TRUE = "true";
 }

@@ -27,6 +27,18 @@ public final class JsonKey {
     public static final String PATH = "path";
     public static final String TEXT = "text";
 
+    // workspaces (/api/workspace/*, /api/initial) and file choosers (/api/choose)
+    public static final String FILES = "files";
+    public static final String ACTIVE = "active";
+    public static final String WORKSPACE = "workspace";
+    public static final String MISSING = "missing";
+    public static final String CANCELLED = "cancelled";
+    /** Marker property of a workspace file, holding the format version. */
+    public static final String WORKSPACE_MARKER = "xsdviewer";
+
+    // capabilities (/api/capabilities)
+    public static final String DIALOGS = "dialogs";
+
     // status answers
     public static final String ERROR = "error";
     public static final String OK = "ok";

@@ -13,10 +13,15 @@
   <div class="menu">
     <button id="fileMenuBtn" class="menubtn" type="button" data-i18n="menu.file">File ▾</button>
     <div id="fileMenu" class="dropdown hidden">
-      <button id="menuOpen" type="button"><span data-i18n="menu.open">Open…</span><span class="kbd">Ctrl+O</span></button>
+      <button id="menuOpen" type="button" data-i18n-title="menu.open.title"><span data-i18n="menu.open">Open…</span><span class="kbd">Ctrl+O</span></button>
       <button id="menuOpenFolder" type="button" data-i18n="menu.openFolder" data-i18n-title="menu.openFolder.title">Open folder…</button>
+      <div class="sep"></div>
+      <button id="menuOpenWorkspace" type="button" data-i18n="menu.openWorkspace" data-i18n-title="menu.openWorkspace.title">Open workspace…</button>
+      <button id="menuSaveWorkspace" type="button" data-i18n-title="menu.saveWorkspace.title"><span data-i18n="menu.saveWorkspace">Save workspace…</span><span class="kbd">Ctrl+S</span></button>
+      <div class="sep"></div>
       <button id="menuNewTab" type="button" data-i18n="menu.newTab">New tab</button>
       <button id="menuClose" type="button" data-i18n="menu.close">Close file</button>
+      <button id="menuCloseAll" type="button" data-i18n="menu.closeAll">Close all tabs</button>
       <button id="menuQuit" type="button" data-i18n="menu.quit" data-i18n-title="menu.quit.title">Quit</button>
     </div>
   </div>
@@ -38,7 +43,10 @@
 
 <div id="body">
   <aside id="sidebar">
-    <div id="schemaInfo"></div>
+    <div id="schemaInfo" class="hidden">
+      <div class="panel-head"><span data-i18n="info.title">Schema</span><button id="schemaInfoToggle" class="panel-toggle" type="button" data-i18n-title="info.collapse">▾</button></div>
+      <div id="schemaInfoContent"></div>
+    </div>
     <div id="searchBar">
       <input id="search" type="search" data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false">
     </div>
@@ -75,7 +83,10 @@
     <div id="text" class="view hidden"></div>
   </main>
 
-  <aside id="details" class="hidden"></aside>
+  <aside id="details" class="hidden">
+    <button id="detailsToggle" class="panel-toggle" type="button" data-i18n-title="details.collapse">»</button>
+    <div id="detailsContent"></div>
+  </aside>
 </div>
 
 <div id="dropOverlay" class="hidden"><div data-i18n="drop.hint">Drop the XSD file to open it</div></div>

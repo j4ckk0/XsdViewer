@@ -35,6 +35,10 @@ public final class XsdViewerServer {
         http.createContext(ApiPath.OPEN, new OpenSchemaLocationHandler(files));
         http.createContext(ApiPath.LOCATE, new LocateSchemaFileHandler(files, new SchemaFileFinder()));
         http.createContext(ApiPath.QUIT, new QuitHandler(server::stopAndExit));
+        http.createContext(ApiPath.CAPABILITIES, new CapabilitiesHandler());
+        http.createContext(ApiPath.CHOOSE, new ChooseFilesHandler(files));
+        http.createContext(ApiPath.WORKSPACE_SAVE, new SaveWorkspaceHandler());
+        http.createContext(ApiPath.WORKSPACE_OPEN, new OpenWorkspaceHandler(files));
         http.createContext(ApiPath.ROOT, new StaticResourceHandler());
         http.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         http.start();

@@ -1,0 +1,189 @@
+package org.jtools.xsdviewer.json;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.jtools.xsdviewer.MessageKey;
+import org.jtools.xsdviewer.Messages;
+
+/**
+ * Minimal JSON parser, the counterpart of {@link JsonWriter}: objects become {@code Map<String, Object>}
+ * (insertion order kept), arrays {@code List<Object>}, strings {@code String}, numbers {@code Long}
+ * or {@code Double}, booleans {@code Boolean}, null {@code null}. Enough for the workspace files
+ * and the small requests of the page.
+ */
+public final class JsonReader {
+
+    private final String text;
+    private int pos;
+
+    private JsonReader(String text) {
+        this.text = text;
+    }
+
+    /** @throws IllegalArgumentException when the text is not valid JSON */
+    public static Object parse(String text) {
+        JsonReader r = new JsonReader(text);
+        r.skipWhitespace();
+        Object value = r.readValue();
+        r.skipWhitespace();
+        if (r.pos != text.length()) throw r.error();
+        return value;
+    }
+
+    /** {@code value} as an object, or null when it is something else. */
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> asObject(Object value) {
+        return value instanceof Map ? (Map<String, Object>) value : null;
+    }
+
+    /** {@code value} as an array, or null when it is something else. */
+    @SuppressWarnings("unchecked")
+    public static List<Object> asArray(Object value) {
+        return value instanceof List ? (List<Object>) value : null;
+    }
+
+    public static String asString(Object value) {
+        return value instanceof String s ? s : null;
+    }
+
+    /** {@code value} as an int, or {@code fallback} when it is not a number. */
+    public static int asInt(Object value, int fallback) {
+        return value instanceof Number n ? n.intValue() : fallback;
+    }
+
+    private Object readValue() {
+        if (pos >= text.length()) throw error();
+        char c = text.charAt(pos);
+        return switch (c) {
+            case '{' -> readObject();
+            case '[' -> readArray();
+            case '"' -> readString();
+            case 't' -> readLiteral("true", Boolean.TRUE);
+            case 'f' -> readLiteral("false", Boolean.FALSE);
+            case 'n' -> readLiteral("null", null);
+            default -> {
+                if (c == '-' || (c >= '0' && c <= '9')) yield readNumber();
+                throw error();
+            }
+        };
+    }
+
+    private Map<String, Object> readObject() {
+        Map<String, Object> map = new LinkedHashMap<>();
+        pos++;   // {
+        skipWhitespace();
+        if (peek() == '}') { pos++; return map; }
+        for (;;) {
+            skipWhitespace();
+            if (peek() != '"') throw error();
+            String key = readString();
+            skipWhitespace();
+            expect(':');
+            skipWhitespace();
+            map.put(key, readValue());
+            skipWhitespace();
+            char c = next();
+            if (c == '}') return map;
+            if (c != ',') throw error();
+        }
+    }
+
+    private List<Object> readArray() {
+        List<Object> list = new ArrayList<>();
+        pos++;   // [
+        skipWhitespace();
+        if (peek() == ']') { pos++; return list; }
+        for (;;) {
+            skipWhitespace();
+            list.add(readValue());
+            skipWhitespace();
+            char c = next();
+            if (c == ']') return list;
+            if (c != ',') throw error();
+        }
+    }
+
+    private String readString() {
+        pos++;   // opening quote
+        StringBuilder sb = new StringBuilder();
+        for (;;) {
+            char c = next();
+            if (c == '"') return sb.toString();
+            if (c != '\\') { sb.append(c); continue; }
+            char e = next();
+            switch (e) {
+                case '"', '\\', '/' -> sb.append(e);
+                case 'n' -> sb.append('\n');
+                case 'r' -> sb.append('\r');
+                case 't' -> sb.append('\t');
+                case 'b' -> sb.append('\b');
+                case 'f' -> sb.append('\f');
+                case 'u' -> {
+                    if (pos + 4 > text.length()) throw error();
+                    try {
+                        sb.append((char) Integer.parseInt(text.substring(pos, pos + 4), 16));
+                    } catch (NumberFormatException ex) {
+                        throw error();
+                    }
+                    pos += 4;
+                }
+                default -> throw error();
+            }
+        }
+    }
+
+    private Object readNumber() {
+        int start = pos;
+        if (peek() == '-') pos++;
+        while (pos < text.length() && Character.isDigit(text.charAt(pos))) pos++;
+        boolean decimal = false;
+        if (pos < text.length() && text.charAt(pos) == '.') {
+            decimal = true;
+            pos++;
+            while (pos < text.length() && Character.isDigit(text.charAt(pos))) pos++;
+        }
+        if (pos < text.length() && (text.charAt(pos) == 'e' || text.charAt(pos) == 'E')) {
+            decimal = true;
+            pos++;
+            if (pos < text.length() && (text.charAt(pos) == '+' || text.charAt(pos) == '-')) pos++;
+            while (pos < text.length() && Character.isDigit(text.charAt(pos))) pos++;
+        }
+        String s = text.substring(start, pos);
+        try {
+            return decimal ? (Object) Double.parseDouble(s) : (Object) Long.parseLong(s);
+        } catch (NumberFormatException e) {
+            throw error();
+        }
+    }
+
+    private Object readLiteral(String literal, Object value) {
+        if (!text.startsWith(literal, pos)) throw error();
+        pos += literal.length();
+        return value;
+    }
+
+    private void skipWhitespace() {
+        while (pos < text.length() && Character.isWhitespace(text.charAt(pos))) pos++;
+    }
+
+    private char peek() {
+        if (pos >= text.length()) throw error();
+        return text.charAt(pos);
+    }
+
+    private char next() {
+        if (pos >= text.length()) throw error();
+        return text.charAt(pos++);
+    }
+
+    private void expect(char c) {
+        if (next() != c) throw error();
+    }
+
+    private IllegalArgumentException error() {
+        return new IllegalArgumentException(Messages.get(MessageKey.INVALID_JSON, pos));
+    }
+}

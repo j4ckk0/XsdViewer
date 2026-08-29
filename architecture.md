@@ -28,7 +28,11 @@ Design choices that shape everything else:
   build step for the web assets and no framework to upgrade.
 - **The file stays in the browser.** The client sends the schema text to the server and
   keeps its own copy for the text view; the server holds no state between requests (except
-  the optional file given on the command line).
+  the optional file given on the command line and the list of files it has served).
+- **The server knows the disk, the browser does not.** A browser hides where a chosen file
+  is; the server, on the same machine, opens native file dialogs (`java.awt.FileDialog`) for
+  File ▸ Open… and the workspace commands, so that files come with their location, links
+  can be followed relative to it, and a workspace can record it.
 - **Single file, level-1 links.** The model describes one XSD: its global declarations and
   the direct references between them. Imports/includes are reported, not followed.
 
@@ -54,6 +58,10 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 | `server.XsdViewerServer` | Starts a `com.sun.net.httpserver.HttpServer` bound to `127.0.0.1:8080` by default and maps each path of `ApiPath` to its handler. Requests are handled on virtual threads (`Executors.newVirtualThreadPerTaskExecutor`). |
 | `server.ParseSchemaHandler`, `InitialFileHandler`, `OpenSchemaLocationHandler`, `LocateSchemaFileHandler`, `QuitHandler`, `StaticResourceHandler` | One handler per path of the HTTP interface below. |
 | `server.ServedSchemaFiles` | The files the server has read and handed to the page: the only directories `/api/open` and `/api/locate` look into. |
+| `server.FileDialogs` | The native open / save dialogs (`java.awt.FileDialog`, one at a time, on a platform thread); `available()` is false when the JVM is headless. |
+| `server.ChooseFilesHandler`, `SaveWorkspaceHandler`, `OpenWorkspaceHandler`, `CapabilitiesHandler`, `WorkspaceResponse` | The dialog-backed endpoints and the answer describing an opened workspace (its files read, the missing ones listed). |
+| `workspace.Workspace` | The workspace record (file paths + active tab) and its `*.xsdviewer.json` form: paths relative to the workspace file when they share its root. |
+| `json.JsonReader` | Minimal parser (objects, arrays, strings, numbers, booleans, null) for workspace files and the page's requests. |
 | `server.SchemaFileFinder` | Bounded walk looking for a file with a given name and content (`/api/locate`). |
 | `server.HttpResponses`, `QueryString`, `ContentType`, `HttpMethod`, `HttpStatus` | Reading the request, writing text / JSON / error answers, query parameters, MIME types by extension. |
 
@@ -98,11 +106,12 @@ Static files, no build step, no framework: `index.html`, `style.css`, ES modules
 | `js/state.js` | `newTabState()` (one object per document tab: the model plus derived indexes `outEdges`, `inEdges`, `lineToNode`, the selection, history, view, filter and scroll positions) and `session` (the tabs, the active one, the pending jump, the folder library). |
 | `js/api.js` | The `fetch` calls to `/api/*`, one function per path. |
 | `js/schema-index.js`, `js/declarations.js` | Indexing a parsed schema into a tab; finding declarations across tabs (`findIn`, `findInTabs`, `usersInOtherTabs`, `locationsFor`). |
-| `js/library.js`, `js/schema-loader.js` | The folder library (Open folder… / dropped folders); `loadInto(tab, …)` (parse through the server, index, locate) and `resolveLocation()` (library, then server). |
+| `js/library.js`, `js/schema-loader.js` | The folder library (Open folder… / dropped folders); `loadInto(tab, …)` (parse through the server, index, locate) and `resolveLocation()` (library, then server; `strict` = relative to the file only). |
+| `js/linked-schemas.js` | `openLinkedSchemas(tab)`: opens in background tabs the schemas linked (strictly relative to the file) from a file whose location is known, recursively, serialised and capped. |
 | `js/tabs.js`, `js/page.js` | Document tabs (create / activate / close, the tab bar); `renderPage()` redraws everything from the active tab, `showView()` switches graph / text. |
 | `js/navigation.js` | `select(id)` drives every view and keeps the back history; `followExternal()` follows a link into another file (see below). |
-| `js/file-actions.js`, `js/events.js` | The File menu actions (open, folder, close, quit, initial file); wiring of every control, key and drop to the actions. |
-| `js/sidebar.js`, `js/graph.js`, `js/details.js`, `js/text-view.js`, `js/xml-highlighter.js`, `js/png-export.js` | One module per view: object list, SVG ego-graph, details panel, source text, its tokenizer, the PNG export. |
+| `js/file-actions.js`, `js/events.js` | The File menu actions (open through the server's dialog or the browser's, folder, save / open workspace, close, quit, initial file or workspace); wiring of every control, key and drop to the actions. |
+| `js/sidebar.js`, `js/graph.js`, `js/details.js`, `js/text-view.js`, `js/xml-highlighter.js`, `js/png-export.js` | One module per view: schema header (foldable) and object list, SVG ego-graph, details panel (collapsible to a strip), source text, its tokenizer, the PNG export. Folded states are remembered in `localStorage`. |
 
 `session.active` always points at the active tab's object (`session.tabs` holds them all), so
 every render function reads "the current document" without knowing about tabs;
@@ -171,10 +180,12 @@ within canvas size limits). `canvas.toBlob()` is then saved through a download l
 
 #### Graph view
 
-An *ego graph* of the selected node: the node in the centre, every neighbour that it links to
-in a column on the right, every neighbour that links to it in a column on the left. Parallel
-edges to one neighbour are merged into one line whose label lists the reasons
-(`shipTo, billTo`). With the **2 levels** toggle (remembered in `localStorage`) two more
+An *ego graph* of the selected node: the node in the centre, every link it makes as a row on
+the right, every link made to it as a row on the left — one arrow per link, so a type used
+twice (`shipTo` and `billTo`) is drawn twice. The arrows carry no text: the name of the link
+is written as a caption above the node it leads to (or comes from), and repeated in the node's
+tooltip: element and attribute names in the page's text style, the XSD words (`type`,
+`extends`, `list of`…, `STRUCTURAL_LINK_LABELS`) small and muted. With the **2 levels** toggle (remembered in `localStorage`) two more
 columns show, for every level-1 target its own targets, and for every level-1 user its own
 users, as trees: a level-1 node spans as many rows as it has children and sits in the middle
 of them; a node reached by several parents is drawn once per parent. The other open tabs
@@ -203,7 +214,11 @@ node. The selected node's line is highlighted and scrolled into view.
 | `POST /api/parse` | body: the XSD text (UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema`, …). |
 | `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
 | `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit). |
-| `GET /api/open?base=…&location=…` | query: `base` = server path of the referencing file (may be empty), `location` = its `schemaLocation` | `200` + `{"name", "path", "text"}` of `location` resolved against `base`'s directory (if `base` is a file the server already served), else against the directories of all served files, else against the working directory; `400` for a remote location (`://`), `404` if not found. |
+| `GET /api/capabilities` | – | `{"dialogs": bool}`: whether the server can show native file dialogs (not headless). The page disables the workspace commands and falls back to the browser's file dialog otherwise. |
+| `POST /api/choose` | – | shows the native "open files" dialog; `200` + `{"files": [{"name", "path", "text"}…]}` (empty when cancelled), `409` without a display. |
+| `POST /api/workspace/save` | body: `{"files": [paths…], "active": n}` | shows the native "save as" dialog, writes the workspace there (`.xsdviewer.json` appended if missing); `200` + `{"path"}` or `{"cancelled": true}`, `400` for a bad body, `409` without a display. |
+| `POST /api/workspace/open` | – | shows the native "open" dialog; `200` + `{"workspace", "active", "files": [{"name", "path", "text"}…], "missing": [paths…]}`, or `{"cancelled": true}`; `400` when the file is not a workspace, `409` without a display. `GET /api/initial` answers the same shape when the command-line file is a workspace. |
+| `GET /api/open?base=…&location=…[&strict=true]` | query: `base` = server path of the referencing file (may be empty), `location` = its `schemaLocation` | `200` + `{"name", "path", "text"}` of `location` resolved against `base`'s directory (if `base` is a file the server already served), else — unless `strict` — against the directories of all served files, else against the working directory; `400` for a remote location (`://`), `404` if not found. |
 | `POST /api/locate?name=…` | body: the text of a file opened in the browser | `200` + `{"path"}` of a file with that name and content under the served files' directories or the working directory (depth ≤ 8, ≤ 50 000 entries, hidden directories skipped), `404` otherwise. |
 
 The server binds to `127.0.0.1` unless `--host` says otherwise: it is a local tool, not a
@@ -237,7 +252,7 @@ Runtime – all part of the JDK (21):
 | `com.sun.net.httpserver` | `jdk.httpserver` | the HTTP server, static files and API routing |
 | `javax.xml.parsers` DOM (`DocumentBuilder`) | `java.xml` | walking the schema structure |
 | `javax.xml.parsers` SAX (`SAXParser`, `Locator`) | `java.xml` | line numbers of the global declarations |
-| `java.awt.Desktop` | `java.desktop` | opening the browser at start-up (optional, guarded) |
+| `java.awt.Desktop`, `java.awt.FileDialog` | `java.desktop` | opening the browser at start-up; the native file dialogs (both guarded: headless JVMs fall back) |
 | virtual threads (`Executors.newVirtualThreadPerTaskExecutor`) | `java.base` | one thread per request |
 
 Browser side: plain ES2020 JavaScript, DOM, SVG, `fetch`, the File and Drag-and-Drop APIs.
@@ -253,6 +268,7 @@ Build and test:
 | maven-surefire-plugin | 3.2.5 | runs the tests |
 | JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest` and `SchemaGraphJsonWriterTest` (against `samples/purchaseOrder.xsd`), `JsonWriterTest`, `CommandLineOptionsTest`, `TranslationsTest` |
 | `run.sh` / `run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
+| `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; the Windows one starts `javaw.exe` in the background (no console; `--console` to keep one) |
 | `build.sh` / `build.bat` | – | `mvn package` |
 | `package.sh` / `package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
 | maven-antrun-plugin | 3.1.0 | `dist` profile only: unpacks the JRE archives into `target/jre/{windows,linux}` |
@@ -283,21 +299,21 @@ XsdViewer/
     ├── main/java/org/jtools/xsdviewer/   XsdViewerApplication, CommandLineOptions, BrowserLauncher, Messages, MessageKey
     │   ├── schema/                      XsdParser, DeclarationLineIndex, SecureXmlFactories, SchemaGraph,
     │   │                                SchemaGraphJsonWriter, NodeKind, LinkLabel, XsdVocabulary
-    │   ├── server/                      XsdViewerServer, ApiPath, *Handler, ServedSchemaFiles, SchemaFileFinder, ...
-    │   └── json/                        JsonWriter, JsonStrings, JsonKey
+    │   ├── server/                      XsdViewerServer, ApiPath, *Handler, ServedSchemaFiles, SchemaFileFinder, FileDialogs, ...
+    │   ├── workspace/                   Workspace
+    │   └── json/                        JsonWriter, JsonReader, JsonStrings, JsonKey
     ├── main/resources/org/jtools/xsdviewer/  messages.properties, messages_fr.properties
     ├── main/resources/web/              index.html, style.css, js/*.js, i18n/en.json, i18n/fr.json
     ├── main/resources/embedded/jre/     JRE archives bundled by the dist profile (git-ignored)
-    └── test/java/org/jtools/xsdviewer/   CommandLineOptionsTest, TranslationsTest, schema/, json/
+    └── test/java/org/jtools/xsdviewer/   CommandLineOptionsTest, TranslationsTest, schema/, json/, workspace/
 ```
 
 ## Extension points
 
-- **Following imports/includes.** `XsdParser` works on one text. Multi-file support would
-  need a resolver that reads `schemaLocation` relative to the opened file — which the
-  browser cannot provide from a dropped file; the natural route is a server-side "open
-  directory/path" mode, or letting the user drop several files that the client merges by
-  target namespace before parsing.
+- **Merging a schema set.** `XsdParser` works on one text; the multi-file view is built by
+  the client from one tab per file (links followed on demand, linked schemas opened
+  automatically when the file's location is known, workspaces to reopen a set). A merged
+  single graph would need the parser to take several texts keyed by target namespace.
 - **More link kinds** are a new `case` in `XsdParser.collect()` plus a `LinkLabel`; the
   client needs nothing (labels are free text).
 - **Other graph layouts** only touch `js/graph.js`; the rest of the client depends on

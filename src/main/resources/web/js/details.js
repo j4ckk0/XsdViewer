@@ -1,4 +1,5 @@
-/** The right panel: the selected object, its documentation, its links out and the objects using it. */
+/** The right panel: the selected object, its documentation, its links out and the objects using it. Collapsible to a strip. */
+import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
@@ -23,8 +24,30 @@ export function renderDetails() {
   html += out.length ? out.map(e => linkHtml(e.label, st.nodes.get(e.to))).join('') : none;
   html += '<h3>' + esc(t(MSG.DETAILS_USED_BY, inn.length)) + '</h3>';
   html += inn.length ? inn.map(e => linkHtml(e.label, st.nodes.get(e.from))).join('') : none;
-  panel.innerHTML = html;
+  $(ID.DETAILS_CONTENT).innerHTML = html;
   panel.classList.remove(CLS.HIDDEN);
+}
+
+const COLLAPSE_GLYPH = '»', EXPAND_GLYPH = '«';
+
+/** Collapses the panel to a strip (or expands it back); remembered across sessions. */
+export function setDetailsCollapsed(collapsed) {
+  $(ID.DETAILS).classList.toggle(CLS.COLLAPSED, collapsed);
+  const toggle = $(ID.DETAILS_TOGGLE);
+  toggle.textContent = collapsed ? EXPAND_GLYPH : COLLAPSE_GLYPH;
+  toggle.title = t(collapsed ? MSG.DETAILS_EXPAND : MSG.DETAILS_COLLAPSE);
+  try { localStorage.setItem(STORAGE_KEY.DETAILS_COLLAPSED, collapsed ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
+}
+
+export function toggleDetails() {
+  setDetailsCollapsed(!$(ID.DETAILS).classList.contains(CLS.COLLAPSED));
+}
+
+/** Restores the collapsed state remembered in the browser. */
+export function initDetails() {
+  let collapsed = false;
+  try { collapsed = localStorage.getItem(STORAGE_KEY.DETAILS_COLLAPSED) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
+  setDetailsCollapsed(collapsed);
 }
 
 function linkHtml(label, target) {

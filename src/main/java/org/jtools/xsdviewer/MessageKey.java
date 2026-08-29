@@ -10,6 +10,7 @@ public final class MessageKey {
     public static final String OPTION_VALUE_EXPECTED = "cli.optionValueExpected";
     public static final String INVALID_PORT = "cli.invalidPort";
     public static final String NOT_A_FILE = "cli.notAFile";
+    public static final String CANNOT_START = "cli.cannotStart";
 
     // console
     public static final String SERVER_LISTENING = "server.listening";
@@ -24,6 +25,15 @@ public final class MessageKey {
     public static final String FILE_NOT_FOUND = "api.fileNotFound";
     public static final String FILE_NAME_EXPECTED = "api.fileNameExpected";
     public static final String NO_FILE_WITH_CONTENT = "api.noFileWithContent";
+    public static final String NO_DISPLAY = "api.noDisplay";
+    public static final String NOT_A_WORKSPACE = "api.notAWorkspace";
+    public static final String WORKSPACE_EXPECTED = "api.workspaceExpected";
+    public static final String INVALID_JSON = "json.invalid";
+
+    // native file dialogs
+    public static final String DIALOG_OPEN_SCHEMA = "dialog.openSchema";
+    public static final String DIALOG_OPEN_WORKSPACE = "dialog.openWorkspace";
+    public static final String DIALOG_SAVE_WORKSPACE = "dialog.saveWorkspace";
 
     // schema parsing
     public static final String NOT_A_SCHEMA = "xsd.notASchema";
