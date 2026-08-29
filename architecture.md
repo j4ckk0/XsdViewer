@@ -97,7 +97,7 @@ Static files, no build step, no framework: `index.html`, `style.css`, ES modules
 
 | File | Role |
 |---|---|
-| `index.html` | Page skeleton: top bar (File menu, view tabs, PNG export, built-in toggle), document tab bar, sidebar (schema info, search, object list), main area with the three views (empty / graph / text), details panel, drop overlay, toast. Every label carries a `data-i18n` / `data-i18n-title` / `data-i18n-placeholder` key. |
+| `index.html` | Page skeleton: top bar (File menu, view tabs, PNG export, language), document tab bar, sidebar (schema info, search, object list), main area with the three views (empty / graph / text), details panel, drop overlay, toast. Every label carries a `data-i18n` / `data-i18n-title` / `data-i18n-placeholder` key. |
 | `style.css` | Layout (flexbox: sidebar – main – details), the colour per kind of object (one CSS variable each, reused by sidebar dots, legend, badges and SVG strokes), text-view syntax colours. |
 | `i18n/en.json`, `i18n/fr.json` | The texts of the page, one flat JSON file per language (same keys in each, checked by `TranslationsTest`). |
 | `js/app.js` | Start-up: `await initI18n()`, `wireEvents()`, `renderPage()`, `loadInitialFile()`. |
