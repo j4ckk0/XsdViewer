@@ -2,7 +2,7 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { closeCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
+import { closeCompare, initOptions, rememberOptions, renderCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openBrowserFolder, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
@@ -108,6 +108,10 @@ function wireDocumentTabs() {
   });
   $(ID.COMPARE_BUTTON).addEventListener('click', () => { if (startCompare()) renderPage(); else toast(t(MSG.COMPARE_NEED_TWO)); });
   $(ID.COMPARE_CLOSE).addEventListener('click', () => { closeCompare(); renderPage(); });
+  initOptions();
+  for (const id of [ID.COMPARE_BUSINESS_ONLY, ID.COMPARE_DIFF_ONLY]) {
+    $(id).addEventListener('change', () => { rememberOptions(); if (session.compare) renderCompare(); });
+  }
   $(ID.COMPARE_TABLE).addEventListener('click', (e) => { const row = e.target.closest(selector(CLS.COMPARE_ROW)); if (row) toggleDetail(row); });
 }
 

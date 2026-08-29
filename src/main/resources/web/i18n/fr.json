@@ -152,6 +152,10 @@
   "compare.identicalLines.one": "{0} ligne identique",
   "compare.identicalLines.other": "{0} lignes identiques",
   "compare.close": "Fermer la comparaison",
+  "compare.businessOnly": "lignes métier seulement",
+  "compare.businessOnly.title": "Ignorer ce qui ne définit pas le schéma : commentaires XML, xs:annotation (documentation, appinfo), lignes vides et indentation",
+  "compare.diffOnly": "différences seulement",
+  "compare.diffOnly.title": "Masquer les fichiers identiques et, dans la comparaison d'un fichier, ne montrer que les lignes modifiées avec une ligne de contexte",
 
   "export.selectFirst": "Sélectionnez un objet pour exporter son graphe",
   "export.renderFailed": "Impossible de dessiner le graphe",

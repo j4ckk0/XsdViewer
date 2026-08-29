@@ -104,6 +104,12 @@
     <div id="compare" class="view hidden">
       <div id="compareHeader">
         <div><span id="compareTitle"></span><br><span id="compareSummary" class="muted"></span></div>
+        <label class="opt" data-i18n-title="compare.businessOnly.title">
+          <input type="checkbox" id="businessOnly" checked> <span data-i18n="compare.businessOnly">business lines only</span>
+        </label>
+        <label class="opt" data-i18n-title="compare.diffOnly.title">
+          <input type="checkbox" id="diffOnly"> <span data-i18n="compare.diffOnly">differences only</span>
+        </label>
         <button id="compareClose" type="button" class="menubtn" data-i18n="compare.close">Close</button>
       </div>
       <div id="compareBody"><table id="compareTable"></table></div>

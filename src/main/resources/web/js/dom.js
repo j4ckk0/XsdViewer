@@ -42,6 +42,8 @@ export const ID = {
   COMPARE_TITLE: 'compareTitle',
   COMPARE_SUMMARY: 'compareSummary',
   COMPARE_CLOSE: 'compareClose',
+  COMPARE_BUSINESS_ONLY: 'businessOnly',
+  COMPARE_DIFF_ONLY: 'diffOnly',
   COMPARE_TABLE: 'compareTable',
   SIDEBAR: 'sidebar',
   FILES: 'files',

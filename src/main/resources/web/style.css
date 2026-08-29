@@ -206,11 +206,13 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
 #compareTitle { font-weight: 600; }
+#compareHeader > div:first-child { flex: 1; }
 #compareHeader .muted { color: var(--muted); font-size: 12px; }
 #compareBody { flex: 1; overflow: auto; padding: 8px 16px; }
 #compareTable { border-collapse: collapse; width: 100%; font-size: 13px; }

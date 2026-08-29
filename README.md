@@ -168,8 +168,12 @@ bar: a folder-comparison view lists the files of both workspaces **paired by nam
 marked *identical* (same text, line endings aside), *different*, or *only in* one of them, with
 a summary line. A *different* row expands to what changed in the schema — declarations and
 links (cardinality included) present on one side only — and to a side-by-side line
-comparison (long identical stretches folded). Clicking a tab or a chip leaves the comparison;
-closing a compared workspace ends it. To try it: `./run.sh samples/compare/v1.xsdviewer.json`,
+comparison (long identical stretches folded). **Business lines only** (on by default,
+remembered) ignores what does not define the schema — XML comments, `xs:annotation` blocks,
+blank lines and indentation — both for the status and in the line comparison, which keeps the
+original line numbers. **Differences only** hides the identical files and reduces a file's
+comparison to its changed lines with one line of context. Clicking a tab or a chip leaves the
+comparison; closing a compared workspace ends it. To try it: `./run.sh samples/compare/v1.xsdviewer.json`,
 then File ▸ Open workspace… `samples/compare/v2.xsdviewer.json` (what differs is listed in
 `samples/compare/README.md`).
 

@@ -93,6 +93,8 @@ export const STORAGE_KEY = {
   DETAILS_COLLAPSED: 'xsdviewer.detailsCollapsed',
   SCHEMA_INFO_COLLAPSED: 'xsdviewer.schemaInfoCollapsed',
   FILES_COLLAPSED: 'xsdviewer.filesCollapsed',
+  COMPARE_BUSINESS_ONLY: 'xsdviewer.compareBusinessOnly',
+  COMPARE_DIFF_ONLY: 'xsdviewer.compareDiffOnly',
   LANGUAGE: 'xsdviewer.language',
 };
 export const STORAGE_TRUE = '1';
