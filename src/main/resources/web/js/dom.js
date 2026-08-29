@@ -104,6 +104,7 @@ export const CLS = {
   CHANGE: 'chg',
   DELETED: 'del',
   INSERTED: 'ins',
+  MOVED: 'mov',
   FOLD: 'fold',
   // sidebar
   GROUP_HEADER: 'group-h',

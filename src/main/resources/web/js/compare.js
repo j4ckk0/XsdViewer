@@ -7,7 +7,7 @@ import { businessLines } from './business-lines.js';
 import { cardinalityText } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
-import { OP, diffLines, splitLines } from './diff.js';
+import { OP, diffLines, onlyMoves, splitLines } from './diff.js';
 import { plural, t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
@@ -18,8 +18,8 @@ import { activateTab, newTab, tabsOf, workspaceName } from './tabs.js';
 export const COMPARED_WORKSPACES = 2;
 /** Equal runs longer than FOLD_ABOVE are folded to one line in the text diff, FOLD_KEEP lines kept on each side; with "differences only", one line of context. */
 const FOLD_ABOVE = 6, FOLD_KEEP = 2, CONTEXT_LINES = 1;
-const STATUS = { SAME: 'same', DIFFERENT: 'different', ONLY_LEFT: 'only-left', ONLY_RIGHT: 'only-right' };
-const STATUS_TEXT = { [STATUS.SAME]: MSG.COMPARE_SAME, [STATUS.DIFFERENT]: MSG.COMPARE_DIFFERENT, [STATUS.ONLY_LEFT]: MSG.COMPARE_ONLY_IN, [STATUS.ONLY_RIGHT]: MSG.COMPARE_ONLY_IN };
+const STATUS = { SAME: 'same', DIFFERENT: 'different', MOVED: 'moved', ONLY_LEFT: 'only-left', ONLY_RIGHT: 'only-right' };
+const STATUS_TEXT = { [STATUS.SAME]: MSG.COMPARE_SAME, [STATUS.DIFFERENT]: MSG.COMPARE_DIFFERENT, [STATUS.MOVED]: MSG.COMPARE_MOVED, [STATUS.ONLY_LEFT]: MSG.COMPARE_ONLY_IN, [STATUS.ONLY_RIGHT]: MSG.COMPARE_ONLY_IN };
 const LINE_BREAK = /\r\n/g;
 const ARROW = ' → ';
 
@@ -55,6 +55,15 @@ function comparedLines(text) {
 }
 
 const comparedText = (text) => comparedLines(text).map(l => l.text).join('\n');
+
+/** The line diff of a pair, computed once: {la, lb, ops} (ops null when the texts are too different to align). */
+function lineDiff(pair) {
+  if (!pair.diff) {
+    const la = comparedLines(pair.left.text), lb = comparedLines(pair.right.text);
+    pair.diff = { la, lb, ops: diffLines(la.map(l => l.text), lb.map(l => l.text)) };
+  }
+  return pair.diff;
+}
 
 /** The pairs of the comparison being shown, by row index. */
 let pairs = [];
@@ -97,8 +106,12 @@ function pairFiles(left, right) {
   const names = [...new Set([...l.keys(), ...r.keys()])].sort((a, b) => a.localeCompare(b));
   return names.map(name => {
     const a = l.get(name) || null, b = r.get(name) || null;
-    const status = !a ? STATUS.ONLY_RIGHT : !b ? STATUS.ONLY_LEFT : comparedText(a.text) === comparedText(b.text) ? STATUS.SAME : STATUS.DIFFERENT;
-    return { name, left: a, right: b, status };
+    const pair = { name, left: a, right: b, status: STATUS.DIFFERENT, diff: null };
+    if (!a) pair.status = STATUS.ONLY_RIGHT;
+    else if (!b) pair.status = STATUS.ONLY_LEFT;
+    else if (comparedText(a.text) === comparedText(b.text)) pair.status = STATUS.SAME;
+    else if (lineDiff(pair).ops && onlyMoves(lineDiff(pair).ops)) pair.status = STATUS.MOVED;
+    return pair;
   });
 }
 
@@ -108,12 +121,12 @@ export function renderCompare() {
   pairs = pairFiles(left, right);
   const count = (s) => pairs.filter(p => p.status === s).length;
   $(ID.COMPARE_TITLE).textContent = t(MSG.COMPARE_TITLE, ln, rn);
-  $(ID.COMPARE_SUMMARY).textContent = t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn);
+  $(ID.COMPARE_SUMMARY).textContent = t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT), count(STATUS.MOVED), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn);
   let html = '<thead><tr><th>' + esc(t(MSG.COMPARE_FILE)) + '</th><th>' + esc(ln) + '</th><th>' + esc(t(MSG.COMPARE_STATUS)) + '</th><th>' + esc(rn) + '</th></tr></thead><tbody>';
   pairs.forEach((p, i) => {
     if (isDiffOnly() && p.status === STATUS.SAME) return;
     const side = p.status === STATUS.ONLY_LEFT ? ln : p.status === STATUS.ONLY_RIGHT ? rn : '';
-    html += '<tr class="' + CLS.COMPARE_ROW + ' ' + p.status + (p.status === STATUS.DIFFERENT ? ' ' + CLS.EXPANDABLE : '') + '"' + dataAttr(DATA.ROW_INDEX, i) + '>'
+    html += '<tr class="' + CLS.COMPARE_ROW + ' ' + p.status + (p.status === STATUS.DIFFERENT || p.status === STATUS.MOVED ? ' ' + CLS.EXPANDABLE : '') + '"' + dataAttr(DATA.ROW_INDEX, i) + '>'
       + '<td class="' + CLS.COMPARE_NAME + '">' + esc(p.name) + '</td>'
       + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.left ? p.left.path || '' : '') + '">' + esc(p.left ? p.left.path || p.left.fileName : '') + '</td>'
       + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side)) + '</td>'
@@ -125,7 +138,7 @@ export function renderCompare() {
 /** Click on a row: shows / hides the differences of that pair under it. */
 export function toggleDetail(row) {
   const pair = pairs[+row.dataset[DATA.ROW_INDEX]];
-  if (!pair || pair.status !== STATUS.DIFFERENT) return;
+  if (!pair || (pair.status !== STATUS.DIFFERENT && pair.status !== STATUS.MOVED)) return;
   const next = row.nextElementSibling;
   if (next && next.classList.contains(CLS.COMPARE_DETAIL)) { next.remove(); row.classList.remove(CLS.OPEN); return; }
   const detail = document.createElement('tr');
@@ -148,13 +161,16 @@ function schemaDiffHtml(pair) {
     + '</div>';
 }
 
-/** Side by side, one row per line pair (original line numbers); long identical runs folded. */
+/** Side by side, one row per line pair (original line numbers); long identical runs folded; moved blocks in their own colour. */
 function textDiffHtml(pair) {
-  const la = comparedLines(pair.left.text), lb = comparedLines(pair.right.text);
-  const a = la.map(l => l.text), b = lb.map(l => l.text);
-  const ops = diffLines(a, b);
+  const { la, lb, ops } = lineDiff(pair);
   if (!ops) return '<p class="' + CLS.META + '">' + esc(t(MSG.COMPARE_TEXT_TOO_LARGE)) + '</p>';
-  const cell = (lines, i, cls) => '<td class="' + CLS.LINE_NUMBER + '">' + (i == null ? '' : lines[i].n) + '</td><td class="' + CLS.CODE + (cls ? ' ' + cls : '') + '">' + esc(i == null ? '' : lines[i].text) + '</td>';
+  const cell = (lines, i, cls, op) => {
+    const moved = op && op.moved;
+    const note = !moved ? '' : op.movedTo != null ? t(MSG.COMPARE_MOVED_TO, lb[op.movedTo].n) : t(MSG.COMPARE_MOVED_FROM, la[op.movedFrom].n);
+    return '<td class="' + CLS.LINE_NUMBER + '"' + (note ? ' title="' + esc(note) + '"' : '') + '>' + (i == null ? '' : lines[i].n) + '</td>'
+      + '<td class="' + CLS.CODE + (cls ? ' ' + cls : '') + (moved ? ' ' + CLS.MOVED : '') + '">' + esc(i == null ? '' : lines[i].text) + '</td>';
+  };
   const keep = isDiffOnly() ? CONTEXT_LINES : FOLD_KEEP, foldAbove = isDiffOnly() ? 2 * CONTEXT_LINES : FOLD_ABOVE;
   let html = '<table class="' + CLS.DIFF + '">';
   let i = 0;
@@ -177,8 +193,8 @@ function textDiffHtml(pair) {
       while (i < ops.length && ops[i].op !== OP.EQUAL) { (ops[i].op === OP.DELETE ? del : ins).push(ops[i]); i++; }
       for (let k = 0; k < Math.max(del.length, ins.length); k++) {
         html += '<tr class="' + CLS.CHANGE + '">'
-          + (k < del.length ? cell(la, del[k].a, CLS.DELETED) : cell(la, null))
-          + (k < ins.length ? cell(lb, ins[k].b, CLS.INSERTED) : cell(lb, null)) + '</tr>';
+          + (k < del.length ? cell(la, del[k].a, CLS.DELETED, del[k]) : cell(la, null))
+          + (k < ins.length ? cell(lb, ins[k].b, CLS.INSERTED, ins[k]) : cell(lb, null)) + '</tr>';
       }
     }
   }

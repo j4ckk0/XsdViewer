@@ -225,6 +225,7 @@ html, body {
 .crow .cstatus { white-space: nowrap; }
 .crow.same .cstatus { color: var(--muted); }
 .crow.different .cstatus { color: #b45309; font-weight: 600; }
+.crow.moved .cstatus { color: #4338ca; }
 .crow.only-left .cstatus, .crow.only-right .cstatus { color: #1d4ed8; }
 .crow.open .cname::before { content: "▾ "; }
 .crow.expandable:not(.open) .cname::before { content: "▸ "; color: var(--muted); }
@@ -240,6 +241,7 @@ table.diff td.ln { width: 1%; text-align: right; color: var(--muted); user-selec
 table.diff td.code { width: 49%; overflow: hidden; }
 table.diff tr.chg td.code.del { background: #fee2e2; }
 table.diff tr.chg td.code.ins { background: #dcfce7; }
+table.diff tr.chg td.code.mov { background: #e0e7ff; color: #3730a3; font-style: italic; }
 table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0f2f5; font-style: italic; }
 .wsclose {
   font: inherit;

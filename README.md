@@ -176,7 +176,10 @@ bar: a folder-comparison view lists the files of both workspaces **paired by nam
 marked *identical* (same text, line endings aside), *different*, or *only in* one of them, with
 a summary line. A *different* row expands to what changed in the schema — declarations and
 links (cardinality included) present on one side only — and to a side-by-side line
-comparison (long identical stretches folded). **Business lines only** (on by default,
+comparison (long identical stretches folded). A block of lines moved elsewhere is recognised
+(two lines or more, or one telling line): it is shown in blue on both sides with "moved
+to / from line N" instead of red and green, and a file whose text differences are all moves
+gets the status *moved lines only*, counted apart. **Business lines only** (on by default,
 remembered) ignores what does not define the schema — XML comments, `xs:annotation` blocks,
 blank lines and indentation — both for the status and in the line comparison, which keeps the
 original line numbers. **Differences only** hides the identical files and reduces a file's
