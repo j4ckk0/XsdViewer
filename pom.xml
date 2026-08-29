@@ -11,6 +11,43 @@
 
   <name>XsdViewer</name>
   <description>Web-based viewer for XML Schema files: graph of the schema objects and their links, plus the source text.</description>
+  <url>https://github.com/j4ckk0/XsdViewer</url>
+  <inceptionYear>2026</inceptionYear>
+
+  <organization>
+    <name>jtools.org</name>
+    <url>https://github.com/j4ckk0</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>Apache License Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>j4ckk0</id>
+      <name>Jacques HENRY</name>
+      <email>j4ckk057@gmail.com</email>
+      <organization>jtools.org</organization>
+      <organizationUrl>https://github.com/j4ckk0</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/j4ckk0/XsdViewer.git</connection>
+    <developerConnection>scm:git:git@github.com:j4ckk0/XsdViewer.git</developerConnection>
+    <url>https://github.com/j4ckk0/XsdViewer</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <issueManagement>
+    <system>GitHub</system>
+    <url>https://github.com/j4ckk0/XsdViewer/issues</url>
+  </issueManagement>
 
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
@@ -47,6 +84,37 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
+      </plugin>
+      <!-- Apache 2.0 header at the top of every Java source (same convention as the jtools projects) -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>2.4.0</version>
+        <configuration>
+          <verbose>false</verbose>
+          <licenseName>apache_v2</licenseName>
+          <organizationName>jtools.org</organizationName>
+          <inceptionYear>2026</inceptionYear>
+          <canUpdateCopyright>true</canUpdateCopyright>
+        </configuration>
+        <executions>
+          <execution>
+            <id>add-license-headers</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>update-file-header</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>**/*.java</include>
+              </includes>
+              <roots>
+                <root>src/main/java</root>
+                <root>src/test</root>
+              </roots>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

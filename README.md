@@ -58,8 +58,9 @@ is a small schema exercising every kind of link.
 ```
 
 builds two self-contained distributions that need no Java installed, each with a
-bundled JRE 21 and a launcher taking the same options as above (the archives of previous
-builds, whatever their version, are deleted from `target/` first):
+bundled JRE 21 (Eclipse Temurin, redistributed under the GPLv2 with Classpath Exception; its
+notices stay in `jre/legal`) and a launcher taking the same options as above (the archives of
+previous builds, whatever their version, are deleted from `target/` first):
 
 | Archive | Launcher |
 |---|---|
@@ -179,3 +180,10 @@ too; only its console messages follow the JVM locale.
 No runtime dependency: the jar only needs a JDK.
 
 See [architecture.md](architecture.md) for the modules, the data flow and the libraries used.
+
+## Licence
+
+Apache License 2.0 — see [LICENSE](LICENSE). Copyright 2026 jtools.org.
+`samples/purchaseOrder.xsd` is adapted from the W3C *XML Schema Part 0: Primer* example
+(W3C Document License). The distributions bundle an Eclipse Temurin JRE (GPLv2 with
+Classpath Exception).

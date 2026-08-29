@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Sample schema, adapted from the W3C XML Schema Primer purchase order. -->
+<!-- Sample schema, adapted from the purchase-order example of "XML Schema Part 0: Primer" (https://www.w3.org/TR/xmlschema-0/), Copyright W3C, reused under the W3C Document License. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:po="http://example.com/po"
            targetNamespace="http://example.com/po"
