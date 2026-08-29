@@ -2,6 +2,7 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
+import { closeCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { addFolder, closeActiveWorkspace, closeAll, closeFile, openFiles, openSchemas, openWorkspace, quit, saveWorkspace, startWorkspace } from './file-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { renderGraph } from './graph.js';
@@ -10,7 +11,10 @@ import { followExternal, goBack, select } from './navigation.js';
 import { renderPage, showView } from './page.js';
 import { exportPng } from './png-export.js';
 import { initSchemaInfo, renderNodeList, toggleGroup, toggleSchemaInfo } from './sidebar.js';
+import { t } from './i18n.js';
+import { MSG } from './message-keys.js';
 import { session } from './state.js';
+import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderTabBar, tabsOf } from './tabs.js';
 
 const LIST_SEPARATOR = ', ';
@@ -81,13 +85,17 @@ function wireDocumentTabs() {
     const tab = tabOf(e), ws = workspaceOf(e);
     if (tab) {
       if (e.target.closest(selector(CLS.DOC_TAB_CLOSE))) close(tab);
-      else if (activateTab(tab)) renderPage();
+      else { const changed = activateTab(tab); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
     } else if (ws && e.target.closest(selector(CLS.WORKSPACE_CLOSE))) {
       closeGroup(ws);
-    } else if (ws && e.target.closest(selector(CLS.WORKSPACE_NAME))) {   // the chip: show the workspace's first tab
-      if (activateTab(tabsOf(ws)[0])) renderPage();
+    } else if (ws && e.target.closest(selector(CLS.WORKSPACE_NAME))) {
+      if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderTabBar(); }   // select for comparison
+      else if (activateTab(tabsOf(ws)[0])) { closeCompare(); renderPage(); }   // the chip: show the workspace's first tab
     }
   });
+  $(ID.COMPARE_BUTTON).addEventListener('click', () => { if (startCompare()) renderPage(); else toast(t(MSG.COMPARE_NEED_TWO)); });
+  $(ID.COMPARE_CLOSE).addEventListener('click', () => { closeCompare(); renderPage(); });
+  $(ID.COMPARE_TABLE).addEventListener('click', (e) => { const row = e.target.closest(selector(CLS.COMPARE_ROW)); if (row) toggleDetail(row); });
   $(ID.TABS).addEventListener('auxclick', (e) => {   // middle click closes a tab or a workspace
     if (e.button !== MIDDLE_BUTTON) return;
     const tab = tabOf(e), ws = workspaceOf(e);

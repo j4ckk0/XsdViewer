@@ -48,6 +48,7 @@
 <div id="tabbar">
   <div id="tabs"></div>
   <button id="newTabBtn" type="button" data-i18n-title="tab.new.title">+</button>
+  <button id="compareBtn" type="button" data-i18n="compare.button" data-i18n-title="compare.button.title" disabled>⇄ Compare</button>
 </div>
 
 <div id="body">
@@ -91,6 +92,13 @@
       <div id="graphCanvas"></div>
     </div>
     <div id="text" class="view hidden"></div>
+    <div id="compare" class="view hidden">
+      <div id="compareHeader">
+        <div><span id="compareTitle"></span><br><span id="compareSummary" class="muted"></span></div>
+        <button id="compareClose" type="button" class="menubtn" data-i18n="compare.close">Close</button>
+      </div>
+      <div id="compareBody"><table id="compareTable"></table></div>
+    </div>
   </main>
 
   <aside id="details" class="hidden">

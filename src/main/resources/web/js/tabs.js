@@ -8,6 +8,13 @@ import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { newTabState, newWorkspaceState, session } from './state.js';
 
+/** A workspace being closed leaves the comparison selection and ends a comparison it took part in. */
+function forgetWorkspace(ws) {
+  const i = session.compareSelection.indexOf(ws);
+  if (i >= 0) session.compareSelection.splice(i, 1);
+  if (session.compare && (session.compare.left === ws || session.compare.right === ws)) session.compare = null;
+}
+
 const PATH_SEPARATORS = /[\\/]/;
 
 export const tabsOf = (ws) => session.tabs.filter(tab => tab.workspace === ws);
@@ -62,7 +69,7 @@ export function closeTab(tab) {
   const i = session.tabs.indexOf(tab);
   session.tabs.splice(i, 1);
   if (!tabsOf(ws).length) {
-    if (session.workspaces.length > 1) session.workspaces.splice(session.workspaces.indexOf(ws), 1);
+    if (session.workspaces.length > 1) { session.workspaces.splice(session.workspaces.indexOf(ws), 1); forgetWorkspace(ws); }
     else session.tabs.push(emptyTabOf(ws, tab.view));
   }
   if (tab !== session.active) return false;
@@ -75,6 +82,7 @@ export function closeWorkspace(ws) {
   const view = session.active.view;
   const wasActive = session.active.workspace === ws;
   session.tabs = session.tabs.filter(tab => tab.workspace !== ws);
+  forgetWorkspace(ws);
   if (session.workspaces.length > 1) {
     session.workspaces.splice(session.workspaces.indexOf(ws), 1);
   } else {
@@ -92,6 +100,8 @@ export function closeAllTabs() {
   session.workspaceCounter = 0;
   const ws = newWorkspaceState(++session.workspaceCounter);
   session.workspaces = [ws];
+  session.compareSelection = [];
+  session.compare = null;
   session.tabs = [emptyTabOf(ws, view)];
   session.active = session.tabs[0];
   session.pendingJump = null;
@@ -119,7 +129,8 @@ export function renderTabBar() {
   session.workspaces.forEach((ws, w) => {
     const own = tabsOf(ws);
     const name = workspaceName(ws);
-    html += '<div class="' + CLS.WORKSPACE_GROUP + (own.includes(session.active) ? ' ' + CLS.ACTIVE : '') + '"' + dataAttr(DATA.WORKSPACE_INDEX, w) + '>'
+    html += '<div class="' + CLS.WORKSPACE_GROUP + (own.includes(session.active) ? ' ' + CLS.ACTIVE : '')
+      + (session.compareSelection.includes(ws) ? ' ' + CLS.SELECTED : '') + '"' + dataAttr(DATA.WORKSPACE_INDEX, w) + '>'
       + '<span class="' + CLS.WORKSPACE_NAME + '" title="' + esc(ws.path || name) + '">' + esc(name)
       + '<button class="' + CLS.WORKSPACE_CLOSE + '" type="button" title="' + esc(t(MSG.WORKSPACE_CLOSE, name)) + '">×</button></span>';
     for (const tab of own) {
@@ -132,4 +143,5 @@ export function renderTabBar() {
     html += '</div>';
   });
   $(ID.TABS).innerHTML = html;
+  $(ID.COMPARE_BUTTON).disabled = session.compareSelection.length !== 2;
 }
