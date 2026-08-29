@@ -1,6 +1,7 @@
 /** Wiring of the page's controls to the actions: menu, tabs, keyboard, drag and drop, clicks in the views. */
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
+import { closeAbout, showAbout } from './about.js';
 import { addFolder, closeAll, closeFile, openFiles, openSchemas, openWorkspace, quit, saveWorkspace } from './file-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { renderGraph } from './graph.js';
@@ -16,6 +17,7 @@ const LIST_SEPARATOR = ', ';
 
 export function wireEvents() {
   wireFileMenu();
+  wireHelpMenu();
   wireDocumentTabs();
   wireKeyboard();
   wireDragAndDrop();
@@ -24,12 +26,31 @@ export function wireEvents() {
   wireSelectionSources();
 }
 
+/** The drop-down menus of the top bar: one open at a time, closed by a click elsewhere or Escape. */
+const MENUS = [[ID.FILE_MENU_BUTTON, ID.FILE_MENU], [ID.HELP_MENU_BUTTON, ID.HELP_MENU]];
+const closeMenus = () => MENUS.forEach(([, menu]) => $(menu).classList.add(CLS.HIDDEN));
+
+function wireMenus() {
+  for (const [button, menu] of MENUS) {
+    $(button).addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = !$(menu).classList.contains(CLS.HIDDEN);
+      closeMenus();
+      if (!open) $(menu).classList.remove(CLS.HIDDEN);
+    });
+  }
+  document.addEventListener('click', closeMenus);
+  document.addEventListener('keydown', (e) => { if (e.key === KEY.ESCAPE) closeMenus(); });
+}
+
+function wireHelpMenu() {
+  $(ID.MENU_ABOUT).addEventListener('click', () => { closeMenus(); showAbout(); });
+  $(ID.ABOUT_CLOSE).addEventListener('click', closeAbout);
+}
+
 function wireFileMenu() {
-  const menu = $(ID.FILE_MENU);
-  const closeMenu = () => menu.classList.add(CLS.HIDDEN);
-  $(ID.FILE_MENU_BUTTON).addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle(CLS.HIDDEN); });
-  document.addEventListener('click', closeMenu);
-  document.addEventListener('keydown', (e) => { if (e.key === KEY.ESCAPE) closeMenu(); });
+  wireMenus();
+  const closeMenu = closeMenus;
   $(ID.MENU_OPEN).addEventListener('click', () => { closeMenu(); openSchemas(); });
   $(ID.MENU_OPEN_WORKSPACE).addEventListener('click', () => { closeMenu(); openWorkspace(); });
   $(ID.MENU_SAVE_WORKSPACE).addEventListener('click', () => { closeMenu(); saveWorkspace(); });

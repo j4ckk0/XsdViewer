@@ -63,6 +63,9 @@ public final class JsonKey {
     public static final String DIALOGS = "dialogs";
     /** Language of the machine's locale (the JVM default), the page's default language. */
     public static final String LANGUAGE = "language";
+    /** Version of the tool and of the Java runtime (Help > About). */
+    public static final String VERSION = "version";
+    public static final String JAVA_VERSION = "javaVersion";
 
     // status answers
     public static final String ERROR = "error";

@@ -39,6 +39,9 @@ export const session = {
   dialogs: false,
   /** Language of the machine's locale, as the server reports it; the page's default language. */
   serverLanguage: null,
+  /** Version of the tool and of its Java runtime, as the server reports them (Help > About). */
+  serverVersion: null,
+  javaVersion: null,
   /** Path of the workspace last saved or opened, null when none. */
   workspacePath: null,
 };

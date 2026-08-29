@@ -108,6 +108,9 @@ XSD built-in types (`xs:string`…) appear as grey dashed nodes (toggle with the
 **built-in types** checkbox). Objects referenced but not declared in the file
 (imported / included ones) appear as red dashed *external* nodes.
 
+**Help ▸ About XsdViewer…** shows the version (from the jar's manifest), the Java runtime, the
+licence and the project page.
+
 ## Where the files are
 
 A browser never tells a page where a chosen file sits on disk, but the server runs on the same

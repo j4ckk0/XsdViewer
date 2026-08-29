@@ -1,7 +1,7 @@
 # Publishing XsdViewer on GitHub
 
 What a public repository needs, what this repository already has, and the steps to publish.
-Checked against the tree at version 1.7.0 (August 2026).
+Checked against the tree at version 1.8.0 (August 2026).
 
 ## 1. Required
 
@@ -21,11 +21,11 @@ Checked against the tree at version 1.7.0 (August 2026).
 | Item | Why | Suggestion |
 |---|---|---|
 | **Continuous integration** | Proves every push still builds and passes the tests; shows a badge in the README. | `.github/workflows/build.yml`: `actions/checkout`, `actions/setup-java` (Temurin 21, Maven cache), `mvn -B package`. Optionally upload `target/xsdviewer.jar` as a workflow artefact. |
-| **Tags and releases** | Users download a version, not a commit. | `git tag -a v1.7.0 -m "1.7.0"` and push the tag; create a GitHub Release from it, attach `xsdviewer.jar` and the two `-Pdist` archives (they are ~50 MB each: fine for Release assets, never for the repository). |
+| **Tags and releases** | Users download a version, not a commit. | `git tag -a v1.8.0 -m "1.8.0"` and push the tag; create a GitHub Release from it, attach `xsdviewer.jar` and the two `-Pdist` archives (they are ~50 MB each: fine for Release assets, never for the repository). |
 | **`pom.xml` metadata** | Shown by Maven tooling and GitHub's dependency graph. | **Done**: `<url>`, `<inceptionYear>`, `<organization>`, `<licenses>`, `<developers>`, `<scm>`, `<issueManagement>`, all pointing at `github.com/j4ckk0/XsdViewer` (same identity as the jtools parent pom). |
 | **Repository description and topics** | Discoverability. | Description "Web-based viewer for XML Schema files"; topics `xsd`, `xml-schema`, `java`, `visualization`, `graph`. |
 | **Security note** | The tool is a local server that reads files on request from the page. | Already in `architecture.md` (binds `127.0.0.1`, only serves directories it has been shown); repeat one sentence in the README so it is seen. A `SECURITY.md` is optional for a tool of this size. |
-| **`CHANGELOG.md`** | The git log already records the versions (1.3.0 … 1.7.0); a short file per version is friendlier. | Optional; GitHub Release notes can serve instead. |
+| **`CHANGELOG.md`** | The git log already records the versions (1.3.0 … 1.8.0); a short file per version is friendlier. | Optional; GitHub Release notes can serve instead. |
 | **`CONTRIBUTING.md` / issue templates** | Only useful if you expect contributions. | Optional. |
 | **Default branch name** | GitHub creates `main`; this repository uses `master`. Either works. | Keep `master`, or `git branch -m master main` before the first push and set it as default on GitHub. |
 | **Branch protection** | Prevents force-pushes to the published branch. | *Settings ▸ Branches* once the repository exists. |
@@ -46,8 +46,8 @@ Checked against the tree at version 1.7.0 (August 2026).
    ```bash
    git remote add github git@github.com:<user>/XsdViewer.git   # or https://…
    git push -u github master                                    # or main
-   git tag -a v1.7.0 -m "1.7.0" && git push github v1.7.0
+   git tag -a v1.8.0 -m "1.8.0" && git push github v1.8.0
    ```
    The existing `origin` (the bare repository on the NAS) keeps working; `git push origin` and `git push github` are independent.
-6. On GitHub: set the description and topics; *Releases ▸ Draft a new release* from `v1.7.0`, attach `target/xsdviewer.jar`, `target/xsdviewer-1.7.0-windows.zip` and `target/xsdviewer-1.7.0-linux.tar.gz` (built with `./package.sh`), paste the release notes.
+6. On GitHub: set the description and topics; *Releases ▸ Draft a new release* from `v1.8.0`, attach `target/xsdviewer.jar`, `target/xsdviewer-1.8.0-windows.zip` and `target/xsdviewer-1.8.0-linux.tar.gz` (built with `./package.sh`), paste the release notes.
 7. Check the repository page as a stranger would: licence shown, README readable, Actions green, release downloadable.

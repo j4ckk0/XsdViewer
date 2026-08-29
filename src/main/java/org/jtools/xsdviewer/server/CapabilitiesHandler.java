@@ -24,14 +24,16 @@ import java.io.IOException;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.jtools.xsdviewer.BuildInfo;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
 import java.util.Locale;
 
 /**
- * {@code GET /api/capabilities}: {@code {"dialogs": bool, "language": "fr"}} — whether the server
- * can show native file dialogs, and the language of the machine's locale (the page's default).
+ * {@code GET /api/capabilities}: {@code {"dialogs": bool, "language": "fr", "version": "1.7.0",
+ * "javaVersion": "21.0.12"}} — whether the server can show native file dialogs, the language of
+ * the machine's locale (the page's default), and what Help > About shows.
  */
 final class CapabilitiesHandler implements HttpHandler {
 
@@ -40,6 +42,8 @@ final class CapabilitiesHandler implements HttpHandler {
         HttpResponses.json(ex, HttpStatus.OK, new JsonWriter().beginObject()
                 .property(JsonKey.DIALOGS, FileDialogs.available())
                 .property(JsonKey.LANGUAGE, Locale.getDefault().getLanguage())
+                .property(JsonKey.VERSION, BuildInfo.version())
+                .property(JsonKey.JAVA_VERSION, BuildInfo.javaVersion())
                 .endObject().toString());
     }
 }

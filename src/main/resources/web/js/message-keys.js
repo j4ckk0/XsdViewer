@@ -6,6 +6,8 @@ export const MSG = {
   LANGUAGE_TITLE: 'language.title',
   APP_TITLE_WITH_FILE: 'app.titleWithFile',
   STATUS_NO_FILE: 'status.noFile',
+  ABOUT_VERSION: 'about.version',
+  ABOUT_JAVA: 'about.java',
 
   TAB_UNTITLED: 'tab.untitled',
   TAB_CLOSE: 'tab.close',

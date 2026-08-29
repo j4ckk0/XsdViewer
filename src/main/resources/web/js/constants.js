@@ -1,6 +1,8 @@
 /** Names shared with the server (the API contract) and the fixed vocabulary of the page. */
 
 export const APP_NAME = 'XsdViewer';
+export const PROJECT_URL = 'https://github.com/j4ckk0/XsdViewer';
+export const LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 
 /** Kinds of node of the schema graph (see NodeKind on the server). */
 export const NODE_KIND = {

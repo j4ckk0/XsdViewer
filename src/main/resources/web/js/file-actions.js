@@ -21,6 +21,8 @@ export async function loadCapabilities() {
     const caps = await fetchCapabilities();
     session.dialogs = !!caps.dialogs;
     session.serverLanguage = caps.language || null;
+    session.serverVersion = caps.version || null;
+    session.javaVersion = caps.javaVersion || null;
   } catch (e) {
     session.dialogs = false;
     session.serverLanguage = null;

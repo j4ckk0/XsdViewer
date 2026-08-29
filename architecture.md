@@ -110,6 +110,7 @@ Static files, no build step, no framework: `index.html`, `style.css`, ES modules
 | `js/linked-schemas.js` | `openLinkedSchemas(tab)`: opens in background tabs the schemas linked (strictly relative to the file) from a file whose location is known, recursively, serialised and capped. |
 | `js/tabs.js`, `js/page.js` | Document tabs (create / activate / close, the tab bar); `renderPage()` redraws everything from the active tab, `showView()` switches graph / text. |
 | `js/navigation.js` | `select(id)` drives every view and keeps the back history; `followExternal()` follows a link into another file (see below). |
+| `js/about.js` | Help ▸ About: a `<dialog>` with the version and Java runtime reported by the server, the licence and the project page. |
 | `js/file-actions.js`, `js/events.js` | The File menu actions (open through the server's dialog or the browser's, folder, save / open workspace, close, quit, initial file or workspace); wiring of every control, key and drop to the actions. |
 | `js/sidebar.js`, `js/graph.js`, `js/details.js`, `js/text-view.js`, `js/xml-highlighter.js`, `js/png-export.js` | One module per view: schema header (foldable) and object list, SVG ego-graph, details panel (collapsible to a strip), source text, its tokenizer, the PNG export. Folded states are remembered in `localStorage`. |
 
@@ -225,7 +226,7 @@ node. The selected node's line is highlighted and scrolled into view.
 | `POST /api/parse` | body: the XSD text (UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema`, …). |
 | `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
 | `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit). |
-| `GET /api/capabilities` | – | `{"dialogs": bool, "language": "fr"}`: whether the server can show native file dialogs (not headless) — the page disables the workspace commands and falls back to the browser's file dialog otherwise — and the language of the machine's locale, the page's default language. |
+| `GET /api/capabilities` | – | `{"dialogs": bool, "language": "fr", "version": "1.8.0", "javaVersion": "21.0.12"}`: whether the server can show native file dialogs (not headless) — the page disables the workspace commands and falls back to the browser's file dialog otherwise — the language of the machine's locale (the page's default language), and the versions shown by Help ▸ About (`BuildInfo`: the jar manifest's `Implementation-Version`, "dev" without one). |
 | `POST /api/choose` | – | shows the native "open files" dialog; `200` + `{"files": [{"name", "path", "text"}…]}` (empty when cancelled), `409` without a display. |
 | `POST /api/workspace/save` | body: `{"files": [paths…], "active": n}` | shows the native "save as" dialog, writes the workspace there (`.xsdviewer.json` appended if missing); `200` + `{"path"}` or `{"cancelled": true}`, `400` for a bad body, `409` without a display. |
 | `POST /api/workspace/open` | – | shows the native "open" dialog; `200` + `{"workspace", "active", "files": [{"name", "path", "text"}…], "missing": [paths…]}`, or `{"cancelled": true}`; `400` when the file is not a workspace, `409` without a display. `GET /api/initial` answers the same shape when the command-line file is a workspace. |

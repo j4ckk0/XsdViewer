@@ -6,7 +6,7 @@
 
   <groupId>org.jtools</groupId>
   <artifactId>xsdviewer</artifactId>
-  <version>1.7.0</version>
+  <version>1.8.0</version>
   <packaging>jar</packaging>
 
   <name>XsdViewer</name>
@@ -124,6 +124,8 @@
           <archive>
             <manifest>
               <mainClass>org.jtools.xsdviewer.XsdViewerApplication</mainClass>
+              <!-- Implementation-Version etc.: what Help > About shows -->
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
           </archive>
         </configuration>
