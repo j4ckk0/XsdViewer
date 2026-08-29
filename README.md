@@ -127,6 +127,10 @@ what uses what across the set right away.
 
 ### Workspaces
 
+The **Files** panel at the top of the sidebar lists the files of the active workspace as a
+tree by folder (the folders they all share are left out), the shown file highlighted; clicking
+a file switches to its tab, clicking a folder folds it.
+
 A **workspace is a group of tabs**: the workspace bar, above the tabs, shows one chip per
 workspace (click it to switch to that workspace — the tab you last had there comes back —,
 its `×` closes it with all its tabs), and the tab bar shows the tabs of the active workspace

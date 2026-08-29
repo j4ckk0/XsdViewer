@@ -43,6 +43,10 @@ export const ID = {
   COMPARE_CLOSE: 'compareClose',
   COMPARE_TABLE: 'compareTable',
   SIDEBAR: 'sidebar',
+  FILES: 'files',
+  FILES_CONTENT: 'filesContent',
+  FILES_TOGGLE: 'filesToggle',
+  FILES_COUNT: 'filesCount',
   SCHEMA_INFO: 'schemaInfo',
   SCHEMA_INFO_CONTENT: 'schemaInfoContent',
   SCHEMA_INFO_TOGGLE: 'schemaInfoToggle',
@@ -100,6 +104,9 @@ export const CLS = {
   GROUP_ITEMS: 'group-items',
   ITEM: 'item',
   NO_MATCH: 'nomatch',
+  DIR: 'dir',
+  FILE: 'file',
+  EMPTY: 'empty',
   DOT: 'dot',
   COUNT: 'count',
   // graph (SVG)
@@ -141,6 +148,7 @@ export const DATA = {
   LINE_NUMBER: 'n',
   TAB_INDEX: 'i',
   WORKSPACE_INDEX: 'ws',
+  DIR: 'dir',
   ROW_INDEX: 'row',
   VIEW: 'view',
 };

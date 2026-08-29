@@ -1,6 +1,7 @@
 /** The language drop-list of the top bar: one entry per i18n file; changing it re-translates the whole page. */
 import { applyCapabilities } from './capabilities.js';
 import { isDetailsCollapsed, setDetailsCollapsed } from './details.js';
+import { isFilesCollapsed, setFilesCollapsed } from './file-list.js';
 import { $, ID, esc } from './dom.js';
 import { availableLanguages, language, setLanguage } from './i18n.js';
 import { renderPage } from './page.js';
@@ -21,6 +22,7 @@ export async function initLanguageSelector() {
 function refreshTexts() {
   renderPage();
   setDetailsCollapsed(isDetailsCollapsed());
+  setFilesCollapsed(isFilesCollapsed());
   setSchemaInfoCollapsed(isSchemaInfoCollapsed());
   applyCapabilities();
 }

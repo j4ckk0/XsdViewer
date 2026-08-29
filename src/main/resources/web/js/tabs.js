@@ -5,6 +5,7 @@
  */
 import { WORKSPACE_FILE_SUFFIX } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
+import { renderFileList } from './file-list.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { newTabState, newWorkspaceState, session } from './state.js';
@@ -150,4 +151,5 @@ export function renderTabBar() {
   }
   $(ID.TABS).innerHTML = tabs;
   $(ID.COMPARE_BUTTON).disabled = session.compareSelection.length !== 2;
+  renderFileList();
 }

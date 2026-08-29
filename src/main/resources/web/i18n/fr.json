@@ -76,6 +76,9 @@
   "group.builtin": "Types prédéfinis",
   "group.external": "Externes / non déclarés",
 
+  "files.title": "Fichiers",
+  "files.collapse": "Replier la liste des fichiers",
+  "files.expand": "Déplier la liste des fichiers",
   "info.title": "Schéma",
   "info.collapse": "Replier l'en-tête du schéma",
   "info.expand": "Déplier l'en-tête du schéma",

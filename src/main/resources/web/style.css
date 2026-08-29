@@ -328,6 +328,17 @@ table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0
 
 /* ---- sidebar ----------------------------------------------------------------------- */
 
+#files { padding: 6px 12px 6px; border-bottom: 1px solid var(--border); font-size: 12px; }
+#files .count { color: var(--muted); font-weight: 500; }
+#files.collapsed #filesContent { display: none; }
+.tree { margin: 0 -12px; }
+.tree .group-h { text-transform: none; letter-spacing: 0; font-size: 12px; padding: 3px 12px 1px; margin-top: 2px; }
+.tree .group-h::before { content: "▾ "; color: var(--muted); }
+.tree .group-h.collapsed::before { content: "▸ "; }
+.tree .group-items { padding-left: 12px; }
+.tree .item .file::before { content: "▫ "; color: var(--muted); }
+.tree .item .empty { color: var(--muted); font-style: italic; }
+
 #schemaInfo {
   padding: 6px 12px 10px;
   border-bottom: 1px solid var(--border);

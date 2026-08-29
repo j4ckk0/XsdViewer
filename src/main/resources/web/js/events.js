@@ -6,6 +6,7 @@ import { closeCompare, startCompare, toggleDetail, toggleSelection } from './com
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openBrowserFolder, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
+import { fileListClick, initFiles, toggleFiles } from './file-list.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, select } from './navigation.js';
@@ -158,6 +159,12 @@ function wireViews() {
   $(ID.DETAILS_TOGGLE).addEventListener('click', toggleDetails);
   initSchemaInfo();
   $(ID.SCHEMA_INFO_TOGGLE).addEventListener('click', toggleSchemaInfo);
+  initFiles();
+  $(ID.FILES_TOGGLE).addEventListener('click', toggleFiles);
+  $(ID.FILES_CONTENT).addEventListener('click', (e) => {   // the Files panel: a file shows its tab
+    const tab = fileListClick(e.target);
+    if (tab) { const changed = activateTab(tab); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
+  });
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   window.addEventListener('resize', () => { const st = session.active; if (st.model && st.view === VIEW.GRAPH) renderGraph(); });
 }

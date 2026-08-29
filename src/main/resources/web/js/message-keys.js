@@ -31,6 +31,8 @@ export const MSG = {
   KIND_PREFIX: 'kind.',
   GROUP_PREFIX: 'group.',
 
+  FILES_COLLAPSE: 'files.collapse',
+  FILES_EXPAND: 'files.expand',
   INFO_TITLE: 'info.title',
   INFO_COLLAPSE: 'info.collapse',
   INFO_EXPAND: 'info.expand',

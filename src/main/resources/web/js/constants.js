@@ -90,6 +90,7 @@ export const STORAGE_KEY = {
   TWO_LEVELS: 'xsdviewer.twoLevels',
   DETAILS_COLLAPSED: 'xsdviewer.detailsCollapsed',
   SCHEMA_INFO_COLLAPSED: 'xsdviewer.schemaInfoCollapsed',
+  FILES_COLLAPSED: 'xsdviewer.filesCollapsed',
   LANGUAGE: 'xsdviewer.language',
 };
 export const STORAGE_TRUE = '1';

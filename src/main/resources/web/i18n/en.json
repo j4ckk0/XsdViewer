@@ -76,6 +76,9 @@
   "group.builtin": "Built-in types",
   "group.external": "External / undeclared",
 
+  "files.title": "Files",
+  "files.collapse": "Fold the file list",
+  "files.expand": "Unfold the file list",
   "info.title": "Schema",
   "info.collapse": "Fold the schema header",
   "info.expand": "Unfold the schema header",
