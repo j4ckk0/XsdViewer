@@ -4,12 +4,12 @@ rem Build the self-contained distributions (jar + bundled JRE + launcher):
 rem   target\xsdviewer-<version>-windows.zip
 rem   target\xsdviewer-<version>-linux.tar.gz
 rem
-rem   package.bat
-rem   package.bat -DskipTests      extra arguments are passed to mvn
+rem   scripts\package.bat
+rem   scripts\package.bat -DskipTests      extra arguments are passed to mvn
 rem
 rem Needs the JRE archives in jre\ (see README: Packaging).
 rem
-cd /d "%~dp0"
+cd /d "%~dp0.."
 where mvn >nul 2>nul || (
   echo mvn not found in PATH >&2
   exit /b 1

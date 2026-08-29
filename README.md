@@ -35,11 +35,11 @@ text) as a PNG image. **File ▸ Quit** stops the server and closes the page.
 Requires Java 21 and Maven.
 
 ```bash
-./run.sh                # builds target/xsdviewer.jar if needed, then starts the tool
-run.bat                 # same, on Windows
+scripts/run.sh                # builds target/xsdviewer.jar if needed, then starts the tool
+scripts\run.bat               # same, on Windows
 ```
 
-To only build the jar (`./build.sh` / `build.bat`, i.e. `mvn package`), or by hand:
+To only build the jar (`scripts/build.sh` / `scripts\build.bat`, i.e. `mvn package`), or by hand:
 
 ```bash
 mvn package
@@ -49,8 +49,8 @@ java -jar target/xsdviewer.jar
 The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
 
 ```
-./run.sh [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Linux/macOS
-run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Windows
+scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Linux/macOS
+scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Windows
 ```
 
 Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
@@ -59,7 +59,7 @@ is a small schema exercising every kind of link.
 ## Packaging
 
 ```bash
-./package.sh            # or package.bat on Windows; runs: mvn package -Pdist
+scripts/package.sh            # or scripts\package.bat on Windows; runs: mvn package -Pdist
 ```
 
 builds two self-contained distributions that need no Java installed, each with a
@@ -170,7 +170,7 @@ them comparable, later). The File menu:
   is proposed; the workspace takes the name of the file.
 - **Close workspace** — the active workspace and its tabs; **Close all tabs** closes every workspace.
 
-A workspace file can also be given on the command line: `./run.sh samples/all.xsdviewer.json`.
+A workspace file can also be given on the command line: `scripts/run.sh samples/all.xsdviewer.json`.
 Opening and saving need the server's dialogs, i.e. a display.
 
 ### Comparing two workspaces
@@ -191,7 +191,7 @@ original line numbers. **Differences only** hides the identical files and reduce
 comparison to its changed lines with one line of context. The comparison is a tab of its own
 (`v1 ⇄ v2`) in the workspace it was started from: switch to and from it like any tab, close
 it with its `×`; closing one of the compared workspaces closes it too, and comparing the same
-pair again brings it back to front. To try it: `./run.sh samples/compare/v1.xsdviewer.json`,
+pair again brings it back to front. To try it: `scripts/run.sh samples/compare/v1.xsdviewer.json`,
 then File ▸ Open workspace… `samples/compare/v2.xsdviewer.json` (what differs is listed in
 `samples/compare/README.md`).
 
@@ -217,7 +217,7 @@ can be found:
    the link is followed.
 
 Remote `schemaLocation`s (`http://…`) are never fetched. `samples/import/` is a
-schema split over four files to try this with: `./run.sh samples/import/order.xsd`,
+schema split over four files to try this with: `scripts/run.sh samples/import/order.xsd`,
 or start the tool from the project folder and open `order.xsd` from the browser.
 
 ## Layout

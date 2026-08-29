@@ -49,5 +49,5 @@ Checked against the tree at version 2.5.0 (August 2026).
    git tag -a v2.5.0 -m "2.5.0" && git push github v2.5.0
    ```
    The existing `origin` (the bare repository on the NAS) keeps working; `git push origin` and `git push github` are independent.
-6. On GitHub: set the description and topics; *Releases ▸ Draft a new release* from `v2.5.0`, attach `target/xsdviewer.jar`, `target/xsdviewer-2.5.0-windows.zip` and `target/xsdviewer-2.5.0-linux.tar.gz` (built with `./package.sh`), paste the release notes.
+6. On GitHub: set the description and topics; *Releases ▸ Draft a new release* from `v2.5.0`, attach `target/xsdviewer.jar`, `target/xsdviewer-2.5.0-windows.zip` and `target/xsdviewer-2.5.0-linux.tar.gz` (built with `scripts/package.sh`), paste the release notes.
 7. Check the repository page as a stranger would: licence shown, README readable, Actions green, release downloadable.

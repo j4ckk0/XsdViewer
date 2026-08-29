@@ -2,16 +2,16 @@
 #
 # Build (if needed) and run XsdViewer.
 #
-#   ./run.sh                          # start the server and open the browser
-#   ./run.sh samples/purchaseOrder.xsd
-#   ./run.sh --port 9090 --no-browser some.xsd
-#   ./run.sh --rebuild                # force a rebuild first
+#   scripts/run.sh                          # start the server and open the browser
+#   scripts/run.sh samples/purchaseOrder.xsd
+#   scripts/run.sh --port 9090 --no-browser some.xsd
+#   scripts/run.sh --rebuild                # force a rebuild first
 #
-# Any other argument is passed to the tool (see: ./run.sh --help).
+# Any other argument is passed to the tool (see: scripts/run.sh --help).
 #
 set -euo pipefail
 
-cd "$(dirname "$(readlink -f "$0")")"
+cd "$(dirname "$(readlink -f "$0")")/.."
 JAR=target/xsdviewer.jar
 
 rebuild=false

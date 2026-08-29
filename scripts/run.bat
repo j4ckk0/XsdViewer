@@ -2,16 +2,16 @@
 rem
 rem Build (if needed) and run XsdViewer on Windows.
 rem
-rem   run.bat                          start the server and open the browser
-rem   run.bat samples\purchaseOrder.xsd
-rem   run.bat --port 9090 --no-browser some.xsd
-rem   run.bat --rebuild                force a rebuild first
+rem   scripts\run.bat                          start the server and open the browser
+rem   scripts\run.bat samples\purchaseOrder.xsd
+rem   scripts\run.bat --port 9090 --no-browser some.xsd
+rem   scripts\run.bat --rebuild                force a rebuild first
 rem
-rem Any other argument is passed to the tool (see: run.bat --help).
+rem Any other argument is passed to the tool (see: scripts\run.bat --help).
 rem
 setlocal EnableDelayedExpansion
 
-cd /d "%~dp0"
+cd /d "%~dp0.."
 set "JAR=target\xsdviewer.jar"
 
 set "REBUILD=0"

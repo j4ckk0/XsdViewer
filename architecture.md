@@ -290,11 +290,11 @@ Build and test:
 | maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` (no shading needed: no dependencies) |
 | maven-surefire-plugin | 3.2.5 | runs the tests |
 | JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest` and `SchemaGraphJsonWriterTest` (against `samples/purchaseOrder.xsd`), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `CommandLineOptionsTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` (the HTTP interface on an ephemeral port) |
-| `run.sh` / `run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
+| `scripts/run.sh` / `scripts\run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
 | `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; on Windows the `.bat` starts `javaw.exe` from a command line (`--console` to keep one) |
 | launch4j-maven-plugin | 2.7.0 | `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
-| `build.sh` / `build.bat` | – | `mvn package` |
-| `package.sh` / `package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
+| `scripts/build.sh` / `scripts\build.bat` | – | `mvn package` |
+| `scripts/package.sh` / `scripts\package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
 | maven-clean-plugin | 3.2.0 | `dist` profile only: deletes the previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` and `target/jre` before the build |
 | maven-antrun-plugin | 3.1.0 | `dist` profile only: unpacks the JRE archives into `target/jre/{windows,linux}` |
 | maven-assembly-plugin | 3.7.1 | `dist` profile only: `src/assembly/{windows,linux}.xml` → zip / tar.gz with the JRE, the jar, a launcher, `samples/` and `README.md` |
@@ -310,9 +310,10 @@ executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's
 ```
 XsdViewer/
 ├── pom.xml
-├── run.sh, run.bat               build if needed + run
-├── build.sh, build.bat           mvn package
-├── package.sh, package.bat       mvn package -Pdist  (zip / tar.gz with bundled JRE)
+├── scripts/
+│   ├── run.sh, run.bat           build if needed + run
+│   ├── build.sh, build.bat       mvn package
+│   └── package.sh, package.bat   mvn package -Pdist  (zip / tar.gz with bundled JRE)
 ├── README.md                     usage
 ├── architecture.md               this file
 ├── jre/                          JRE archives bundled by the dist profile (git-ignored, downloaded by hand)
