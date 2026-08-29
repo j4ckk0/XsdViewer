@@ -54,8 +54,10 @@
   "graph.back.title": "Revenir au nœud précédent",
   "graph.twoLevels": "2 niveaux",
   "graph.twoLevels.title": "Afficher aussi ce vers quoi pointent les objets liés (une colonne de plus à droite)",
+  "legend.mandatory": "obligatoire",
+  "legend.mandatory.title": "Une flèche pleine est un lien obligatoire (minimum 1). Le nombre après le nom d'un lien est sa cardinalité : 1, 0..1, 1..*…",
   "legend.optional": "optionnel",
-  "legend.optional.title": "Une flèche pointillée est un lien optionnel : minOccurs 0, attribut optionnel, branche d'un choice. Le nombre après le nom d'un lien est sa cardinalité : 1, 0..1, 1..*…",
+  "legend.optional.title": "Une flèche pointillée est un lien optionnel : minOccurs 0, attribut optionnel, branche d'un choice",
   "graph.nodeTitle": "{0} {1}",
   "graph.kindInFile": "{0} · {1}",
 

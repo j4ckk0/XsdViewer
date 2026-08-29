@@ -498,7 +498,11 @@ table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0
   border-radius: 10px;
   font-size: 11px;
 }
-.lg.optional { color: var(--muted); border: 1px dashed var(--muted); padding: 0 6px; }
+/* the arrow entries of the legend: a small arrow, plain or dashed, then its meaning */
+.lg.arrow { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); padding: 0 2px; }
+.lg.arrow svg line { stroke: #9aa3af; stroke-width: 1.5; }
+.lg.arrow svg line.optional { stroke-dasharray: 4 3; }
+.lg.arrow svg path { fill: #9aa3af; }
 
 #graphCanvas { flex: 1; overflow: auto; }
 #graphCanvas svg { display: block; }

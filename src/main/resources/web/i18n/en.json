@@ -54,8 +54,10 @@
   "graph.back.title": "Back to the previous node",
   "graph.twoLevels": "2 levels",
   "graph.twoLevels.title": "Also show what the linked objects link to (a further column on the right)",
+  "legend.mandatory": "mandatory",
+  "legend.mandatory.title": "A plain arrow is a mandatory link (minimum 1). The number after a link's name is its cardinality: 1, 0..1, 1..*…",
   "legend.optional": "optional",
-  "legend.optional.title": "A dashed arrow is an optional link: minOccurs 0, optional attribute, branch of a choice. The number after a link's name is its cardinality: 1, 0..1, 1..*…",
+  "legend.optional.title": "A dashed arrow is an optional link: minOccurs 0, optional attribute, branch of a choice",
   "graph.nodeTitle": "{0} {1}",
   "graph.kindInFile": "{0} · {1}",
 
