@@ -2,9 +2,10 @@
  * The graph view: the selected object in the centre, what it links to on the right, what uses it on
  * the left, and optionally a second level on each side, drawn as an SVG with bezier edges.
  * One arrow per link: an object linked twice (shipTo and billTo to the same type) is drawn twice,
- * each copy captioned with the link's name; the arrows themselves carry no text.
+ * each copy captioned with the link's name; the arrows themselves carry no text. At level 2 an
+ * object is expanded only the first time it appears in a column: its later copies stay leaves.
  */
-import { LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS } from './constants.js';
+import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS } from './constants.js';
 import { findInTabs, kindsOf, usersInOtherTabs } from './declarations.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc } from './dom.js';
 import { t } from './i18n.js';
@@ -59,8 +60,11 @@ export function renderGraph() {
   }
   right.sort(byName); left.sort(byName);
 
-  // Level 2, drawn as trees (a node may appear under several parents).
+  // Level 2, drawn as trees (a node may appear under several parents). An object reached by
+  // several links is expanded once, under its first copy; the other copies stay leaves.
   if (depth === 2) {
+    const expandedKey = (n, tab) => (tab ? session.tabs.indexOf(tab) : -1) + ID_SEPARATOR + n.id;
+    const expanded = new Set();
     // right: what each level-1 target links to; an external target declared in another tab is expanded from there
     for (const r of right) {
       let src = st, id = r.n.id;
@@ -70,6 +74,8 @@ export function renderGraph() {
         src = found.tab; id = found.id;
         r.resolved = { n: src.nodes.get(id), tab: src };
       }
+      if (expanded.has(expandedKey(r.n, r.tab))) continue;
+      expanded.add(expandedKey(r.n, r.tab));
       for (const e of src.outEdges.get(id) || []) {
         if (e.to === id) continue;
         const n = src.nodes.get(e.to);
@@ -78,7 +84,10 @@ export function renderGraph() {
       r.children.sort(byName);
     }
     // left: what uses each level-1 user, in its own file and in the other open tabs
+    expanded.clear();
     for (const l of left) {
+      if (expanded.has(expandedKey(l.n, l.tab))) continue;
+      expanded.add(expandedKey(l.n, l.tab));
       const src = l.tab || st;
       for (const e of src.inEdges.get(l.n.id) || []) {
         if (e.from === l.n.id) continue;

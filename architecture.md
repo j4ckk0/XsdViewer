@@ -196,7 +196,9 @@ the model's labels is not drawn (the node's kind says it), so `attribute orderDa
 `orderDate` and `attribute ref` reads `ref`. The details panel keeps the full labels. With the **2 levels** toggle (remembered in `localStorage`) two more
 columns show, for every level-1 target its own targets, and for every level-1 user its own
 users, as trees: a level-1 node spans as many rows as it has children and sits in the middle
-of them; a node reached by several parents is drawn once per parent. The other open tabs
+of them; a node reached by several parents is drawn once per parent, and an object reached
+by several links from the centre (`shipTo` and `billTo` to `USAddress`) is expanded only
+under its first copy — the other copies stay leaves, so nothing is drawn twice. The other open tabs
 take part: a level-1 `external` target declared in another tab (`findInTabs()`) is drawn
 with its real kind and file name and expanded from that tab's model, and nodes of other tabs
 that reference the centre or a level-1 user through an external placeholder
