@@ -8,3 +8,6 @@ target/
 
 # JRE archives bundled by "mvn package -Pdist" (see README: Packaging)
 /jre/
+
+# workspaces saved from the GUI while testing (the shipped ones live in samples/compare/)
+/samples/*.xsdviewer.json
