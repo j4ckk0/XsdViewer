@@ -7,9 +7,9 @@ A Java server parses the schema and serves a web page offering two views:
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
   sits in the middle, what it links to is on the right, what uses it is on the left.
-  **2 levels** adds a column on each side: what each linked object links to in turn,
-  and what uses each user in turn, drawn as trees (e.g. complexType → element type →
-  its own types and attributes). Objects of the other open tabs take part: an external
+  **2 levels** adds a column on the right: what each linked object links to in turn,
+  drawn as trees (e.g. complexType → element type → its own types and attributes); the
+  left side, what uses the selected object, stays one step deep. Objects of the other open tabs take part: an external
   object whose file is open is expanded from that tab (its box shows the real kind and
   the file), and objects of other files that use the centre appear on the left, marked
   with their file; clicking one of them switches to that tab.

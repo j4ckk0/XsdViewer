@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -69,8 +70,7 @@ final class FileDialogs {
 
     /** The folder chosen in a "choose folder" dialog (a Swing chooser: the native dialog cannot pick folders), or null when cancelled. */
     static synchronized Path chooseFolder(String title) {
-        Path[] result = { null };
-        Thread t = Thread.ofPlatform().start(() -> {
+        return onPlatformThread(() -> {
             JFrame owner = new JFrame();   // an invisible always-on-top owner, so the chooser comes over the browser
             owner.setUndecorated(true);
             owner.setSize(0, 0);
@@ -83,39 +83,41 @@ final class FileDialogs {
                 JFileChooser chooser = new JFileChooser(lastDirectory);
                 chooser.setDialogTitle(title);
                 chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                if (chooser.showOpenDialog(owner) == JFileChooser.APPROVE_OPTION && chooser.getSelectedFile() != null) {
-                    result[0] = chooser.getSelectedFile().toPath().toAbsolutePath().normalize();
-                    lastDirectory = result[0].toString();
-                }
+                if (chooser.showOpenDialog(owner) != JFileChooser.APPROVE_OPTION || chooser.getSelectedFile() == null) return null;
+                Path chosen = chooser.getSelectedFile().toPath().toAbsolutePath().normalize();
+                lastDirectory = chosen.toString();
+                return chosen;
             } finally {
                 owner.dispose();
             }
         });
-        try {
-            t.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        return result[0];
     }
 
-    /** Shows the dialog on a platform thread (AWT is happier there than on a virtual one) and waits for it. */
+    /** Shows the dialog and waits for it: the files chosen (none when cancelled). */
     private static File[] show(FileDialog d) {
-        File[][] result = { new File[0] };
-        Thread t = Thread.ofPlatform().start(() -> {
+        return onPlatformThread(() -> {
             try {
                 d.setAlwaysOnTop(true);   // the browser window is in front: come over it
             } catch (SecurityException ignored) { /* then the dialog may open behind */ }
             d.setVisible(true);           // blocks until closed
-            result[0] = d.getFiles();
+            File[] files = d.getFiles();
             if (d.getDirectory() != null) lastDirectory = d.getDirectory();
             d.dispose();
+            return files;
         });
+    }
+
+    /** Runs a blocking AWT / Swing interaction on a platform thread (AWT is happier there than on a virtual one) and waits for its result. */
+    private static <T> T onPlatformThread(Supplier<T> interaction) {
+        Object[] result = { null };
+        Thread t = Thread.ofPlatform().start(() -> result[0] = interaction.get());
         try {
             t.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        return result[0];
+        @SuppressWarnings("unchecked")
+        T value = (T) result[0];
+        return value;
     }
 }

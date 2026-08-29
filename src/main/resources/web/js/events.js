@@ -1,12 +1,13 @@
 /** Wiring of the page's controls to the actions: menu, tabs, keyboard, drag and drop, clicks in the views. */
-import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, VIEW } from './constants.js';
+import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { closeCompare, startCompare, toggleDetail, toggleSelection } from './compare.js';
-import { closeActiveWorkspace, closeAll, closeFile, openBrowserFolder, openFiles, openFolder, openSchemas, openWorkspace, quit, saveWorkspace, startWorkspace } from './file-actions.js';
+import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
+import { closeActiveWorkspace, openBrowserFolder, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { renderGraph } from './graph.js';
-import { filesOfEntries } from './library.js';
+import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, select } from './navigation.js';
 import { renderPage, showView } from './page.js';
 import { exportPng } from './png-export.js';
@@ -17,9 +18,9 @@ import { session } from './state.js';
 import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderTabBar, tabToShow } from './tabs.js';
 
-const LIST_SEPARATOR = ', ';
 
 export function wireEvents() {
+  wireMenus();
   wireFileMenu();
   wireHelpMenu();
   wireDocumentTabs();
@@ -53,7 +54,6 @@ function wireHelpMenu() {
 }
 
 function wireFileMenu() {
-  wireMenus();
   const closeMenu = closeMenus;
   $(ID.MENU_OPEN).addEventListener('click', () => { closeMenu(); openSchemas(); });
   $(ID.MENU_NEW_WORKSPACE).addEventListener('click', () => { closeMenu(); startWorkspace(); });
@@ -137,7 +137,7 @@ function wireDragAndDrop() {
     const dirs = entries.filter(en => en.isDirectory);
     if (dirs.length) {
       filesOfEntries(dirs).then(list => {
-        openBrowserFolder(list.map(x => x.file), f => list.find(x => x.file === f).rel, dirs.map(d => d.name).join(LIST_SEPARATOR));
+        openBrowserFolder(list.map(x => x.file), f => list.find(x => x.file === f).rel, dirs.map(d => d.name).join(TEXT.LIST_SEPARATOR));
       });
     }
     const files = [...e.dataTransfer.files].filter((f, i) => !entries[i] || entries[i].isFile);

@@ -100,4 +100,6 @@ export const SVG_NS = 'http://www.w3.org/2000/svg';
 export const DATA_TRANSFER_FILES = 'Files';
 export const DROP_EFFECT_COPY = 'copy';
 export const KEY = { ESCAPE: 'Escape', ARROW_LEFT: 'ArrowLeft', OPEN: 'o', FIND: 'f', SAVE: 's' };
+/** Punctuation of the texts the page composes. */
+export const TEXT = { LIST_SEPARATOR: ', ', TOAST_SEPARATOR: ' — ' };
 export const MIDDLE_BUTTON = 1;

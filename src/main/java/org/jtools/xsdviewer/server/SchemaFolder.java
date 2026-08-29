@@ -57,7 +57,8 @@ final class SchemaFolder {
         return p.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(SCHEMA_EXTENSION);
     }
 
-    private static boolean hidden(Path root, Path p) {
+    /** True when {@code p}, under {@code root}, lies in a hidden directory (a dot-name) or is one itself. */
+    static boolean hidden(Path root, Path p) {
         for (Path part : root.relativize(p)) if (part.toString().startsWith(HIDDEN_PREFIX)) return true;
         return false;
     }

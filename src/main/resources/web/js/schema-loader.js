@@ -3,7 +3,7 @@ import { ServerUnreachableError, locateFile, openLocation, parseSchema } from '.
 import { REMOTE_LOCATION_MARK } from './constants.js';
 import { $, ID } from './dom.js';
 import { t } from './i18n.js';
-import { findInLibrary } from './library.js';
+import { findInLibrary } from './folder-library.js';
 import { MSG } from './message-keys.js';
 import { indexSchema } from './schema-index.js';
 import { newScroll, session } from './state.js';

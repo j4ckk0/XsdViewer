@@ -106,13 +106,13 @@ Static files, no build step, no framework: `index.html`, `style.css`, ES modules
 | `js/state.js` | `newTabState()` (one object per document tab: the model plus derived indexes `outEdges`, `inEdges`, `lineToNode`, the selection, history, view, filter and scroll positions, and its `workspace`), `newWorkspaceState()` (a workspace: `path` once saved / opened, `number` until then) and `session` (the workspaces, their tabs — one flat list grouped in workspace order —, the active tab, the pending jump, the folder library). |
 | `js/api.js` | The `fetch` calls to `/api/*`, one function per path. |
 | `js/schema-index.js`, `js/declarations.js` | Indexing a parsed schema into a tab; finding declarations across the tabs of a workspace (`findIn`, `findInTabs`, `usersInOtherTabs`, `locationsFor`) — never across workspaces. |
-| `js/library.js`, `js/schema-loader.js` | The folder library (Open folder… / dropped folders); `loadInto(tab, …)` (parse through the server, index, locate) and `resolveLocation()` (library, then server; `strict` = relative to the file only). |
+| `js/folder-library.js`, `js/schema-loader.js` | The folder library (Open folder… / dropped folders); `loadInto(tab, …)` (parse through the server, index, locate) and `resolveLocation()` (library, then server; `strict` = relative to the file only). |
 | `js/linked-schemas.js` | `openLinkedSchemas(tab)`: opens in background tabs the schemas linked (strictly relative to the file) from a file whose location is known, recursively, serialised and capped. |
 | `js/tabs.js`, `js/page.js` | Workspaces and their tabs (`newWorkspace`, `newTab(ws)`, `tabsOf(ws)`, activate / close a tab or a workspace, `closeAllTabs`, the workspace bar with one chip per workspace and the tab bar with the active workspace's tabs); `renderPage()` redraws everything from the active tab, `showView()` switches graph / text. |
 | `js/navigation.js` | `select(id)` drives every view and keeps the back history; `followExternal()` follows a link into another file (see below). |
 | `js/about.js` | Help ▸ About: a `<dialog>` with the version and Java runtime reported by the server, the licence and the project page. |
 | `js/compare.js`, `js/schema-diff.js`, `js/diff.js` | Workspace comparison: the selection (Ctrl+click on chips, `session.compareSelection`), the view (`session.compare`; files paired by name, statuses, expandable rows), the model diff (declared nodes and edges — cardinality included — on one side only) and the LCS line diff (common start / end trimmed, capped at 9 M cells). |
-| `js/file-actions.js`, `js/events.js` | The File menu actions (open through the server's dialog or the browser's, open a folder as a workspace named after it, new / open / save / close workspace — an opened workspace is its own group of tabs, saving writes the active workspace —, close, quit, initial file or workspace); wiring of every control, key and drop to the actions. |
+| `js/file-actions.js`, `js/workspace-actions.js`, `js/capabilities.js`, `js/events.js` | The File menu on files (open through the server's dialog or the browser's, close, quit, the start-up file); on workspaces (new / open / save / close, a folder opened as a workspace named after it — an opened workspace is its own group of tabs, saving writes the active workspace); what the server can do (dialogs, language, versions) and the menu entries depending on it; wiring of every control, key and drop to the actions. |
 | `js/sidebar.js`, `js/graph.js`, `js/details.js`, `js/text-view.js`, `js/xml-highlighter.js`, `js/png-export.js` | One module per view: schema header (foldable) and object list, SVG ego-graph, details panel (collapsible to a strip), source text, its tokenizer, the PNG export. Folded states are remembered in `localStorage`. |
 
 `session.active` always points at the active tab's object (`session.tabs` holds them all), so
@@ -196,12 +196,12 @@ followed by its cardinality when it has one, is written as a caption above the n
 to (or comes from), and repeated in the node's tooltip: element and attribute names in the page's text style, the XSD words (`type`,
 `extends`, `list of`…, `STRUCTURAL_LINK_LABELS`) small and muted; the word "attribute" of
 the model's labels is not drawn (the node's kind says it), so `attribute orderDate` reads
-`orderDate` and `attribute ref` reads `ref`. The details panel keeps the full labels. With the **2 levels** toggle (remembered in `localStorage`) two more
-columns show, for every level-1 target its own targets, and for every level-1 user its own
-users, as trees: a level-1 node spans as many rows as it has children and sits in the middle
-of them; a node reached by several parents is drawn once per parent, and an object reached
-by several links from the centre (`shipTo` and `billTo` to `USAddress`) is expanded only
-under its first copy — the other copies stay leaves, so nothing is drawn twice. The other open tabs
+`orderDate` and `attribute ref` reads `ref`. The details panel keeps the full labels. With the **2 levels** toggle (remembered in `localStorage`) one more
+column shows, on the right only, for every level-1 target its own targets, as trees: a
+level-1 node spans as many rows as it has children and sits in the middle of them, and an
+object reached by several links from the centre (`shipTo` and `billTo` to `USAddress`) is
+expanded only under its first copy — the other copies stay leaves, so nothing is drawn twice.
+The left side (what uses the centre) always stays one step deep: that is what is useful there. The other open tabs
 take part: a level-1 `external` target declared in another tab (`findInTabs()`) is drawn
 with its real kind and file name and expanded from that tab's model, and nodes of other tabs
 that reference the centre or a level-1 user through an external placeholder
@@ -227,7 +227,7 @@ node. The selected node's line is highlighted and scrolled into view.
 | `POST /api/parse` | body: the XSD text (UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema`, …). |
 | `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
 | `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit). |
-| `GET /api/capabilities` | – | `{"dialogs": bool, "language": "fr", "version": "1.8.0", "javaVersion": "21.0.12"}`: whether the server can show native file dialogs (not headless) — the page disables the workspace commands and falls back to the browser's file dialog otherwise — the language of the machine's locale (the page's default language), and the versions shown by Help ▸ About (`BuildInfo`: the jar manifest's `Implementation-Version`, "dev" without one). |
+| `GET /api/capabilities` | – | `{"dialogs": bool, "language": "fr", "version": "2.0.0", "javaVersion": "21.0.12"}`: whether the server can show native file dialogs (not headless) — the page disables the workspace commands and falls back to the browser's file dialog otherwise — the language of the machine's locale (the page's default language), and the versions shown by Help ▸ About (`BuildInfo`: the jar manifest's `Implementation-Version`, "dev" without one). |
 | `POST /api/choose` | – | shows the native "open files" dialog; `200` + `{"files": [{"name", "path", "text"}…]}` (empty when cancelled), `409` without a display. |
 | `POST /api/choose-folder` | – | shows a folder chooser (Swing `JFileChooser`: the native dialog cannot pick folders); `200` + `{"folder", "files": [{"name", "path", "text"}…], "truncated"}` — the `.xsd` files of the folder and its sub-folders (depth ≤ 8, at most 200, hidden directories skipped, sorted), or `{"cancelled": true}`; `409` without a display. |
 | `POST /api/workspace/save` | body: `{"files": [paths…], "active": n, "path": …}` (`path`, optional: the workspace file to propose) | shows the native "save as" dialog, writes the workspace there (`.xsdviewer.json` appended if missing); `200` + `{"path"}` or `{"cancelled": true}`, `400` for a bad body, `409` without a display. |
@@ -287,7 +287,7 @@ Build and test:
 | maven-compiler-plugin | 3.13.0 | `--release 21` |
 | maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` (no shading needed: no dependencies) |
 | maven-surefire-plugin | 3.2.5 | runs the tests |
-| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest` and `SchemaGraphJsonWriterTest` (against `samples/purchaseOrder.xsd`), `JsonWriterTest`, `CommandLineOptionsTest`, `TranslationsTest` |
+| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest` and `SchemaGraphJsonWriterTest` (against `samples/purchaseOrder.xsd`), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `CommandLineOptionsTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` (the HTTP interface on an ephemeral port) |
 | `run.sh` / `run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
 | `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; on Windows the `.bat` starts `javaw.exe` from a command line (`--console` to keep one) |
 | launch4j-maven-plugin | 2.7.0 | `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |

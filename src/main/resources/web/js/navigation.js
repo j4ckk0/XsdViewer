@@ -1,11 +1,11 @@
 /** Moving the selection: within the file (with a back history) and across files, following links to external declarations. */
-import { NODE_KIND } from './constants.js';
+import { NODE_KIND, TEXT } from './constants.js';
 import { findIn, kindsOf, locationsFor } from './declarations.js';
 import { renderDetails } from './details.js';
 import { $, ID } from './dom.js';
 import { renderGraph } from './graph.js';
 import { t } from './i18n.js';
-import { holdsKey, tabKeys } from './library.js';
+import { holdsKey, tabKeys } from './folder-library.js';
 import { MSG } from './message-keys.js';
 import { renderPage } from './page.js';
 import { loadInto, resolveLocation } from './schema-loader.js';
@@ -15,7 +15,6 @@ import { activateTab, closeTab, newTab, renderTabBar, tabsOf } from './tabs.js';
 import { highlightTextLine } from './text-view.js';
 import { toast } from './toast.js';
 
-const LIST_SEPARATOR = ', ';
 
 /** Selects a node of the active tab and redraws the views; follows it when it is an external placeholder. */
 export function select(id, pushHistory = true) {
@@ -83,8 +82,8 @@ export async function followExternal(node) {
     if (id) { jumpTo(tab, id); return; }
     for (const l of locationsFor(tab, ns)) queue.push({ src: tab, location: l });
   }
-  const why = missing.length ? t(MSG.EXTERNAL_MISSING, missing.join(LIST_SEPARATOR))
-    : examined.length ? t(MSG.EXTERNAL_NOT_FOUND_IN, name, examined.map(x => x.fileName).join(LIST_SEPARATOR))
+  const why = missing.length ? t(MSG.EXTERNAL_MISSING, missing.join(TEXT.LIST_SEPARATOR))
+    : examined.length ? t(MSG.EXTERNAL_NOT_FOUND_IN, name, examined.map(x => x.fileName).join(TEXT.LIST_SEPARATOR))
     : t(MSG.EXTERNAL_NOT_FOUND, name);
   askForFile(name, kinds, ns, t(MSG.EXTERNAL_CHOOSE_FILE, why, name));
 }

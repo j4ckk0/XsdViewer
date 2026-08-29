@@ -1,5 +1,5 @@
 /** The language drop-list of the top bar: one entry per i18n file; changing it re-translates the whole page. */
-import { applyCapabilities } from './file-actions.js';
+import { applyCapabilities } from './capabilities.js';
 import { isDetailsCollapsed, setDetailsCollapsed } from './details.js';
 import { $, ID, esc } from './dom.js';
 import { availableLanguages, language, setLanguage } from './i18n.js';

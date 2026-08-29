@@ -1,6 +1,7 @@
 /** Start-up of the page: texts, event wiring, first drawing, and the file given on the command line. */
 import { wireEvents } from './events.js';
-import { applyCapabilities, loadCapabilities, loadInitialFile } from './file-actions.js';
+import { applyCapabilities, loadCapabilities } from './capabilities.js';
+import { loadInitialFile } from './file-actions.js';
 import { initI18n } from './i18n.js';
 import { initLanguageSelector } from './language-selector.js';
 import { renderPage } from './page.js';
