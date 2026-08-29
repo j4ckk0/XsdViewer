@@ -515,8 +515,10 @@ table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0
 .node.group rect { stroke: var(--c-group); }
 .node.attributeGroup rect { stroke: var(--c-attributeGroup); }
 .node.attribute rect { stroke: var(--c-attribute); }
-.node.builtin rect { stroke: var(--c-builtin); stroke-dasharray: 4 3; }
-.node.external rect { stroke: var(--c-external); stroke-dasharray: 4 3; }
+/* placeholders (a built-in type, an object declared in another file): solid border, grey fill — dashed is for optional links only */
+.node.builtin rect { stroke: var(--c-builtin); fill: #f3f4f6; }
+.node.external rect { stroke: var(--c-external); fill: #f3f4f6; }
+.node.builtin text.name, .node.external text.name { font-style: italic; }
 .node:hover rect { fill: #eef2ff; }
 .node.center rect { stroke-width: 3; fill: #f8fafc; }
 .node text { font-size: 13px; fill: var(--text); pointer-events: none; }

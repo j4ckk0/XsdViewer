@@ -104,9 +104,10 @@ content (anonymous nested types included):
 | `list itemType` / `union memberTypes` | `list of` / `union of` |
 | `substitutionGroup` | `substitutes` |
 
-XSD built-in types (`xs:string`…) appear as grey dashed nodes (toggle with the
-**built-in types** checkbox). Objects referenced but not declared in the file
-(imported / included ones) appear as red dashed *external* nodes.
+XSD built-in types (`xs:string`…) appear as grey-filled nodes with a grey border (toggle with
+the **built-in types** checkbox). Objects referenced but not declared in the file (imported /
+included ones) appear as grey-filled *external* nodes with a red border. Dashed lines are
+reserved for optional links.
 
 **Help ▸ About XsdViewer…** shows the version (from the jar's manifest), the Java runtime, the
 log file, the licence and the project page.
