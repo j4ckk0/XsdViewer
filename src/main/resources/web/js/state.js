@@ -37,6 +37,8 @@ export const session = {
   library: new Map(),
   /** Whether the server can show native file dialogs (it has a display): files then come with their location. */
   dialogs: false,
+  /** Language of the machine's locale, as the server reports it; the page's default language. */
+  serverLanguage: null,
   /** Path of the workspace last saved or opened, null when none. */
   workspacePath: null,
 };

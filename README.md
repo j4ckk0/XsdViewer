@@ -173,7 +173,7 @@ samples/                  purchaseOrder.xsd (one file), import/ (order.xsd + imp
 ```
 
 The page is shown in the language chosen in the drop-list at the right of the top bar
-(remembered by the browser; initially the browser's language when a `web/i18n/<language>.json`
+(remembered by the browser; initially the machine's language when a `web/i18n/<language>.json`
 exists, English otherwise; `?lang=fr` forces one). The server answers the page in that language
 too; only its console messages follow the JVM locale.
 

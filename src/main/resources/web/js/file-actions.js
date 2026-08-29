@@ -15,14 +15,16 @@ import { toast } from './toast.js';
 const LIST_SEPARATOR = ', ';
 const TOAST_SEPARATOR = ' — ';
 
-/** Asks the server what it can do (native dialogs) and enables the menu accordingly. */
-export async function initCapabilities() {
+/** Asks the server what it can do (native dialogs) and which language the machine speaks; nothing is applied yet. */
+export async function loadCapabilities() {
   try {
-    session.dialogs = !!(await fetchCapabilities()).dialogs;
+    const caps = await fetchCapabilities();
+    session.dialogs = !!caps.dialogs;
+    session.serverLanguage = caps.language || null;
   } catch (e) {
     session.dialogs = false;
+    session.serverLanguage = null;
   }
-  applyCapabilities();
 }
 
 /** Enables the workspace commands when the server has dialogs, else disables them and says why. */

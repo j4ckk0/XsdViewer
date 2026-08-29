@@ -1,8 +1,8 @@
 /**
  * Texts of the page, read from i18n/<language>.json (one file per language, each naming itself
  * under "language.name"). The language is, in order: the "lang" query parameter, the choice
- * remembered from the drop-list, the first browser language that has a file, English.
- * Missing keys fall back to English, then to the key itself.
+ * remembered from the drop-list, the machine's locale (as the server reports it) when it has
+ * a file, English. Missing keys fall back to English, then to the key itself.
  */
 import { STORAGE_KEY } from './constants.js';
 import { MSG } from './message-keys.js';
@@ -13,7 +13,6 @@ const FILE_EXTENSION = '.json';
 export const LANGUAGES = ['en', 'fr'];
 export const DEFAULT_LANGUAGE = 'en';
 const LANGUAGE_PARAM = 'lang';
-const LANGUAGE_CODE_LENGTH = 2;
 
 /** Attributes binding an element to a key (see index.html). */
 const ATTR = { TEXT: 'data-i18n', TITLE: 'data-i18n-title', PLACEHOLDER: 'data-i18n-placeholder' };
@@ -27,17 +26,15 @@ export let language = DEFAULT_LANGUAGE;
 
 const known = (code) => LANGUAGES.includes(code);
 
-function pickLanguage() {
+/** @param machineLanguage the language of the machine's locale, or null when unknown */
+function pickLanguage(machineLanguage) {
   const wanted = new URLSearchParams(location.search).get(LANGUAGE_PARAM);
   if (wanted && known(wanted)) return wanted;
   try {
     const stored = localStorage.getItem(STORAGE_KEY.LANGUAGE);
     if (stored && known(stored)) return stored;
   } catch (e) { /* storage unavailable */ }
-  for (const c of navigator.languages || [navigator.language]) {
-    const code = String(c || '').toLowerCase().slice(0, LANGUAGE_CODE_LENGTH);
-    if (known(code)) return code;
-  }
+  if (machineLanguage && known(machineLanguage)) return machineLanguage;
   return DEFAULT_LANGUAGE;
 }
 
@@ -55,9 +52,9 @@ async function load(code) {
 }
 
 /** Loads the texts and translates the static page. To be awaited before anything is rendered. */
-export async function initI18n() {
+export async function initI18n(machineLanguage) {
   fallback = await load(DEFAULT_LANGUAGE);
-  await setLanguage(pickLanguage(), false);
+  await setLanguage(pickLanguage(machineLanguage), false);
 }
 
 /** Switches the page to {@code code} (a member of LANGUAGES) and re-translates the static labels. */

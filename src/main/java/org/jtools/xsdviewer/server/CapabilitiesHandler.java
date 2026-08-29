@@ -27,11 +27,19 @@ import com.sun.net.httpserver.HttpHandler;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
-/** {@code GET /api/capabilities}: {@code {"dialogs": bool}}, whether the server can show native file dialogs. */
+import java.util.Locale;
+
+/**
+ * {@code GET /api/capabilities}: {@code {"dialogs": bool, "language": "fr"}} — whether the server
+ * can show native file dialogs, and the language of the machine's locale (the page's default).
+ */
 final class CapabilitiesHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange ex) throws IOException {
-        HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.DIALOGS, FileDialogs.available()));
+        HttpResponses.json(ex, HttpStatus.OK, new JsonWriter().beginObject()
+                .property(JsonKey.DIALOGS, FileDialogs.available())
+                .property(JsonKey.LANGUAGE, Locale.getDefault().getLanguage())
+                .endObject().toString());
     }
 }

@@ -35,10 +35,13 @@ export function toggleSchemaInfo() {
   setSchemaInfoCollapsed(!isSchemaInfoCollapsed());
 }
 
-/** Restores the folded state remembered in the browser. */
+/** Restores the folded state remembered in the browser; folded until the user unfolds it once. */
 export function initSchemaInfo() {
-  let collapsed = false;
-  try { collapsed = localStorage.getItem(STORAGE_KEY.SCHEMA_INFO_COLLAPSED) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
+  let collapsed = true;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY.SCHEMA_INFO_COLLAPSED);
+    if (stored !== null) collapsed = stored === STORAGE_TRUE;
+  } catch (e) { /* storage unavailable */ }
   setSchemaInfoCollapsed(collapsed);
 }
 

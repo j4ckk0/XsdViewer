@@ -58,6 +58,8 @@ public final class JsonKey {
 
     // capabilities (/api/capabilities)
     public static final String DIALOGS = "dialogs";
+    /** Language of the machine's locale (the JVM default), the page's default language. */
+    public static final String LANGUAGE = "language";
 
     // status answers
     public static final String ERROR = "error";
