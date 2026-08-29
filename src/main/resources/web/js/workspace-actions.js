@@ -10,7 +10,7 @@ import { openLinkedSchemas } from './linked-schemas.js';
 import { MSG } from './message-keys.js';
 import { renderPage } from './page.js';
 import { session } from './state.js';
-import { activateTab, activeWorkspace, closeWorkspace, isEmptyWorkspace, newTab, newWorkspace, renderTabBar, tabsOf, workspaceName } from './tabs.js';
+import { activateTab, activeWorkspace, closeWorkspace, isEmptyWorkspace, newTab, newWorkspace, renderNavigation, tabsOf, workspaceName } from './tabs.js';
 import { toast, toastServerError } from './toast.js';
 
 /** File ▸ New workspace: an empty one, made active. */
@@ -37,7 +37,7 @@ export async function saveWorkspace() {
     const r = await saveWorkspaceFile(saved.map(tab => tab.path), Math.max(0, saved.indexOf(session.active)), ws.path);
     if (r.cancelled) return;
     ws.path = r.path;
-    renderTabBar();
+    renderNavigation();
     toast(t(MSG.WORKSPACE_SAVED, r.path) + (skipped.length ? TEXT.TOAST_SEPARATOR + t(MSG.WORKSPACE_NOT_SAVED, skipped.join(TEXT.LIST_SEPARATOR)) : ''));
   } catch (e) {
     toastServerError(e);

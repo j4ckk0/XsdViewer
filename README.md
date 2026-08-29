@@ -77,10 +77,10 @@ failure such as a port already in use is shown in a dialog instead of being lost
 
 The JREs are not tracked in git: before packaging, download the Temurin JRE 21
 archives from <https://adoptium.net/temurin/releases/> and put them in
-`src/main/resources/embedded/jre/`:
+`jre/` at the root of the project:
 
 ```
-src/main/resources/embedded/jre/
+jre/
 ├── OpenJDK21U-jre_x64_windows_hotspot_<version>.zip
 └── OpenJDK21U-jre_x64_linux_hotspot_<version>.tar.gz
 ```

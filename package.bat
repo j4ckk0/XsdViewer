@@ -7,7 +7,7 @@ rem
 rem   package.bat
 rem   package.bat -DskipTests      extra arguments are passed to mvn
 rem
-rem Needs the JRE archives in src\main\resources\embedded\jre\ (see README: Packaging).
+rem Needs the JRE archives in jre\ (see README: Packaging).
 rem
 cd /d "%~dp0"
 where mvn >nul 2>nul || (
@@ -15,7 +15,7 @@ where mvn >nul 2>nul || (
   exit /b 1
 )
 
-set "JRE=src\main\resources\embedded\jre"
+set "JRE=jre"
 if not exist "%JRE%\*windows*.zip" (
   echo no *windows*.zip in %JRE%\ - download the JRE archives first ^(see README: Packaging^) >&2
   exit /b 1

@@ -65,15 +65,6 @@
 
   <build>
     <finalName>xsdviewer</finalName>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <excludes>
-          <!-- JRE archives used by the dist profile, not part of the jar -->
-          <exclude>embedded/**</exclude>
-        </excludes>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -137,14 +128,14 @@
     <!--
       mvn package -Pdist
       Builds the self-contained distributions, each with a bundled JRE
-      (from src/main/resources/embedded/jre) and a launcher script:
+      (from jre/ at the root of the project) and a launcher script:
         target/xsdviewer-<version>-windows.zip     xsdviewer.bat
         target/xsdviewer-<version>-linux.tar.gz    xsdviewer.sh
     -->
     <profile>
       <id>dist</id>
       <properties>
-        <jre.archives>${project.basedir}/src/main/resources/embedded/jre</jre.archives>
+        <jre.archives>${project.basedir}/jre</jre.archives>
         <jre.unpacked>${project.build.directory}/jre</jre.unpacked>
       </properties>
       <build>

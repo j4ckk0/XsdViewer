@@ -3,7 +3,7 @@ import { parseSchema } from './api.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { fillTab } from './schema-loader.js';
-import { newTab, renderTabBar, tabsOf } from './tabs.js';
+import { newTab, renderNavigation, tabsOf } from './tabs.js';
 import { toast } from './toast.js';
 import { tabOfFile, workspaceOfFile } from './workspace-files.js';
 
@@ -30,7 +30,7 @@ export async function ensureTab(entry) {
   const tab = tabsOf(ws).find(x => !x.model) || newTab(ws);
   fillTab(tab, entry.name, entry.text, entry.path, entry.rel, entry.model);
   tab.file = entry;
-  renderTabBar();
+  renderNavigation();
   return tab;
 }
 
@@ -43,7 +43,7 @@ export function parseInBackground(ws) {
     for (const entry of ws.files) {
       if (entry.model || entry.failed) continue;
       await ensureModel(entry, false);
-      renderTabBar();
+      renderNavigation();
     }
   }).catch(() => { /* nothing to report: a file that fails is shown as such */ });
   return chain;

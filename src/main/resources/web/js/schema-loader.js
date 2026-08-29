@@ -7,7 +7,7 @@ import { findInLibrary } from './folder-library.js';
 import { MSG } from './message-keys.js';
 import { indexSchema } from './schema-index.js';
 import { newScroll, session } from './state.js';
-import { renderTabBar } from './tabs.js';
+import { renderNavigation } from './tabs.js';
 import { toast } from './toast.js';
 import { registerFile } from './workspace-files.js';
 
@@ -26,7 +26,7 @@ export async function loadInto(st, name, text, path, rel = null) {
   }
   fillTab(st, name, text, path, rel, json);
   st.file = registerFile(st.workspace, { name, path, rel, text, model: json });
-  renderTabBar();
+  renderNavigation();
   return true;
 }
 
@@ -52,7 +52,7 @@ async function locate(st, name, text) {
     st.path = path;
     if (st.file && !st.file.path) st.file.path = path;
     if (st === session.active) $(ID.FILE_NAME).title = path;
-    renderTabBar();
+    renderNavigation();
     return path;
   } catch (e) {
     return null;   // server unreachable: reported when something else is fetched

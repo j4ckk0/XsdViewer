@@ -7,15 +7,14 @@
 import { parseSchema } from './api.js';
 import { MAX_AUTO_OPEN, TEXT } from './constants.js';
 import { ensureTab } from './file-tabs.js';
-import { tabKeys } from './folder-library.js';
 import { renderGraph } from './graph.js';
 import { plural } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { resolveLocation } from './schema-loader.js';
 import { session } from './state.js';
-import { renderTabBar } from './tabs.js';
+import { renderNavigation } from './tabs.js';
 import { toast } from './toast.js';
-import { fileKeys, registerFile } from './workspace-files.js';
+import { fileKeys, isLocated, registerFile } from './workspace-files.js';
 
 /** Upper bound on the files one file can bring in through its links. */
 const MAX_LINKED_SCHEMAS = 200;
@@ -30,9 +29,9 @@ export function openLinkedSchemas(root) {
 }
 
 async function discover(root) {
-  if (!root.model || !tabKeys(root).length) return;
+  if (!root.model || !isLocated(root)) return;
   const ws = root.workspace;
-  const known = new Set([...ws.files.flatMap(fileKeys), ...tabKeys(root)]);
+  const known = new Set([...ws.files.flatMap(fileKeys), ...fileKeys(root)]);
   const queue = [root];
   const found = [];
   while (queue.length && found.length < MAX_LINKED_SCHEMAS) {
@@ -51,7 +50,7 @@ async function discover(root) {
   }
   if (!found.length) return;
   if (found.length > MAX_AUTO_OPEN) {
-    renderTabBar();
+    renderNavigation();
     toast(plural(found.length, MSG.LINKED_LISTED_ONE, MSG.LINKED_LISTED_OTHER));
     return;
   }

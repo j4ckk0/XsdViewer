@@ -5,12 +5,11 @@ import { renderDetails } from './details.js';
 import { $, ID } from './dom.js';
 import { renderGraph } from './graph.js';
 import { t } from './i18n.js';
-import { holdsKey, tabKeys } from './folder-library.js';
 import { MSG } from './message-keys.js';
 import { renderPage } from './page.js';
 import { ensureTab } from './file-tabs.js';
 import { resolveLocation } from './schema-loader.js';
-import { registerFile } from './workspace-files.js';
+import { fileKeys, hasKey, registerFile } from './workspace-files.js';
 import { renderNodeListSelection } from './sidebar.js';
 import { session } from './state.js';
 import { activateTab, tabsOf } from './tabs.js';
@@ -64,7 +63,7 @@ export async function followExternal(node) {
   // Read the imported files (from an opened folder or through the server), following their own imports / includes.
   // A file already open in a tab is not loaded again, but its own imports / includes are followed too.
   if (!from.path && from.located) await from.located;
-  const visited = new Set(tabKeys(from));
+  const visited = new Set(fileKeys(from));
   const queue = locs.map(location => ({ src: from, location }));
   const examined = [], missing = [];
   while (queue.length) {
@@ -73,7 +72,7 @@ export async function followExternal(node) {
     if (!f) { if (!missing.includes(location)) missing.push(location); continue; }
     if (visited.has(f.key)) continue;
     visited.add(f.key);
-    let tab = tabsOf(from.workspace).find(x => holdsKey(x, f.key));
+    let tab = tabsOf(from.workspace).find(x => hasKey(x, f.key));
     if (!tab) {
       tab = await ensureTab(registerFile(from.workspace, { name: f.name, path: f.path, rel: f.rel, text: f.text }));
       if (!tab) continue;

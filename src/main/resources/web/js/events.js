@@ -18,7 +18,7 @@ import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
 import { toast } from './toast.js';
-import { activateTab, closeTab, closeWorkspace, newTab, renderTabBar, tabToShow } from './tabs.js';
+import { activateTab, closeTab, closeWorkspace, newTab, renderNavigation, tabToShow } from './tabs.js';
 
 
 export function wireEvents() {
@@ -81,8 +81,8 @@ function wireDocumentTabs() {
   $(ID.NEW_TAB_BUTTON).addEventListener('click', () => { activateTab(newTab()); renderPage(); });
   const tabOf = (e) => { const el = e.target.closest(selector(CLS.DOC_TAB)); return el ? session.tabs[+el.dataset[DATA.TAB_INDEX]] : null; };
   const workspaceOf = (e) => { const el = e.target.closest(selector(CLS.WORKSPACE_GROUP)); return el ? session.workspaces[+el.dataset[DATA.WORKSPACE_INDEX]] : null; };
-  const close = (tab) => { if (closeTab(tab)) renderPage(); else renderTabBar(); };
-  const closeGroup = (ws) => { if (closeWorkspace(ws)) renderPage(); else renderTabBar(); };
+  const close = (tab) => { if (closeTab(tab)) renderPage(); else renderNavigation(); };
+  const closeGroup = (ws) => { if (closeWorkspace(ws)) renderPage(); else renderNavigation(); };
   // the tab bar: the tabs of the active workspace
   $(ID.TABS).addEventListener('click', (e) => {
     const tab = tabOf(e);
@@ -99,7 +99,7 @@ function wireDocumentTabs() {
     const ws = workspaceOf(e);
     if (!ws) return;
     if (e.target.closest(selector(CLS.WORKSPACE_CLOSE))) closeGroup(ws);
-    else if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderTabBar(); }   // select for comparison
+    else if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderNavigation(); }   // select for comparison
     else { const changed = activateTab(tabToShow(ws)); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
   });
   $(ID.WORKSPACES).addEventListener('auxclick', (e) => {

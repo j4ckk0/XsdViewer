@@ -8,7 +8,7 @@ import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { renderNodeList, renderSchemaInfo } from './sidebar.js';
 import { session } from './state.js';
-import { renderTabBar } from './tabs.js';
+import { renderNavigation } from './tabs.js';
 import { highlightTextLine, renderText } from './text-view.js';
 
 /** Redraws everything from the active tab's state. */
@@ -35,7 +35,7 @@ export function renderPage() {
     $(ID.GRAPH_CANVAS).innerHTML = '';
     $(ID.DETAILS).classList.add(CLS.HIDDEN);
   }
-  renderTabBar();
+  renderNavigation();
   if (session.compare) renderCompare();
   showView(st.view);
   $(ID.TEXT).scrollTop = st.scroll.text;

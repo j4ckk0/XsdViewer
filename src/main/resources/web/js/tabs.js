@@ -46,7 +46,7 @@ export function newTab(ws = session.active.workspace) {
   const own = tabsOf(ws);
   const at = own.length ? session.tabs.indexOf(own[own.length - 1]) + 1 : session.tabs.length;
   session.tabs.splice(at, 0, tab);
-  renderTabBar();
+  renderNavigation();
   return tab;
 }
 
@@ -130,8 +130,8 @@ function currentScroll() {
   return { text: $(ID.TEXT).scrollTop, graphTop: $(ID.GRAPH_CANVAS).scrollTop, graphLeft: $(ID.GRAPH_CANVAS).scrollLeft };
 }
 
-/** Draws the workspace bar (every workspace) and the tab bar (the tabs of the active workspace). */
-export function renderTabBar() {
+/** Draws everything that lists what is open: the workspace bar, the tab bar (the active workspace's tabs) and the Files panel. */
+export function renderNavigation() {
   let chips = '';
   session.workspaces.forEach((ws, w) => {
     const name = workspaceName(ws);

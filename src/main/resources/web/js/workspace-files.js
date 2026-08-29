@@ -6,11 +6,17 @@
 import { LIBRARY_KEY_PREFIX, NAME_KEY_PREFIX } from './constants.js';
 import { session } from './state.js';
 
-/** Every identity a file answers to: its path on disk, its path in an opened folder, else its name. */
+/** Every identity a file (or the tab showing it) answers to: its path on disk, its path in an opened folder, else its name. */
 export function fileKeys(f) {
   const keys = [f.path, f.rel ? LIBRARY_KEY_PREFIX + f.rel : null].filter(Boolean);
-  return keys.length ? keys : [NAME_KEY_PREFIX + f.name];
+  return keys.length ? keys : [NAME_KEY_PREFIX + (f.name || f.fileName)];
 }
+
+/** True when a file / tab is the one a resolved location identifies by {@code key}. */
+export const hasKey = (f, key) => fileKeys(f).includes(key);
+
+/** True when a tab shows a file with a location (on disk or in a folder): links can be resolved from it. */
+export const isLocated = (f) => !!(f.path || f.rel);
 
 /** The entry of {@code ws} sharing an identity with {@code file} ({key} or {path, rel, name}), or null. */
 export function findFile(ws, file) {

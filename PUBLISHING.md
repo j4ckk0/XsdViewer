@@ -32,7 +32,7 @@ Checked against the tree at version 2.0.0 (August 2026).
 
 ## 3. What not to publish
 
-- `src/main/resources/embedded/jre/*` (JRE archives, ~50 MB each) and anything under `target/` — already git-ignored.
+- `jre/*` (JRE archives, ~50 MB each) and anything under `target/` — already git-ignored.
 - Workspace files (`*.xsdviewer.json`) and screenshots from real, non-public schemas.
 - Local scripts pointing at your own machines (the NAS push script is outside the repository: keep it that way).
 

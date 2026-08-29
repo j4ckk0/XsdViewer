@@ -109,7 +109,7 @@ Static files, no build step, no framework: `index.html`, `style.css`, ES modules
 | `js/schema-index.js`, `js/declarations.js` | Indexing a parsed schema into a tab; finding declarations across the tabs of a workspace (`findIn`, `findInTabs`, `usersInOtherTabs`, `locationsFor`) — never across workspaces. |
 | `js/folder-library.js`, `js/schema-loader.js` | The folder library (Open folder… / dropped folders); `loadInto(tab, …)` (parse through the server, index, locate) and `resolveLocation()` (library, then server; `strict` = relative to the file only). |
 | `js/linked-schemas.js` | `openLinkedSchemas(tab)`: finds the schemas linked (strictly relative to the file) from a file whose location is known, recursively, registers them in the workspace and opens them in tabs when there are at most 10; serialised and capped. |
-| `js/tabs.js`, `js/page.js` | Workspaces and their tabs (`newWorkspace`, `newTab(ws)`, `tabsOf(ws)`, activate / close a tab or a workspace, `closeAllTabs`, the workspace bar with one chip per workspace and the tab bar with the active workspace's tabs); `renderPage()` redraws everything from the active tab, `showView()` switches graph / text. |
+| `js/tabs.js`, `js/page.js` | Workspaces and their tabs (`newWorkspace`, `newTab(ws)`, `tabsOf(ws)`, activate / close a tab or a workspace, `closeAllTabs`) and `renderNavigation()`: the workspace bar, the tab bar (the active workspace's tabs) and the Files panel — what background loads redraw; `renderPage()` redraws everything from the active tab, `showView()` switches graph / text. |
 | `js/navigation.js` | `select(id)` drives every view and keeps the back history; `followExternal()` follows a link into another file (see below). |
 | `js/about.js` | Help ▸ About: a `<dialog>` with the version and Java runtime reported by the server, the licence and the project page. |
 | `js/compare.js`, `js/schema-diff.js`, `js/diff.js` | Workspace comparison: the selection (Ctrl+click on chips, `session.compareSelection`), the view (`session.compare`; files paired by name, statuses, expandable rows), the model diff (declared nodes and edges — cardinality included — on one side only) and the LCS line diff (common start / end trimmed, capped at 9 M cells). |
@@ -299,9 +299,8 @@ Build and test:
 | maven-assembly-plugin | 3.7.1 | `dist` profile only: `src/assembly/{windows,linux}.xml` → zip / tar.gz with the JRE, the jar, a launcher, `samples/` and `README.md` |
 
 `mvn package -Pdist` produces `target/xsdviewer-<version>-windows.zip` and
-`-linux.tar.gz`. The JRE archives under `src/main/resources/embedded/jre/` are
-git-ignored (downloaded by hand, see README) and excluded from the jar's resources;
-the antrun step fails when one is missing. The Linux descriptor restores the
+`-linux.tar.gz`. The JRE archives under `jre/` (a build input, kept out of `src/`) are
+git-ignored (downloaded by hand, see README); the antrun step fails when one is missing. The Linux descriptor restores the
 executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's
 `untar` drops.
 
@@ -315,6 +314,7 @@ XsdViewer/
 ├── package.sh, package.bat       mvn package -Pdist  (zip / tar.gz with bundled JRE)
 ├── README.md                     usage
 ├── architecture.md               this file
+├── jre/                          JRE archives bundled by the dist profile (git-ignored, downloaded by hand)
 ├── samples/purchaseOrder.xsd     small schema exercising every kind of link
 ├── samples/import/               order.xsd + the files it imports / includes (link following)
 └── src/
@@ -328,7 +328,6 @@ XsdViewer/
     │   └── json/                        JsonWriter, JsonReader, JsonStrings, JsonKey
     ├── main/resources/org/jtools/xsdviewer/  messages.properties, messages_fr.properties
     ├── main/resources/web/              index.html, style.css, js/*.js, i18n/en.json, i18n/fr.json
-    ├── main/resources/embedded/jre/     JRE archives bundled by the dist profile (git-ignored)
     └── test/java/org/jtools/xsdviewer/   CommandLineOptionsTest, TranslationsTest, schema/, json/, workspace/
 ```
 

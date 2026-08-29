@@ -66,14 +66,3 @@ export async function findInLibrary(src, location, strict = false) {
   return { key: LIBRARY_KEY_PREFIX + rel, name: file.name, text: await file.text(), path: null, rel };
 }
 
-/** Identity of a loaded file (for the visited set when following links): server path or library path. */
-export const tabKey = (t) => t.path || (t.rel ? LIBRARY_KEY_PREFIX + t.rel : null);
-
-/**
- * Every identity a tab's file answers to: its server path and its library path — a file opened
- * from a folder in the browser has both once the server has located it on disk.
- */
-export const tabKeys = (t) => [t.path, t.rel ? LIBRARY_KEY_PREFIX + t.rel : null].filter(Boolean);
-
-/** True when the tab holds the file identified by {@code key} (a resolved location's key). */
-export const holdsKey = (t, key) => tabKeys(t).includes(key);
