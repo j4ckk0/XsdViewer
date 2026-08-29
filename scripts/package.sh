@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 #
 # Build the self-contained distributions (jar + bundled JRE + launcher):
-#   target/xsdviewer-<version>-windows.zip
-#   target/xsdviewer-<version>-linux.tar.gz
+#   releases/xsdviewer-<version>-windows.zip
+#   releases/xsdviewer-<version>-linux.tar.gz
+#   releases/xsdviewer-<version>.jar             (copy of target/xsdviewer.jar)
 #
 #   scripts/package.sh
 #   scripts/package.sh -DskipTests      # extra arguments are passed to mvn

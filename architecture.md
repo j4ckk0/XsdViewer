@@ -295,12 +295,12 @@ Build and test:
 | launch4j-maven-plugin | 2.7.0 | `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
 | `scripts/build.sh` / `scripts\build.bat` | – | `mvn package` |
 | `scripts/package.sh` / `scripts\package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
-| maven-clean-plugin | 3.2.0 | `dist` profile only: deletes the previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` and `target/jre` before the build |
-| maven-antrun-plugin | 3.1.0 | `dist` profile only: unpacks the JRE archives into `target/jre/{windows,linux}` |
-| maven-assembly-plugin | 3.7.1 | `dist` profile only: `src/assembly/{windows,linux}.xml` → zip / tar.gz with the JRE, the jar, a launcher, `samples/` and `README.md` |
+| maven-clean-plugin | 3.2.0 | `dist` profile only: empties `releases/` (previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` / `.jar`) and deletes `target/jre` before the build |
+| maven-antrun-plugin | 3.1.0 | `dist` profile only: unpacks the JRE archives into `target/jre/{windows,linux}`; copies the jar to `releases/xsdviewer-<version>.jar` |
+| maven-assembly-plugin | 3.7.1 | `dist` profile only: `src/assembly/{windows,linux}.xml` → zip / tar.gz in `releases/` with the JRE, the jar, a launcher, `samples/` and `README.md` |
 
-`mvn package -Pdist` produces `target/xsdviewer-<version>-windows.zip` and
-`-linux.tar.gz`. The JRE archives under `jre/` (a build input, kept out of `src/`) are
+`mvn package -Pdist` produces `releases/xsdviewer-<version>-windows.zip`,
+`-linux.tar.gz` and `.jar` (git-ignored directory). The JRE archives under `jre/` (a build input, kept out of `src/`) are
 git-ignored (downloaded by hand, see README); the antrun step fails when one is missing. The Linux descriptor restores the
 executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's
 `untar` drops.
@@ -317,6 +317,7 @@ XsdViewer/
 ├── README.md                     usage
 ├── architecture.md               this file
 ├── jre/                          JRE archives bundled by the dist profile (git-ignored, downloaded by hand)
+├── releases/                     output of the dist profile: zip, tar.gz, jar (git-ignored, README only)
 ├── samples/purchaseOrder.xsd     small schema exercising every kind of link
 ├── samples/import/               order.xsd + the files it imports / includes (link following)
 └── src/

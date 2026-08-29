@@ -9,5 +9,9 @@ target/
 # JRE archives bundled by "mvn package -Pdist" (see README: Packaging)
 /jre/
 
+# distributions built by "mvn package -Pdist" (scripts/package.sh); only the README is tracked
+/releases/*
+!/releases/README.md
+
 # workspaces saved from the GUI while testing (the shipped ones live in samples/compare/)
 /samples/*.xsdviewer.json

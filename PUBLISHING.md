@@ -55,7 +55,7 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
 ## 5. Next release
 
 1. Bump the version in `pom.xml`, commit `Version X.Y.Z`, `git tag -a vX.Y.Z -m "X.Y.Z"`, `git push github master vX.Y.Z`.
-2. `scripts/package.sh`, then `sha256sum target/xsdviewer.jar target/xsdviewer-X.Y.Z-*` for the notes.
-3. *Releases ▸ Draft a new release* from the tag, attach the three files — or `POST /repos/j4ckk0/XsdViewer/releases` then `uploads.github.com/…/assets` with a token.
+2. `scripts/package.sh`, then `sha256sum releases/*` for the notes.
+3. *Releases ▸ Draft a new release* from the tag, attach the three files of `releases/` — or `POST /repos/j4ckk0/XsdViewer/releases` then `uploads.github.com/…/assets` with a token.
 
 Token for the API (the SSH key only serves `git push`): a **fine-grained** personal access token with *Repository access* = **Only select repositories → XsdViewer** — the default *Public repositories (read-only)* greys out the permissions and every write answers `403 Resource not accessible` — and *Contents: Read and write* (releases); *Administration: Read and write* is also needed to change the description or topics. Short expiry, revoke it afterwards.

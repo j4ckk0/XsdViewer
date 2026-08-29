@@ -65,12 +65,13 @@ scripts/package.sh            # or scripts\package.bat on Windows; runs: mvn pac
 builds two self-contained distributions that need no Java installed, each with a
 bundled JRE 21 (Eclipse Temurin, redistributed under the GPLv2 with Classpath Exception; its
 notices stay in `jre/legal`) and a launcher taking the same options as above (the archives of
-previous builds, whatever their version, are deleted from `target/` first):
+previous builds, whatever their version, are deleted from `releases/` first):
 
 | Archive | Launcher |
 |---|---|
-| `target/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled JRE, no console window at all. The exe is built with launch4j from any OS. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
-| `target/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
+| `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled JRE, no console window at all. The exe is built with launch4j from any OS. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
+| `releases/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
+| `releases/xsdviewer-<version>.jar` | copy of `target/xsdviewer.jar`, for people who have Java 21: `java -jar xsdviewer-<version>.jar` |
 
 When started without a console (the Windows launcher, a double-clicked jar), a start-up
 failure such as a port already in use is shown in a dialog instead of being lost.
