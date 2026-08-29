@@ -74,6 +74,8 @@ export const HTTP = {
 export const REMOTE_LOCATION_MARK = '://';
 /** Files of an opened folder worth keeping. */
 export const SCHEMA_FILE_PATTERN = /\.(xsd|xml)$/i;
+/** Suffix of a workspace file (Workspace.FILE_SUFFIX on the server); a workspace is named after the rest. */
+export const WORKSPACE_FILE_SUFFIX = '.xsdviewer.json';
 /** Prefix of the identity of a file that came from an opened folder (as opposed to a server path). */
 export const LIBRARY_KEY_PREFIX = 'lib:';
 export const PATH_SEPARATOR = '/';

@@ -1,6 +1,6 @@
 /** Finding declarations across the open tabs: what an external placeholder resolves to, and who uses what. */
 import { IMPORT_TAG, NODE_KIND, TYPE_REFERENCE_KIND, kindOfId, nodeId } from './constants.js';
-import { session } from './state.js';
+import { tabsOf } from './tabs.js';
 
 /** The kinds of declaration an external placeholder ("type:X", "element:X"...) can resolve to. */
 export function kindsOf(node) {
@@ -23,9 +23,9 @@ export function findIn(t, name, kinds, ns) {
   return null;
 }
 
-/** The declaration of {@code name} in any open tab (except {@code skip}): {tab, id} or null. */
+/** The declaration of {@code name} in the other tabs of {@code skip}'s workspace: {tab, id} or null. */
 export function findInTabs(name, kinds, ns, skip) {
-  for (const t of session.tabs) {
+  for (const t of tabsOf(skip.workspace)) {
     if (t === skip) continue;
     const id = findIn(t, name, kinds, ns);
     if (id) return { tab: t, id };
@@ -33,11 +33,11 @@ export function findInTabs(name, kinds, ns, skip) {
   return null;
 }
 
-/** The nodes of the other open tabs that link to {@code n} (declared in tab {@code home}), where it is an external placeholder: [{n, edges, tab}]. */
+/** The nodes of the other tabs of {@code home}'s workspace that link to {@code n} (declared in {@code home}), where it is an external placeholder: [{n, edges, tab}]. */
 export function usersInOtherTabs(n, home) {
   const extId = externalIdOf(n);
   const out = [];
-  for (const t of session.tabs) {
+  for (const t of tabsOf(home.workspace)) {
     if (t === home || !t.model) continue;
     const ext = t.nodes.get(extId);
     if (!ext || ext.kind !== NODE_KIND.EXTERNAL || !(ext.ns === (n.ns || '') || ext.ns === '' || !n.ns)) continue;

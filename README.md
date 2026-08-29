@@ -127,12 +127,25 @@ what uses what across the set right away.
 
 ### Workspaces
 
-**File ▸ Save workspace…** (Ctrl+S) writes a `<name>.xsdviewer.json` holding the location of
-the open files (relative to the workspace file when they share its root) and which tab is
-shown; files whose location is unknown are left out and named in the message.
-**File ▸ Open workspace…** replaces the open tabs with the workspace's files (missing ones are
-reported). A workspace file can also be given on the command line:
-`./run.sh samples/all.xsdviewer.json`. Both need the server's dialogs, i.e. a display.
+A **workspace is a group of tabs**: the tab bar shows one chip per workspace followed by its
+tabs (click the chip to show it, its `×` to close it with all its tabs). Every tab belongs to a
+workspace — the first one is "Workspace 1" until it is saved — and a workspace is a closed
+world: links are followed, linked schemas auto-loaded and "used by" looked up among its own
+tabs only, so two workspaces holding the same file do not see each other (that is what makes
+them comparable, later). The File menu:
+
+- **New workspace** — an empty group of tabs, made active.
+- **Open workspace…** — opens a `<name>.xsdviewer.json` as a new group next to the workspaces
+  already open (an empty unsaved one is taken over; a workspace already open is brought to
+  front; missing files are reported). Several workspaces can be open together.
+- **Save workspace…** (Ctrl+S) — writes the active workspace: the location of its files
+  (relative to the workspace file when they share its root) and which tab is shown; files
+  whose location is unknown are left out and named in the message. The workspace's own file
+  is proposed; the workspace takes the name of the file.
+- **Close workspace** — the active workspace and its tabs; **Close all tabs** closes every workspace.
+
+A workspace file can also be given on the command line: `./run.sh samples/all.xsdviewer.json`.
+Opening and saving need the server's dialogs, i.e. a display.
 
 ## Following links into other files
 

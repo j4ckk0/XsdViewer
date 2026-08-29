@@ -10,6 +10,7 @@ export function newTabState() {
     path: null,         // file path on the server, when the server read it (initial file, followed links)
     rel: null,          // path in an opened folder, when the file came from the library
     located: null,      // promise of the server's search for the path of a file opened in the browser
+    workspace: null,    // the workspace (see newWorkspaceState) the tab belongs to; always set
     text: '',
     model: null,        // { targetNamespace, imports, nodes, edges } as answered by /api/parse
     nodes: new Map(),   // id -> node
@@ -25,11 +26,23 @@ export function newTabState() {
   };
 }
 
-/** Everything the page holds: the document tabs, the active one, and what is shared between them. */
+/**
+ * A workspace: a group of tabs. {@code path} is its file once saved or opened from one; until
+ * then it is named after {@code number}. Links are followed and users looked up within a workspace only.
+ */
+export function newWorkspaceState(number) {
+  return { number, path: null };
+}
+
+/** Everything the page holds: the workspaces, their tabs (grouped, in workspace order), the active tab, and what is shared. */
 export const session = {
-  /** The tab being displayed. */
+  /** The tab being displayed; its workspace is the active workspace. */
   active: null,
+  /** Every tab, grouped by workspace in the order of {@code workspaces}. */
   tabs: [],
+  workspaces: [],
+  /** Numbers the unsaved workspaces. */
+  workspaceCounter: 0,
   /** Set when a link to an external declaration could not be resolved: checked whenever a file gets loaded. */
   pendingJump: null,
   /** Schema files of the folders opened in the browser (File ▸ Open folder…, or a dropped folder),
@@ -42,8 +55,9 @@ export const session = {
   /** Version of the tool and of its Java runtime, as the server reports them (Help > About). */
   serverVersion: null,
   javaVersion: null,
-  /** Path of the workspace last saved or opened, null when none. */
-  workspacePath: null,
 };
+const firstWorkspace = newWorkspaceState(++session.workspaceCounter);
+session.workspaces.push(firstWorkspace);
 session.active = newTabState();
+session.active.workspace = firstWorkspace;
 session.tabs.push(session.active);

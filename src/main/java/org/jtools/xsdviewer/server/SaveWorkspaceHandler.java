@@ -38,8 +38,9 @@ import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.workspace.Workspace;
 
 /**
- * {@code POST /api/workspace/save}, body {@code {"files": [paths...], "active": n}}: shows the
- * native "save as" dialog and writes the workspace file there. Answers {@code {"path": ...}},
+ * {@code POST /api/workspace/save}, body {@code {"files": [paths...], "active": n, "path": ...}}:
+ * shows the native "save as" dialog (proposing {@code path}, the workspace last opened, when
+ * given) and writes the workspace file there. Answers {@code {"path": ...}},
  * {@code {"cancelled": true}} when the user cancels, 400 for a bad body, 409 without a display.
  */
 final class SaveWorkspaceHandler implements HttpHandler {
@@ -52,14 +53,19 @@ final class SaveWorkspaceHandler implements HttpHandler {
             return;
         }
         Workspace ws;
+        Path suggested;
         try {
-            ws = fromRequest(HttpResponses.readBody(ex));
+            Map<String, Object> body = JsonReader.asObject(JsonReader.parse(HttpResponses.readBody(ex)));
+            ws = fromRequest(body);
+            String s = body == null ? null : JsonReader.asString(body.get(JsonKey.PATH));
+            suggested = s == null || s.isEmpty() ? null : Path.of(s).toAbsolutePath().normalize();
         } catch (IllegalArgumentException e) {
             HttpResponses.error(ex, HttpStatus.BAD_REQUEST, e.getMessage());
             return;
         }
-        Path dir = ws.files().isEmpty() ? null : ws.files().get(0).getParent();
-        Path target = FileDialogs.chooseFileToSave(Messages.get(MessageKey.DIALOG_SAVE_WORKSPACE), dir, Workspace.DEFAULT_FILE_NAME);
+        Path dir = suggested != null ? suggested.getParent() : ws.files().isEmpty() ? null : ws.files().get(0).getParent();
+        String name = suggested != null ? suggested.getFileName().toString() : Workspace.DEFAULT_FILE_NAME;
+        Path target = FileDialogs.chooseFileToSave(Messages.get(MessageKey.DIALOG_SAVE_WORKSPACE), dir, name);
         if (target == null) {
             HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.CANCELLED, true));
             return;
@@ -72,8 +78,7 @@ final class SaveWorkspaceHandler implements HttpHandler {
     }
 
     /** The workspace described by the request body: absolute paths, as the page got them from the server. */
-    private static Workspace fromRequest(String body) {
-        Map<String, Object> o = JsonReader.asObject(JsonReader.parse(body));
+    private static Workspace fromRequest(Map<String, Object> o) {
         List<Object> list = o == null ? null : JsonReader.asArray(o.get(JsonKey.FILES));
         if (list == null) throw new IllegalArgumentException(Messages.get(MessageKey.WORKSPACE_EXPECTED));
         List<Path> files = new ArrayList<>();

@@ -11,6 +11,8 @@ export const MSG = {
 
   TAB_UNTITLED: 'tab.untitled',
   TAB_CLOSE: 'tab.close',
+  WORKSPACE_UNTITLED: 'workspace.untitled',
+  WORKSPACE_CLOSE: 'workspace.close',
 
   KIND_PREFIX: 'kind.',
   GROUP_PREFIX: 'group.',
@@ -45,6 +47,7 @@ export const MSG = {
   WORKSPACE_LOADED_ONE: 'workspace.loaded.one',
   WORKSPACE_LOADED_OTHER: 'workspace.loaded.other',
   WORKSPACE_MISSING: 'workspace.missing',
+  WORKSPACE_ALREADY_OPEN: 'workspace.alreadyOpen',
   LINKED_OPENED_ONE: 'linked.opened.one',
   LINKED_OPENED_OTHER: 'linked.opened.other',
   CANNOT_PARSE: 'toast.cannotParse',

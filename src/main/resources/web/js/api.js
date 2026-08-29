@@ -71,9 +71,12 @@ export async function chooseFiles() {
   return (await post(API.CHOOSE)).files;
 }
 
-/** POST /api/workspace/save: {path} of the workspace written through the server's "save as" dialog, or {cancelled}. */
-export async function saveWorkspaceFile(files, active) {
-  return post(API.WORKSPACE_SAVE, { files, active });
+/**
+ * POST /api/workspace/save: {path} of the workspace written through the server's "save as" dialog, or {cancelled}.
+ * {@code suggested} is the workspace file proposed by the dialog (the last one opened), or null.
+ */
+export async function saveWorkspaceFile(files, active, suggested) {
+  return post(API.WORKSPACE_SAVE, suggested ? { files, active, path: suggested } : { files, active });
 }
 
 /** POST /api/workspace/open: {workspace, active, files: [{name, path, text}], missing} of the workspace picked in the server's dialog, or {cancelled}. */

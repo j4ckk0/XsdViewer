@@ -2,7 +2,7 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { addFolder, closeAll, closeFile, openFiles, openSchemas, openWorkspace, quit, saveWorkspace } from './file-actions.js';
+import { addFolder, closeActiveWorkspace, closeAll, closeFile, openFiles, openSchemas, openWorkspace, quit, saveWorkspace, startWorkspace } from './file-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './library.js';
@@ -11,7 +11,7 @@ import { renderPage, showView } from './page.js';
 import { exportPng } from './png-export.js';
 import { initSchemaInfo, renderNodeList, toggleGroup, toggleSchemaInfo } from './sidebar.js';
 import { session } from './state.js';
-import { activateTab, closeTab, newTab, renderTabBar } from './tabs.js';
+import { activateTab, closeTab, closeWorkspace, newTab, renderTabBar, tabsOf } from './tabs.js';
 
 const LIST_SEPARATOR = ', ';
 
@@ -52,7 +52,9 @@ function wireFileMenu() {
   wireMenus();
   const closeMenu = closeMenus;
   $(ID.MENU_OPEN).addEventListener('click', () => { closeMenu(); openSchemas(); });
+  $(ID.MENU_NEW_WORKSPACE).addEventListener('click', () => { closeMenu(); startWorkspace(); });
   $(ID.MENU_OPEN_WORKSPACE).addEventListener('click', () => { closeMenu(); openWorkspace(); });
+  $(ID.MENU_CLOSE_WORKSPACE).addEventListener('click', () => { closeMenu(); closeActiveWorkspace(); });
   $(ID.MENU_SAVE_WORKSPACE).addEventListener('click', () => { closeMenu(); saveWorkspace(); });
   $(ID.MENU_NEW_TAB).addEventListener('click', () => { closeMenu(); activateTab(newTab()); renderPage(); });
   $(ID.MENU_CLOSE).addEventListener('click', () => { closeMenu(); closeFile(); });
@@ -72,16 +74,24 @@ function wireFileMenu() {
 function wireDocumentTabs() {
   $(ID.NEW_TAB_BUTTON).addEventListener('click', () => { activateTab(newTab()); renderPage(); });
   const tabOf = (e) => { const el = e.target.closest(selector(CLS.DOC_TAB)); return el ? session.tabs[+el.dataset[DATA.TAB_INDEX]] : null; };
+  const workspaceOf = (e) => { const el = e.target.closest(selector(CLS.WORKSPACE_GROUP)); return el ? session.workspaces[+el.dataset[DATA.WORKSPACE_INDEX]] : null; };
   const close = (tab) => { if (closeTab(tab)) renderPage(); else renderTabBar(); };
+  const closeGroup = (ws) => { if (closeWorkspace(ws)) renderPage(); else renderTabBar(); };
   $(ID.TABS).addEventListener('click', (e) => {
-    const tab = tabOf(e);
-    if (!tab) return;
-    if (e.target.closest(selector(CLS.DOC_TAB_CLOSE))) close(tab);
-    else if (activateTab(tab)) renderPage();
+    const tab = tabOf(e), ws = workspaceOf(e);
+    if (tab) {
+      if (e.target.closest(selector(CLS.DOC_TAB_CLOSE))) close(tab);
+      else if (activateTab(tab)) renderPage();
+    } else if (ws && e.target.closest(selector(CLS.WORKSPACE_CLOSE))) {
+      closeGroup(ws);
+    } else if (ws && e.target.closest(selector(CLS.WORKSPACE_NAME))) {   // the chip: show the workspace's first tab
+      if (activateTab(tabsOf(ws)[0])) renderPage();
+    }
   });
-  $(ID.TABS).addEventListener('auxclick', (e) => {   // middle click closes
-    const tab = tabOf(e);
-    if (tab && e.button === MIDDLE_BUTTON) { e.preventDefault(); close(tab); }
+  $(ID.TABS).addEventListener('auxclick', (e) => {   // middle click closes a tab or a workspace
+    if (e.button !== MIDDLE_BUTTON) return;
+    const tab = tabOf(e), ws = workspaceOf(e);
+    if (tab) { e.preventDefault(); close(tab); } else if (ws) { e.preventDefault(); closeGroup(ws); }
   });
 }
 

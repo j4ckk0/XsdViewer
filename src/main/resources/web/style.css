@@ -149,7 +149,39 @@ html, body {
   overflow-x: auto;
   overflow-y: hidden;
 }
-#tabs { display: flex; gap: 2px; min-width: 0; }
+#tabs { display: flex; gap: 2px; min-width: 0; align-items: flex-end; }
+/* one group per workspace: its chip, then its tabs */
+.wsgroup { display: flex; align-items: flex-end; gap: 2px; padding-right: 6px; margin-right: 8px; border-right: 1px solid var(--border); }
+.wsname {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  margin: 0 4px 4px 0;
+  padding: 0 4px 0 9px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: #d9dce1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.wsgroup.active .wsname { background: var(--accent); color: #fff; }
+.wsclose {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  width: 16px; height: 16px;
+  line-height: 14px;
+  padding: 0;
+  cursor: pointer;
+  opacity: .7;
+}
+.wsclose:hover { opacity: 1; background: rgba(0,0,0,.15); }
 .dtab {
   display: flex;
   align-items: center;

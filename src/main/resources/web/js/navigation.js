@@ -11,7 +11,7 @@ import { renderPage } from './page.js';
 import { loadInto, resolveLocation } from './schema-loader.js';
 import { renderNodeListSelection } from './sidebar.js';
 import { session } from './state.js';
-import { activateTab, closeTab, newTab, renderTabBar } from './tabs.js';
+import { activateTab, closeTab, newTab, renderTabBar, tabsOf } from './tabs.js';
 import { highlightTextLine } from './text-view.js';
 import { toast } from './toast.js';
 
@@ -44,13 +44,14 @@ export function jumpTo(tab, id) {
 }
 
 /**
- * Follows a link to something this file does not declare: in an already open tab, else in the
- * file(s) named by the xs:import / xs:include (read by the server, relative to this file, when it
- * knows where this file is), else asks the user to open the file.
+ * Follows a link to something this file does not declare: in an already open tab of the same
+ * workspace, else in the file(s) named by the xs:import / xs:include (read by the server, relative
+ * to this file, when it knows where this file is), opened in that workspace, else asks the user
+ * to open the file.
  */
 export async function followExternal(node) {
   const from = session.active, name = node.name, kinds = kindsOf(node), ns = node.ns || '';
-  for (const tab of session.tabs) {
+  for (const tab of tabsOf(from.workspace)) {
     const id = findIn(tab, name, kinds, ns);
     if (id) { jumpTo(tab, id); return; }
   }
@@ -71,9 +72,9 @@ export async function followExternal(node) {
     if (!f) { if (!missing.includes(location)) missing.push(location); continue; }
     if (visited.has(f.key)) continue;
     visited.add(f.key);
-    let tab = session.tabs.find(x => tabKey(x) === f.key);
+    let tab = tabsOf(from.workspace).find(x => tabKey(x) === f.key);
     if (!tab) {
-      tab = newTab();
+      tab = newTab(from.workspace);
       if (!(await loadInto(tab, f.name, f.text, f.path))) { closeTab(tab); renderTabBar(); continue; }
       tab.rel = f.rel;
     }

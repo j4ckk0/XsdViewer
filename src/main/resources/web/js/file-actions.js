@@ -9,7 +9,7 @@ import { checkPendingJump } from './navigation.js';
 import { renderPage } from './page.js';
 import { loadInto } from './schema-loader.js';
 import { session } from './state.js';
-import { activateTab, closeAllTabs, closeTab, newTab, resetTab } from './tabs.js';
+import { activateTab, activeWorkspace, closeAllTabs, closeTab, closeWorkspace, isEmptyWorkspace, newTab, newWorkspace, renderTabBar, resetTab, tabsOf, workspaceName } from './tabs.js';
 import { toast } from './toast.js';
 
 const LIST_SEPARATOR = ', ';
@@ -83,9 +83,21 @@ export function closeFile() {
   renderPage();
 }
 
-/** File ▸ Close all tabs. */
+/** File ▸ Close all tabs: every workspace goes. */
 export function closeAll() {
   closeAllTabs();
+  renderPage();
+}
+
+/** File ▸ New workspace: an empty one, made active. */
+export function startWorkspace() {
+  activateTab(newTab(newWorkspace()));
+  renderPage();
+}
+
+/** File ▸ Close workspace: the active workspace and all its tabs. */
+export function closeActiveWorkspace() {
+  closeWorkspace(activeWorkspace());
   renderPage();
 }
 
@@ -95,23 +107,26 @@ export function addFolder(files, relOf, folderLabel) {
   toast(plural(n, MSG.LIBRARY_ADDED_ONE, MSG.LIBRARY_ADDED_OTHER, folderLabel));
 }
 
-/** File ▸ Save workspace…: the locations of the open files, written where the server's "save as" dialog says. */
+/** File ▸ Save workspace…: the active workspace (the locations of its files), written where the server's "save as" dialog says; its own file is proposed. */
 export async function saveWorkspace() {
   if (!session.dialogs) { toast(t(MSG.DIALOGS_UNAVAILABLE)); return; }
-  const saved = session.tabs.filter(tab => tab.model && tab.path);
-  const skipped = session.tabs.filter(tab => tab.model && !tab.path).map(tab => tab.fileName);
+  const ws = activeWorkspace();
+  const own = tabsOf(ws);
+  const saved = own.filter(tab => tab.model && tab.path);
+  const skipped = own.filter(tab => tab.model && !tab.path).map(tab => tab.fileName);
   if (!saved.length) { toast(t(MSG.WORKSPACE_EMPTY)); return; }
   try {
-    const r = await saveWorkspaceFile(saved.map(tab => tab.path), Math.max(0, saved.indexOf(session.active)));
+    const r = await saveWorkspaceFile(saved.map(tab => tab.path), Math.max(0, saved.indexOf(session.active)), ws.path);
     if (r.cancelled) return;
-    session.workspacePath = r.path;
+    ws.path = r.path;
+    renderTabBar();
     toast(t(MSG.WORKSPACE_SAVED, r.path) + (skipped.length ? TOAST_SEPARATOR + t(MSG.WORKSPACE_NOT_SAVED, skipped.join(LIST_SEPARATOR)) : ''));
   } catch (e) {
     toast(serverError(e));
   }
 }
 
-/** File ▸ Open workspace…: replaces the open tabs with the files of the workspace chosen in the server's dialog. */
+/** File ▸ Open workspace…: opens the workspace chosen in the server's dialog as a new group of tabs. */
 export async function openWorkspace() {
   if (!session.dialogs) { toast(t(MSG.DIALOGS_UNAVAILABLE)); return; }
   try {
@@ -122,21 +137,41 @@ export async function openWorkspace() {
   }
 }
 
-/** Replaces the open tabs with the files of a workspace answered by the server ({workspace, active, files, missing}). */
-async function applyWorkspace(ws) {
-  session.workspacePath = ws.workspace;
-  const first = closeAllTabs();
-  const loaded = [];
-  for (const f of ws.files) {
-    const tab = loaded.length ? newTab() : first;
-    if (await loadInto(tab, f.name, f.text, f.path)) loaded.push(tab);
-    else if (tab !== first) closeTab(tab);
+/**
+ * Opens a workspace answered by the server ({workspace, active, files, missing}) as its own group
+ * of tabs, next to the workspaces already open (an empty unsaved active workspace is taken over).
+ * A workspace already open is only brought to front. Workspaces are independent: the same file
+ * may be open in two of them.
+ */
+export async function applyWorkspace(answer) {
+  const already = session.workspaces.find(w => w.path === answer.workspace);
+  if (already) {
+    const own = tabsOf(already);
+    if (own.length && activateTab(own[0])) renderPage();
+    toast(t(MSG.WORKSPACE_ALREADY_OPEN, workspaceName(already)));
+    return;
   }
-  if (loaded.length) session.active = loaded[Math.min(ws.active, loaded.length - 1)];
+  const ws = isEmptyWorkspace(activeWorkspace()) ? activeWorkspace() : newWorkspace();
+  ws.path = answer.workspace;
+  const tabs = [];            // one per answer.files entry, null when it could not be loaded
+  const opened = [];
+  for (const f of answer.files) {
+    const tab = tabsOf(ws).find(x => !x.model) || newTab(ws);
+    if (await loadInto(tab, f.name, f.text, f.path)) {
+      opened.push(tab);
+      tabs.push(tab);
+    } else {
+      if (tab !== session.active) closeTab(tab);
+      tabs.push(null);
+    }
+  }
+  if (!tabsOf(ws).length) newTab(ws);
+  const active = tabs[answer.active] || tabs.find(Boolean) || tabsOf(ws)[0];
+  activateTab(active);
   renderPage();
-  toast(plural(loaded.length, MSG.WORKSPACE_LOADED_ONE, MSG.WORKSPACE_LOADED_OTHER, ws.workspace)
-    + (ws.missing.length ? TOAST_SEPARATOR + t(MSG.WORKSPACE_MISSING, ws.missing.join(LIST_SEPARATOR)) : ''));
-  for (const tab of loaded) openLinkedSchemas(tab);
+  toast(plural(opened.length, MSG.WORKSPACE_LOADED_ONE, MSG.WORKSPACE_LOADED_OTHER, workspaceName(ws))
+    + (answer.missing.length ? TOAST_SEPARATOR + t(MSG.WORKSPACE_MISSING, answer.missing.join(LIST_SEPARATOR)) : ''));
+  for (const tab of opened) openLinkedSchemas(tab);
 }
 
 /** File ▸ Quit: stops the server, then closes the page (browsers only let a script close a

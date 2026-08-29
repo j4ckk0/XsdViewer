@@ -1,14 +1,42 @@
-/** The document tabs: creating, switching, closing, and the tab bar. Callers redraw the page (renderPage) after a switch. */
+/**
+ * Workspaces and their document tabs: creating, switching, closing, and the tab bar (one group per
+ * workspace: its chip, then its tabs). Callers redraw the page (renderPage) after a switch.
+ */
+import { WORKSPACE_FILE_SUFFIX } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
-import { newTabState, session } from './state.js';
+import { newTabState, newWorkspaceState, session } from './state.js';
 
-/** Adds an empty tab (with the current view) at the end; does not activate it. */
-export function newTab() {
+const PATH_SEPARATORS = /[\\/]/;
+
+export const tabsOf = (ws) => session.tabs.filter(tab => tab.workspace === ws);
+export const activeWorkspace = () => session.active.workspace;
+/** An unsaved workspace holding no file: it can take the next workspace opened. */
+export const isEmptyWorkspace = (ws) => !ws.path && tabsOf(ws).every(tab => !tab.model);
+
+/** The workspace file's name without its suffix, or "Workspace n" while unsaved. */
+export function workspaceName(ws) {
+  if (!ws.path) return t(MSG.WORKSPACE_UNTITLED, ws.number);
+  const base = ws.path.split(PATH_SEPARATORS).pop();
+  return base.endsWith(WORKSPACE_FILE_SUFFIX) ? base.slice(0, -WORKSPACE_FILE_SUFFIX.length) : base;
+}
+
+/** Adds an unsaved, empty workspace (no tab yet: see newTab). */
+export function newWorkspace() {
+  const ws = newWorkspaceState(++session.workspaceCounter);
+  session.workspaces.push(ws);
+  return ws;
+}
+
+/** Adds an empty tab (with the current view) at the end of {@code ws} (default: the active workspace); does not activate it. */
+export function newTab(ws = session.active.workspace) {
   const tab = newTabState();
   tab.view = session.active.view;
-  session.tabs.push(tab);
+  tab.workspace = ws;
+  const own = tabsOf(ws);
+  const at = own.length ? session.tabs.indexOf(own[own.length - 1]) + 1 : session.tabs.length;
+  session.tabs.splice(at, 0, tab);
   renderTabBar();
   return tab;
 }
@@ -21,34 +49,65 @@ export function activateTab(tab) {
   return true;
 }
 
-/** Removes {@code tab} (the last one is emptied instead). Returns true when the active tab's content changed. */
+/**
+ * Removes {@code tab}; a workspace left without tabs goes too (the last workspace gets an empty
+ * tab instead). Returns true when the active tab's content changed.
+ */
 export function closeTab(tab) {
-  const tabs = session.tabs;
-  if (tabs.length === 1) {
+  const ws = tab.workspace;
+  if (session.tabs.length === 1) {
     resetTab(tab);
     return true;
   }
-  const i = tabs.indexOf(tab);
-  tabs.splice(i, 1);
+  const i = session.tabs.indexOf(tab);
+  session.tabs.splice(i, 1);
+  if (!tabsOf(ws).length) {
+    if (session.workspaces.length > 1) session.workspaces.splice(session.workspaces.indexOf(ws), 1);
+    else session.tabs.push(emptyTabOf(ws, tab.view));
+  }
   if (tab !== session.active) return false;
-  session.active = tabs[Math.min(i, tabs.length - 1)];
+  session.active = session.tabs[Math.min(i, session.tabs.length - 1)];
   return true;
 }
 
-/** Closes every tab (File ▸ Close all tabs, opening a workspace): one empty tab remains, with the current view. */
-export function closeAllTabs() {
-  const first = newTabState();
-  first.view = session.active.view;
-  session.tabs.length = 0;
-  session.tabs.push(first);
-  session.active = first;
-  session.pendingJump = null;
-  return first;
+/** Closes every tab of {@code ws} and forgets it (the last workspace is emptied instead). Returns true when the active tab changed. */
+export function closeWorkspace(ws) {
+  const view = session.active.view;
+  const wasActive = session.active.workspace === ws;
+  session.tabs = session.tabs.filter(tab => tab.workspace !== ws);
+  if (session.workspaces.length > 1) {
+    session.workspaces.splice(session.workspaces.indexOf(ws), 1);
+  } else {
+    ws.path = null;
+    session.tabs.push(emptyTabOf(ws, view));
+  }
+  if (!wasActive) return false;
+  session.active = session.tabs[0];
+  return true;
 }
 
-/** Empties a tab (File ▸ Close), keeping its view. */
+/** Closes everything (File ▸ Close all tabs): one unsaved workspace with one empty tab remains, with the current view. */
+export function closeAllTabs() {
+  const view = session.active.view;
+  session.workspaceCounter = 0;
+  const ws = newWorkspaceState(++session.workspaceCounter);
+  session.workspaces = [ws];
+  session.tabs = [emptyTabOf(ws, view)];
+  session.active = session.tabs[0];
+  session.pendingJump = null;
+  return session.active;
+}
+
+/** Empties a tab (File ▸ Close), keeping its view and workspace. */
 export function resetTab(tab) {
-  Object.assign(tab, newTabState(), { view: tab.view });
+  Object.assign(tab, newTabState(), { view: tab.view, workspace: tab.workspace });
+}
+
+function emptyTabOf(ws, view) {
+  const tab = newTabState();
+  tab.view = view;
+  tab.workspace = ws;
+  return tab;
 }
 
 function currentScroll() {
@@ -57,12 +116,20 @@ function currentScroll() {
 
 export function renderTabBar() {
   let html = '';
-  session.tabs.forEach((tab, i) => {
-    const name = tab.fileName || t(MSG.TAB_UNTITLED);
-    html += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + '"'
-      + dataAttr(DATA.TAB_INDEX, i) + ' title="' + esc(tab.path || name) + '">'
-      + '<span class="' + CLS.DOC_TAB_NAME + '">' + esc(name) + '</span>'
-      + '<button class="' + CLS.DOC_TAB_CLOSE + '" type="button" title="' + esc(t(MSG.TAB_CLOSE)) + '">×</button></div>';
+  session.workspaces.forEach((ws, w) => {
+    const own = tabsOf(ws);
+    const name = workspaceName(ws);
+    html += '<div class="' + CLS.WORKSPACE_GROUP + (own.includes(session.active) ? ' ' + CLS.ACTIVE : '') + '"' + dataAttr(DATA.WORKSPACE_INDEX, w) + '>'
+      + '<span class="' + CLS.WORKSPACE_NAME + '" title="' + esc(ws.path || name) + '">' + esc(name)
+      + '<button class="' + CLS.WORKSPACE_CLOSE + '" type="button" title="' + esc(t(MSG.WORKSPACE_CLOSE, name)) + '">×</button></span>';
+    for (const tab of own) {
+      const tabName = tab.fileName || t(MSG.TAB_UNTITLED);
+      html += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + '"'
+        + dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(tab)) + ' title="' + esc(tab.path || tabName) + '">'
+        + '<span class="' + CLS.DOC_TAB_NAME + '">' + esc(tabName) + '</span>'
+        + '<button class="' + CLS.DOC_TAB_CLOSE + '" type="button" title="' + esc(t(MSG.TAB_CLOSE)) + '">×</button></div>';
+    }
+    html += '</div>';
   });
   $(ID.TABS).innerHTML = html;
 }

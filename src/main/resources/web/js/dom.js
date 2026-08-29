@@ -11,7 +11,9 @@ export const ID = {
   FILE_MENU: 'fileMenu',
   MENU_OPEN: 'menuOpen',
   MENU_OPEN_FOLDER: 'menuOpenFolder',
+  MENU_NEW_WORKSPACE: 'menuNewWorkspace',
   MENU_OPEN_WORKSPACE: 'menuOpenWorkspace',
+  MENU_CLOSE_WORKSPACE: 'menuCloseWorkspace',
   MENU_SAVE_WORKSPACE: 'menuSaveWorkspace',
   MENU_NEW_TAB: 'menuNewTab',
   MENU_CLOSE: 'menuClose',
@@ -66,6 +68,9 @@ export const CLS = {
   DOC_TAB: 'dtab',
   DOC_TAB_NAME: 'tname',
   DOC_TAB_CLOSE: 'tclose',
+  WORKSPACE_GROUP: 'wsgroup',
+  WORKSPACE_NAME: 'wsname',
+  WORKSPACE_CLOSE: 'wsclose',
   // sidebar
   GROUP_HEADER: 'group-h',
   GROUP_ITEMS: 'group-items',
@@ -111,6 +116,7 @@ export const DATA = {
   LINE: 'line',
   LINE_NUMBER: 'n',
   TAB_INDEX: 'i',
+  WORKSPACE_INDEX: 'ws',
   VIEW: 'view',
 };
 export const dataAttr = (name, value) => ' data-' + name + '="' + esc(value) + '"';
