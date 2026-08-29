@@ -32,7 +32,7 @@ text) as a PNG image. **File ▸ Quit** stops the server and closes the page.
 
 ## Build and run
 
-Requires Java 21 and Maven.
+Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)).
 
 ```bash
 scripts/run.sh                # builds target/xsdviewer.jar if needed, then starts the tool
@@ -56,6 +56,56 @@ scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   #
 Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
 is a small schema exercising every kind of link.
 
+## Installing Java 21
+
+Only needed to run the jar (`xsdviewer-<version>.jar`) or to build from source. The Windows
+zip and the Linux tarball bring their own JRE: unpack them anywhere and start the launcher,
+nothing to install.
+
+**What to get.** A *JRE* is enough to run the jar; a *JDK* is needed to build. Eclipse Temurin
+is the free, vendor-neutral build used here: <https://adoptium.net/temurin/releases/?version=21>
+— pick your OS and architecture, version 21 (LTS). Any other OpenJDK 21 (Microsoft, Amazon
+Corretto, Oracle, your distribution's package) works the same.
+
+**Windows.** Either the `.msi` installer — tick *Add to PATH* and *Set JAVA_HOME variable* in
+the *Custom Setup* screen — or the `.zip`: unzip it into a folder without spaces, e.g.
+`C:\Java\jdk-21`, then either add `C:\Java\jdk-21\bin` to the `Path` of your user
+(*Settings ▸ System ▸ About ▸ Advanced system settings ▸ Environment Variables*, log off and on
+again), or call it with its full path, no PATH change needed:
+
+```bat
+"C:\Java\jdk-21\bin\java" -jar xsdviewer-2.5.0.jar
+```
+
+**Linux.** Your distribution's package is the simplest — `sudo apt install openjdk-21-jre`
+(Debian/Ubuntu; `openjdk-21-jdk` to build), `sudo dnf install java-21-openjdk` (Fedora/RHEL) —
+otherwise the Temurin `.tar.gz`: unpack it under `/opt` (system-wide) or `~/java` (your user
+only) and either put its `bin` on the PATH in `~/.profile` or `~/.bashrc`,
+
+```bash
+sudo tar xzf OpenJDK21U-jre_x64_linux_hotspot_*.tar.gz -C /opt   # → /opt/jdk-21.0.12.1+1-jre (name varies with the version)
+export PATH=/opt/jdk-21.0.12.1+1-jre/bin:$PATH                     # in ~/.profile to make it permanent
+```
+
+or call it with its full path: `/opt/jdk-21.0.12.1+1-jre/bin/java -jar xsdviewer-2.5.0.jar`.
+
+**macOS.** The Temurin `.pkg` installer, or `brew install --cask temurin@21`.
+
+**Check.** A new terminal, then:
+
+```
+java -version
+openjdk version "21.0.12" ...
+```
+
+If it reports another major version, an older Java is first on the PATH: run the jar with the
+full path of the Java 21 `java` as above (under an older Java the jar fails at once with
+`UnsupportedClassVersionError … class file version 65.0`, which means exactly that). To build,
+Maven uses the JDK of `JAVA_HOME` when it is set, the `java` of the PATH otherwise.
+
+**For packaging only** (`scripts/package.sh`), the JRE *archives* are not installed but copied
+as they are into `jre/` — see [Packaging](#packaging).
+
 ## Packaging
 
 ```bash
@@ -71,7 +121,7 @@ previous builds, whatever their version, are deleted from `releases/` first):
 |---|---|
 | `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled JRE, no console window at all. The exe is built with launch4j from any OS. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
 | `releases/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
-| `releases/xsdviewer-<version>.jar` | copy of `target/xsdviewer.jar`, for people who have Java 21: `java -jar xsdviewer-<version>.jar` |
+| `releases/xsdviewer-<version>.jar` | copy of `target/xsdviewer.jar`, for people who have [Java 21](#installing-java-21): `java -jar xsdviewer-<version>.jar` |
 
 When started without a console (the Windows launcher, a double-clicked jar), a start-up
 failure such as a port already in use is shown in a dialog instead of being lost.
@@ -248,7 +298,7 @@ The page is shown in the language chosen in the drop-list at the right of the to
 exists, English otherwise; `?lang=fr` forces one). The server answers the page in that language
 too; only its console messages follow the JVM locale.
 
-No runtime dependency: the jar only needs a JDK.
+No runtime dependency: the jar only needs a Java 21 runtime.
 
 See [architecture.md](architecture.md) for the modules, the data flow and the libraries used.
 
