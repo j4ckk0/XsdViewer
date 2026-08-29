@@ -191,7 +191,9 @@ the right, every link made to it as a row on the left — one arrow per link, so
 twice (`shipTo` and `billTo`) is drawn twice. The arrows carry no text: the name of the link
 is written as a caption above the node it leads to (or comes from), and repeated in the node's
 tooltip: element and attribute names in the page's text style, the XSD words (`type`,
-`extends`, `list of`…, `STRUCTURAL_LINK_LABELS`) small and muted. With the **2 levels** toggle (remembered in `localStorage`) two more
+`extends`, `list of`…, `STRUCTURAL_LINK_LABELS`) small and muted; the word "attribute" of
+the model's labels is not drawn (the node's kind says it), so `attribute orderDate` reads
+`orderDate` and `attribute ref` reads `ref`. The details panel keeps the full labels. With the **2 levels** toggle (remembered in `localStorage`) two more
 columns show, for every level-1 target its own targets, and for every level-1 user its own
 users, as trees: a level-1 node spans as many rows as it has children and sits in the middle
 of them; a node reached by several parents is drawn once per parent. The other open tabs

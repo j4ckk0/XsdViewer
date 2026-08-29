@@ -180,18 +180,15 @@ function textWithBg(x, y, text) {
 
 /**
  * The name of a link above a node: an element / attribute name in the page's text style, the
- * XSD words (type, extends, list of…) small and muted; "attribute x" mixes both.
+ * XSD words (type, extends, list of…) small and muted. The word "attribute" of the model's
+ * labels ("attribute x", "attribute ref") is dropped: the node's kind already says it.
  */
 function captionSvg(label) {
-  const open = '<text class="' + CLS.LINK_NAME + '" x="2" y="-' + CAPTION_LIFT + '">';
-  if (STRUCTURAL_LINK_LABELS.has(label)) {
-    return '<text class="' + CLS.LINK_NAME + ' ' + CLS.STRUCTURAL + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(label) + '</text>';
-  }
-  if (label.startsWith(LINK_LABEL.ATTRIBUTE_PREFIX)) {
-    return open + '<tspan class="' + CLS.STRUCTURAL + '">' + esc(LINK_LABEL.ATTRIBUTE_PREFIX.trim()) + '</tspan> '
-      + esc(shorten(label.slice(LINK_LABEL.ATTRIBUTE_PREFIX.length), CAPTION_MAX_CHARS)) + '</text>';
-  }
-  return open + esc(shorten(label, CAPTION_MAX_CHARS)) + '</text>';
+  const structural = (word) => '<text class="' + CLS.LINK_NAME + ' ' + CLS.STRUCTURAL + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(word) + '</text>';
+  if (label === LINK_LABEL.ATTRIBUTE_REF) return structural(LINK_LABEL.REF);
+  if (STRUCTURAL_LINK_LABELS.has(label)) return structural(label);
+  const name = label.startsWith(LINK_LABEL.ATTRIBUTE_PREFIX) ? label.slice(LINK_LABEL.ATTRIBUTE_PREFIX.length) : label;
+  return '<text class="' + CLS.LINK_NAME + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(shorten(name, CAPTION_MAX_CHARS)) + '</text>';
 }
 
 /**
