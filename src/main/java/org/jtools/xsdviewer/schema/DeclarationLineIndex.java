@@ -1,0 +1,77 @@
+package org.jtools.xsdviewer.schema;
+
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.Locator;
+import org.xml.sax.helpers.DefaultHandler;
+
+/**
+ * Line number of each global declaration of a schema: maps the node id ({@code kind:name}) to the
+ * line where its start tag opens. The SAX locator reports the position of the end of the start
+ * tag, so we walk back from there to the '<' to also handle start tags spread over several lines.
+ */
+final class DeclarationLineIndex {
+
+    /** Depth of the children of the root element in the SAX walk. */
+    private static final int GLOBAL_DECLARATION_DEPTH = 2;
+
+    private DeclarationLineIndex() {}
+
+    static Map<String, Integer> build(String text) throws Exception {
+        int[] lineStarts = lineStarts(text);
+        Map<String, Integer> result = new HashMap<>();
+
+        SecureXmlFactories.newSaxParser().parse(new InputSource(new StringReader(text)), new DefaultHandler() {
+            private Locator locator;
+            private int depth;
+
+            @Override
+            public void setDocumentLocator(Locator l) { locator = l; }
+
+            @Override
+            public void startElement(String uri, String localName, String qName, Attributes attrs) {
+                depth++;
+                if (depth != GLOBAL_DECLARATION_DEPTH || !XsdVocabulary.NAMESPACE.equals(uri)
+                        || !NodeKind.GLOBAL_DECLARATIONS.contains(localName)) return;
+                String name = attrs.getValue(XsdVocabulary.ATTR_NAME);
+                if (name == null || locator == null) return;
+                int line = locator.getLineNumber();
+                int col = locator.getColumnNumber();
+                if (line > 0 && line <= lineStarts.length) {
+                    int offset = Math.min(text.length(), lineStarts[line - 1] + Math.max(0, col - 1));
+                    int lt = text.lastIndexOf('<', Math.max(0, offset - 1));
+                    if (lt >= 0) line = lineOf(lineStarts, lt);
+                }
+                result.putIfAbsent(SchemaGraph.nodeId(localName, name), line);
+            }
+
+            @Override
+            public void endElement(String uri, String localName, String qName) { depth--; }
+        });
+        return result;
+    }
+
+    /** Offset of the first character of each line. */
+    private static int[] lineStarts(String text) {
+        List<Integer> starts = new ArrayList<>();
+        starts.add(0);
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == '\n') starts.add(i + 1);
+        }
+        return starts.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    /** 1-based line containing the character at {@code offset}. */
+    private static int lineOf(int[] lineStarts, int offset) {
+        int i = Arrays.binarySearch(lineStarts, offset);
+        if (i < 0) i = -i - 2;
+        return i + 1;
+    }
+}

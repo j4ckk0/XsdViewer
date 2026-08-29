@@ -1,0 +1,106 @@
+/** Moving the selection: within the file (with a back history) and across files, following links to external declarations. */
+import { NODE_KIND } from './constants.js';
+import { findIn, kindsOf, locationsFor } from './declarations.js';
+import { renderDetails } from './details.js';
+import { $, ID } from './dom.js';
+import { renderGraph } from './graph.js';
+import { t } from './i18n.js';
+import { tabKey } from './library.js';
+import { MSG } from './message-keys.js';
+import { renderPage } from './page.js';
+import { loadInto, resolveLocation } from './schema-loader.js';
+import { renderNodeListSelection } from './sidebar.js';
+import { session } from './state.js';
+import { activateTab, closeTab, newTab, renderTabBar } from './tabs.js';
+import { highlightTextLine } from './text-view.js';
+import { toast } from './toast.js';
+
+const LIST_SEPARATOR = ', ';
+
+/** Selects a node of the active tab and redraws the views; follows it when it is an external placeholder. */
+export function select(id, pushHistory = true) {
+  const st = session.active;
+  if (!st.nodes.has(id)) return;
+  if (pushHistory && st.selected && st.selected !== id) st.history.push(st.selected);
+  st.selected = id;
+  $(ID.BACK_BUTTON).disabled = st.history.length === 0;
+  renderNodeListSelection();
+  renderGraph();
+  renderDetails();
+  highlightTextLine(true);
+  const n = st.nodes.get(id);
+  if (n.kind === NODE_KIND.EXTERNAL && pushHistory) followExternal(n);
+}
+
+export function goBack() {
+  const prev = session.active.history.pop();
+  if (prev) select(prev, false);
+}
+
+/** Shows tab {@code tab} with node {@code id} selected. */
+export function jumpTo(tab, id) {
+  if (activateTab(tab)) renderPage();
+  select(id);
+}
+
+/**
+ * Follows a link to something this file does not declare: in an already open tab, else in the
+ * file(s) named by the xs:import / xs:include (read by the server, relative to this file, when it
+ * knows where this file is), else asks the user to open the file.
+ */
+export async function followExternal(node) {
+  const from = session.active, name = node.name, kinds = kindsOf(node), ns = node.ns || '';
+  for (const tab of session.tabs) {
+    const id = findIn(tab, name, kinds, ns);
+    if (id) { jumpTo(tab, id); return; }
+  }
+  const locs = locationsFor(from, ns);
+  if (!locs.length) {
+    askForFile(name, kinds, ns, t(MSG.EXTERNAL_NO_LOCATION, name));
+    return;
+  }
+  // Read the imported files (from an opened folder or through the server), following their own imports / includes.
+  // A file already open in a tab is not loaded again, but its own imports / includes are followed too.
+  if (!from.path && from.located) await from.located;
+  const visited = new Set([tabKey(from)].filter(Boolean));
+  const queue = locs.map(location => ({ src: from, location }));
+  const examined = [], missing = [];
+  while (queue.length) {
+    const { src, location } = queue.shift();
+    const f = await resolveLocation(src, location);
+    if (!f) { if (!missing.includes(location)) missing.push(location); continue; }
+    if (visited.has(f.key)) continue;
+    visited.add(f.key);
+    let tab = session.tabs.find(x => tabKey(x) === f.key);
+    if (!tab) {
+      tab = newTab();
+      if (!(await loadInto(tab, f.name, f.text, f.path))) { closeTab(tab); renderTabBar(); continue; }
+      tab.rel = f.rel;
+    }
+    examined.push(tab);
+    const id = findIn(tab, name, kinds, ns);
+    if (id) { jumpTo(tab, id); return; }
+    for (const l of locationsFor(tab, ns)) queue.push({ src: tab, location: l });
+  }
+  const why = missing.length ? t(MSG.EXTERNAL_MISSING, missing.join(LIST_SEPARATOR))
+    : examined.length ? t(MSG.EXTERNAL_NOT_FOUND_IN, name, examined.map(x => x.fileName).join(LIST_SEPARATOR))
+    : t(MSG.EXTERNAL_NOT_FOUND, name);
+  askForFile(name, kinds, ns, t(MSG.EXTERNAL_CHOOSE_FILE, why, name));
+}
+
+/** Opens the file chooser for the file declaring {@code name}; the jump completes when it is loaded. */
+function askForFile(name, kinds, ns, hint) {
+  session.pendingJump = { name, kinds, ns };
+  toast(hint);
+  $(ID.FILE_INPUT).click();   // needs a recent user gesture: fine, this follows a click on the node
+}
+
+/** After a file is loaded by the user: jump to the declaration a link was waiting for, if it is in there. */
+export function checkPendingJump(tab) {
+  const jump = session.pendingJump;
+  if (!jump) return;
+  const id = findIn(tab, jump.name, jump.kinds, jump.ns);
+  if (!id) return;
+  session.pendingJump = null;
+  jumpTo(tab, id);
+}

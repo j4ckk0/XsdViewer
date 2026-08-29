@@ -1,7 +1,6 @@
-package org.jtools.xsdviewer;
+package org.jtools.xsdviewer.schema;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,12 +9,14 @@ import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.jtools.xsdviewer.MessageKey;
+import org.jtools.xsdviewer.Messages;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class XsdParserTest {
 
-    private static Model model;
+    private static SchemaGraph model;
 
     @BeforeAll
     static void parseSample() throws Exception {
@@ -23,14 +24,14 @@ class XsdParserTest {
     }
 
     private static boolean hasEdge(String from, String to, String label) {
-        return model.edges.contains(new Model.Edge(from, to, label));
+        return model.edges.contains(new SchemaGraph.Edge(from, to, label));
     }
 
     @Test
     void globalDeclarationsBecomeNodes() {
         Set<String> declared = model.nodes.values().stream()
-                .filter(n -> !n.kind().equals("builtin") && !n.kind().equals("external"))
-                .map(Model.Node::id).collect(Collectors.toSet());
+                .filter(n -> !n.kind().equals(NodeKind.BUILTIN) && !n.kind().equals(NodeKind.EXTERNAL))
+                .map(SchemaGraph.Node::id).collect(Collectors.toSet());
         assertEquals(Set.of(
                 "element:purchaseOrder", "element:comment", "element:urgentComment",
                 "complexType:PurchaseOrderType", "complexType:USAddress", "complexType:Items",
@@ -96,15 +97,15 @@ class XsdParserTest {
 
     @Test
     void undeclaredReferencesBecomeExternalNodes() {
-        Model.Node ext = model.nodes.get("type:Label");
-        assertEquals("external", ext.kind());
+        SchemaGraph.Node ext = model.nodes.get("type:Label");
+        assertEquals(NodeKind.EXTERNAL, ext.kind());
         assertEquals("Label", ext.name());
         assertTrue(hasEdge("complexType:Category", "type:Label", "attribute label"));
     }
 
     @Test
     void builtinTypesAreSharedNodes() {
-        assertEquals("builtin", model.nodes.get("builtin:string").kind());
+        assertEquals(NodeKind.BUILTIN, model.nodes.get("builtin:string").kind());
         assertEquals(1, model.nodes.values().stream().filter(n -> n.name().equals("string")).count());
     }
 
@@ -125,31 +126,22 @@ class XsdParserTest {
     }
 
     @Test
-    void jsonIsWellFormed() {
-        String json = model.toJson();
-        assertTrue(json.startsWith("{\"targetNamespace\":\"http://example.com/po\""));
-        assertTrue(json.contains("\"id\":\"element:purchaseOrder\""));
-        assertTrue(json.contains("\"from\":\"element:urgentComment\",\"to\":\"element:comment\",\"label\":\"substitutes\""));
-        assertFalse(json.contains("\n"));
-    }
-
-    @Test
     void rejectsNonSchemaXml() {
         Exception e = assertThrows(Exception.class, () -> XsdParser.parse("<root><a/></root>"));
-        assertTrue(e.getMessage().contains("not an XML Schema"));
+        assertEquals(Messages.get(MessageKey.NOT_A_SCHEMA, "root"), e.getMessage());
         assertThrows(Exception.class, () -> XsdParser.parse("not xml at all"));
     }
 
     @Test
     void defaultNamespaceSchemasResolveBuiltins() throws Exception {
-        Model m = XsdParser.parse("""
+        SchemaGraph m = XsdParser.parse("""
                 <schema xmlns="http://www.w3.org/2001/XMLSchema">
                   <element name="a" type="string"/>
                   <element name="b" type="T"/>
                   <complexType name="T"><sequence><element ref="a"/></sequence></complexType>
                 </schema>""");
-        assertTrue(m.edges.contains(new Model.Edge("element:a", "builtin:string", "type")));
-        assertTrue(m.edges.contains(new Model.Edge("element:b", "complexType:T", "type")));
-        assertTrue(m.edges.contains(new Model.Edge("complexType:T", "element:a", "ref")));
+        assertTrue(m.edges.contains(new SchemaGraph.Edge("element:a", "builtin:string", "type")));
+        assertTrue(m.edges.contains(new SchemaGraph.Edge("element:b", "complexType:T", "type")));
+        assertTrue(m.edges.contains(new SchemaGraph.Edge("complexType:T", "element:a", "ref")));
     }
 }

@@ -246,6 +246,7 @@ html, body {
 }
 .item:hover { background: #e7e9ee; }
 .item.selected { background: #dbe4ff; }
+.item.nomatch { color: var(--muted); cursor: default; }
 .dot {
   width: 9px; height: 9px;
   flex: none;

@@ -1,0 +1,58 @@
+package org.jtools.xsdviewer;
+
+import java.nio.file.Path;
+
+/**
+ * The options accepted on the command line.
+ *
+ * @param host        interface the server binds to
+ * @param port        port the server listens on
+ * @param openBrowser whether to open the page in the default browser at start-up
+ * @param help        {@code -h} / {@code --help} was given: print the usage and stop
+ * @param initialFile schema to open at start-up, or null
+ */
+public record CommandLineOptions(String host, int port, boolean openBrowser, boolean help, Path initialFile) {
+
+    public static final String OPTION_PORT = "--port";
+    public static final String OPTION_HOST = "--host";
+    public static final String OPTION_NO_BROWSER = "--no-browser";
+    public static final String OPTION_HELP = "--help";
+    public static final String OPTION_HELP_SHORT = "-h";
+
+    public static final String DEFAULT_HOST = "127.0.0.1";
+    public static final int DEFAULT_PORT = 8080;
+
+    /** @throws IllegalArgumentException when an option lacks its value or the port is not a number */
+    public static CommandLineOptions parse(String[] args) {
+        String host = DEFAULT_HOST;
+        int port = DEFAULT_PORT;
+        boolean openBrowser = true, help = false;
+        Path initialFile = null;
+        for (int i = 0; i < args.length; i++) {
+            switch (args[i]) {
+                case OPTION_PORT -> port = parsePort(valueOf(args, i++));
+                case OPTION_HOST -> host = valueOf(args, i++);
+                case OPTION_NO_BROWSER -> openBrowser = false;
+                case OPTION_HELP, OPTION_HELP_SHORT -> help = true;
+                default -> initialFile = Path.of(args[i]);
+            }
+        }
+        return new CommandLineOptions(host, port, openBrowser, help, initialFile);
+    }
+
+    /** The value following the option at {@code i}. */
+    private static String valueOf(String[] args, int i) {
+        if (i + 1 >= args.length) {
+            throw new IllegalArgumentException(Messages.get(MessageKey.OPTION_VALUE_EXPECTED, args[i]));
+        }
+        return args[i + 1];
+    }
+
+    private static int parsePort(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(Messages.get(MessageKey.INVALID_PORT, value));
+        }
+    }
+}

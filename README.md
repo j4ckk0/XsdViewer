@@ -127,14 +127,22 @@ or start the tool from the project folder and open `order.xsd` from the browser.
 
 ```
 src/main/java/org/jtools/xsdviewer/
-  Main.java        HTTP server (JDK com.sun.net.httpserver), static files + /api/parse, /api/initial, /api/open
-  XsdParser.java   XSD text -> Model (DOM for the structure, SAX for line numbers)
-  Model.java       nodes / edges / imports, JSON output
-  Json.java        string escaping
-src/main/resources/web/   index.html, app.js, style.css – the client, no framework
-src/test/java/            parser tests, run against samples/purchaseOrder.xsd
+  XsdViewerApplication   entry point: command line, server start-up, browser
+  CommandLineOptions, BrowserLauncher, Messages (+ MessageKey)
+  schema/                XsdParser (XSD text -> SchemaGraph), DeclarationLineIndex, SchemaGraphJsonWriter,
+                         NodeKind / LinkLabel / XsdVocabulary constants
+  server/                XsdViewerServer (JDK com.sun.net.httpserver) + one handler per path:
+                         ParseSchemaHandler, InitialFileHandler, OpenSchemaLocationHandler,
+                         LocateSchemaFileHandler, QuitHandler, StaticResourceHandler
+  json/                  JsonWriter, JsonStrings, JsonKey
+src/main/resources/org/jtools/xsdviewer/   messages.properties (English), messages_fr.properties – server texts
+src/main/resources/web/   index.html, style.css, js/ (ES modules, one per concern), i18n/en.json, i18n/fr.json – the client, no framework
+src/test/java/            parser, JSON, command line and translation tests (samples/purchaseOrder.xsd)
 samples/                  purchaseOrder.xsd (one file), import/ (order.xsd + imported / included files)
 ```
+
+The page is shown in the browser's language when a `web/i18n/<language>.json` exists (English
+otherwise; `?lang=fr` forces one); the server's own messages follow the JVM locale.
 
 No runtime dependency: the jar only needs a JDK.
 

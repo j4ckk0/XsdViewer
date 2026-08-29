@@ -55,7 +55,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.jtools.xsdviewer.Main</mainClass>
+              <mainClass>org.jtools.xsdviewer.XsdViewerApplication</mainClass>
             </manifest>
           </archive>
         </configuration>

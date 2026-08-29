@@ -6,15 +6,16 @@ highlighted source text. Everything ships in one jar; the only runtime requireme
 
 ```
 ┌───────────────────────────── browser ──────────────────────────────┐
-│  index.html / style.css / app.js                                    │
+│  index.html / style.css / js/*.js (ES modules) / i18n/<lang>.json   │
 │  File ▸ Open / drag-and-drop ──► fetch POST /api/parse ──► model    │
 │  Graph view (SVG ego-graph) · Text view · sidebar · details panel   │
 └──────────────────────────────┬─────────────────────────────────────┘
                                │ HTTP (localhost)
 ┌──────────────────────────────┴─────────────────────────────────────┐
-│  Main            com.sun.net.httpserver – static files + /api/*     │
-│  XsdParser       XSD text ─► Model   (DOM walk + SAX line index)    │
-│  Model / Json    nodes, edges, imports ─► JSON                      │
+│  server/         com.sun.net.httpserver – static files + /api/*     │
+│  schema/         XSD text ─► SchemaGraph (DOM walk + SAX line index)│
+│  json/           nodes, edges, imports ─► JSON                      │
+│  Messages        server texts, messages_<lang>.properties           │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -35,12 +36,26 @@ Design choices that shape everything else:
 
 ### Server – `src/main/java/org/jtools/xsdviewer/`
 
+Each class does one thing and is named for it; the packages follow the tiers of the diagram.
+
 | Class | Role |
 |---|---|
-| `Main` | Entry point and HTTP layer. Parses the command line (`--port`, `--host`, `--no-browser`, optional `file.xsd`), starts a `com.sun.net.httpserver.HttpServer` bound to `127.0.0.1:8080` by default, serves the web assets from the classpath (`/web/*`), exposes the two API endpoints and opens the browser (`java.awt.Desktop`, falling back to `xdg-open`). Requests are handled on virtual threads (`Executors.newVirtualThreadPerTaskExecutor`). |
-| `XsdParser` | The only class that knows XSD. Turns the schema text into a `Model` in three passes (see below). Uses the JDK DOM parser for the structure and a SAX pass to locate each global declaration's start tag. |
-| `Model` | Plain data: `Node`, `Edge`, `Import` records, the `targetNamespace`, and `toJson()`. `nodes` is a `LinkedHashMap` (declaration order is kept), `edges` a `LinkedHashSet` (parallel identical edges collapse). |
-| `Json` | String escaping for the hand-written JSON writer. The model is flat enough that a JSON library would be the only dependency of the project, so it was left out. |
+| `XsdViewerApplication` | Entry point: reads the `CommandLineOptions`, checks the initial file, starts the `XsdViewerServer`, prints the URL and opens the browser. |
+| `CommandLineOptions` | Record of the options (`--port`, `--host`, `--no-browser`, `-h`, optional `file.xsd`) and their parser. |
+| `BrowserLauncher` | Opens a URL with `java.awt.Desktop`, falling back to `xdg-open`. |
+| `Messages`, `MessageKey` | The texts the server prints or sends to the page (console, API errors, generated documentation of placeholder nodes), read from `messages.properties` (English) / `messages_fr.properties` for the JVM locale; `MessageKey` holds the keys. |
+| `schema.XsdParser` | The only class that knows XSD. Turns the schema text into a `SchemaGraph` in three passes (see below) with the JDK DOM parser. |
+| `schema.DeclarationLineIndex` | SAX pass locating the start tag of each global declaration (line numbers). |
+| `schema.SecureXmlFactories` | DOM / SAX factories with external entities and DTD loading disabled. |
+| `schema.SchemaGraph` | Plain data: `Node`, `Edge`, `Import` records, the `targetNamespace`, `nodeId(kind, name)`. `nodes` is a `LinkedHashMap` (declaration order is kept), `edges` a `LinkedHashSet` (parallel identical edges collapse). |
+| `schema.NodeKind`, `schema.LinkLabel`, `schema.XsdVocabulary` | The constants of the model: the kinds of node, the edge labels, and the XSD namespace / element / attribute names the parser reads. |
+| `schema.SchemaGraphJsonWriter` | `SchemaGraph` → JSON (keys in `json.JsonKey`). |
+| `json.JsonWriter`, `json.JsonStrings`, `json.JsonKey` | A minimal streaming JSON writer and the string escaping. The model is flat enough that a JSON library would be the only dependency of the project, so it was left out. `JsonKey` is the API contract, mirrored by the client. |
+| `server.XsdViewerServer` | Starts a `com.sun.net.httpserver.HttpServer` bound to `127.0.0.1:8080` by default and maps each path of `ApiPath` to its handler. Requests are handled on virtual threads (`Executors.newVirtualThreadPerTaskExecutor`). |
+| `server.ParseSchemaHandler`, `InitialFileHandler`, `OpenSchemaLocationHandler`, `LocateSchemaFileHandler`, `QuitHandler`, `StaticResourceHandler` | One handler per path of the HTTP interface below. |
+| `server.ServedSchemaFiles` | The files the server has read and handed to the page: the only directories `/api/open` and `/api/locate` look into. |
+| `server.SchemaFileFinder` | Bounded walk looking for a file with a given name and content (`/api/locate`). |
+| `server.HttpResponses`, `QueryString`, `ContentType`, `HttpMethod`, `HttpStatus` | Reading the request, writing text / JSON / error answers, query parameters, MIME types by extension. |
 
 #### Parsing passes (`XsdParser`)
 
@@ -69,20 +84,53 @@ disabled: the input is an arbitrary user file.
 
 ### Web client – `src/main/resources/web/`
 
-Three static files, no build step, no framework.
+Static files, no build step, no framework: `index.html`, `style.css`, ES modules under `js/`
+(loaded by `<script type="module" src="js/app.js">`) and the texts under `i18n/`.
 
 | File | Role |
 |---|---|
-| `index.html` | Page skeleton: top bar (File menu, view tabs, PNG export, built-in toggle), document tab bar, sidebar (schema info, search, object list), main area with the three views (empty / graph / text), details panel, drop overlay, toast. |
+| `index.html` | Page skeleton: top bar (File menu, view tabs, PNG export, built-in toggle), document tab bar, sidebar (schema info, search, object list), main area with the three views (empty / graph / text), details panel, drop overlay, toast. Every label carries a `data-i18n` / `data-i18n-title` / `data-i18n-placeholder` key. |
 | `style.css` | Layout (flexbox: sidebar – main – details), the colour per kind of object (one CSS variable each, reused by sidebar dots, legend, badges and SVG strokes), text-view syntax colours. |
-| `app.js` | All behaviour. Organised in sections: **state** (one object per document tab: the model plus derived indexes `outEdges`, `inEdges`, `lineToNode`, the selection, history, view, filter and scroll positions), **loading** (read the `File`, `POST /api/parse`, index the answer), **document tabs**, **selection** (`select(id)` drives every view, keeps the back history), **external declarations** (following a link into another file), **sidebar**, **graph**, **details**, **text view**, **PNG export**, **UI wiring**. |
+| `i18n/en.json`, `i18n/fr.json` | The texts of the page, one flat JSON file per language (same keys in each, checked by `TranslationsTest`). |
+| `js/app.js` | Start-up: `await initI18n()`, `wireEvents()`, `renderPage()`, `loadInitialFile()`. |
+| `js/constants.js`, `js/dom.js`, `js/message-keys.js` | The strings of the client: the API contract and vocabulary shared with the server (kinds, paths, storage keys); element ids, CSS classes and data attributes; the keys of the texts. |
+| `js/i18n.js`, `js/kind-labels.js` | Language choice (`?lang=`, else the browser's), loading of `i18n/<lang>.json`, `t(key, …args)`, `plural()`, `translate(root)` for the `data-i18n*` bindings; labels of node kinds. |
+| `js/state.js` | `newTabState()` (one object per document tab: the model plus derived indexes `outEdges`, `inEdges`, `lineToNode`, the selection, history, view, filter and scroll positions) and `session` (the tabs, the active one, the pending jump, the folder library). |
+| `js/api.js` | The `fetch` calls to `/api/*`, one function per path. |
+| `js/schema-index.js`, `js/declarations.js` | Indexing a parsed schema into a tab; finding declarations across tabs (`findIn`, `findInTabs`, `usersInOtherTabs`, `locationsFor`). |
+| `js/library.js`, `js/schema-loader.js` | The folder library (Open folder… / dropped folders); `loadInto(tab, …)` (parse through the server, index, locate) and `resolveLocation()` (library, then server). |
+| `js/tabs.js`, `js/page.js` | Document tabs (create / activate / close, the tab bar); `renderPage()` redraws everything from the active tab, `showView()` switches graph / text. |
+| `js/navigation.js` | `select(id)` drives every view and keeps the back history; `followExternal()` follows a link into another file (see below). |
+| `js/file-actions.js`, `js/events.js` | The File menu actions (open, folder, close, quit, initial file); wiring of every control, key and drop to the actions. |
+| `js/sidebar.js`, `js/graph.js`, `js/details.js`, `js/text-view.js`, `js/xml-highlighter.js`, `js/png-export.js` | One module per view: object list, SVG ego-graph, details panel, source text, its tokenizer, the PNG export. |
 
-`state` always points at the active tab's object (`tabs[]` holds them all), so every render
-function reads "the current document" without knowing about tabs; `activateTab()` swaps the
-pointer and calls `renderAll()`, which redraws the page from that state. Rendering is
+`session.active` always points at the active tab's object (`session.tabs` holds them all), so
+every render function reads "the current document" without knowing about tabs;
+`activateTab()` swaps the pointer and the caller redraws with `renderPage()`. Rendering is
 "re-render from state": each `select()` rebuilds the SVG, the details panel and the sidebar
-highlight from `state`. The text view is rendered once per file or tab switch (it can be
-thousands of lines); selection just toggles a highlight class.
+highlight from the tab. The text view is rendered once per file or tab switch (it can be
+thousands of lines); selection just toggles a highlight class. The module graph has no cycle:
+views depend on the state, `navigation` on the views, `file-actions` / `events` on both.
+
+#### Texts and constants
+
+Two rules apply to both tiers:
+
+- **No hard-coded strings in the logic.** Names that carry meaning live in constants classes /
+  modules: the API contract (`ApiPath` ↔ `API`, `JsonKey`, `NodeKind` ↔ `NODE_KIND`,
+  `LinkLabel`), the XSD vocabulary (`XsdVocabulary`), element ids / CSS classes / data
+  attributes (`dom.js`), storage keys and MIME types (`constants.js`). Edge labels
+  (`type`, `extends`, `list of`…) are part of the model, not user-interface text: they are
+  constants, not translated.
+- **User-visible texts come from resource files, one per language.** Server side,
+  `Messages.get(MessageKey.X, args…)` reads `messages.properties` (English, the base file) or
+  `messages_<language>.properties` for the JVM locale (`MessageFormat` patterns). Client side,
+  `t(MSG.X, args…)` reads `i18n/<language>.json`, chosen from `?lang=` or the browser's
+  languages, English as fallback; static labels of `index.html` are bound with `data-i18n*`
+  attributes and filled by `translate()`. To add a language: copy `en.json` to `<code>.json`,
+  add the code to `LANGUAGES` in `i18n.js`, and (server) add `messages_<code>.properties`.
+  `TranslationsTest` checks that every language file has the same keys, that every key the
+  code uses exists, and that no key is left unused.
 
 #### Following links into other files
 
@@ -151,7 +199,7 @@ node. The selected node's line is highlighted and scrolled into view.
 
 | Method & path | Request | Response |
 |---|---|---|
-| `GET /`, `/app.js`, `/style.css` | – | the static asset (classpath `web/`, `Cache-Control: no-cache`). Paths are restricted to `/[A-Za-z0-9._-]+`. |
+| `GET /`, `/style.css`, `/js/*.js`, `/i18n/*.json` | – | the static asset (classpath `web/`, `Cache-Control: no-cache`). Paths are restricted to `(/[A-Za-z0-9._-]+)+` without `..`. |
 | `POST /api/parse` | body: the XSD text (UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema`, …). |
 | `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
 | `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit). |
@@ -201,9 +249,9 @@ Build and test:
 |---|---|---|
 | Maven | 3.9 | build; `mvn package` produces `target/xsdviewer.jar` |
 | maven-compiler-plugin | 3.13.0 | `--release 21` |
-| maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.Main` (no shading needed: no dependencies) |
+| maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` (no shading needed: no dependencies) |
 | maven-surefire-plugin | 3.2.5 | runs the tests |
-| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, run against `samples/purchaseOrder.xsd` |
+| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest` and `SchemaGraphJsonWriterTest` (against `samples/purchaseOrder.xsd`), `JsonWriterTest`, `CommandLineOptionsTest`, `TranslationsTest` |
 | `run.sh` / `run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
 | `build.sh` / `build.bat` | – | `mvn package` |
 | `package.sh` / `package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
@@ -232,10 +280,15 @@ XsdViewer/
 └── src/
     ├── assembly/                        windows.xml, linux.xml (dist profile)
     ├── dist/                            xsdviewer.bat, xsdviewer.sh launchers
-    ├── main/java/org/jtools/xsdviewer/   Main, XsdParser, Model, Json
-    ├── main/resources/web/              index.html, app.js, style.css
+    ├── main/java/org/jtools/xsdviewer/   XsdViewerApplication, CommandLineOptions, BrowserLauncher, Messages, MessageKey
+    │   ├── schema/                      XsdParser, DeclarationLineIndex, SecureXmlFactories, SchemaGraph,
+    │   │                                SchemaGraphJsonWriter, NodeKind, LinkLabel, XsdVocabulary
+    │   ├── server/                      XsdViewerServer, ApiPath, *Handler, ServedSchemaFiles, SchemaFileFinder, ...
+    │   └── json/                        JsonWriter, JsonStrings, JsonKey
+    ├── main/resources/org/jtools/xsdviewer/  messages.properties, messages_fr.properties
+    ├── main/resources/web/              index.html, style.css, js/*.js, i18n/en.json, i18n/fr.json
     ├── main/resources/embedded/jre/     JRE archives bundled by the dist profile (git-ignored)
-    └── test/java/org/jtools/xsdviewer/   XsdParserTest
+    └── test/java/org/jtools/xsdviewer/   CommandLineOptionsTest, TranslationsTest, schema/, json/
 ```
 
 ## Extension points
@@ -245,9 +298,12 @@ XsdViewer/
   browser cannot provide from a dropped file; the natural route is a server-side "open
   directory/path" mode, or letting the user drop several files that the client merges by
   target namespace before parsing.
-- **More link kinds** are a new `case` in `XsdParser.collect()` plus a label; the client
-  needs nothing (labels are free text).
-- **Other graph layouts** only touch `renderGraph()` in `app.js`; the rest of the client
-  depends on `select()` and `state`, not on how the SVG is built.
-- **Node details** (e.g. facets, cardinalities) would extend `Model.Node` and `toJson()`,
-  and `renderDetails()` on the client.
+- **More link kinds** are a new `case` in `XsdParser.collect()` plus a `LinkLabel`; the
+  client needs nothing (labels are free text).
+- **Other graph layouts** only touch `js/graph.js`; the rest of the client depends on
+  `select()` and the tab state, not on how the SVG is built.
+- **Node details** (e.g. facets, cardinalities) would extend `SchemaGraph.Node`,
+  `SchemaGraphJsonWriter` and `JsonKey`, and `js/details.js` on the client.
+- **Another language** is one more `i18n/<code>.json` (+ the code in `LANGUAGES` of
+  `js/i18n.js`) and one more `messages_<code>.properties`; `TranslationsTest` flags any
+  missing key.

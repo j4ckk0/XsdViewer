@@ -7,39 +7,40 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- Labels come from i18n/<language>.json: data-i18n = text, data-i18n-title = tooltip, data-i18n-placeholder. -->
 
 <header id="topbar">
   <div class="menu">
-    <button id="fileMenuBtn" class="menubtn" type="button">File ▾</button>
+    <button id="fileMenuBtn" class="menubtn" type="button" data-i18n="menu.file">File ▾</button>
     <div id="fileMenu" class="dropdown hidden">
-      <button id="menuOpen" type="button">Open…<span class="kbd">Ctrl+O</span></button>
-      <button id="menuOpenFolder" type="button" title="Make every schema of a folder available for following links">Open folder…</button>
-      <button id="menuNewTab" type="button">New tab</button>
-      <button id="menuClose" type="button">Close file</button>
-      <button id="menuQuit" type="button" title="Stop the XsdViewer server and close this page">Quit</button>
+      <button id="menuOpen" type="button"><span data-i18n="menu.open">Open…</span><span class="kbd">Ctrl+O</span></button>
+      <button id="menuOpenFolder" type="button" data-i18n="menu.openFolder" data-i18n-title="menu.openFolder.title">Open folder…</button>
+      <button id="menuNewTab" type="button" data-i18n="menu.newTab">New tab</button>
+      <button id="menuClose" type="button" data-i18n="menu.close">Close file</button>
+      <button id="menuQuit" type="button" data-i18n="menu.quit" data-i18n-title="menu.quit.title">Quit</button>
     </div>
   </div>
-  <span id="fileName" class="filename">No file loaded</span>
+  <span id="fileName" class="filename" data-i18n="status.noFile">No file loaded</span>
   <nav class="tabs">
-    <button class="tab active" data-view="graph" type="button">Graph</button>
-    <button class="tab" data-view="text" type="button">Text</button>
+    <button class="tab active" data-view="graph" type="button" data-i18n="view.graph">Graph</button>
+    <button class="tab" data-view="text" type="button" data-i18n="view.text">Text</button>
   </nav>
-  <button id="exportBtn" class="menubtn" type="button" title="Export the current view as a PNG image" disabled>⤓ PNG</button>
-  <label class="opt" title="Show XML Schema built-in types (xs:string, xs:int…) in the graph">
-    <input type="checkbox" id="showBuiltins" checked> built-in types
+  <button id="exportBtn" class="menubtn" type="button" data-i18n="export.button" data-i18n-title="export.title" disabled>⤓ PNG</button>
+  <label class="opt" data-i18n-title="option.builtins.title">
+    <input type="checkbox" id="showBuiltins" checked> <span data-i18n="option.builtins">built-in types</span>
   </label>
 </header>
 
 <div id="tabbar">
   <div id="tabs"></div>
-  <button id="newTabBtn" type="button" title="New tab">+</button>
+  <button id="newTabBtn" type="button" data-i18n-title="tab.new.title">+</button>
 </div>
 
 <div id="body">
   <aside id="sidebar">
     <div id="schemaInfo"></div>
     <div id="searchBar">
-      <input id="search" type="search" placeholder="Search objects… (Ctrl+F)" autocomplete="off" spellcheck="false">
+      <input id="search" type="search" data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false">
     </div>
     <div id="nodeList"></div>
   </aside>
@@ -47,26 +48,26 @@
   <main id="main">
     <div id="empty" class="view">
       <div class="emptybox">
-        <div class="big">Open an XSD file</div>
-        <div>File ▸ Open… (Ctrl+O), or drop a file anywhere in this window.</div>
+        <div class="big" data-i18n="empty.title">Open an XSD file</div>
+        <div data-i18n="empty.hint">File ▸ Open… (Ctrl+O), or drop a file anywhere in this window.</div>
       </div>
     </div>
     <div id="graph" class="view hidden">
       <div id="graphToolbar">
-        <button id="backBtn" type="button" title="Back to the previous node">← Back</button>
+        <button id="backBtn" type="button" data-i18n="graph.back" data-i18n-title="graph.back.title">← Back</button>
         <span id="graphTitle"></span>
-        <label class="opt" title="Also show what the linked objects link to (a further column on the right)">
-          <input type="checkbox" id="twoLevels"> 2 levels
+        <label class="opt" data-i18n-title="graph.twoLevels.title">
+          <input type="checkbox" id="twoLevels"> <span data-i18n="graph.twoLevels">2 levels</span>
         </label>
         <span class="legend">
-          <span class="lg element">element</span>
-          <span class="lg complexType">complexType</span>
-          <span class="lg simpleType">simpleType</span>
-          <span class="lg group">group</span>
-          <span class="lg attributeGroup">attributeGroup</span>
-          <span class="lg attribute">attribute</span>
-          <span class="lg builtin">built-in</span>
-          <span class="lg external">external</span>
+          <span class="lg element" data-i18n="kind.element">element</span>
+          <span class="lg complexType" data-i18n="kind.complexType">complexType</span>
+          <span class="lg simpleType" data-i18n="kind.simpleType">simpleType</span>
+          <span class="lg group" data-i18n="kind.group">group</span>
+          <span class="lg attributeGroup" data-i18n="kind.attributeGroup">attributeGroup</span>
+          <span class="lg attribute" data-i18n="kind.attribute">attribute</span>
+          <span class="lg builtin" data-i18n="kind.builtin">built-in</span>
+          <span class="lg external" data-i18n="kind.external">external</span>
         </span>
       </div>
       <div id="graphCanvas"></div>
@@ -77,11 +78,11 @@
   <aside id="details" class="hidden"></aside>
 </div>
 
-<div id="dropOverlay" class="hidden"><div>Drop the XSD file to open it</div></div>
+<div id="dropOverlay" class="hidden"><div data-i18n="drop.hint">Drop the XSD file to open it</div></div>
 <div id="toast" class="hidden"></div>
 <input type="file" id="fileInput" accept=".xsd,.xml,text/xml,application/xml" multiple hidden>
 <input type="file" id="folderInput" webkitdirectory hidden>
 
-<script src="app.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
