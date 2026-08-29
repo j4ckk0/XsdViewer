@@ -150,15 +150,27 @@ html, body {
   overflow-y: hidden;
 }
 #tabs { display: flex; gap: 2px; min-width: 0; align-items: flex-end; }
-/* one group per workspace: its chip, then its tabs */
-.wsgroup { display: flex; align-items: flex-end; gap: 2px; padding-right: 6px; margin-right: 8px; border-right: 1px solid var(--border); }
+
+/* ---- workspace bar: one chip per workspace, above the tabs of the active one ---- */
+#workspaceBar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  background: #dfe3e8;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+#workspaces { display: flex; gap: 6px; min-width: 0; }
+.wsgroup { display: flex; align-items: center; }
 .wsname {
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 20px;
-  margin: 0 4px 4px 0;
-  padding: 0 4px 0 9px;
+  height: 22px;
+  padding: 0 4px 0 10px;
   border-radius: 10px;
   font-size: 11px;
   font-weight: 600;
@@ -173,7 +185,7 @@ html, body {
 #compareBtn {
   font: inherit;
   font-size: 12px;
-  margin: 0 0 4px auto;
+  margin-left: auto;
   padding: 2px 10px;
   color: var(--text);
   background: #fff;

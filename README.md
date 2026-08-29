@@ -127,8 +127,10 @@ what uses what across the set right away.
 
 ### Workspaces
 
-A **workspace is a group of tabs**: the tab bar shows one chip per workspace followed by its
-tabs (click the chip to show it, its `×` to close it with all its tabs). Every tab belongs to a
+A **workspace is a group of tabs**: the workspace bar, above the tabs, shows one chip per
+workspace (click it to switch to that workspace — the tab you last had there comes back —,
+its `×` closes it with all its tabs), and the tab bar shows the tabs of the active workspace
+only. Every tab belongs to a
 workspace — the first one is "Workspace 1" until it is saved — and a workspace is a closed
 world: links are followed, linked schemas auto-loaded and "used by" looked up among its own
 tabs only, so two workspaces holding the same file do not see each other (that is what makes

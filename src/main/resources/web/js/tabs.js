@@ -1,6 +1,7 @@
 /**
- * Workspaces and their document tabs: creating, switching, closing, and the tab bar (one group per
- * workspace: its chip, then its tabs). Callers redraw the page (renderPage) after a switch.
+ * Workspaces and their document tabs: creating, switching, closing, and the two bars — the
+ * workspace bar (one chip per workspace) and the tab bar (the tabs of the active workspace).
+ * Callers redraw the page (renderPage) after a switch.
  */
 import { WORKSPACE_FILE_SUFFIX } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
@@ -50,11 +51,15 @@ export function newTab(ws = session.active.workspace) {
 
 /** Makes {@code tab} the active one, keeping the scroll positions of the previous one. Returns false when it already was. */
 export function activateTab(tab) {
+  tab.workspace.lastActive = tab;
   if (tab === session.active) return false;
   session.active.scroll = currentScroll();
   session.active = tab;
   return true;
 }
+
+/** The tab to show when switching to {@code ws}: the one last active there, else its first. */
+export const tabToShow = (ws) => (tabsOf(ws).includes(ws.lastActive) ? ws.lastActive : tabsOf(ws)[0]);
 
 /**
  * Removes {@code tab}; a workspace left without tabs goes too (the last workspace gets an empty
@@ -124,24 +129,25 @@ function currentScroll() {
   return { text: $(ID.TEXT).scrollTop, graphTop: $(ID.GRAPH_CANVAS).scrollTop, graphLeft: $(ID.GRAPH_CANVAS).scrollLeft };
 }
 
+/** Draws the workspace bar (every workspace) and the tab bar (the tabs of the active workspace). */
 export function renderTabBar() {
-  let html = '';
+  let chips = '';
   session.workspaces.forEach((ws, w) => {
-    const own = tabsOf(ws);
     const name = workspaceName(ws);
-    html += '<div class="' + CLS.WORKSPACE_GROUP + (own.includes(session.active) ? ' ' + CLS.ACTIVE : '')
+    chips += '<div class="' + CLS.WORKSPACE_GROUP + (ws === session.active.workspace ? ' ' + CLS.ACTIVE : '')
       + (session.compareSelection.includes(ws) ? ' ' + CLS.SELECTED : '') + '"' + dataAttr(DATA.WORKSPACE_INDEX, w) + '>'
       + '<span class="' + CLS.WORKSPACE_NAME + '" title="' + esc(ws.path || name) + '">' + esc(name)
-      + '<button class="' + CLS.WORKSPACE_CLOSE + '" type="button" title="' + esc(t(MSG.WORKSPACE_CLOSE, name)) + '">×</button></span>';
-    for (const tab of own) {
-      const tabName = tab.fileName || t(MSG.TAB_UNTITLED);
-      html += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + '"'
-        + dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(tab)) + ' title="' + esc(tab.path || tabName) + '">'
-        + '<span class="' + CLS.DOC_TAB_NAME + '">' + esc(tabName) + '</span>'
-        + '<button class="' + CLS.DOC_TAB_CLOSE + '" type="button" title="' + esc(t(MSG.TAB_CLOSE)) + '">×</button></div>';
-    }
-    html += '</div>';
+      + '<button class="' + CLS.WORKSPACE_CLOSE + '" type="button" title="' + esc(t(MSG.WORKSPACE_CLOSE, name)) + '">×</button></span></div>';
   });
-  $(ID.TABS).innerHTML = html;
+  $(ID.WORKSPACES).innerHTML = chips;
+  let tabs = '';
+  for (const tab of tabsOf(session.active.workspace)) {
+    const tabName = tab.fileName || t(MSG.TAB_UNTITLED);
+    tabs += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + '"'
+      + dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(tab)) + ' title="' + esc(tab.path || tabName) + '">'
+      + '<span class="' + CLS.DOC_TAB_NAME + '">' + esc(tabName) + '</span>'
+      + '<button class="' + CLS.DOC_TAB_CLOSE + '" type="button" title="' + esc(t(MSG.TAB_CLOSE)) + '">×</button></div>';
+  }
+  $(ID.TABS).innerHTML = tabs;
   $(ID.COMPARE_BUTTON).disabled = session.compareSelection.length !== 2;
 }

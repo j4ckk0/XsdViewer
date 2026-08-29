@@ -33,6 +33,8 @@ export const ID = {
   SHOW_BUILTINS: 'showBuiltins',
   LANGUAGE: 'language',
   TABS: 'tabs',
+  WORKSPACE_BAR: 'workspaceBar',
+  WORKSPACES: 'workspaces',
   NEW_TAB_BUTTON: 'newTabBtn',
   COMPARE_BUTTON: 'compareBtn',
   COMPARE: 'compare',

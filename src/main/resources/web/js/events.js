@@ -15,7 +15,7 @@ import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
 import { toast } from './toast.js';
-import { activateTab, closeTab, closeWorkspace, newTab, renderTabBar, tabsOf } from './tabs.js';
+import { activateTab, closeTab, closeWorkspace, newTab, renderTabBar, tabToShow } from './tabs.js';
 
 const LIST_SEPARATOR = ', ';
 
@@ -81,26 +81,32 @@ function wireDocumentTabs() {
   const workspaceOf = (e) => { const el = e.target.closest(selector(CLS.WORKSPACE_GROUP)); return el ? session.workspaces[+el.dataset[DATA.WORKSPACE_INDEX]] : null; };
   const close = (tab) => { if (closeTab(tab)) renderPage(); else renderTabBar(); };
   const closeGroup = (ws) => { if (closeWorkspace(ws)) renderPage(); else renderTabBar(); };
+  // the tab bar: the tabs of the active workspace
   $(ID.TABS).addEventListener('click', (e) => {
-    const tab = tabOf(e), ws = workspaceOf(e);
-    if (tab) {
-      if (e.target.closest(selector(CLS.DOC_TAB_CLOSE))) close(tab);
-      else { const changed = activateTab(tab); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
-    } else if (ws && e.target.closest(selector(CLS.WORKSPACE_CLOSE))) {
-      closeGroup(ws);
-    } else if (ws && e.target.closest(selector(CLS.WORKSPACE_NAME))) {
-      if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderTabBar(); }   // select for comparison
-      else if (activateTab(tabsOf(ws)[0])) { closeCompare(); renderPage(); }   // the chip: show the workspace's first tab
-    }
+    const tab = tabOf(e);
+    if (!tab) return;
+    if (e.target.closest(selector(CLS.DOC_TAB_CLOSE))) close(tab);
+    else { const changed = activateTab(tab); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
+  });
+  $(ID.TABS).addEventListener('auxclick', (e) => {   // middle click closes
+    const tab = tabOf(e);
+    if (tab && e.button === MIDDLE_BUTTON) { e.preventDefault(); close(tab); }
+  });
+  // the workspace bar: one chip per workspace
+  $(ID.WORKSPACES).addEventListener('click', (e) => {
+    const ws = workspaceOf(e);
+    if (!ws) return;
+    if (e.target.closest(selector(CLS.WORKSPACE_CLOSE))) closeGroup(ws);
+    else if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderTabBar(); }   // select for comparison
+    else { const changed = activateTab(tabToShow(ws)); if (session.compare) { closeCompare(); renderPage(); } else if (changed) renderPage(); }
+  });
+  $(ID.WORKSPACES).addEventListener('auxclick', (e) => {
+    const ws = workspaceOf(e);
+    if (ws && e.button === MIDDLE_BUTTON) { e.preventDefault(); closeGroup(ws); }
   });
   $(ID.COMPARE_BUTTON).addEventListener('click', () => { if (startCompare()) renderPage(); else toast(t(MSG.COMPARE_NEED_TWO)); });
   $(ID.COMPARE_CLOSE).addEventListener('click', () => { closeCompare(); renderPage(); });
   $(ID.COMPARE_TABLE).addEventListener('click', (e) => { const row = e.target.closest(selector(CLS.COMPARE_ROW)); if (row) toggleDetail(row); });
-  $(ID.TABS).addEventListener('auxclick', (e) => {   // middle click closes a tab or a workspace
-    if (e.button !== MIDDLE_BUTTON) return;
-    const tab = tabOf(e), ws = workspaceOf(e);
-    if (tab) { e.preventDefault(); close(tab); } else if (ws) { e.preventDefault(); closeGroup(ws); }
-  });
 }
 
 function wireKeyboard() {
