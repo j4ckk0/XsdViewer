@@ -1,7 +1,7 @@
 # Publishing XsdViewer on GitHub
 
 What a public repository needs, what this repository already has, and the steps to publish.
-Checked against the tree at version 2.5.0 (August 2026).
+Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>, release [v2.5.0](https://github.com/j4ckk0/XsdViewer/releases/tag/v2.5.0).
 
 ## 1. Required
 
@@ -21,14 +21,14 @@ Checked against the tree at version 2.5.0 (August 2026).
 | Item | Why | Suggestion |
 |---|---|---|
 | **Continuous integration** | Proves every push still builds and passes the tests; shows a badge in the README. | `.github/workflows/build.yml`: `actions/checkout`, `actions/setup-java` (Temurin 21, Maven cache), `mvn -B package`. Optionally upload `target/xsdviewer.jar` as a workflow artefact. |
-| **Tags and releases** | Users download a version, not a commit. | `git tag -a v2.5.0 -m "2.5.0"` and push the tag; create a GitHub Release from it, attach `xsdviewer.jar` and the two `-Pdist` archives (they are ~50 MB each: fine for Release assets, never for the repository). |
+| **Tags and releases** | Users download a version, not a commit. | **Done** (30 August 2026): tag `v2.5.0`, GitHub Release *XsdViewer 2.5.0* with `xsdviewer.jar`, `xsdviewer-2.5.0-windows.zip` and `xsdviewer-2.5.0-linux.tar.gz` (~50 MB each: fine for Release assets, never for the repository) and the SHA-256 checksums in the notes. |
 | **`pom.xml` metadata** | Shown by Maven tooling and GitHub's dependency graph. | **Done**: `<url>`, `<inceptionYear>`, `<organization>`, `<licenses>`, `<developers>`, `<scm>`, `<issueManagement>`, all pointing at `github.com/j4ckk0/XsdViewer` (same identity as the jtools parent pom). |
-| **Repository description and topics** | Discoverability. | Description "Web-based viewer for XML Schema files"; topics `xsd`, `xml-schema`, `java`, `visualization`, `graph`. |
+| **Repository description and topics** | Discoverability. | **Done** (30 August 2026): description "Explore XML Schema (.xsd) files in the browser: …", website field pointing at `releases/latest`, topics `xsd`, `xml-schema`, `xml`, `schema`, `viewer`, `visualization`, `graph`, `java`, `web-application`, `developer-tools`. |
 | **Security note** | The tool is a local server that reads files on request from the page. | Already in `architecture.md` (binds `127.0.0.1`, only serves directories it has been shown); repeat one sentence in the README so it is seen. A `SECURITY.md` is optional for a tool of this size. |
 | **`CHANGELOG.md`** | The git log already records the versions (1.3.0 … 2.5.0); a short file per version is friendlier. | Optional; GitHub Release notes can serve instead. |
 | **`CONTRIBUTING.md` / issue templates** | Only useful if you expect contributions. | Optional. |
-| **Default branch name** | GitHub creates `main`; this repository uses `master`. Either works. | Keep `master`, or `git branch -m master main` before the first push and set it as default on GitHub. |
-| **Branch protection** | Prevents force-pushes to the published branch. | *Settings ▸ Branches* once the repository exists. |
+| **Default branch name** | GitHub creates `main`; this repository uses `master`. Either works. | Kept `master`; it is the default branch on GitHub. |
+| **Branch protection** | Prevents force-pushes to the published branch. | Still to do: *Settings ▸ Branches* on GitHub. |
 
 ## 3. What not to publish
 
@@ -39,15 +39,23 @@ Checked against the tree at version 2.5.0 (August 2026).
 ## 4. Publishing, step by step
 
 1. ~~Licence, attribution, pom metadata~~ — done (Apache 2.0).
-2. ~~Author e-mail~~ — done. Decide on the commit trailers (item 3); if they must go, rewrite the history now, before anything is pushed.
-3. (Optional) add `.github/workflows/build.yml` and `docs/screenshot.png`. Commit.
-4. On GitHub: *New repository*, name `XsdViewer`, public, **without** README/licence/.gitignore (the tree has them). Note the URL.
-5. Locally:
+2. ~~Author e-mail~~ — done. The commit trailers (item 3) were kept and published as they are.
+3. (Optional, still open) add `.github/workflows/build.yml` and `docs/screenshot.png`. Commit.
+4. ~~On GitHub: *New repository*~~ — done (29 August 2026): <https://github.com/j4ckk0/XsdViewer>, public, `master` as default branch.
+5. ~~Locally: remote, push, tag~~ — done (29 August 2026):
    ```bash
-   git remote add github git@github.com:<user>/XsdViewer.git   # or https://…
-   git push -u github master                                    # or main
+   git remote add github git@github.com:j4ckk0/XsdViewer.git
+   git push -u github master
    git tag -a v2.5.0 -m "2.5.0" && git push github v2.5.0
    ```
-   The existing `origin` (the bare repository on the NAS) keeps working; `git push origin` and `git push github` are independent.
-6. On GitHub: set the description and topics; *Releases ▸ Draft a new release* from `v2.5.0`, attach `target/xsdviewer.jar`, `target/xsdviewer-2.5.0-windows.zip` and `target/xsdviewer-2.5.0-linux.tar.gz` (built with `scripts/package.sh`), paste the release notes.
-7. Check the repository page as a stranger would: licence shown, README readable, Actions green, release downloadable.
+   `master` now tracks `github/master`. The existing `origin` (the bare repository on the NAS) still holds the history from before the rewrite: the next `git push origin` needs `--force`.
+6. ~~Release, description, topics~~ — done (30 August 2026) through the REST API: release *XsdViewer 2.5.0* from `v2.5.0` with the three artefacts of `scripts/package.sh` and the SHA-256 checksums in the notes; description, website and topics as in section 2.
+7. ~~Check the repository page as a stranger would~~ — done: licence detected (Apache-2.0), README rendered, release assets downloadable anonymously (jar checksum verified). No Actions yet (step 3).
+
+## 5. Next release
+
+1. Bump the version in `pom.xml`, commit `Version X.Y.Z`, `git tag -a vX.Y.Z -m "X.Y.Z"`, `git push github master vX.Y.Z`.
+2. `scripts/package.sh`, then `sha256sum target/xsdviewer.jar target/xsdviewer-X.Y.Z-*` for the notes.
+3. *Releases ▸ Draft a new release* from the tag, attach the three files — or `POST /repos/j4ckk0/XsdViewer/releases` then `uploads.github.com/…/assets` with a token.
+
+Token for the API (the SSH key only serves `git push`): a **fine-grained** personal access token with *Repository access* = **Only select repositories → XsdViewer** — the default *Public repositories (read-only)* greys out the permissions and every write answers `403 Resource not accessible` — and *Contents: Read and write* (releases); *Administration: Read and write* is also needed to change the description or topics. Short expiry, revoke it afterwards.
