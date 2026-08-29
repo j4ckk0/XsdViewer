@@ -76,7 +76,7 @@ export const SCHEMA_FILE_PATTERN = /\.(xsd|xml)$/i;
 /** Files of an opened folder that are opened as tabs. */
 export const XSD_FILE_PATTERN = /\.xsd$/i;
 /** At most this many schemas of a folder opened in the browser are listed. */
-export const MAX_FOLDER_FILES = 200;
+export const MAX_FOLDER_FILES = 2000;
 /** A folder, a workspace or a set of linked schemas larger than this is only listed in the Files panel: one tab opens. */
 export const MAX_AUTO_OPEN = 10;
 /** Prefix of the identity of a file known only by its name (opened in the browser, not located yet). */

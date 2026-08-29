@@ -48,6 +48,21 @@ class SchemaFolderTest {
     }
 
     @Test
+    void deepTreesAndSymbolicLinks(@TempDir Path dir) throws Exception {
+        Path deep = dir;
+        for (int i = 0; i < 12; i++) deep = deep.resolve("d" + i);
+        Files.createDirectories(deep);
+        Files.writeString(deep.resolve("deep.xsd"), "");
+        Path elsewhere = Files.createDirectories(dir.resolveSibling(dir.getFileName() + "-linked"));
+        Files.writeString(elsewhere.resolve("linked.xsd"), "");
+        Files.createSymbolicLink(dir.resolve("link"), elsewhere);
+        Files.createSymbolicLink(dir.resolve("loop"), dir);   // a loop must not hang nor fail the listing
+        SchemaFolder.Listing l = SchemaFolder.list(dir);
+        assertTrue(l.files().stream().anyMatch(p -> p.endsWith("deep.xsd")), "deep file listed");
+        assertTrue(l.files().stream().anyMatch(p -> p.endsWith("linked.xsd")), "file behind a symbolic link listed");
+    }
+
+    @Test
     void sampleFolder() throws Exception {
         SchemaFolder.Listing l = SchemaFolder.list(Path.of("samples/compare"));
         assertEquals(8, l.files().size());

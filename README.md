@@ -153,7 +153,8 @@ world: links are followed, linked schemas auto-loaded and "used by" looked up am
 tabs only, so two workspaces holding the same file do not see each other (that is what makes
 them comparable, later). The File menu:
 
-- **Open folder…** — lists every `.xsd` of a folder and its sub-folders (up to 200) as a
+- **Open folder…** — lists every `.xsd` of a folder and its whole sub-tree (symbolic links
+  followed, up to 2000 files) as a
   workspace named after the folder (through the server's folder chooser; the browser's when
   the server has no display), opening them all when there are at most 10, else the first one.
   Dropping a folder on the window does the same.

@@ -29,16 +29,17 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+import java.util.EnumSet;
+import java.nio.file.FileVisitOption;
 
 import org.jtools.xsdviewer.Log;
 
-/** The schema files of a folder and its sub-folders (bounded walk, hidden and unreadable directories skipped), sorted by path. */
+/** The schema files of a folder and its whole sub-tree (symbolic links followed, hidden and unreadable directories skipped), sorted by path. */
 final class SchemaFolder {
 
-    static final int MAX_DEPTH = 8;
+    static final int MAX_DEPTH = 64;
     /** Files beyond this many are left out ({@link Listing#truncated}). */
-    static final int MAX_FILES = 200;
+    static final int MAX_FILES = 2000;
     private static final String SCHEMA_EXTENSION = ".xsd";
     private static final String HIDDEN_PREFIX = ".";
 
@@ -48,7 +49,7 @@ final class SchemaFolder {
 
     static Listing list(Path folder) throws IOException {
         List<Path> all = new ArrayList<>();
-        Files.walkFileTree(folder, Set.of(), MAX_DEPTH, new SimpleFileVisitor<>() {
+        Files.walkFileTree(folder, EnumSet.of(FileVisitOption.FOLLOW_LINKS), MAX_DEPTH, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
                 return dir.equals(folder) || !hidden(folder, dir) ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
@@ -62,7 +63,7 @@ final class SchemaFolder {
 
             @Override
             public FileVisitResult visitFileFailed(Path file, IOException e) {
-                Log.warn(file + ": " + e);   // unreadable: skipped, the rest of the folder is still listed
+                Log.warn(file + ": " + e);   // unreadable, or a link loop: skipped, the rest of the folder is still listed
                 return FileVisitResult.CONTINUE;
             }
         });
