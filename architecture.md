@@ -189,9 +189,9 @@ within canvas size limits). `canvas.toBlob()` is then saved through a download l
 
 An *ego graph* of the selected node: the node in the centre, every link it makes as a row on
 the right, every link made to it as a row on the left — one arrow per link, so a type used
-twice (`shipTo` and `billTo`) is drawn twice. The arrows carry no text: the name of the link
-is written as a caption above the node it leads to (or comes from), and repeated in the node's
-tooltip: element and attribute names in the page's text style, the XSD words (`type`,
+twice (`shipTo` and `billTo`) is drawn twice. The arrows carry no text (an optional link — `min` 0 — is dashed): the name of the link,
+followed by its cardinality when it has one, is written as a caption above the node it leads
+to (or comes from), and repeated in the node's tooltip: element and attribute names in the page's text style, the XSD words (`type`,
 `extends`, `list of`…, `STRUCTURAL_LINK_LABELS`) small and muted; the word "attribute" of
 the model's labels is not drawn (the node's kind says it), so `attribute orderDate` reads
 `orderDate` and `attribute ref` reads `ref`. The details panel keeps the full labels. With the **2 levels** toggle (remembered in `localStorage`) two more
@@ -244,9 +244,16 @@ service, and it parses whatever is posted to it.
   "nodes":   [ { "id": "complexType:USAddress", "kind": "complexType", "name": "USAddress",
                  "ns": "http://example.com/po", "line": 36, "doc": "…" } ],
   "edges":   [ { "from": "complexType:PurchaseOrderType", "to": "complexType:USAddress",
-                 "label": "shipTo" } ]
+                 "label": "shipTo", "min": 1, "max": 1 } ]
 }
 ```
+
+`min` / `max` are present on the links that have a cardinality — nested elements and `group ref`
+(their `minOccurs`/`maxOccurs`, multiplied by those of the enclosing `sequence`/`all`/`choice`
+since the nearest enclosing element; a `choice` sets `min` to 0), `element ref`, and attributes
+(`use`: required → 1..1, optional → 0..1, prohibited → 0..0); `max` is -1 for `unbounded`. Type
+links (`type`, `extends`, `restricts`, `list of`, `union of`, `substitutes`, `attributeGroup`)
+have none. The client draws links with `min` 0 as optional (dashed).
 
 `kind` is one of `element`, `complexType`, `simpleType`, `group`, `attributeGroup`,
 `attribute`, `builtin`, `external`. `ns` is the target namespace for a declaration, the

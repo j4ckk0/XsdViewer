@@ -37,6 +37,9 @@ export const STRUCTURAL_LINK_LABELS = new Set([
   LINK_LABEL.ATTRIBUTE_GROUP, LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.LIST_OF, LINK_LABEL.UNION_OF,
 ]);
 
+/** Cardinality of a link (edge.min / edge.max, absent on type links); how it is written. */
+export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };
+
 /** Tags of the schema's imports (SchemaGraph.Import.tag). */
 export const IMPORT_TAG = { IMPORT: 'import', INCLUDE: 'include', REDEFINE: 'redefine' };
 

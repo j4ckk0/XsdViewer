@@ -33,7 +33,7 @@ export function findInTabs(name, kinds, ns, skip) {
   return null;
 }
 
-/** The nodes of the other open tabs that link to {@code n} (declared in tab {@code home}), where it is an external placeholder: [{n, labels, tab}]. */
+/** The nodes of the other open tabs that link to {@code n} (declared in tab {@code home}), where it is an external placeholder: [{n, edges, tab}]. */
 export function usersInOtherTabs(n, home) {
   const extId = externalIdOf(n);
   const out = [];
@@ -44,9 +44,9 @@ export function usersInOtherTabs(n, home) {
     const users = new Map();
     for (const e of t.inEdges.get(extId) || []) {
       if (!users.has(e.from)) users.set(e.from, []);
-      users.get(e.from).push(e.label);
+      users.get(e.from).push(e);
     }
-    for (const [id, labels] of users) { const u = t.nodes.get(id); if (u) out.push({ n: u, labels, tab: t }); }
+    for (const [id, edges] of users) { const u = t.nodes.get(id); if (u) out.push({ n: u, edges, tab: t }); }
   }
   return out;
 }

@@ -52,9 +52,11 @@ class SchemaGraphJsonWriterTest {
         g.imports.add(new SchemaGraph.Import("include", "", "b.xsd"));
         g.nodes.put("element:a", new SchemaGraph.Node("element:a", NodeKind.ELEMENT, "a", "urn:t", 3, "doc \"quoted\""));
         g.edges.add(new SchemaGraph.Edge("element:a", "builtin:string", LinkLabel.TYPE));
+        g.edges.add(new SchemaGraph.Edge("element:a", "builtin:int", "n", new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED)));
         assertEquals("{\"targetNamespace\":\"urn:t\","
                 + "\"imports\":[{\"tag\":\"include\",\"namespace\":\"\",\"schemaLocation\":\"b.xsd\"}],"
                 + "\"nodes\":[{\"id\":\"element:a\",\"kind\":\"element\",\"name\":\"a\",\"ns\":\"urn:t\",\"line\":3,\"doc\":\"doc \\\"quoted\\\"\"}],"
-                + "\"edges\":[{\"from\":\"element:a\",\"to\":\"builtin:string\",\"label\":\"type\"}]}", g.toJson());
+                + "\"edges\":[{\"from\":\"element:a\",\"to\":\"builtin:string\",\"label\":\"type\"},"
+                + "{\"from\":\"element:a\",\"to\":\"builtin:int\",\"label\":\"n\",\"min\":0,\"max\":-1}]}", g.toJson());
     }
 }

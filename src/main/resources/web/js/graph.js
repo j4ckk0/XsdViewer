@@ -2,11 +2,13 @@
  * The graph view: the selected object in the centre, what it links to on the right, what uses it on
  * the left, and optionally a second level on each side, drawn as an SVG with bezier edges.
  * One arrow per link: an object linked twice (shipTo and billTo to the same type) is drawn twice,
- * each copy captioned with the link's name; the arrows themselves carry no text. At level 2 an
+ * each copy captioned with the link's name and cardinality; the arrows themselves carry no text,
+ * but an optional link (minOccurs 0, optional attribute, choice branch) is dashed. At level 2 an
  * object is expanded only the first time it appears in a column: its later copies stay leaves.
  */
 import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS } from './constants.js';
 import { findInTabs, kindsOf, usersInOtherTabs } from './declarations.js';
+import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc } from './dom.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
@@ -36,27 +38,27 @@ export function renderGraph() {
   const depth = $(ID.TWO_LEVELS).checked ? 2 : 1;
   $(ID.GRAPH_TITLE).textContent = t(MSG.GRAPH_NODE_TITLE, kindLabel(center.kind), center.name);
   const visible = (n) => n && (showBuiltins || n.kind !== NODE_KIND.BUILTIN);
-  const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name) || a.label.localeCompare(b.label);
+  const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name) || a.edge.label.localeCompare(b.edge.label);
   const fileKind = (n, tab) => ({ kindText: t(MSG.GRAPH_KIND_IN_FILE, kindLabel(n.kind), tab.fileName) });
-  /** One row per link: {n, label, tab} (tab: the other file the node belongs to, or null). */
-  const link = (n, label, tab) => ({ n, label, tab, children: [], parents: [] });
+  /** One row per link: {n, edge, tab} (tab: the other file the node belongs to, or null). */
+  const link = (n, edge, tab) => ({ n, edge, tab, children: [], parents: [] });
 
   // Level 1: one row per outgoing edge on the right, per incoming edge on the left.
   const selfLabels = [];
   const right = [], left = [];
   for (const e of st.outEdges.get(center.id) || []) {
-    if (e.to === center.id) { selfLabels.push(e.label); continue; }
+    if (e.to === center.id) { selfLabels.push(linkTitle(e)); continue; }
     const n = st.nodes.get(e.to);
-    if (visible(n)) right.push(link(n, e.label, null));
+    if (visible(n)) right.push(link(n, e, null));
   }
   for (const e of st.inEdges.get(center.id) || []) {
     if (e.from === center.id) continue;
     const n = st.nodes.get(e.from);
-    if (visible(n)) left.push(link(n, e.label, null));
+    if (visible(n)) left.push(link(n, e, null));
   }
   // Users of the centre in the other open tabs, where it appears as an external placeholder.
   for (const u of usersInOtherTabs(center, st)) {
-    if (visible(u.n)) for (const label of u.labels) left.push(link(u.n, label, u.tab));
+    if (visible(u.n)) for (const e of u.edges) left.push(link(u.n, e, u.tab));
   }
   right.sort(byName); left.sort(byName);
 
@@ -79,7 +81,7 @@ export function renderGraph() {
       for (const e of src.outEdges.get(id) || []) {
         if (e.to === id) continue;
         const n = src.nodes.get(e.to);
-        if (visible(n)) r.children.push(link(n, e.label, src === st ? null : src));
+        if (visible(n)) r.children.push(link(n, e, src === st ? null : src));
       }
       r.children.sort(byName);
     }
@@ -92,10 +94,10 @@ export function renderGraph() {
       for (const e of src.inEdges.get(l.n.id) || []) {
         if (e.from === l.n.id) continue;
         const n = src.nodes.get(e.from);
-        if (visible(n)) l.parents.push(link(n, e.label, l.tab));
+        if (visible(n)) l.parents.push(link(n, e, l.tab));
       }
       if (l.n.kind !== NODE_KIND.EXTERNAL) {
-        for (const u of usersInOtherTabs(l.n, src)) if (visible(u.n)) for (const label of u.labels) l.parents.push(link(u.n, label, u.tab));
+        for (const u of usersInOtherTabs(l.n, src)) if (visible(u.n)) for (const e of u.edges) l.parents.push(link(u.n, e, u.tab));
       }
       l.parents.sort(byName);
     }
@@ -116,8 +118,8 @@ export function renderGraph() {
   const cx = colX(ci) + NODE_W / 2, xLeft = colX(ci - 1), xR1 = colX(ci + 1);
   const xL2 = depth === 2 ? colX(0) : 0, xR2 = depth === 2 ? colX(ci + 2) : 0;
   const yOf = (i, count) => cy - ((count - 1) * ROW) / 2 + i * ROW;
-  /** Drawing options of a row's node: its caption (the link's name) and, for a node of another file, that file. */
-  const rowOpt = (row) => Object.assign({ caption: row.label }, row.tab ? { tab: session.tabs.indexOf(row.tab) } : {}, row.tab ? fileKind(row.n, row.tab) : {});
+  /** Drawing options of a row's node: its caption (the link) and, for a node of another file, that file. */
+  const rowOpt = (row) => Object.assign({ link: row.edge }, row.tab ? { tab: session.tabs.indexOf(row.tab) } : {}, row.tab ? fileKind(row.n, row.tab) : {});
 
   let svg = '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
     + '<defs><marker id="' + SVG_ID.ARROW + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
@@ -130,13 +132,13 @@ export function renderGraph() {
   for (const r of right) {
     const first = yOf(row, rightRows);
     const y = first + ((spanR(r) - 1) * ROW) / 2;   // a parent sits in the middle of its children
-    edges.push(curve(cx + NODE_W / 2, cy, xR1, y));
+    edges.push(curve(cx + NODE_W / 2, cy, xR1, y, isOptional(r.edge)));
     nodes.push(r.resolved
-      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, caption: r.label }, fileKind(r.resolved.n, r.resolved.tab)))
-      : nodeSvg(r.n, xR1, y - NODE_H / 2, false, { caption: r.label }));
+      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge }, fileKind(r.resolved.n, r.resolved.tab)))
+      : nodeSvg(r.n, xR1, y - NODE_H / 2, false, { link: r.edge }));
     r.children.forEach((c, k) => {
       const yc = first + k * ROW;
-      edges.push(curve(xR1 + NODE_W, y, xR2, yc));
+      edges.push(curve(xR1 + NODE_W, y, xR2, yc, isOptional(c.edge)));
       nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, rowOpt(c)));
     });
     row += spanR(r);
@@ -146,11 +148,11 @@ export function renderGraph() {
   for (const l of left) {
     const first = yOf(row, leftRows);
     const y = first + ((spanL(l) - 1) * ROW) / 2;
-    edges.push(curve(xLeft + NODE_W, y, cx - NODE_W / 2, cy));
+    edges.push(curve(xLeft + NODE_W, y, cx - NODE_W / 2, cy, isOptional(l.edge)));
     nodes.push(nodeSvg(l.n, xLeft, y - NODE_H / 2, false, rowOpt(l)));
     l.parents.forEach((p, k) => {
       const yp = first + k * ROW;
-      edges.push(curve(xL2 + NODE_W, yp, xLeft, y));
+      edges.push(curve(xL2 + NODE_W, yp, xLeft, y, isOptional(p.edge)));
       nodes.push(nodeSvg(p.n, xL2, yp - NODE_H / 2, false, rowOpt(p)));
     });
     row += spanL(l);
@@ -173,9 +175,10 @@ export function renderGraph() {
   canvas.scrollLeft = Math.max(0, cx - canvas.clientWidth / 2);
 }
 
-function curve(x1, y1, x2, y2) {
+/** A bezier arrow; dashed when the link is optional. */
+function curve(x1, y1, x2, y2, optional) {
   const dx = (x2 - x1) / 2;
-  return '<path class="' + CLS.EDGE + '" marker-end="url(#' + SVG_ID.ARROW + ')" d="M' + x1 + ',' + y1
+  return '<path class="' + CLS.EDGE + (optional ? ' ' + CLS.OPTIONAL : '') + '" marker-end="url(#' + SVG_ID.ARROW + ')" d="M' + x1 + ',' + y1
     + ' C' + (x1 + dx) + ',' + y1 + ' ' + (x2 - dx) + ',' + y2 + ' ' + x2 + ',' + y2 + '"/>';
 }
 
@@ -188,31 +191,39 @@ function textWithBg(x, y, text) {
 }
 
 /**
- * The name of a link above a node: an element / attribute name in the page's text style, the
+ * The name of a link above a node, followed by its cardinality when it has one ("items 1..*"):
+ * an element / attribute name in the page's text style (lighter when the link is optional), the
  * XSD words (type, extends, list of…) small and muted. The word "attribute" of the model's
  * labels ("attribute x", "attribute ref") is dropped: the node's kind already says it.
  */
-function captionSvg(label) {
-  const structural = (word) => '<text class="' + CLS.LINK_NAME + ' ' + CLS.STRUCTURAL + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(word) + '</text>';
+function captionSvg(edge) {
+  const label = edge.label;
+  const card = cardinalityText(edge);
+  const cardSvg = card ? ' <tspan class="' + CLS.CARDINALITY + '">' + esc(card) + '</tspan>' : '';
+  const optional = isOptional(edge) ? ' ' + CLS.OPTIONAL : '';
+  const structural = (word) => '<text class="' + CLS.LINK_NAME + ' ' + CLS.STRUCTURAL + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(word) + cardSvg + '</text>';
   if (label === LINK_LABEL.ATTRIBUTE_REF) return structural(LINK_LABEL.REF);
   if (STRUCTURAL_LINK_LABELS.has(label)) return structural(label);
   const name = label.startsWith(LINK_LABEL.ATTRIBUTE_PREFIX) ? label.slice(LINK_LABEL.ATTRIBUTE_PREFIX.length) : label;
-  return '<text class="' + CLS.LINK_NAME + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(shorten(name, CAPTION_MAX_CHARS)) + '</text>';
+  return '<text class="' + CLS.LINK_NAME + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(shorten(name, CAPTION_MAX_CHARS)) + cardSvg + '</text>';
 }
+
+/** The link as written in a tooltip: "shipTo 1 → complexType USAddress". */
+const linkTitle = (edge) => edge.label + (cardinalityText(edge) ? ' ' + cardinalityText(edge) : '');
 
 /**
  * @param opts optional: {id} to select on click (default n.id), {tab} index of the tab the node
  *             belongs to (another file), {kindText} text shown instead of the kind,
- *             {caption} the name of the link the node is reached by, written above it
+ *             {link} the edge the node is reached by: its name and cardinality are written above it
  */
 function nodeSvg(n, x, y, isCenter, opts) {
   const o = opts || {};
   const name = shorten(n.name, isCenter ? NAME_MAX_CHARS_CENTER : NAME_MAX_CHARS);
   const kindText = o.kindText || kindLabel(n.kind);
-  const caption = o.caption ? captionSvg(o.caption) : '';
+  const caption = o.link ? captionSvg(o.link) : '';
   return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + '"' + dataAttr(DATA.ID, o.id || n.id)
     + (o.tab != null ? dataAttr(DATA.TAB, o.tab) : '') + ' transform="translate(' + x + ',' + y + ')">'
-    + '<title>' + (o.caption ? esc(o.caption) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
+    + '<title>' + (o.link ? esc(linkTitle(o.link)) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
     + caption
     + '<rect width="' + NODE_W + '" height="' + NODE_H + '"/>'
     + '<text class="' + CLS.NODE_NAME + '" x="10" y="' + (NODE_H / 2 + 1) + '">' + esc(name) + '</text>'

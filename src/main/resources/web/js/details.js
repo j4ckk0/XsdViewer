@@ -1,4 +1,5 @@
 /** The right panel: the selected object, its documentation, its links out and the objects using it. Collapsible to a strip. */
+import { cardinalityText, isOptional } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { t } from './i18n.js';
@@ -21,9 +22,9 @@ export function renderDetails() {
   const inn = (st.inEdges.get(n.id) || []).filter(e => st.nodes.has(e.from));
   const none = '<div class="' + CLS.META + '">' + esc(t(MSG.DETAILS_NONE)) + '</div>';
   html += '<h3>' + esc(t(MSG.DETAILS_LINKS_OUT, out.length)) + '</h3>';
-  html += out.length ? out.map(e => linkHtml(e.label, st.nodes.get(e.to))).join('') : none;
+  html += out.length ? out.map(e => linkHtml(e, st.nodes.get(e.to))).join('') : none;
   html += '<h3>' + esc(t(MSG.DETAILS_USED_BY, inn.length)) + '</h3>';
-  html += inn.length ? inn.map(e => linkHtml(e.label, st.nodes.get(e.from))).join('') : none;
+  html += inn.length ? inn.map(e => linkHtml(e, st.nodes.get(e.from))).join('') : none;
   $(ID.DETAILS_CONTENT).innerHTML = html;
   panel.classList.remove(CLS.HIDDEN);
 }
@@ -52,8 +53,13 @@ export function initDetails() {
   setDetailsCollapsed(collapsed);
 }
 
-function linkHtml(label, target) {
-  return '<div class="' + CLS.LINK + '"' + dataAttr(DATA.ID, target.id) + ' title="' + esc(t(MSG.GRAPH_NODE_TITLE, kindLabel(target.kind), target.name)) + '">'
-    + '<span class="' + CLS.LINK_LABEL + '">' + esc(label) + '</span><span class="' + CLS.DOT + ' ' + target.kind + '"></span>'
+/** One link row: its label, its cardinality when it has one, and the node at the other end; optional links are marked. */
+function linkHtml(edge, target) {
+  const card = cardinalityText(edge);
+  return '<div class="' + CLS.LINK + (isOptional(edge) ? ' ' + CLS.OPTIONAL : '') + '"' + dataAttr(DATA.ID, target.id)
+    + ' title="' + esc(t(MSG.GRAPH_NODE_TITLE, kindLabel(target.kind), target.name)) + '">'
+    + '<span class="' + CLS.LINK_LABEL + '">' + esc(edge.label) + '</span>'
+    + (card ? '<span class="' + CLS.CARDINALITY + '">' + esc(card) + '</span>' : '')
+    + '<span class="' + CLS.DOT + ' ' + target.kind + '"></span>'
     + '<span class="' + CLS.LINK_TARGET + '">' + esc(target.name) + '</span></div>';
 }

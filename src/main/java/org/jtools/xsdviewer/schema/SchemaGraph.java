@@ -44,8 +44,44 @@ public final class SchemaGraph {
      */
     public record Node(String id, String kind, String name, String ns, int line, String doc) {}
 
-    /** A direct link from one node to another, e.g. element -> its type; {@code label} is a {@link LinkLabel}. */
-    public record Edge(String from, String to, String label) {}
+    /**
+     * How many times the target of a link occurs in its owner: {@code minOccurs..maxOccurs} of a
+     * nested element or group reference, adjusted by the enclosing sequence / all / choice (a
+     * choice makes its branches optional) and counted from the nearest enclosing element; the
+     * {@code use} of an attribute. Type links (extends, restricts, list of...) have none.
+     */
+    public record Cardinality(int min, int max) {
+        /** {@code max} of an unbounded occurrence. */
+        public static final int UNBOUNDED = -1;
+        public static final Cardinality ONE = new Cardinality(1, 1);
+        public static final Cardinality OPTIONAL = new Cardinality(0, 1);
+        /** A prohibited attribute. */
+        public static final Cardinality NONE = new Cardinality(0, 0);
+
+        public boolean optional() {
+            return min == 0;
+        }
+
+        /** This cardinality inside each of {@code outer} occurrences of the enclosing particle. */
+        public Cardinality within(Cardinality outer) {
+            int mx = max == UNBOUNDED || outer.max == UNBOUNDED ? UNBOUNDED : max * outer.max;
+            return new Cardinality(min * outer.min, mx);
+        }
+
+        public Cardinality withMin(int newMin) {
+            return new Cardinality(newMin, max);
+        }
+    }
+
+    /**
+     * A direct link from one node to another, e.g. element -> its type; {@code label} is a
+     * {@link LinkLabel}; {@code cardinality} is null when the link has none (type links).
+     */
+    public record Edge(String from, String to, String label, Cardinality cardinality) {
+        public Edge(String from, String to, String label) {
+            this(from, to, label, null);
+        }
+    }
 
     /** An xs:import / xs:include / xs:redefine found at the top of the schema. */
     public record Import(String tag, String namespace, String schemaLocation) {}

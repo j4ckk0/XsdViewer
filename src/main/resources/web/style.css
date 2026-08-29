@@ -340,6 +340,7 @@ html, body {
   border-radius: 10px;
   font-size: 11px;
 }
+.lg.optional { color: var(--muted); border: 1px dashed var(--muted); padding: 0 6px; }
 
 #graphCanvas { flex: 1; overflow: auto; }
 #graphCanvas svg { display: block; }
@@ -369,7 +370,10 @@ html, body {
 .edge-label-bg { fill: #fff; opacity: .9; }
 
 .node .link-name { font-size: 13px; font-weight: 600; fill: var(--text); }
+.node .link-name.optional { font-weight: 400; }
 .node .link-name.structural, .node .link-name .structural { font-size: 11px; font-weight: 400; font-style: italic; fill: var(--muted); }
+.node .link-name .card { font-size: 11px; font-weight: 400; font-style: normal; fill: var(--muted); }
+.edge.optional { stroke-dasharray: 6 4; }
 
 /* ---- text view --------------------------------------------------------------------- */
 
@@ -445,6 +449,8 @@ html, body {
 }
 .link:hover { background: #e7e9ee; }
 .link .lbl { color: var(--text); font-size: 12px; flex: none; }
+.link .card { color: var(--muted); font-size: 11px; flex: none; }
+.link.optional .lbl { font-weight: 400; color: var(--muted); }
 .link .tgt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---- overlays ---------------------------------------------------------------------- */

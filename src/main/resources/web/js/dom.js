@@ -74,6 +74,8 @@ export const CLS = {
   NODE_KIND: 'kind',
   LINK_NAME: 'link-name',
   STRUCTURAL: 'structural',
+  CARDINALITY: 'card',
+  OPTIONAL: 'optional',
   // details
   BADGE: 'badge',
   META: 'meta',

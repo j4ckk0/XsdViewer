@@ -42,6 +42,9 @@ public final class JsonKey {
     public static final String FROM = "from";
     public static final String TO = "to";
     public static final String LABEL = "label";
+    /** Cardinality of a link, only when it has one: {@code min}, and {@code max} (-1 = unbounded). */
+    public static final String MIN = "min";
+    public static final String MAX = "max";
 
     // schema files (/api/initial, /api/open, /api/locate)
     public static final String PATH = "path";

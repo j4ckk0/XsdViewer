@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
+import org.jtools.xsdviewer.schema.SchemaGraph.Cardinality;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -90,7 +91,7 @@ public final class XsdParser {
         // Pass 2: the links.
         for (Element c : children(schema)) {
             if (isGlobalDeclaration(c)) {
-                collect(c, SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME)), true);
+                collect(c, SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME)), true, Cardinality.ONE);
             }
         }
 
@@ -110,7 +111,7 @@ public final class XsdParser {
                             Messages.get(MessageKey.EXTERNAL_DECLARATION_DOC, kind)));
                 }
             }
-            graph.edges.add(new SchemaGraph.Edge(e.from(), to, e.label()));
+            graph.edges.add(new SchemaGraph.Edge(e.from(), to, e.label(), e.cardinality()));
         }
         return graph;
     }
@@ -130,71 +131,107 @@ public final class XsdParser {
     /**
      * Walks a declaration and records every reference it makes.
      *
-     * @param e     the element being examined
-     * @param owner id of the global declaration all links are attributed to
-     * @param self  true when {@code e} is the global declaration itself (its own type /
-     *              substitutionGroup are then labelled differently from a nested element's)
+     * @param e         the element being examined
+     * @param owner     id of the global declaration all links are attributed to
+     * @param self      true when {@code e} is the global declaration itself (its own type /
+     *                  substitutionGroup are then labelled differently from a nested element's)
+     * @param enclosing occurrences of the enclosing particles (sequence / choice / all) since the
+     *                  nearest enclosing element: what a nested element's own minOccurs / maxOccurs
+     *                  are multiplied by
      */
-    private void collect(Element e, String owner, boolean self) {
+    private void collect(Element e, String owner, boolean self, Cardinality enclosing) {
         if (!XsdVocabulary.NAMESPACE.equals(e.getNamespaceURI())) return; // e.g. content of xs:appinfo
         String ln = e.getLocalName();
+        Cardinality inner = enclosing;   // what the children of e are enclosed in
         switch (ln) {
             case XsdVocabulary.ANNOTATION -> { return; }
             case XsdVocabulary.ELEMENT -> {
+                Cardinality card = self ? null : particle(e).within(enclosing);
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.REF);
+                    link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.REF, card);
                     return;
                 }
                 String name = e.getAttribute(XsdVocabulary.ATTR_NAME);
                 if (e.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
                     // a nested element is labelled with just its name: "shipTo", not "child shipTo"
-                    linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e, self ? LinkLabel.TYPE : name);
+                    linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e, self ? LinkLabel.TYPE : name, card);
                 }
                 if (self && e.hasAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP)) {
-                    link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP), e, LinkLabel.SUBSTITUTES);
+                    link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP), e, LinkLabel.SUBSTITUTES, null);
                 }
+                inner = Cardinality.ONE;   // an anonymous type's content is counted from this element
             }
             case XsdVocabulary.ATTRIBUTE -> {
+                Cardinality card = self ? null : attributeUse(e);
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.ATTRIBUTE, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_REF);
+                    link(owner, NodeKind.ATTRIBUTE, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_REF, card);
                     return;
                 }
                 if (e.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
                     linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e,
-                            self ? LinkLabel.TYPE : LinkLabel.attribute(e.getAttribute(XsdVocabulary.ATTR_NAME)));
+                            self ? LinkLabel.TYPE : LinkLabel.attribute(e.getAttribute(XsdVocabulary.ATTR_NAME)), card);
                 }
             }
             case XsdVocabulary.GROUP -> {
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.GROUP);
+                    link(owner, NodeKind.GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.GROUP, particle(e).within(enclosing));
                     return;
                 }
             }
             case XsdVocabulary.ATTRIBUTE_GROUP -> {
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.ATTRIBUTE_GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_GROUP);
+                    link(owner, NodeKind.ATTRIBUTE_GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_GROUP, null);
                     return;
                 }
             }
+            case XsdVocabulary.SEQUENCE, XsdVocabulary.ALL -> inner = particle(e).within(enclosing);
+            case XsdVocabulary.CHOICE -> inner = particle(e).within(enclosing).withMin(0);   // one branch or another: each is optional
             case XsdVocabulary.EXTENSION -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.EXTENDS);
+                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.EXTENDS, null);
             }
             case XsdVocabulary.RESTRICTION -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.RESTRICTS);
+                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.RESTRICTS, null);
             }
             case XsdVocabulary.LIST -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_ITEM_TYPE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_ITEM_TYPE), e, LinkLabel.LIST_OF);
+                if (e.hasAttribute(XsdVocabulary.ATTR_ITEM_TYPE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_ITEM_TYPE), e, LinkLabel.LIST_OF, null);
             }
             case XsdVocabulary.UNION -> {
                 if (e.hasAttribute(XsdVocabulary.ATTR_MEMBER_TYPES)) {
                     for (String t : e.getAttribute(XsdVocabulary.ATTR_MEMBER_TYPES).trim().split(WHITESPACE)) {
-                        if (!t.isEmpty()) linkType(owner, t, e, LinkLabel.UNION_OF);
+                        if (!t.isEmpty()) linkType(owner, t, e, LinkLabel.UNION_OF, null);
                     }
                 }
             }
             default -> { }
         }
-        for (Element c : children(e)) collect(c, owner, false);
+        for (Element c : children(e)) collect(c, owner, false, inner);
+    }
+
+    /** minOccurs..maxOccurs of a particle (element, group reference, compositor); 1..1 when absent. */
+    private static Cardinality particle(Element e) {
+        int min = intAttribute(e, XsdVocabulary.ATTR_MIN_OCCURS, 1);
+        String max = e.getAttribute(XsdVocabulary.ATTR_MAX_OCCURS);
+        if (XsdVocabulary.MAX_OCCURS_UNBOUNDED.equals(max)) return new Cardinality(min, Cardinality.UNBOUNDED);
+        return new Cardinality(min, intAttribute(e, XsdVocabulary.ATTR_MAX_OCCURS, 1));
+    }
+
+    /** The cardinality of an attribute from its {@code use}: optional unless said otherwise. */
+    private static Cardinality attributeUse(Element e) {
+        return switch (e.getAttribute(XsdVocabulary.ATTR_USE)) {
+            case XsdVocabulary.USE_REQUIRED -> Cardinality.ONE;
+            case XsdVocabulary.USE_PROHIBITED -> Cardinality.NONE;
+            default -> Cardinality.OPTIONAL;
+        };
+    }
+
+    private static int intAttribute(Element e, String name, int fallback) {
+        String v = e.getAttribute(name);
+        if (v.isEmpty()) return fallback;
+        try {
+            return Integer.parseInt(v.trim());
+        } catch (NumberFormatException ex) {
+            return fallback;   // a lenient viewer: a malformed value is not worth refusing the file
+        }
     }
 
     /** A qualified name split into the namespace it resolves to (empty when unbound) and its local part. */
@@ -209,7 +246,7 @@ public final class XsdParser {
     }
 
     /** A reference to a named type: built-in XSD types are resolved now, the others at the end. */
-    private void linkType(String owner, String qname, Element ctx, String label) {
+    private void linkType(String owner, String qname, Element ctx, String label, Cardinality card) {
         QName q = QName.resolve(qname, ctx);
         // A name in the XSD namespace is a built-in type, unless this file declares it: schemas
         // that use the XSD namespace as their default namespace refer to their own types unprefixed.
@@ -217,16 +254,16 @@ public final class XsdParser {
             String id = SchemaGraph.nodeId(NodeKind.BUILTIN, q.local());
             graph.nodes.computeIfAbsent(id, k -> new SchemaGraph.Node(id, NodeKind.BUILTIN, q.local(),
                     XsdVocabulary.NAMESPACE, 0, Messages.get(MessageKey.BUILTIN_TYPE_DOC)));
-            graph.edges.add(new SchemaGraph.Edge(owner, id, label));
+            graph.edges.add(new SchemaGraph.Edge(owner, id, label, card));
         } else {
-            pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local()), label), q.ns()));
+            pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local()), label, card), q.ns()));
         }
     }
 
     /** A reference (ref=, substitutionGroup=) to a named declaration of a given kind. */
-    private void link(String owner, String kind, String qname, Element ctx, String label) {
+    private void link(String owner, String kind, String qname, Element ctx, String label, Cardinality card) {
         QName q = QName.resolve(qname, ctx);
-        pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(kind, q.local()), label), q.ns()));
+        pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(kind, q.local()), label, card), q.ns()));
     }
 
     /** The xs:documentation texts of the declaration's first xs:annotation, joined by line breaks. */

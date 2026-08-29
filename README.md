@@ -13,6 +13,11 @@ A Java server parses the schema and serves a web page offering two views:
   object whose file is open is expanded from that tab (its box shows the real kind and
   the file), and objects of other files that use the centre appear on the left, marked
   with their file; clicking one of them switches to that tab.
+  Each link shows its **cardinality** after its name (`items 1..*`, `orderDate 0..1`): the
+  `minOccurs`/`maxOccurs` of a nested element or group reference — through the enclosing
+  `sequence`/`all`/`choice`, counted from the nearest enclosing element — or the `use` of an
+  attribute. **Optional** links (minimum 0: `minOccurs="0"`, optional attribute, branch of a
+  `choice`) are drawn dashed and lighter; mandatory ones solid.
   Click any node to make it the centre; **← Back** (or Alt+←) returns to the previous one.
 - **Text** – the schema source with line numbers and syntax colouring. The selected
   object's declaration is highlighted; click a highlighted line number to select that

@@ -21,6 +21,7 @@ package org.jtools.xsdviewer.schema;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,8 +44,17 @@ class XsdParserTest {
         model = XsdParser.parse(Files.readString(Path.of("samples/purchaseOrder.xsd")));
     }
 
+    private static boolean hasEdge(SchemaGraph g, String from, String to, String label) {
+        return g.edges.stream().anyMatch(e -> e.from().equals(from) && e.to().equals(to) && e.label().equals(label));
+    }
+
     private static boolean hasEdge(String from, String to, String label) {
-        return model.edges.contains(new SchemaGraph.Edge(from, to, label));
+        return hasEdge(model, from, to, label);
+    }
+
+    private static SchemaGraph.Cardinality cardinality(SchemaGraph g, String from, String to, String label) {
+        return g.edges.stream().filter(e -> e.from().equals(from) && e.to().equals(to) && e.label().equals(label))
+                .findFirst().orElseThrow().cardinality();
     }
 
     @Test
@@ -160,8 +170,59 @@ class XsdParserTest {
                   <element name="b" type="T"/>
                   <complexType name="T"><sequence><element ref="a"/></sequence></complexType>
                 </schema>""");
-        assertTrue(m.edges.contains(new SchemaGraph.Edge("element:a", "builtin:string", "type")));
-        assertTrue(m.edges.contains(new SchemaGraph.Edge("element:b", "complexType:T", "type")));
-        assertTrue(m.edges.contains(new SchemaGraph.Edge("complexType:T", "element:a", "ref")));
+        assertTrue(hasEdge(m, "element:a", "builtin:string", "type"));
+        assertTrue(hasEdge(m, "element:b", "complexType:T", "type"));
+        assertTrue(hasEdge(m, "complexType:T", "element:a", "ref"));
+    }
+
+    @Test
+    void cardinalitiesOfElementsGroupsAndAttributes() {
+        SchemaGraph.Cardinality one = SchemaGraph.Cardinality.ONE, optional = SchemaGraph.Cardinality.OPTIONAL;
+        assertEquals(one, cardinality(model, "complexType:PurchaseOrderType", "complexType:USAddress", "shipTo"));
+        assertEquals(optional, cardinality(model, "complexType:PurchaseOrderType", "element:comment", "ref"));
+        assertEquals(optional, cardinality(model, "complexType:PurchaseOrderType", "builtin:date", "attribute orderDate"));
+        assertNull(cardinality(model, "complexType:PurchaseOrderType", "attributeGroup:AuditAttributes", "attributeGroup"));
+        assertEquals(new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED), cardinality(model, "complexType:Category", "complexType:Category", "subCategory"));
+        // inside item (0..*): counted from item, not from Items
+        assertEquals(one, cardinality(model, "complexType:Items", "builtin:string", "productName"));
+        assertEquals(one, cardinality(model, "complexType:Items", "simpleType:SKU", "attribute partNum"));
+        assertEquals(optional, cardinality(model, "complexType:Items", "group:ItemExtras", "group"));
+        assertEquals(optional, cardinality(model, "attributeGroup:AuditAttributes", "attribute:version", "attribute ref"));
+        // type links have none
+        assertNull(cardinality(model, "element:purchaseOrder", "complexType:PurchaseOrderType", "type"));
+        assertNull(cardinality(model, "complexType:InternationalAddress", "complexType:USAddress", "extends"));
+        assertNull(cardinality(model, "simpleType:SKUList", "simpleType:SKU", "list of"));
+    }
+
+    @Test
+    void enclosingCompositorsCountToo() throws Exception {
+        SchemaGraph m = XsdParser.parse("""
+                <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+                  <xs:complexType name="T">
+                    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                      <xs:element name="a" type="xs:string"/>
+                      <xs:choice maxOccurs="2">
+                        <xs:element name="b" type="xs:string"/>
+                        <xs:element name="c" type="xs:string" minOccurs="2" maxOccurs="3"/>
+                      </xs:choice>
+                    </xs:sequence>
+                    <xs:attribute name="p" type="xs:string" use="prohibited"/>
+                  </xs:complexType>
+                </xs:schema>""");
+        assertEquals(new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED), cardinality(m, "complexType:T", "builtin:string", "a"));
+        assertEquals(new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED), cardinality(m, "complexType:T", "builtin:string", "b"));
+        assertEquals(new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED), cardinality(m, "complexType:T", "builtin:string", "c"));
+        assertEquals(SchemaGraph.Cardinality.NONE, cardinality(m, "complexType:T", "builtin:string", "attribute p"));
+        SchemaGraph m2 = XsdParser.parse("""
+                <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+                  <xs:complexType name="T">
+                    <xs:choice maxOccurs="2">
+                      <xs:element name="b" type="xs:string"/>
+                      <xs:element name="c" type="xs:string" minOccurs="2" maxOccurs="3"/>
+                    </xs:choice>
+                  </xs:complexType>
+                </xs:schema>""");
+        assertEquals(new SchemaGraph.Cardinality(0, 2), cardinality(m2, "complexType:T", "builtin:string", "b"));
+        assertEquals(new SchemaGraph.Cardinality(0, 6), cardinality(m2, "complexType:T", "builtin:string", "c"));
     }
 }

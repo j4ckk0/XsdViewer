@@ -44,6 +44,9 @@ public final class XsdVocabulary {
     public static final String RESTRICTION = "restriction";
     public static final String LIST = "list";
     public static final String UNION = "union";
+    public static final String SEQUENCE = "sequence";
+    public static final String CHOICE = "choice";
+    public static final String ALL = "all";
 
     // attributes
     public static final String ATTR_NAME = "name";
@@ -56,6 +59,12 @@ public final class XsdVocabulary {
     public static final String ATTR_TARGET_NAMESPACE = "targetNamespace";
     public static final String ATTR_NAMESPACE = "namespace";
     public static final String ATTR_SCHEMA_LOCATION = "schemaLocation";
+    public static final String ATTR_MIN_OCCURS = "minOccurs";
+    public static final String ATTR_MAX_OCCURS = "maxOccurs";
+    public static final String MAX_OCCURS_UNBOUNDED = "unbounded";
+    public static final String ATTR_USE = "use";
+    public static final String USE_REQUIRED = "required";
+    public static final String USE_PROHIBITED = "prohibited";
 
     /** Separator between the prefix and the local part of a qualified name ({@code xs:string}). */
     public static final char QNAME_SEPARATOR = ':';
