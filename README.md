@@ -70,12 +70,24 @@ java -jar target/xsdviewer.jar
 The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
 
 ```
-scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Linux/macOS
-scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [file.xsd]   # Windows
+scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [file.xsd]   # Linux/macOS
+scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [file.xsd]   # Windows
 ```
 
 Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
 is a small schema exercising every kind of link.
+
+**The server stops by itself** 15 seconds after the last page showing it has been closed —
+no orphan process left behind when you close the browser (*File ▸ Quit* stops it at once).
+Each page holds a connection open for its whole life; the server only counts a page gone when
+that connection breaks, so an idle page, even for hours and even in a background tab, keeps
+the server up; a reload, a browser restart or a laptop waking up reconnect within the grace.
+`--keep-alive` disables the automatic stop, for a server you open pages on now and then;
+`--no-browser` implies it (you start it without a page and will open one later). One caveat:
+Chrome's and Edge's *Memory Saver* may *discard* a background tab after a long idle time, which
+is indistinguishable from closing it — the visible tab is never discarded; if the tool lives in
+a background tab for hours, add `127.0.0.1` to *Settings ▸ Performance ▸ Always keep these sites
+active*, or use `--keep-alive`.
 
 ## Installing Java 21
 

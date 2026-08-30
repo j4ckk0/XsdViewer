@@ -34,8 +34,8 @@ import org.jtools.xsdviewer.json.JsonWriter;
 /** Reading the request body and writing the answers, for all the handlers. */
 final class HttpResponses {
 
-    private static final String CACHE_CONTROL_HEADER = "Cache-Control";
-    private static final String NO_CACHE = "no-cache";
+    static final String CACHE_CONTROL_HEADER = "Cache-Control";
+    static final String NO_CACHE = "no-cache";
 
     private HttpResponses() {}
 

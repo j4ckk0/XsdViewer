@@ -1,6 +1,6 @@
 @echo off
 rem Run XsdViewer with the bundled JRE. Arguments are passed to the tool:
-rem   xsdviewer.bat [--port N] [--host H] [--no-browser] [file.xsd | name.xsdviewer.json]
+rem   xsdviewer.bat [--port N] [--host H] [--no-browser] [--keep-alive] [file.xsd | name.xsdviewer.json]
 rem
 rem The server runs in the background (javaw.exe): no console window stays open, the page opens
 rem in the browser, File > Quit stops it. A start-up failure is shown in a dialog.

@@ -35,6 +35,10 @@ public final class ApiPath {
     public static final String LOCATE = "/api/locate";
     /** {@code POST}: stop the server. */
     public static final String QUIT = "/api/quit";
+    /** {@code GET ?id=}: a page is open — an event stream held for the page's whole life. */
+    public static final String ALIVE = "/api/alive";
+    /** {@code POST ?id=}: a page is closing. */
+    public static final String BYE = "/api/bye";
     /** {@code GET}: what the server can do for the page ({@code {"dialogs": bool}}). */
     public static final String CAPABILITIES = "/api/capabilities";
     /** {@code POST}: native "open files" dialog, answers the chosen schemas. */
@@ -52,6 +56,8 @@ public final class ApiPath {
     public static final String PARAM_BASE = "base";
     public static final String PARAM_LOCATION = "location";
     public static final String PARAM_NAME = "name";
+    /** {@code /api/alive}, {@code /api/bye}: the page's own random id. */
+    public static final String PARAM_ID = "id";
     /** {@code /api/open}: resolve only against the directory of {@code base}. */
     public static final String PARAM_STRICT = "strict";
     public static final String TRUE = "true";

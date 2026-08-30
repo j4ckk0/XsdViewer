@@ -53,13 +53,15 @@ export const API = {
   OPEN: '/api/open',
   LOCATE: '/api/locate',
   QUIT: '/api/quit',
+  ALIVE: '/api/alive',
+  BYE: '/api/bye',
   CAPABILITIES: '/api/capabilities',
   CHOOSE: '/api/choose',
   CHOOSE_FOLDER: '/api/choose-folder',
   WORKSPACE_SAVE: '/api/workspace/save',
   WORKSPACE_OPEN: '/api/workspace/open',
 };
-export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location', STRICT: 'strict' };
+export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location', STRICT: 'strict', ID: 'id' };
 export const HTTP = {
   POST: 'POST',
   CONTENT_TYPE_HEADER: 'Content-Type',

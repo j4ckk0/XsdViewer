@@ -6,6 +6,7 @@ import { openLinkedSchemas } from './linked-schemas.js';
 import { MSG } from './message-keys.js';
 import { checkPendingJump } from './navigation.js';
 import { renderPage } from './page.js';
+import { stopPresence } from './presence.js';
 import { loadInto } from './schema-loader.js';
 import { session } from './state.js';
 import { activateTab, closeAllTabs, newTab, resetTab } from './tabs.js';
@@ -72,6 +73,7 @@ export async function quit() {
     toast(t(MSG.CANNOT_STOP, e.message));
     return;
   }
+  stopPresence(false);                       // the server is stopping: no reconnection attempts, nothing to tell it
   document.body.innerHTML = '<div id="' + ID.EMPTY + '" class="' + CLS.VIEW + '"><div class="' + CLS.EMPTY_BOX + '">'
     + '<div class="' + CLS.BIG + '">' + esc(t(MSG.QUIT_STOPPED_TITLE)) + '</div><div>' + esc(t(MSG.QUIT_STOPPED_HINT)) + '</div></div></div>';
   window.close();

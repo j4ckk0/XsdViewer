@@ -32,7 +32,7 @@ import org.jtools.xsdviewer.server.XsdViewerServer;
  * Entry point: reads the command line, starts the {@link XsdViewerServer} and opens the browser.
  *
  * <pre>
- *   java -jar xsdviewer.jar [--port N] [--host H] [--no-browser] [file.xsd]
+ *   java -jar xsdviewer.jar [--port N] [--host H] [--no-browser] [--keep-alive] [file.xsd]
  * </pre>
  */
 public final class XsdViewerApplication {
@@ -67,7 +67,7 @@ public final class XsdViewerApplication {
 
         XsdViewerServer server;
         try {
-            server = XsdViewerServer.start(options.host(), options.port(), options.initialFile());
+            server = XsdViewerServer.start(options.host(), options.port(), options.initialFile(), options.stopWhenNoPage());
         } catch (IOException e) {
             String message = Messages.get(MessageKey.CANNOT_START, options.host(), String.valueOf(options.port()), e.getMessage());
             Log.warn(message, e);

@@ -38,6 +38,8 @@ class CommandLineOptionsTest {
         assertEquals(CommandLineOptions.DEFAULT_HOST, o.host());
         assertEquals(CommandLineOptions.DEFAULT_PORT, o.port());
         assertTrue(o.openBrowser());
+        assertFalse(o.keepAlive());
+        assertTrue(o.stopWhenNoPage());
         assertFalse(o.help());
         assertNull(o.initialFile());
     }
@@ -49,6 +51,14 @@ class CommandLineOptionsTest {
         assertEquals(9090, o.port());
         assertFalse(o.openBrowser());
         assertEquals(Path.of("a.xsd"), o.initialFile());
+    }
+
+    @Test
+    void keepAliveAndNoBrowserBothKeepTheServerRunning() {
+        assertTrue(CommandLineOptions.parse(new String[] { "--keep-alive" }).keepAlive());
+        assertFalse(CommandLineOptions.parse(new String[] { "--keep-alive" }).stopWhenNoPage());
+        assertFalse(CommandLineOptions.parse(new String[] { "--no-browser" }).stopWhenNoPage());
+        assertTrue(CommandLineOptions.parse(new String[] { "--port", "1" }).stopWhenNoPage());
     }
 
     @Test

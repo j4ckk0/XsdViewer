@@ -28,6 +28,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
+import java.io.InputStream;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -41,7 +42,7 @@ class XsdViewerServerTest {
 
     @BeforeAll
     static void start() throws Exception {
-        server = XsdViewerServer.start("127.0.0.1", 0, Path.of("samples/purchaseOrder.xsd"));
+        server = XsdViewerServer.start("127.0.0.1", 0, Path.of("samples/purchaseOrder.xsd"), false);
     }
 
     @AfterAll
@@ -94,6 +95,23 @@ class XsdViewerServerTest {
         HttpResponse<String> caps = get("/api/capabilities");
         assertEquals(200, caps.statusCode());
         assertTrue(caps.body().contains("\"dialogs\":") && caps.body().contains("\"version\":"), caps.body());
+    }
+
+    @Test
+    void aliveIsAnEventStreamAndByeAnswers() throws Exception {
+        assertEquals(400, get("/api/alive").statusCode());
+        HttpResponse<InputStream> alive = client.send(HttpRequest.newBuilder(URI.create(server.url() + "api/alive?id=t1")).GET().build(),
+                HttpResponse.BodyHandlers.ofInputStream());
+        assertEquals(200, alive.statusCode());
+        assertEquals(AliveHandler.CONTENT_TYPE, alive.headers().firstValue("Content-Type").orElse(""));
+        try (InputStream in = alive.body()) {
+            byte[] first = in.readNBytes(8);      // the first ping arrives at once
+            assertEquals(": ping\n\n", new String(first, java.nio.charset.StandardCharsets.UTF_8));
+        }
+        HttpResponse<String> bye = post("/api/bye?id=t1", "");
+        assertEquals(200, bye.statusCode());
+        assertEquals("{\"ok\":true}", bye.body());
+        assertEquals(405, get("/api/bye?id=t1").statusCode());
     }
 
     @Test

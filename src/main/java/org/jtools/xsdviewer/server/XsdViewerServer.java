@@ -47,16 +47,24 @@ public final class XsdViewerServer {
         this.url = URL_SCHEME + host + ':' + server.getAddress().getPort() + ApiPath.ROOT;
     }
 
-    /** Binds to {@code host:port} (port 0 for an ephemeral one) and starts serving. */
-    public static XsdViewerServer start(String host, int port, Path initialFile) throws IOException {
+    /**
+     * Binds to {@code host:port} (port 0 for an ephemeral one) and starts serving.
+     *
+     * @param stopWhenNoPage exit the process once every page has been closed for {@link PageWatch#GRACE}
+     *                       (false with {@code --keep-alive})
+     */
+    public static XsdViewerServer start(String host, int port, Path initialFile, boolean stopWhenNoPage) throws IOException {
         HttpServer http = HttpServer.create(new InetSocketAddress(host, port), 0);
         XsdViewerServer server = new XsdViewerServer(http, host);
         ServedSchemaFiles files = new ServedSchemaFiles();
+        PageWatch pages = new PageWatch();
         http.createContext(ApiPath.PARSE, localized(new ParseSchemaHandler()));
         http.createContext(ApiPath.INITIAL, localized(new InitialFileHandler(files, initialFile)));
         http.createContext(ApiPath.OPEN, localized(new OpenSchemaLocationHandler(files)));
         http.createContext(ApiPath.LOCATE, localized(new LocateSchemaFileHandler(files, new SchemaFileFinder())));
         http.createContext(ApiPath.QUIT, localized(new QuitHandler(server::stopAndExit)));
+        http.createContext(ApiPath.ALIVE, localized(new AliveHandler(pages)));
+        http.createContext(ApiPath.BYE, localized(new ByeHandler(pages)));
         http.createContext(ApiPath.CAPABILITIES, localized(new CapabilitiesHandler()));
         http.createContext(ApiPath.CHOOSE, localized(new ChooseFilesHandler(files)));
         http.createContext(ApiPath.CHOOSE_FOLDER, localized(new ChooseFolderHandler(files)));
@@ -65,6 +73,7 @@ public final class XsdViewerServer {
         http.createContext(ApiPath.ROOT, localized(new StaticResourceHandler()));
         http.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         http.start();
+        if (stopWhenNoPage) pages.watch(server::stopAndExit);
         return server;
     }
 

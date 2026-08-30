@@ -35,12 +35,14 @@ public final class MessageKey {
     // console
     public static final String SERVER_LISTENING = "server.listening";
     public static final String SERVER_QUIT_REQUESTED = "server.quitRequested";
+    public static final String SERVER_NO_PAGE_LEFT = "server.noPageLeft";
     public static final String LOG_FILE = "server.logFile";
     public static final String LOG_FILE_UNAVAILABLE = "server.logFileUnavailable";
     public static final String REQUEST_FAILED = "server.requestFailed";
 
     // HTTP / API errors
     public static final String POST_EXPECTED = "http.postExpected";
+    public static final String PAGE_ID_EXPECTED = "http.pageIdExpected";
     public static final String NOT_FOUND = "http.notFound";
     public static final String NO_INITIAL_FILE = "api.noInitialFile";
     public static final String LOCATION_EXPECTED = "api.locationExpected";
