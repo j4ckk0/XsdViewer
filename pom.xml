@@ -238,7 +238,7 @@
                  bundled jre\ with xsdviewer.jar; built from any OS. xsdviewer.bat keeps the console. -->
             <groupId>com.akathist.maven.plugins.launch4j</groupId>
             <artifactId>launch4j-maven-plugin</artifactId>
-            <version>2.7.1</version>
+            <version>2.7.0</version>
             <executions>
               <execution>
                 <id>windows-launcher</id>
