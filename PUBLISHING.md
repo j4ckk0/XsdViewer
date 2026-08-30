@@ -1,7 +1,7 @@
 # Publishing XsdViewer on GitHub
 
 What a public repository needs, what this repository already has, and the steps to publish.
-Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>, release [v2.5.0](https://github.com/j4ckk0/XsdViewer/releases/tag/v2.5.0).
+Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>; current release [v2.6.0](https://github.com/j4ckk0/XsdViewer/releases/tag/v2.6.0) (first one: v2.5.0).
 
 ## 1. Required
 
@@ -21,11 +21,11 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
 | Item | Why | Suggestion |
 |---|---|---|
 | **Continuous integration** | Proves every push still builds and passes the tests; shows a badge in the README. | **Done** (30 August 2026): `.github/workflows/build.yml` — `actions/checkout`, `actions/setup-java` (Temurin 21, Maven cache), `mvn -B package` on every push to `master`, every `v*` tag and every pull request; `target/xsdviewer.jar` kept as a workflow artefact; badge at the top of the README. |
-| **Tags and releases** | Users download a version, not a commit. | **Done** (30 August 2026): tag `v2.5.0`, GitHub Release *XsdViewer 2.5.0* with `xsdviewer.jar`, `xsdviewer-2.5.0-windows.zip` and `xsdviewer-2.5.0-linux.tar.gz` (~50 MB each: fine for Release assets, never for the repository) and the SHA-256 checksums in the notes. |
+| **Tags and releases** | Users download a version, not a commit. | **Done**: one tag `vX.Y.Z` and one GitHub Release per version (v2.5.0 and v2.6.0 on 30 August 2026), each with `xsdviewer-X.Y.Z.jar`, `-windows.zip` and `-linux.tar.gz` from `releases/` (~50 MB each: fine for Release assets, never for the repository) and the SHA-256 checksums in the notes; the routine is section 5. |
 | **`pom.xml` metadata** | Shown by Maven tooling and GitHub's dependency graph. | **Done**: `<url>`, `<inceptionYear>`, `<organization>`, `<licenses>`, `<developers>`, `<scm>`, `<issueManagement>`, all pointing at `github.com/j4ckk0/XsdViewer` (same identity as the jtools parent pom). |
 | **Repository description and topics** | Discoverability. | **Done** (30 August 2026): description "Explore XML Schema (.xsd) files in the browser: …", website field pointing at `releases/latest`, topics `xsd`, `xml-schema`, `xml`, `schema`, `viewer`, `visualization`, `graph`, `java`, `web-application`, `developer-tools`. |
 | **Security note** | The tool is a local server that reads files on request from the page. | Already in `architecture.md` (binds `127.0.0.1`, only serves directories it has been shown); repeat one sentence in the README so it is seen. A `SECURITY.md` is optional for a tool of this size. |
-| **`CHANGELOG.md`** | The git log already records the versions (1.3.0 … 2.5.0); a short file per version is friendlier. | Optional; GitHub Release notes can serve instead. |
+| **`CHANGELOG.md`** | The git log already records the versions (1.3.0 … 2.6.0); a short file per version is friendlier. | Optional; the GitHub Release notes serve instead (each release lists what changed since the previous one). |
 | **`CONTRIBUTING.md` / issue templates** | Only useful if you expect contributions. | Optional. |
 | **Default branch name** | GitHub creates `main`; this repository uses `master`. Either works. | Kept `master`; it is the default branch on GitHub. |
 | **Branch protection** | Prevents force-pushes to the published branch. | **Done** (30 August 2026), as two rulesets (*Settings ▸ Rules ▸ Rulesets*): *protect master* on `refs/heads/master` and *protect version tags* on `refs/tags/v*`, both blocking deletion and force-push. Nobody else can push anyway: no collaborator is added, other users can only fork and open pull requests. To move a tag or rewrite history on purpose, disable the ruleset first, then enable it again. |
@@ -53,6 +53,8 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
 7. ~~Check the repository page as a stranger would~~ — done: licence detected (Apache-2.0), README rendered, release assets downloadable anonymously (jar checksum verified), Actions green.
 
 ## 5. Next release
+
+Followed for v2.6.0 (30 August 2026): version bump, tag, `scripts/package.sh`, release through the API — about ten minutes.
 
 1. Bump the version in `pom.xml`, commit `Version X.Y.Z`, `git tag -a vX.Y.Z -m "X.Y.Z"`, `git push github master vX.Y.Z`.
 2. `scripts/package.sh`, then `sha256sum releases/*` for the notes.
