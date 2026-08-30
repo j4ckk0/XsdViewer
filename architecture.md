@@ -310,6 +310,7 @@ executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's
 ```
 XsdViewer/
 ├── pom.xml
+├── .github/workflows/build.yml   CI: mvn package on JDK 21, jar kept as artefact
 ├── scripts/
 │   ├── run.sh, run.bat           build if needed + run
 │   ├── build.sh, build.bat       mvn package

@@ -1,5 +1,7 @@
 # XsdViewer
 
+[![build](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml/badge.svg)](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml)
+
 A small tool to explore an XML Schema (`.xsd`) file in the browser.
 
 A Java server parses the schema and serves a web page offering two views:

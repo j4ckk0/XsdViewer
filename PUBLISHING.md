@@ -20,7 +20,7 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
 
 | Item | Why | Suggestion |
 |---|---|---|
-| **Continuous integration** | Proves every push still builds and passes the tests; shows a badge in the README. | `.github/workflows/build.yml`: `actions/checkout`, `actions/setup-java` (Temurin 21, Maven cache), `mvn -B package`. Optionally upload `target/xsdviewer.jar` as a workflow artefact. |
+| **Continuous integration** | Proves every push still builds and passes the tests; shows a badge in the README. | **Done** (30 August 2026): `.github/workflows/build.yml` — `actions/checkout`, `actions/setup-java` (Temurin 21, Maven cache), `mvn -B package` on every push to `master`, every `v*` tag and every pull request; `target/xsdviewer.jar` kept as a workflow artefact; badge at the top of the README. |
 | **Tags and releases** | Users download a version, not a commit. | **Done** (30 August 2026): tag `v2.5.0`, GitHub Release *XsdViewer 2.5.0* with `xsdviewer.jar`, `xsdviewer-2.5.0-windows.zip` and `xsdviewer-2.5.0-linux.tar.gz` (~50 MB each: fine for Release assets, never for the repository) and the SHA-256 checksums in the notes. |
 | **`pom.xml` metadata** | Shown by Maven tooling and GitHub's dependency graph. | **Done**: `<url>`, `<inceptionYear>`, `<organization>`, `<licenses>`, `<developers>`, `<scm>`, `<issueManagement>`, all pointing at `github.com/j4ckk0/XsdViewer` (same identity as the jtools parent pom). |
 | **Repository description and topics** | Discoverability. | **Done** (30 August 2026): description "Explore XML Schema (.xsd) files in the browser: …", website field pointing at `releases/latest`, topics `xsd`, `xml-schema`, `xml`, `schema`, `viewer`, `visualization`, `graph`, `java`, `web-application`, `developer-tools`. |
@@ -40,7 +40,7 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
 
 1. ~~Licence, attribution, pom metadata~~ — done (Apache 2.0).
 2. ~~Author e-mail~~ — done. The commit trailers (item 3) were kept and published as they are.
-3. (Optional) add `.github/workflows/build.yml` — still open. ~~Screenshots~~ — done (30 August 2026), `screenshots/` linked from the README.
+3. ~~CI workflow and screenshots~~ — done (30 August 2026): `.github/workflows/build.yml`, `screenshots/` linked from the README.
 4. ~~On GitHub: *New repository*~~ — done (29 August 2026): <https://github.com/j4ckk0/XsdViewer>, public, `master` as default branch.
 5. ~~Locally: remote, push, tag~~ — done (29 August 2026):
    ```bash
@@ -50,7 +50,7 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
    ```
    `master` now tracks `github/master`. The existing `origin` (the bare repository on the NAS) still holds the history from before the rewrite: the next `git push origin` needs `--force`.
 6. ~~Release, description, topics~~ — done (30 August 2026) through the REST API: release *XsdViewer 2.5.0* from `v2.5.0` with the three artefacts of `scripts/package.sh` and the SHA-256 checksums in the notes; description, website and topics as in section 2.
-7. ~~Check the repository page as a stranger would~~ — done: licence detected (Apache-2.0), README rendered, release assets downloadable anonymously (jar checksum verified). No Actions yet (step 3).
+7. ~~Check the repository page as a stranger would~~ — done: licence detected (Apache-2.0), README rendered, release assets downloadable anonymously (jar checksum verified), Actions green.
 
 ## 5. Next release
 
