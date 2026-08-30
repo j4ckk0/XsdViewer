@@ -13,7 +13,7 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
 | 4 | **Attribution of third-party content** | Copying code or data from elsewhere requires respecting its licence. | **Done.** `samples/purchaseOrder.xsd` is adapted from the W3C *XML Schema Part 0: Primer* purchase-order example (W3C Document Licence): its header now carries the source URL and the W3C copyright, and the README's Licence section repeats it. `samples/import/*.xsd` are original. The only dependency, JUnit (EPL-2.0), is test-scoped and not redistributed. |
 | 5 | **Licences of what the release archives bundle** | `mvn package -Pdist` ships an Eclipse Temurin JRE (GPLv2 with Classpath Exception). Redistribution is allowed provided its notices travel with it. | **Done.** The `jre/` directory is copied whole (`legal/` and `release` inside) and `README.md ▸ Packaging` says what is bundled and under which licence. The archives themselves stay git-ignored. |
 | 6 | **No build artefacts or IDE files** | Keep the repository to sources. | **Done.** `.gitignore` covers `target/`, `.idea/`, `*.iml`, `.vscode/`, Eclipse files and the JRE archives; `.gitattributes` fixes line endings (`*.bat` CRLF, `*.sh` LF). |
-| 7 | **A README** | The repository's front page: what it is, how to run it, how to build it. | **Done** (`README.md`); add the licence section and, ideally, a screenshot (`docs/screenshot.png`) — a picture of the graph says more than the first paragraph. |
+| 7 | **A README** | The repository's front page: what it is, how to run it, how to build it. | **Done** (`README.md`), with the licence section and three screenshots (`screenshots/`, graph, text and compare views on the shipped samples) — a picture of the graph says more than the first paragraph. |
 | 8 | **A buildable tree from a fresh clone** | Anyone must be able to `git clone` then build with only what the README asks for. | **Done.** `mvn package` needs only a JDK 21 and Maven; tests run without network access. `-Pdist` fails with a clear message when the JRE archives are absent (documented). |
 
 ## 2. Recommended
@@ -40,7 +40,7 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
 
 1. ~~Licence, attribution, pom metadata~~ — done (Apache 2.0).
 2. ~~Author e-mail~~ — done. The commit trailers (item 3) were kept and published as they are.
-3. (Optional, still open) add `.github/workflows/build.yml` and `docs/screenshot.png`. Commit.
+3. (Optional) add `.github/workflows/build.yml` — still open. ~~Screenshots~~ — done (30 August 2026), `screenshots/` linked from the README.
 4. ~~On GitHub: *New repository*~~ — done (29 August 2026): <https://github.com/j4ckk0/XsdViewer>, public, `master` as default branch.
 5. ~~Locally: remote, push, tag~~ — done (29 August 2026):
    ```bash

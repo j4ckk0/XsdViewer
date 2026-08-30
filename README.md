@@ -30,6 +30,25 @@ selection, history and search filter. The **search box** in the left panel (Ctrl
 filters the object list; **⤓ PNG** in the top bar saves the current view (graph or
 text) as a PNG image. **File ▸ Quit** stops the server and closes the page.
 
+## Screenshots
+
+**Graph view** — `CatalogType` in the centre, what it links to on the right (two levels:
+`publisher` is an `Address` from `common.xsd`, expanded from its own tab), what uses it on the
+left; cardinalities after each link, optional links dashed. The details panel on the right
+lists the links and the documentation.
+
+![Graph view](screenshots/XsdViewer-graph-view.jpg)
+
+**Text view** — the same schema as source, the selected object's declaration highlighted;
+clicking a line number selects that object.
+
+![Text view](screenshots/XsdViewer-xml-view.jpg)
+
+**Comparing two workspaces** — `v1` against `v2` of the same schema set: file by file, the
+declarations and links only on one side, then the two sources side by side.
+
+![Compare view](screenshots/XsdViewer-compare-view.jpg)
+
 ## Build and run
 
 Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)).

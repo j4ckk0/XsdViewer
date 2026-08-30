@@ -318,6 +318,7 @@ XsdViewer/
 ├── architecture.md               this file
 ├── jre/                          JRE archives bundled by the dist profile (git-ignored, downloaded by hand)
 ├── releases/                     output of the dist profile: zip, tar.gz, jar (git-ignored, README only)
+├── screenshots/                  the three pictures of the README (graph, text, compare)
 ├── samples/purchaseOrder.xsd     small schema exercising every kind of link
 ├── samples/import/               order.xsd + the files it imports / includes (link following)
 └── src/
