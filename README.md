@@ -163,6 +163,12 @@ previous builds, whatever their version, are deleted from `releases/` first):
 When started without a console (the Windows launcher, a double-clicked jar), a start-up
 failure such as a port already in use is shown in a dialog instead of being lost.
 
+`scripts/release.sh <version> <whats-new.md>` then publishes them: it creates the GitHub Release
+from the tag `v<version>` (which must be pushed) and attaches the three archives, with release
+notes made of your "what's new" file, the downloads table and the SHA-256 checksums
+(`--dry-run` prints the notes, `--draft` creates a draft). It reads a GitHub token from
+`$GITHUB_TOKEN` or `~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
+
 The JREs are not tracked in git: before packaging, download the Temurin JRE 21
 archives from <https://adoptium.net/temurin/releases/> and put them in
 `jre/` at the root of the project:

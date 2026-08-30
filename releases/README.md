@@ -10,6 +10,7 @@ xsdviewer-<version>.jar            needs Java 21: java -jar xsdviewer-<version>.
 ```
 
 Everything here except this file is git-ignored; a build first deletes the artefacts
-of the previous one, whatever their version.
+of the previous one, whatever their version. `scripts/release.sh <version> <notes.md>`
+attaches them to the GitHub Release of the tag `v<version>`.
 
 The official releases can be found here: https://github.com/j4ckk0/XsdViewer/releases
