@@ -509,6 +509,11 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   border-radius: 10px;
   font-size: 11px;
 }
+/* the legend of the comparison: the backgrounds of the line comparison */
+#compareLegend { margin-left: 0; }
+.lg.del { background: #fee2e2; color: #991b1b; }
+.lg.ins { background: #dcfce7; color: #166534; }
+.lg.mov { background: #e0e7ff; color: #3730a3; font-style: italic; }
 /* the arrow entries of the legend: a small arrow, plain or dashed, then its meaning */
 .lg.arrow { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); padding: 0 2px; }
 .lg.arrow svg line { stroke: #9aa3af; stroke-width: 1.5; }

@@ -167,6 +167,8 @@
   "compare.identicalLines.one": "{0} identical line",
   "compare.identicalLines.other": "{0} identical lines",
   "compare.close": "Close the comparison",
+  "compare.legend.moved": "moved lines",
+  "compare.legend.title": "Colours of the line by line comparison",
   "compare.businessOnly": "business lines only",
   "compare.businessOnly.title": "Ignore what does not define the schema: XML comments, xs:annotation (documentation, appinfo), the XML declaration, the xs:schema, xs:import and xs:include tags, blank lines and indentation",
   "compare.diffOnly": "differences only",

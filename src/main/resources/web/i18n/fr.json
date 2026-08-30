@@ -167,6 +167,8 @@
   "compare.identicalLines.one": "{0} ligne identique",
   "compare.identicalLines.other": "{0} lignes identiques",
   "compare.close": "Fermer la comparaison",
+  "compare.legend.moved": "lignes déplacées",
+  "compare.legend.title": "Couleurs de la comparaison ligne à ligne",
   "compare.businessOnly": "lignes métier seulement",
   "compare.businessOnly.title": "Ignorer ce qui ne définit pas le schéma : commentaires XML, xs:annotation (documentation, appinfo), déclaration XML, balises xs:schema, xs:import et xs:include, lignes vides et indentation",
   "compare.diffOnly": "différences seulement",

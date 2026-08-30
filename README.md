@@ -274,7 +274,8 @@ links (cardinality included) present on one side only — and to a side-by-side 
 comparison (long identical stretches folded). A block of lines moved elsewhere is recognised
 (two lines or more, or one telling line): it is shown in blue on both sides with "moved
 to / from line N" instead of red and green, and a file whose text differences are all moves
-gets the status *moved lines only*, counted apart. **Business lines only** (on by default,
+gets the status *moved lines only*, counted apart; a legend of the three colours sits in the
+header of the comparison. **Business lines only** (on by default,
 remembered) ignores what does not define the schema — XML comments, `xs:annotation` blocks,
 the XML declaration, the `xs:schema`, `xs:import` and `xs:include` tags, blank lines and
 indentation — both for the status and in the line comparison, which keeps the original line

@@ -24,6 +24,7 @@ export const MSG = {
   COMPARE_SAME: 'compare.same',
   COMPARE_DIFFERENT: 'compare.different',
   COMPARE_MOVED: 'compare.moved',
+  COMPARE_LEGEND_MOVED: 'compare.legend.moved',
   COMPARE_MOVED_TO: 'compare.movedTo',
   COMPARE_MOVED_FROM: 'compare.movedFrom',
   COMPARE_ONLY_IN: 'compare.onlyIn',

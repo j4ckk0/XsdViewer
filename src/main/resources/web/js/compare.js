@@ -125,6 +125,9 @@ export function renderCompare() {
   const count = (s) => pairs.filter(p => p.status === s).length;
   $(ID.COMPARE_TITLE).textContent = t(MSG.COMPARE_TITLE, ln, rn);
   $(ID.COMPARE_SUMMARY).textContent = t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT), count(STATUS.MOVED), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn);
+  // the colours of the line comparison: lines only on the left (red), only on the right (green), moved (blue)
+  $(ID.COMPARE_LEGEND).innerHTML = [[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, ln)], [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, rn)], [CLS.MOVED, t(MSG.COMPARE_LEGEND_MOVED)]]
+    .map(([cls, text]) => '<span class="' + CLS.LEGEND_ENTRY + ' ' + cls + '">' + esc(text) + '</span>').join('');
   let html = '<thead><tr><th>' + esc(t(MSG.COMPARE_FILE)) + '</th><th>' + esc(ln) + '</th><th>' + esc(t(MSG.COMPARE_STATUS)) + '</th><th>' + esc(rn) + '</th></tr></thead><tbody>';
   pairs.forEach((p, i) => {
     if (isDiffOnly() && p.status === STATUS.SAME) return;
