@@ -28,7 +28,7 @@ Checked against the tree at version 2.5.0 (August 2026). **Published on 29–30 
 | **`CHANGELOG.md`** | The git log already records the versions (1.3.0 … 2.5.0); a short file per version is friendlier. | Optional; GitHub Release notes can serve instead. |
 | **`CONTRIBUTING.md` / issue templates** | Only useful if you expect contributions. | Optional. |
 | **Default branch name** | GitHub creates `main`; this repository uses `master`. Either works. | Kept `master`; it is the default branch on GitHub. |
-| **Branch protection** | Prevents force-pushes to the published branch. | Still to do: *Settings ▸ Branches* on GitHub. |
+| **Branch protection** | Prevents force-pushes to the published branch. | **Done** (30 August 2026), as two rulesets (*Settings ▸ Rules ▸ Rulesets*): *protect master* on `refs/heads/master` and *protect version tags* on `refs/tags/v*`, both blocking deletion and force-push. Nobody else can push anyway: no collaborator is added, other users can only fork and open pull requests. To move a tag or rewrite history on purpose, disable the ruleset first, then enable it again. |
 
 ## 3. What not to publish
 
