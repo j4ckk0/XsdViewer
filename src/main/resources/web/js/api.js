@@ -90,6 +90,20 @@ export async function fetchInitialFile() {
   return await resp.json();
 }
 
+/** GET /api/settings: {autoStop}. */
+export async function fetchSettings() {
+  const resp = await request(API.SETTINGS);
+  if (!resp.ok) throw new Error(String(resp.status));
+  return await resp.json();
+}
+
+/** POST /api/settings: applies and keeps the given settings, answers them all. */
+export async function saveSettings(settings) {
+  const resp = await request(API.SETTINGS, { method: HTTP.POST, headers: { [HTTP.CONTENT_TYPE_HEADER]: HTTP.JSON }, body: JSON.stringify(settings) });
+  if (!resp.ok) throw new Error(String(resp.status));
+  return await resp.json();
+}
+
 /** POST /api/quit: stops the server. Throws when it refuses. */
 export async function quitServer() {
   const resp = await request(API.QUIT, { method: HTTP.POST });

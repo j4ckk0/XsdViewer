@@ -45,6 +45,7 @@ public final class MessageKey {
     public static final String PAGE_ID_EXPECTED = "http.pageIdExpected";
     public static final String NOT_FOUND = "http.notFound";
     public static final String NO_INITIAL_FILE = "api.noInitialFile";
+    public static final String BAD_SETTINGS = "api.badSettings";
     public static final String LOCATION_EXPECTED = "api.locationExpected";
     public static final String REMOTE_LOCATION_NOT_SUPPORTED = "api.remoteLocationNotSupported";
     public static final String FILE_NOT_FOUND = "api.fileNotFound";

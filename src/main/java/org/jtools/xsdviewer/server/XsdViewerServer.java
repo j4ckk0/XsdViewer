@@ -30,6 +30,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.jtools.xsdviewer.Log;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
+import org.jtools.xsdviewer.UserSettings;
 
 /** The HTTP server: the page under {@code /}, the API under {@code /api/*} (one handler per {@link ApiPath}); virtual threads, answers in the language the page sends. */
 public final class XsdViewerServer {
@@ -51,7 +52,7 @@ public final class XsdViewerServer {
      * Binds to {@code host:port} (port 0 for an ephemeral one) and starts serving.
      *
      * @param stopWhenNoPage exit the process once every page has been closed for {@link PageWatch#GRACE}
-     *                       (false with {@code --keep-alive})
+     *                       (false with {@code --keep-alive}); the Settings menu can change it later
      */
     public static XsdViewerServer start(String host, int port, Path initialFile, boolean stopWhenNoPage) throws IOException {
         HttpServer http = HttpServer.create(new InetSocketAddress(host, port), 0);
@@ -65,6 +66,7 @@ public final class XsdViewerServer {
         http.createContext(ApiPath.QUIT, localized(new QuitHandler(server::stopAndExit)));
         http.createContext(ApiPath.ALIVE, localized(new AliveHandler(pages)));
         http.createContext(ApiPath.BYE, localized(new ByeHandler(pages)));
+        http.createContext(ApiPath.SETTINGS, localized(new SettingsHandler(pages, UserSettings::setAutoStop)));
         http.createContext(ApiPath.CAPABILITIES, localized(new CapabilitiesHandler()));
         http.createContext(ApiPath.CHOOSE, localized(new ChooseFilesHandler(files)));
         http.createContext(ApiPath.CHOOSE_FOLDER, localized(new ChooseFolderHandler(files)));
@@ -73,7 +75,8 @@ public final class XsdViewerServer {
         http.createContext(ApiPath.ROOT, localized(new StaticResourceHandler()));
         http.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         http.start();
-        if (stopWhenNoPage) pages.watch(server::stopAndExit);
+        pages.setEnabled(stopWhenNoPage);
+        pages.watch(server::stopAndExit);
         return server;
     }
 

@@ -40,7 +40,7 @@ import org.jtools.xsdviewer.Messages;
  * ({@link ByeHandler}). When no page is left for {@link #GRACE} — long enough for a reload or
  * a browser restart, and for a laptop waking up — {@link #watch} runs the stop. Nothing
  * happens before a first page has been seen (the browser may be slow to open), and nothing
- * happens at all without {@link #watch} ({@code --keep-alive}).
+ * happens while {@link #setEnabled disabled} ({@code --keep-alive}, or the Settings menu).
  */
 final class PageWatch {
 
@@ -52,6 +52,7 @@ final class PageWatch {
     private final Duration grace;
     private final Duration checkEvery;
     private volatile boolean seenOnce;
+    private volatile boolean enabled = true;
     private volatile Instant emptySince;
     private ScheduledExecutorService scheduler;
 
@@ -79,6 +80,16 @@ final class PageWatch {
         return pages.size();
     }
 
+    /** Whether the automatic stop is armed; off, pages are still counted but nothing ever stops. */
+    boolean isEnabled() {
+        return enabled;
+    }
+
+    void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) emptySince = null;
+    }
+
     /** Starts the periodic check; {@code stop} runs once, from the check thread, when the grace has elapsed with no page. */
     synchronized void watch(Runnable stop) {
         if (scheduler != null) return;
@@ -87,7 +98,7 @@ final class PageWatch {
     }
 
     private void check(Runnable stop) {
-        if (!seenOnce || !pages.isEmpty()) {
+        if (!enabled || !seenOnce || !pages.isEmpty()) {
             emptySince = null;
             return;
         }

@@ -79,6 +79,8 @@ export const MSG = {
   LINKED_LISTED_OTHER: 'linked.listed.other',
   CANNOT_PARSE: 'toast.cannotParse',
   CANNOT_STOP: 'toast.cannotStop',
+  SETTINGS_AUTO_STOP_ON: 'settings.autoStop.on',
+  SETTINGS_AUTO_STOP_OFF: 'settings.autoStop.off',
   QUIT_CONFIRM: 'quit.confirm',
   QUIT_STOPPED_TITLE: 'quit.stoppedTitle',
   QUIT_STOPPED_HINT: 'quit.stoppedHint',

@@ -67,7 +67,7 @@ public final class XsdViewerApplication {
 
         XsdViewerServer server;
         try {
-            server = XsdViewerServer.start(options.host(), options.port(), options.initialFile(), options.stopWhenNoPage());
+            server = XsdViewerServer.start(options.host(), options.port(), options.initialFile(), options.stopWhenNoPage() && UserSettings.autoStop());
         } catch (IOException e) {
             String message = Messages.get(MessageKey.CANNOT_START, options.host(), String.valueOf(options.port()), e.getMessage());
             Log.warn(message, e);

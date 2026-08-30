@@ -75,6 +75,18 @@ class PageWatchTest {
     }
 
     @Test
+    void disabledNeverStopsAndEnablingArmsItAgain() throws Exception {
+        CountDownLatch stopped = new CountDownLatch(1);
+        PageWatch w = watching(stopped);
+        w.setEnabled(false);
+        w.opened("a");
+        w.closed("a");
+        assertFalse(stopped.await(GRACE.toMillis() * 3, TimeUnit.MILLISECONDS), "disabled");
+        w.setEnabled(true);
+        assertTrue(stopped.await(GRACE.toMillis() * 5, TimeUnit.MILLISECONDS), "enabled again, still no page");
+    }
+
+    @Test
     void withoutWatchNothingHappens() throws Exception {
         PageWatch w = new PageWatch(GRACE, CHECK);   // --keep-alive: watch() is never called
         w.opened("a");

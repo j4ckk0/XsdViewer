@@ -82,6 +82,9 @@ html, body {
 .dropdown button:hover { background: #e7e9ee; }
 .dropdown button:disabled { color: var(--muted); cursor: default; background: none; }
 .dropdown .sep { border-top: 1px solid #e5e7eb; margin: 4px 0; }
+.dropdown .check { width: 1.2em; margin-right: 4px; visibility: hidden; }   /* a switch entry: the mark shows when on */
+.dropdown button.checked .check { visibility: visible; }
+.dropdown button:has(.check) { justify-content: flex-start; }
 .kbd { color: var(--muted); font-size: 12px; margin-left: 20px; }
 
 .filename {

@@ -39,6 +39,8 @@ public final class ApiPath {
     public static final String ALIVE = "/api/alive";
     /** {@code POST ?id=}: a page is closing. */
     public static final String BYE = "/api/bye";
+    /** {@code GET}: the settings ({@code {"autoStop": bool}}); {@code POST} the same shape to change them. */
+    public static final String SETTINGS = "/api/settings";
     /** {@code GET}: what the server can do for the page ({@code {"dialogs": bool}}). */
     public static final String CAPABILITIES = "/api/capabilities";
     /** {@code POST}: native "open files" dialog, answers the chosen schemas. */

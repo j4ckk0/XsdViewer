@@ -19,6 +19,9 @@ export const ID = {
   MENU_CLOSE: 'menuClose',
   MENU_CLOSE_ALL: 'menuCloseAll',
   MENU_QUIT: 'menuQuit',
+  SETTINGS_MENU_BUTTON: 'settingsMenuBtn',
+  SETTINGS_MENU: 'settingsMenu',
+  MENU_AUTO_STOP: 'menuAutoStop',
   HELP_MENU_BUTTON: 'helpMenuBtn',
   HELP_MENU: 'helpMenu',
   MENU_ABOUT: 'menuAbout',
@@ -81,6 +84,8 @@ export const ID = {
 export const CLS = {
   HIDDEN: 'hidden',
   ACTIVE: 'active',
+  /** A menu entry that is a switch, currently on (its .check mark is shown). */
+  CHECKED: 'checked',
   SELECTED: 'selected',
   COLLAPSED: 'collapsed',
   VIEW: 'view',

@@ -74,4 +74,6 @@ public final class JsonKey {
     // status answers
     public static final String ERROR = "error";
     public static final String OK = "ok";
+    /** {@code /api/settings}: stop the server once every page has been closed. */
+    public static final String AUTO_STOP = "autoStop";
 }

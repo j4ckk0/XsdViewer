@@ -21,6 +21,7 @@ package org.jtools.xsdviewer.server;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -30,6 +31,9 @@ import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.io.InputStream;
 
+import java.util.prefs.Preferences;
+
+import org.jtools.xsdviewer.UserSettings;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -40,14 +44,20 @@ class XsdViewerServerTest {
     private static XsdViewerServer server;
     private static final HttpClient client = HttpClient.newHttpClient();
 
+    /** The settings the test changes go to a preferences node of their own, removed afterwards. */
+    private static final String TEST_PREFERENCES = "org/jtools/xsdviewer/test";
+
     @BeforeAll
     static void start() throws Exception {
+        System.setProperty(UserSettings.NODE_PROPERTY, TEST_PREFERENCES);
         server = XsdViewerServer.start("127.0.0.1", 0, Path.of("samples/purchaseOrder.xsd"), false);
     }
 
     @AfterAll
-    static void stop() {
+    static void stop() throws Exception {
         server.stop();
+        Preferences.userRoot().node(TEST_PREFERENCES).removeNode();
+        System.clearProperty(UserSettings.NODE_PROPERTY);
     }
 
     private static HttpResponse<String> get(String path) throws Exception {
@@ -112,6 +122,20 @@ class XsdViewerServerTest {
         assertEquals(200, bye.statusCode());
         assertEquals("{\"ok\":true}", bye.body());
         assertEquals(405, get("/api/bye?id=t1").statusCode());
+    }
+
+    @Test
+    void settingsAreAnsweredAppliedAndKept() throws Exception {
+        assertEquals("{\"autoStop\":false}", get("/api/settings").body());        // started with stopWhenNoPage = false
+        HttpResponse<String> on = post("/api/settings", "{\"autoStop\": true}");
+        assertEquals(200, on.statusCode());
+        assertEquals("{\"autoStop\":true}", on.body());
+        assertTrue(UserSettings.autoStop(), "kept in the preferences");
+        assertEquals("{\"autoStop\":true}", get("/api/settings").body());
+        assertEquals(400, post("/api/settings", "{\"autoStop\": \"yes\"}").statusCode());
+        assertEquals(400, post("/api/settings", "nonsense").statusCode());
+        post("/api/settings", "{\"autoStop\": false}");
+        assertFalse(UserSettings.autoStop());
     }
 
     @Test

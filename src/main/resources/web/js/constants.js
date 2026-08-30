@@ -55,6 +55,7 @@ export const API = {
   QUIT: '/api/quit',
   ALIVE: '/api/alive',
   BYE: '/api/bye',
+  SETTINGS: '/api/settings',
   CAPABILITIES: '/api/capabilities',
   CHOOSE: '/api/choose',
   CHOOSE_FOLDER: '/api/choose-folder',

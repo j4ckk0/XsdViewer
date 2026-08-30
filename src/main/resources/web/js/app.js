@@ -6,12 +6,14 @@ import { initI18n } from './i18n.js';
 import { initLanguageSelector } from './language-selector.js';
 import { renderPage } from './page.js';
 import { startPresence } from './presence.js';
+import { applySettings, loadSettings } from './settings.js';
 import { session } from './state.js';
 
 startPresence();                             // first: the server counts this page from now on
-await loadCapabilities();                    // first: the machine's language is the default language
+await Promise.all([loadCapabilities(), loadSettings()]);   // first: the machine's language is the default language
 await initI18n(session.serverLanguage);
 applyCapabilities();
+applySettings();
 await initLanguageSelector();
 wireEvents();
 renderPage();

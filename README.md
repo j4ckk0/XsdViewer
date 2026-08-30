@@ -82,8 +82,11 @@ no orphan process left behind when you close the browser (*File ▸ Quit* stops 
 Each page holds a connection open for its whole life; the server only counts a page gone when
 that connection breaks, so an idle page, even for hours and even in a background tab, keeps
 the server up; a reload, a browser restart or a laptop waking up reconnect within the grace.
-`--keep-alive` disables the automatic stop, for a server you open pages on now and then;
-`--no-browser` implies it (you start it without a page and will open one later). One caveat:
+**Settings ▸ Stop the server when the last page is closed** switches it off (and on again)
+from the page — the choice is kept for the next runs (in the user's Java preferences) — for a
+server you open pages on now and then, or that other computers reach (`--host 0.0.0.0`).
+On the command line, `--keep-alive` turns it off for a run, and `--no-browser` implies it (you
+start it without a page and will open one later). One caveat:
 Chrome's and Edge's *Memory Saver* may *discard* a background tab after a long idle time, which
 is indistinguishable from closing it — the visible tab is never discarded; if the tool lives in
 a background tab for hours, add `127.0.0.1` to *Settings ▸ Performance ▸ Always keep these sites

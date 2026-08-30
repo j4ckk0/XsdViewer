@@ -19,11 +19,13 @@ import { MSG } from './message-keys.js';
 import { session } from './state.js';
 import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderNavigation, tabToShow } from './tabs.js';
+import { toggleAutoStop } from './settings.js';
 
 
 export function wireEvents() {
   wireMenus();
   wireFileMenu();
+  wireSettingsMenu();
   wireHelpMenu();
   wireDocumentTabs();
   wireKeyboard();
@@ -34,7 +36,7 @@ export function wireEvents() {
 }
 
 /** The drop-down menus of the top bar: one open at a time, closed by a click elsewhere or Escape. */
-const MENUS = [[ID.FILE_MENU_BUTTON, ID.FILE_MENU], [ID.HELP_MENU_BUTTON, ID.HELP_MENU]];
+const MENUS = [[ID.FILE_MENU_BUTTON, ID.FILE_MENU], [ID.SETTINGS_MENU_BUTTON, ID.SETTINGS_MENU], [ID.HELP_MENU_BUTTON, ID.HELP_MENU]];
 const closeMenus = () => MENUS.forEach(([, menu]) => $(menu).classList.add(CLS.HIDDEN));
 
 function wireMenus() {
@@ -48,6 +50,10 @@ function wireMenus() {
   }
   document.addEventListener('click', closeMenus);
   document.addEventListener('keydown', (e) => { if (e.key === KEY.ESCAPE) closeMenus(); });
+}
+
+function wireSettingsMenu() {
+  $(ID.MENU_AUTO_STOP).addEventListener('click', () => { closeMenus(); toggleAutoStop(); });
 }
 
 function wireHelpMenu() {
