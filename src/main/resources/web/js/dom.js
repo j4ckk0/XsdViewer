@@ -108,6 +108,8 @@ export const CLS = {
   COMPARE_PATH: 'cpath',
   COMPARE_STATUS: 'cstatus',
   COMPARE_MODEL: 'cmodel',
+  DIFF_SIDES: 'csides',
+  DIFF_SIDE: 'cside',
   EXPANDABLE: 'expandable',
   OPEN: 'open',
   DIFF: 'diff',

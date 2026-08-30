@@ -29,7 +29,8 @@ Files are opened with **File ▸ Open…** (Ctrl+O) or by dropping them anywhere
 Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸ New tab
 opens an empty one, × or a middle click closes one); every tab keeps its own view,
 selection, history and search filter. The **search box** in the left panel (Ctrl+F)
-filters the object list; **⤓ PNG** in the top bar saves the current view (graph or
+filters the object list and the Files panel — every schema of the workspace, open in a tab or
+not, is searched; **⤓ PNG** in the top bar saves the current view (graph or
 text) as a PNG image. **File ▸ Quit** stops the server and closes the page.
 
 ## Screenshots
@@ -228,6 +229,8 @@ tree by folder (the folders they all share are left out) — open in a tab (bold
 —, the shown file highlighted; each file unfolds to its global objects (the ▸ before it).
 Clicking a file or one of its objects shows its tab, opening it when needed, and selects the
 object; the ⧉ button of a folder row (on hover) opens that sub-folder as a workspace of its own.
+While the search box holds a text, the panel lists only the objects whose name contains it, in
+the files holding one — a way to find a type across a whole folder without opening its files.
 The ⊞ / ⊟ buttons expand or collapse a whole tree at once (the Files panel, the object list,
 the rows of a comparison). Large sets stay light: a folder or a workspace holding more than 10 schemas, or more
 than 10 linked schemas found at once, are only listed (parsed in the background) and a single
@@ -273,8 +276,9 @@ comparison (long identical stretches folded). A block of lines moved elsewhere i
 to / from line N" instead of red and green, and a file whose text differences are all moves
 gets the status *moved lines only*, counted apart. **Business lines only** (on by default,
 remembered) ignores what does not define the schema — XML comments, `xs:annotation` blocks,
-blank lines and indentation — both for the status and in the line comparison, which keeps the
-original line numbers. **Differences only** hides the identical files and reduces a file's
+the XML declaration, the `xs:schema`, `xs:import` and `xs:include` tags, blank lines and
+indentation — both for the status and in the line comparison, which keeps the original line
+numbers. Each side of the line comparison scrolls sideways on its own when a line is long. **Differences only** hides the identical files and reduces a file's
 comparison to its changed lines with one line of context. The comparison is a tab of its own
 (`v1 ⇄ v2`) in the workspace it was started from: switch to and from it like any tab, close
 it with its `×`; closing one of the compared workspaces closes it too, and comparing the same

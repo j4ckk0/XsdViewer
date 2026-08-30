@@ -27,7 +27,7 @@ const ARROW = ' → ';
 /** The two options of the view, remembered across sessions: "business lines only" (on by default) and "differences only". */
 const OPTIONS = [[ID.COMPARE_BUSINESS_ONLY, STORAGE_KEY.COMPARE_BUSINESS_ONLY, true], [ID.COMPARE_DIFF_ONLY, STORAGE_KEY.COMPARE_DIFF_ONLY, false]];
 
-/** Comments, xs:annotation, blank lines and indentation ignored. */
+/** Comments, xs:annotation, the wiring tags (XML declaration, xs:schema, xs:import, xs:include), blank lines and indentation ignored. */
 export const isBusinessOnly = () => $(ID.COMPARE_BUSINESS_ONLY).checked;
 /** Identical files hidden, identical lines reduced to one line of context. */
 export const isDiffOnly = () => $(ID.COMPARE_DIFF_ONLY).checked;
@@ -177,18 +177,22 @@ function schemaDiffHtml(pair) {
     + '</div>';
 }
 
-/** Side by side, one row per line pair (original line numbers); long identical runs folded; moved blocks in their own colour. */
+/**
+ * Side by side, one row per line pair (original line numbers); long identical runs folded; moved blocks in their own colour.
+ * One table per side, each scrolling sideways on its own: the rows are one line high on both sides, so they stay aligned.
+ */
 function textDiffHtml(pair) {
   const { la, lb, ops } = lineDiff(pair);
   if (!ops) return '<p class="' + CLS.META + '">' + esc(t(MSG.COMPARE_TEXT_TOO_LARGE)) + '</p>';
-  const cell = (lines, i, cls, op) => {
+  const row = (rowCls, lines, i, cls, op) => {
     const moved = op && op.moved;
     const note = !moved ? '' : op.movedTo != null ? t(MSG.COMPARE_MOVED_TO, lb[op.movedTo].n) : t(MSG.COMPARE_MOVED_FROM, la[op.movedFrom].n);
-    return '<td class="' + CLS.LINE_NUMBER + '"' + (note ? ' title="' + esc(note) + '"' : '') + '>' + (i == null ? '' : lines[i].n) + '</td>'
-      + '<td class="' + CLS.CODE + (cls ? ' ' + cls : '') + (moved ? ' ' + CLS.MOVED : '') + '">' + esc(i == null ? '' : lines[i].text) + '</td>';
+    return '<tr class="' + rowCls + '"><td class="' + CLS.LINE_NUMBER + '"' + (note ? ' title="' + esc(note) + '"' : '') + '>' + (i == null ? '' : lines[i].n) + '</td>'
+      + '<td class="' + CLS.CODE + (cls ? ' ' + cls : '') + (moved ? ' ' + CLS.MOVED : '') + '">' + esc(i == null ? '' : lines[i].text) + '</td></tr>';
   };
   const keep = isDiffOnly() ? CONTEXT_LINES : FOLD_KEEP, foldAbove = isDiffOnly() ? 2 * CONTEXT_LINES : FOLD_ABOVE;
-  let html = '<table class="' + CLS.DIFF + '">';
+  let left = '', right = '';
+  const equal = (op) => { left += row(CLS.EQUAL, la, op.a); right += row(CLS.EQUAL, lb, op.b); };
   let i = 0;
   while (i < ops.length) {
     if (ops[i].op === OP.EQUAL) {
@@ -197,10 +201,11 @@ function textDiffHtml(pair) {
       const run = j - i;
       const folded = run > foldAbove;
       const keepEnd = folded ? i + keep : j;
-      for (let k = i; k < keepEnd; k++) html += '<tr class="' + CLS.EQUAL + '">' + cell(la, ops[k].a) + cell(lb, ops[k].b) + '</tr>';
+      for (let k = i; k < keepEnd; k++) equal(ops[k]);
       if (folded) {
-        html += '<tr class="' + CLS.FOLD + '"><td colspan="4">' + esc(plural(run - 2 * keep, MSG.COMPARE_IDENTICAL_LINES_ONE, MSG.COMPARE_IDENTICAL_LINES_OTHER)) + '</td></tr>';
-        for (let k = j - keep; k < j; k++) html += '<tr class="' + CLS.EQUAL + '">' + cell(la, ops[k].a) + cell(lb, ops[k].b) + '</tr>';
+        const fold = '<tr class="' + CLS.FOLD + '"><td colspan="2"><span>' + esc(plural(run - 2 * keep, MSG.COMPARE_IDENTICAL_LINES_ONE, MSG.COMPARE_IDENTICAL_LINES_OTHER)) + '</span></td></tr>';
+        left += fold; right += fold;
+        for (let k = j - keep; k < j; k++) equal(ops[k]);
       }
       i = j;
     } else {
@@ -208,11 +213,11 @@ function textDiffHtml(pair) {
       const del = [], ins = [];
       while (i < ops.length && ops[i].op !== OP.EQUAL) { (ops[i].op === OP.DELETE ? del : ins).push(ops[i]); i++; }
       for (let k = 0; k < Math.max(del.length, ins.length); k++) {
-        html += '<tr class="' + CLS.CHANGE + '">'
-          + (k < del.length ? cell(la, del[k].a, CLS.DELETED, del[k]) : cell(la, null))
-          + (k < ins.length ? cell(lb, ins[k].b, CLS.INSERTED, ins[k]) : cell(lb, null)) + '</tr>';
+        left += k < del.length ? row(CLS.CHANGE, la, del[k].a, CLS.DELETED, del[k]) : row(CLS.CHANGE, la, null);
+        right += k < ins.length ? row(CLS.CHANGE, lb, ins[k].b, CLS.INSERTED, ins[k]) : row(CLS.CHANGE, lb, null);
       }
     }
   }
-  return html + '</table>';
+  const side = (rows) => '<div class="' + CLS.DIFF_SIDE + '"><table class="' + CLS.DIFF + '">' + rows + '</table></div>';
+  return '<div class="' + CLS.DIFF_SIDES + '">' + side(left) + side(right) + '</div>';
 }

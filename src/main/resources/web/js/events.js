@@ -6,7 +6,7 @@ import { initOptions, rememberOptions, renderCompare, setAllDetails, startCompar
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
-import { fileListClick, initFiles, setAllUnfolded, toggleFiles } from './file-list.js';
+import { fileListClick, initFiles, renderFileList, setAllUnfolded, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
@@ -194,7 +194,7 @@ function wireViews() {
 
 function wireSearch() {
   const search = $(ID.SEARCH);
-  const apply = (value) => { session.active.filter = value.trim(); if (session.active.model) renderNodeList(); };
+  const apply = (value) => { session.active.filter = value.trim(); if (session.active.model) renderNodeList(); renderFileList(); };
   search.addEventListener('input', (e) => apply(e.target.value));
   search.addEventListener('keydown', (e) => {
     if (e.key === KEY.ESCAPE) { e.target.value = ''; apply(''); e.target.blur(); }

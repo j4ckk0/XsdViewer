@@ -168,7 +168,7 @@
   "compare.identicalLines.other": "{0} lignes identiques",
   "compare.close": "Fermer la comparaison",
   "compare.businessOnly": "lignes métier seulement",
-  "compare.businessOnly.title": "Ignorer ce qui ne définit pas le schéma : commentaires XML, xs:annotation (documentation, appinfo), lignes vides et indentation",
+  "compare.businessOnly.title": "Ignorer ce qui ne définit pas le schéma : commentaires XML, xs:annotation (documentation, appinfo), déclaration XML, balises xs:schema, xs:import et xs:include, lignes vides et indentation",
   "compare.diffOnly": "différences seulement",
   "compare.diffOnly.title": "Masquer les fichiers identiques et, dans la comparaison d'un fichier, ne montrer que les lignes modifiées avec une ligne de contexte",
 

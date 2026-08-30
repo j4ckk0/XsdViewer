@@ -238,14 +238,19 @@ html, body {
 .cmodel h4 { margin: 6px 0 4px; font-size: 12px; color: var(--muted); }
 .cmodel ul { margin: 0; padding-left: 4px; list-style: none; font-size: 12px; }
 .cmodel li { display: flex; align-items: center; gap: 6px; padding: 1px 0; word-break: break-all; }
+/* the line comparison: one table per side in its own box, each scrolling sideways on its own when a line is long;
+   contain: inline-size keeps a long line from widening the row of the files table */
+.csides { display: flex; gap: 8px; contain: inline-size; }
+.csides .cside { flex: 1; min-width: 0; overflow-x: auto; }
 table.diff { border-collapse: collapse; width: 100%; font: 12px/1.4 ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; white-space: pre; }
 table.diff td { padding: 0 6px; border: none; vertical-align: top; }
 table.diff td.ln { width: 1%; text-align: right; color: var(--muted); user-select: none; border-right: 1px solid var(--border); }
-table.diff td.code { width: 49%; overflow: hidden; }
+table.diff td.code { width: 99%; }
 table.diff tr.chg td.code.del { background: #fee2e2; }
 table.diff tr.chg td.code.ins { background: #dcfce7; }
 table.diff tr.chg td.code.mov { background: #e0e7ff; color: #3730a3; font-style: italic; }
-table.diff tr.fold td { text-align: center; color: var(--muted); background: #f0f2f5; font-style: italic; }
+table.diff tr.fold td { color: var(--muted); background: #f0f2f5; font-style: italic; }
+table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   /* stays in view when the side is scrolled sideways */
 .wsclose {
   font: inherit;
   color: inherit;

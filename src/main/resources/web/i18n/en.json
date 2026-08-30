@@ -168,7 +168,7 @@
   "compare.identicalLines.other": "{0} identical lines",
   "compare.close": "Close the comparison",
   "compare.businessOnly": "business lines only",
-  "compare.businessOnly.title": "Ignore what does not define the schema: XML comments, xs:annotation (documentation, appinfo), blank lines and indentation",
+  "compare.businessOnly.title": "Ignore what does not define the schema: XML comments, xs:annotation (documentation, appinfo), the XML declaration, the xs:schema, xs:import and xs:include tags, blank lines and indentation",
   "compare.diffOnly": "differences only",
   "compare.diffOnly.title": "Hide the identical files, and in a file's comparison show only the changed lines with one line of context",
 

@@ -1,6 +1,7 @@
 /**
  * The Files panel: every file the active workspace knows, as a tree by folder, each unfoldable to
- * its objects; a click shows the file's tab (events.js opens it when needed).
+ * its objects; a click shows the file's tab (events.js opens it when needed). While the search box
+ * holds a text, only the objects whose name contains it are listed, in the files holding one (unfolded).
  */
 import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
@@ -64,32 +65,40 @@ function tree(list) {
 
 const byKindThenName = (a, b) => (KIND_ORDER.get(a.kind) - KIND_ORDER.get(b.kind)) || a.name.localeCompare(b.name);
 
-function objectsHtml(entry) {
-  if (!entry.model) return entry.failed ? '<div class="' + CLS.ITEM + ' ' + CLS.EMPTY + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</div>' : '';
-  return entry.model.nodes.filter(declared).sort(byKindThenName).map(n =>
+/** The objects of a file to list: its declared ones — only those whose name contains {@code filter} when there is one —, by kind then name. */
+const listedObjects = (entry, filter) => entry.model.nodes.filter(n => declared(n) && (!filter || n.name.toLowerCase().includes(filter))).sort(byKindThenName);
+
+function objectsHtml(entry, filter) {
+  if (!entry.model) return entry.failed && !filter ? '<div class="' + CLS.ITEM + ' ' + CLS.EMPTY + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</div>' : '';
+  return listedObjects(entry, filter).map(n =>
     '<div class="' + CLS.ITEM + ' ' + CLS.OBJECT + '"' + dataAttr(DATA.ID, n.id) + ' title="' + esc(n.id) + '">'
     + '<span class="' + CLS.DOT + ' ' + n.kind + '"></span><span>' + esc(n.name) + '</span></div>').join('');
 }
 
-function nodeHtml(node, dirPath) {
+/** The HTML of a folder of the tree; while filtering (lower-cased {@code filter}), folders and files without a matching object are left out and the others unfolded. */
+function nodeHtml(node, dirPath, filter) {
   let html = '';
   for (const [name, child] of [...node.dirs].sort((a, b) => a[0].localeCompare(b[0]))) {
     const path = dirPath + PATH_SEPARATOR + name;
     dirEntries.set(path, { name, entries: child.entries });
-    html += '<div class="' + CLS.GROUP_HEADER + ' ' + CLS.DIR + (foldedDirs.has(path) ? ' ' + CLS.COLLAPSED : '') + '"' + dataAttr(DATA.DIR, path) + '>'
+    const inner = nodeHtml(child, path, filter);
+    if (filter && !inner) continue;
+    html += '<div class="' + CLS.GROUP_HEADER + ' ' + CLS.DIR + (!filter && foldedDirs.has(path) ? ' ' + CLS.COLLAPSED : '') + '"' + dataAttr(DATA.DIR, path) + '>'
       + '<span>' + esc(name) + '</span>'
       + '<button class="' + CLS.WORKSPACE_OPEN + '" type="button" title="' + esc(t(MSG.FILES_OPEN_AS_WORKSPACE, name)) + '">⧉</button>'
-      + '</div><div class="' + CLS.GROUP_ITEMS + '">' + nodeHtml(child, path) + '</div>';
+      + '</div><div class="' + CLS.GROUP_ITEMS + '">' + inner + '</div>';
   }
   for (const f of node.files.sort((a, b) => a.shown.localeCompare(b.shown))) {
     const active = f.tab === session.active;
-    const unfolded = f.entry && showsObjects(f.entry, active);
+    const unfolded = f.entry && (!!filter || showsObjects(f.entry, active));
+    const objects = unfolded ? objectsHtml(f.entry, filter) : '';
+    if (filter && !objects) continue;   // no matching object (or not parsed yet: the panel is redrawn once it is)
     html += '<div class="' + CLS.ITEM + ' ' + CLS.FILE + (active ? ' ' + CLS.SELECTED : '') + (f.tab ? ' ' + CLS.OPEN : '') + '"'
       + (f.entry ? dataAttr(DATA.FILE, session.active.workspace.files.indexOf(f.entry)) : dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(f.tab)))
       + ' title="' + esc(f.path) + '">'
       + (f.entry ? '<span class="' + CLS.EXPANDER + '">' + (unfolded ? COLLAPSE_GLYPH : EXPAND_GLYPH) + '</span>' : '')
       + '<span class="' + (f.entry ? '' : CLS.EMPTY) + '">' + esc(f.shown) + '</span></div>';
-    if (f.entry && unfolded) html += '<div class="' + CLS.GROUP_ITEMS + ' ' + CLS.OBJECTS + '">' + objectsHtml(f.entry) + '</div>';
+    if (unfolded) html += '<div class="' + CLS.GROUP_ITEMS + ' ' + CLS.OBJECTS + '">' + objects + '</div>';
   }
   return html;
 }
@@ -98,7 +107,9 @@ export function renderFileList() {
   dirEntries.clear();
   const list = rows();
   $(ID.FILES_COUNT).textContent = list.length;
-  $(ID.FILES_CONTENT).innerHTML = nodeHtml(tree(list), '');
+  const filter = session.active.filter.toLowerCase();
+  const html = nodeHtml(tree(list), '', filter);
+  $(ID.FILES_CONTENT).innerHTML = html || (filter ? '<div class="' + CLS.ITEM + ' ' + CLS.NO_MATCH + '">' + esc(t(MSG.LIST_NO_MATCH)) + '</div>' : '');
 }
 
 /** A click in the panel: folds are handled here (null); else what was hit — {entry}, {entry, id} for an object, {tab} for an empty tab, {folder, entries} for a folder's "open as workspace". */
