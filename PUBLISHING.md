@@ -1,7 +1,7 @@
 # Publishing XsdViewer on GitHub
 
 What a public repository needs, what this repository already has, and the steps to publish.
-Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>; current release [v2.6.0](https://github.com/j4ckk0/XsdViewer/releases/tag/v2.6.0) (first one: v2.5.0).
+Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>; current release [v2.7.1](https://github.com/j4ckk0/XsdViewer/releases/tag/v2.7.1) (first one: v2.5.0).
 
 ## 1. Required
 
@@ -21,7 +21,7 @@ Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 
 | Item | Why | Suggestion |
 |---|---|---|
 | **Continuous integration** | Proves every push still builds and passes the tests; shows a badge in the README. | **Done** (30 August 2026): `.github/workflows/build.yml` — `actions/checkout`, `actions/setup-java` (Temurin 21, Maven cache), `mvn -B package` on every push to `master`, every `v*` tag and every pull request; `target/xsdviewer.jar` kept as a workflow artefact; badge at the top of the README. |
-| **Tags and releases** | Users download a version, not a commit. | **Done**: one tag `vX.Y.Z` and one GitHub Release per version (v2.5.0 and v2.6.0 on 30 August 2026), each with `xsdviewer-X.Y.Z.jar`, `-windows.zip` and `-linux.tar.gz` from `releases/` (~50 MB each: fine for Release assets, never for the repository) and the SHA-256 checksums in the notes; the routine is section 5. |
+| **Tags and releases** | Users download a version, not a commit. | **Done**: one tag `vX.Y.Z` and one GitHub Release per version (v2.5.0, v2.6.0 and v2.7.1 on 30 August 2026; v2.7.0 is a tag without a Release, superseded the same day), each with `xsdviewer-X.Y.Z.jar`, `-windows.zip` and `-linux.tar.gz` from `releases/` (~50 MB each: fine for Release assets, never for the repository) and the SHA-256 checksums in the notes; the routine is section 5. |
 | **`pom.xml` metadata** | Shown by Maven tooling and GitHub's dependency graph. | **Done**: `<url>`, `<inceptionYear>`, `<organization>`, `<licenses>`, `<developers>`, `<scm>`, `<issueManagement>`, all pointing at `github.com/j4ckk0/XsdViewer` (same identity as the jtools parent pom). |
 | **Repository description and topics** | Discoverability. | **Done** (30 August 2026): description "Explore XML Schema (.xsd) files in the browser: …", website field pointing at `releases/latest`, topics `xsd`, `xml-schema`, `xml`, `schema`, `viewer`, `visualization`, `graph`, `java`, `web-application`, `developer-tools`. |
 | **Security note** | The tool is a local server that reads files on request from the page. | Already in `architecture.md` (binds `127.0.0.1`, only serves directories it has been shown); repeat one sentence in the README so it is seen. A `SECURITY.md` is optional for a tool of this size. |
@@ -54,10 +54,10 @@ Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 
 
 ## 5. Next release
 
-Followed for v2.6.0 (30 August 2026): version bump, tag, `scripts/package.sh`, release through the API — about ten minutes.
+Followed for v2.6.0 and v2.7.1 (30 August 2026): version bump, tag, `scripts/package.sh`, release through the API — about ten minutes. When bumping, change the project's `<version>` only: a plugin in the `dist` profile may carry the same number (launch4j was 2.7.0).
 
 1. Bump the version in `pom.xml`, commit `Version X.Y.Z`, `git tag -a vX.Y.Z -m "X.Y.Z"`, `git push github master vX.Y.Z`.
 2. `scripts/package.sh`, then `sha256sum releases/*` for the notes.
 3. *Releases ▸ Draft a new release* from the tag, attach the three files of `releases/` — or `POST /repos/j4ckk0/XsdViewer/releases` then `uploads.github.com/…/assets` with a token.
 
-Token for the API (the SSH key only serves `git push`): a **fine-grained** personal access token with *Repository access* = **Only select repositories → XsdViewer** — the default *Public repositories (read-only)* greys out the permissions and every write answers `403 Resource not accessible` — and *Contents: Read and write* (releases); *Administration: Read and write* is also needed to change the description or topics. Short expiry, revoke it afterwards.
+Token for the API (the SSH key only serves `git push`): a **fine-grained** personal access token with *Repository access* = **Only select repositories → XsdViewer** — the default *Public repositories (read-only)* greys out the permissions and every write answers `403 Resource not accessible` — and *Contents: Read and write* (releases); *Administration: Read and write* is also needed to change the description or topics. Short expiry, revoke it afterwards. Kept in `~/.config/github/xsdviewer-release-token` (mode 600, outside the repository) for the release script to read.
