@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 3.4.0 — 2026-09-02
 
 - **The graph and the details resolve declarations across the whole workspace**, not only the open tabs: the files listed in the Files panel (parsed in the background) count too. An external object declared elsewhere shows as what it is there (its kind, its file) at both levels, level-2 targets are expanded from where they are declared, the users of the centre in other files appear on the left and in the details panel, and following a link opens a listed file's tab when needed.
 - **File ▸ Validate an XML file…** checks a document against the shown schema with the JDK's validator, from the schema's file on disk (imports included); the problems are listed with their line and column.
