@@ -86,13 +86,27 @@ if "id" not in r: sys.exit("release not created: " + r.get("message", str(r)))
 print(r["id"])' <<<"$resp")
 echo "release $tag created (id $id$($draft && echo ', draft'))"
 
+# An upload of a large archive sometimes answers nothing (the connection dropped): tried again, a few times.
 for f in "$jar" "$zip" "$tgz"; do
   case $f in *.jar) type=application/java-archive ;; *.zip) type=application/zip ;; *) type=application/gzip ;; esac
-  curl -sS "${auth[@]}" -H "Content-Type: $type" --data-binary @"releases/$f" \
-    "https://uploads.github.com/repos/$REPO/releases/$id/assets?name=$f" \
-    | python3 -c 'import json, sys
-r = json.load(sys.stdin)
+  for attempt in 1 2 3; do
+    if curl -sS "${auth[@]}" -H "Content-Type: $type" --data-binary @"releases/$f" \
+        "https://uploads.github.com/repos/$REPO/releases/$id/assets?name=$f" \
+        | python3 -c 'import json, sys
+try:
+    r = json.load(sys.stdin)
+except ValueError:
+    sys.exit("no answer")
 if r.get("state") != "uploaded": sys.exit("upload failed: " + r.get("message", str(r)))
-print("uploaded", r["name"], r["size"], "bytes")'
+print("uploaded", r["name"], r["size"], "bytes")'; then break; fi
+    [ "$attempt" -lt 3 ] || { echo "$f: giving up - attach it by hand on the release page" >&2; exit 1; }
+    echo "$f: upload attempt $attempt failed, retrying" >&2
+    # a half-uploaded asset of that name would block the retry: remove it
+    curl -sS "${auth[@]}" "https://api.github.com/repos/$REPO/releases/$id/assets" | python3 -c 'import json, sys
+for a in json.load(sys.stdin):
+    if a["name"] == sys.argv[1]: print(a["id"])' "$f" | while read -r aid; do
+      curl -sS "${auth[@]}" -X DELETE "https://api.github.com/repos/$REPO/releases/assets/$aid" >/dev/null
+    done
+  done
 done
 echo "https://github.com/$REPO/releases/tag/$tag"
