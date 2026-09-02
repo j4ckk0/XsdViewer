@@ -58,6 +58,7 @@ export const ID = {
   FILES_EXPAND_ALL: 'filesExpandAll',
   FILES_COLLAPSE_ALL: 'filesCollapseAll',
   OBJECTS_EXPAND_ALL: 'objectsExpandAll',
+  GRAPH_LEGEND: 'graphLegend',
   OBJECTS_COLLAPSE_ALL: 'objectsCollapseAll',
   COMPARE_EXPAND_ALL: 'compareExpandAll',
   COMPARE_COLLAPSE_ALL: 'compareCollapseAll',
@@ -148,6 +149,8 @@ export const CLS = {
   OPTIONAL: 'optional',
   /** An edge to a base type (extends / restricts). */
   DERIVATION: 'derivation',
+  /** On the legend: the shown file is a WSDL (its kinds are listed). */
+  WSDL: 'wsdl',
   // details
   BADGE: 'badge',
   META: 'meta',

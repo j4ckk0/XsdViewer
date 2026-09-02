@@ -41,7 +41,7 @@ class XsdParserTest {
 
     @BeforeAll
     static void parseSample() throws Exception {
-        model = XsdParser.parse(Files.readString(Path.of("samples/purchaseOrder.xsd")));
+        model = SchemaParser.parse(Files.readString(Path.of("samples/purchaseOrder.xsd")));
     }
 
     private static boolean hasEdge(SchemaGraph g, String from, String to, String label) {
@@ -157,14 +157,14 @@ class XsdParserTest {
 
     @Test
     void rejectsNonSchemaXml() {
-        Exception e = assertThrows(Exception.class, () -> XsdParser.parse("<root><a/></root>"));
+        Exception e = assertThrows(Exception.class, () -> SchemaParser.parse("<root><a/></root>"));
         assertEquals(Messages.get(MessageKey.NOT_A_SCHEMA, "root"), e.getMessage());
-        assertThrows(Exception.class, () -> XsdParser.parse("not xml at all"));
+        assertThrows(Exception.class, () -> SchemaParser.parse("not xml at all"));
     }
 
     @Test
     void defaultNamespaceSchemasResolveBuiltins() throws Exception {
-        SchemaGraph m = XsdParser.parse("""
+        SchemaGraph m = SchemaParser.parse("""
                 <schema xmlns="http://www.w3.org/2001/XMLSchema">
                   <element name="a" type="string"/>
                   <element name="b" type="T"/>
@@ -196,7 +196,7 @@ class XsdParserTest {
 
     @Test
     void enclosingCompositorsCountToo() throws Exception {
-        SchemaGraph m = XsdParser.parse("""
+        SchemaGraph m = SchemaParser.parse("""
                 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
                   <xs:complexType name="T">
                     <xs:sequence minOccurs="0" maxOccurs="unbounded">
@@ -213,7 +213,7 @@ class XsdParserTest {
         assertEquals(new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED), cardinality(m, "complexType:T", "builtin:string", "b"));
         assertEquals(new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED), cardinality(m, "complexType:T", "builtin:string", "c"));
         assertEquals(SchemaGraph.Cardinality.NONE, cardinality(m, "complexType:T", "builtin:string", "attribute p"));
-        SchemaGraph m2 = XsdParser.parse("""
+        SchemaGraph m2 = SchemaParser.parse("""
                 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
                   <xs:complexType name="T">
                     <xs:choice maxOccurs="2">

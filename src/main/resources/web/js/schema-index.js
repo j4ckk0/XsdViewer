@@ -17,9 +17,11 @@ export function indexSchema(st, json) {
   st.selected = initialSelection(st);
 }
 
-/** The first global element that nothing references (a likely document root), else the first element, else the first node. */
+/** The first service (a WSDL), else the first global element that nothing references (a likely document root), else the first element, else the first node. */
 function initialSelection(st) {
   const nodes = st.model.nodes;
+  const service = nodes.find(n => n.kind === NODE_KIND.SERVICE);
+  if (service) return service.id;
   const roots = nodes.filter(n => n.kind === NODE_KIND.ELEMENT && !(st.inEdges.get(n.id) || []).some(e => e.from !== n.id));
   const first = roots[0] || nodes.find(n => n.kind === NODE_KIND.ELEMENT) || nodes[0];
   return first ? first.id : null;

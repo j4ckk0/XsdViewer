@@ -4,7 +4,7 @@
  * a derivation from a base type), what uses it on the
  * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
-import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, isDerivation } from './constants.js';
+import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, WSDL_KINDS, isDerivation } from './constants.js';
 import { findInTabs, kindsOf, usersInOtherTabs } from './declarations.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc } from './dom.js';
@@ -36,6 +36,7 @@ export function renderGraph() {
   const showBuiltins = $(ID.SHOW_BUILTINS).checked;
   const depth = $(ID.TWO_LEVELS).checked ? 2 : 1;
   $(ID.GRAPH_TITLE).textContent = t(MSG.GRAPH_NODE_TITLE, kindLabel(center.kind), center.name);
+  $(ID.GRAPH_LEGEND).classList.toggle(CLS.WSDL, st.model.nodes.some(n => WSDL_KINDS.has(n.kind)));
   const visible = (n) => n && (showBuiltins || n.kind !== NODE_KIND.BUILTIN);
   const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name) || a.edge.label.localeCompare(b.edge.label);
   const fileKind = (n, tab) => ({ kindText: t(MSG.GRAPH_KIND_IN_FILE, kindLabel(n.kind), tab.fileName) });

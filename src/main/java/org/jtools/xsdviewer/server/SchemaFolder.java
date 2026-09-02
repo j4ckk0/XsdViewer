@@ -34,13 +34,13 @@ import java.nio.file.FileVisitOption;
 
 import org.jtools.xsdviewer.Log;
 
-/** The schema files of a folder and its whole sub-tree (symbolic links followed, hidden and unreadable directories skipped), sorted by path. */
+/** The schema files (.xsd, .wsdl) of a folder and its whole sub-tree (symbolic links followed, hidden and unreadable directories skipped), sorted by path. */
 final class SchemaFolder {
 
     static final int MAX_DEPTH = 64;
     /** Files beyond this many are left out ({@link Listing#truncated}). */
     static final int MAX_FILES = 2000;
-    private static final String SCHEMA_EXTENSION = ".xsd";
+    private static final List<String> SCHEMA_EXTENSIONS = List.of(".xsd", ".wsdl");
     private static final String HIDDEN_PREFIX = ".";
 
     private SchemaFolder() {}
@@ -73,7 +73,8 @@ final class SchemaFolder {
     }
 
     private static boolean isSchema(Path p) {
-        return p.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(SCHEMA_EXTENSION);
+        String name = p.getFileName().toString().toLowerCase(Locale.ROOT);
+        return SCHEMA_EXTENSIONS.stream().anyMatch(name::endsWith);
     }
 
     /** True when {@code p}, under {@code root}, lies in a hidden directory (a dot-name) or is one itself. */

@@ -36,6 +36,7 @@ import org.jtools.xsdviewer.json.JsonWriter;
 final class ChooseFilesHandler implements HttpHandler {
 
     private static final String SCHEMA_EXTENSION = ".xsd";
+    private static final String WSDL_EXTENSION = ".wsdl";
     private static final String XML_EXTENSION = ".xml";
 
     private final ServedSchemaFiles files;
@@ -46,7 +47,7 @@ final class ChooseFilesHandler implements HttpHandler {
 
     static boolean isSchemaName(String name) {
         String n = name.toLowerCase(Locale.ROOT);
-        return n.endsWith(SCHEMA_EXTENSION) || n.endsWith(XML_EXTENSION);
+        return n.endsWith(SCHEMA_EXTENSION) || n.endsWith(WSDL_EXTENSION) || n.endsWith(XML_EXTENSION);
     }
 
     @Override

@@ -50,8 +50,10 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 | `Log` | The log (`java.util.logging`): console and `xsdviewer.%g.log` in the temporary directory; every handler failure is logged with its stack trace by `XsdViewerServer` and answered as a 500 with a message. |
 | `UserSettings` | The settings changed from the page's Settings menu, kept in the user's `java.util.prefs.Preferences` (`org/jtools/xsdviewer`): `autoStop`. The command line wins for a run. |
 | `Messages`, `MessageKey` | The texts the server prints or sends to the page (console, API errors, generated documentation of placeholder nodes), read from `messages.properties` (English) / `messages_fr.properties` for the JVM locale; `MessageKey` holds the keys. |
-| `schema.XsdParser` | The only class that knows XSD. Turns the schema text into a `SchemaGraph` in three passes (see below) with the JDK DOM parser. |
-| `schema.DeclarationLineIndex` | SAX pass locating the start tag of each global declaration (line numbers). |
+| `schema.SchemaParser` | Entry point for a file's text: an `xs:schema` root goes to `XsdParser`, a `wsdl:definitions` root to `WsdlParser`, anything else is refused. |
+| `schema.XsdParser` | The only class that knows XSD. Turns an `xs:schema` element into `SchemaGraph` nodes and edges in three passes (see below) with the JDK DOM parser; the passes take any `xs:schema` element so that the schemas inline in a WSDL are parsed into the WSDL's graph. |
+| `schema.WsdlParser` | The only class that knows WSDL 1.1 (`WsdlVocabulary`): services, portTypes, operations (named within their portType: `operation:P.op`), bindings and messages become nodes; the inline schemas go through `XsdParser`; the links follow service → portType (labelled with the port) → operation → message (`input` / `output` / `fault`) → element or type (labelled with the part), plus binding → portType (`binds`). References are resolved by `XsdParser`'s third pass, so an element of an imported schema is an `external` placeholder in its namespace, resolved by the page in the other tabs like any schema reference. |
+| `schema.DeclarationLineIndex` | SAX pass locating the start tag of each declaration (line numbers); the parser says which tag paths declare a node (`DeclarationId`): for a WSDL, the operations at depth 3 and the inline schemas' declarations at depth 4 too. |
 | `schema.SecureXmlFactories` | DOM / SAX factories with external entities and DTD loading disabled. |
 | `schema.SchemaGraph` | Plain data: `Node`, `Edge`, `Import` records, the `targetNamespace`, `nodeId(kind, name)`. `nodes` is a `LinkedHashMap` (declaration order is kept), `edges` a `LinkedHashSet` (parallel identical edges collapse). |
 | `schema.NodeKind`, `schema.LinkLabel`, `schema.XsdVocabulary` | The constants of the model: the kinds of node, the edge labels, and the XSD namespace / element / attribute names the parser reads. |
@@ -69,7 +71,7 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 | `server.SchemaFileFinder` | Bounded walk looking for a file with a given name and content (`/api/locate`). |
 | `server.HttpResponses`, `QueryString`, `ContentType`, `HttpMethod`, `HttpStatus` | Reading the request, writing text / JSON / error answers, query parameters, MIME types by extension. |
 
-#### Parsing passes (`XsdParser`)
+#### Parsing passes (`XsdParser`, on the file's `xs:schema` or on each one inline in a WSDL)
 
 1. **Declarations → nodes.** Every direct child of `xs:schema` that is an `element`,
    `complexType`, `simpleType`, `group`, `attributeGroup` or `attribute` with a `name`
@@ -351,7 +353,8 @@ XsdViewer/
   automatically when the file's location is known, workspaces to reopen a set). A merged
   single graph would need the parser to take several texts keyed by target namespace.
 - **More link kinds** are a new `case` in `XsdParser.collect()` plus a `LinkLabel`; the
-  client needs nothing (labels are free text).
+  client needs nothing (labels are free text). **More node kinds** (as the WSDL ones) need
+  their `NodeKind`, a colour, a legend chip and the `kind.` / `group.` texts on the page.
 - **Other graph layouts** only touch `js/graph.js`; the rest of the client depends on
   `select()` and the tab state, not on how the SVG is built.
 - **Node details** (e.g. facets, cardinalities) would extend `SchemaGraph.Node`,

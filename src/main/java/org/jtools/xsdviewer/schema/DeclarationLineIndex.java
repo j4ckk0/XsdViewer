@@ -33,34 +33,43 @@ import org.xml.sax.Locator;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * The line where each global declaration's start tag opens, by node id. The SAX locator points
- * after the start tag, so the '<' is looked for backwards: a tag spread over several lines gets its first.
+ * The line where each declaration's start tag opens, by node id. Which tags declare a node is
+ * the parser's business ({@link DeclarationId}): the walk hands it the path of open tags. The SAX
+ * locator points after the start tag, so the '<' is looked for backwards: a tag spread over several lines gets its first.
  */
 final class DeclarationLineIndex {
 
-    /** Depth of the children of the root element in the SAX walk. */
-    private static final int GLOBAL_DECLARATION_DEPTH = 2;
+    /** An open element: its namespace, local name and {@code name} attribute (null when it has none). */
+    record Tag(String uri, String localName, String name) {
+        boolean is(String namespace, String local) {
+            return namespace.equals(uri) && local.equals(localName);
+        }
+    }
+
+    /** The id of the node declared by the last tag of {@code path} (the root first), or null when it declares none. */
+    @FunctionalInterface
+    interface DeclarationId {
+        String of(List<Tag> path);
+    }
 
     private DeclarationLineIndex() {}
 
-    static Map<String, Integer> build(String text) throws Exception {
+    static Map<String, Integer> build(String text, DeclarationId idOf) throws Exception {
         int[] lineStarts = lineStarts(text);
         Map<String, Integer> result = new HashMap<>();
 
         SecureXmlFactories.newSaxParser().parse(new InputSource(new StringReader(text)), new DefaultHandler() {
             private Locator locator;
-            private int depth;
+            private final List<Tag> path = new ArrayList<>();
 
             @Override
             public void setDocumentLocator(Locator l) { locator = l; }
 
             @Override
             public void startElement(String uri, String localName, String qName, Attributes attrs) {
-                depth++;
-                if (depth != GLOBAL_DECLARATION_DEPTH || !XsdVocabulary.NAMESPACE.equals(uri)
-                        || !NodeKind.GLOBAL_DECLARATIONS.contains(localName)) return;
-                String name = attrs.getValue(XsdVocabulary.ATTR_NAME);
-                if (name == null || locator == null) return;
+                path.add(new Tag(uri, localName, attrs.getValue(XsdVocabulary.ATTR_NAME)));
+                String id = idOf.of(path);
+                if (id == null || locator == null) return;
                 int line = locator.getLineNumber();
                 int col = locator.getColumnNumber();
                 if (line > 0 && line <= lineStarts.length) {
@@ -68,11 +77,11 @@ final class DeclarationLineIndex {
                     int lt = text.lastIndexOf('<', Math.max(0, offset - 1));
                     if (lt >= 0) line = lineOf(lineStarts, lt);
                 }
-                result.putIfAbsent(SchemaGraph.nodeId(localName, name), line);
+                result.putIfAbsent(id, line);
             }
 
             @Override
-            public void endElement(String uri, String localName, String qName) { depth--; }
+            public void endElement(String uri, String localName, String qName) { path.remove(path.size() - 1); }
         });
         return result;
     }

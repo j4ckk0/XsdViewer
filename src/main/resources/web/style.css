@@ -15,6 +15,12 @@
   --c-attribute: #0d9488;
   --c-builtin: #6b7280;
   --c-external: #dc2626;
+  /* the kinds of a WSDL */
+  --c-service: #1e3a8a;
+  --c-portType: #0e7490;
+  --c-operation: #b45309;
+  --c-binding: #a16207;
+  --c-message: #881337;
 }
 
 * { box-sizing: border-box; }
@@ -475,6 +481,14 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .dot.attribute, .lg.attribute, .badge.attribute { background: var(--c-attribute); }
 .dot.builtin, .lg.builtin, .badge.builtin { background: var(--c-builtin); }
 .dot.external, .lg.external, .badge.external { background: var(--c-external); }
+.dot.service, .lg.service, .badge.service { background: var(--c-service); }
+.dot.portType, .lg.portType, .badge.portType { background: var(--c-portType); }
+.dot.operation, .lg.operation, .badge.operation { background: var(--c-operation); }
+.dot.binding, .lg.binding, .badge.binding { background: var(--c-binding); }
+.dot.message, .lg.message, .badge.message { background: var(--c-message); }
+/* the chips of the WSDL kinds only show for a WSDL file */
+.legend .lg.wsdl { display: none; }
+.legend.wsdl .lg.wsdl { display: inline; }
 
 /* ---- empty state ------------------------------------------------------------------- */
 
@@ -540,6 +554,11 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 /* placeholders (a built-in type, an object declared in another file): solid border, grey fill — dashed is for optional links only */
 .node.builtin rect { stroke: var(--c-builtin); fill: #f3f4f6; }
 .node.external rect { stroke: var(--c-external); fill: #f3f4f6; }
+.node.service rect { stroke: var(--c-service); }
+.node.portType rect { stroke: var(--c-portType); }
+.node.operation rect { stroke: var(--c-operation); }
+.node.binding rect { stroke: var(--c-binding); }
+.node.message rect { stroke: var(--c-message); }
 .node.builtin text.name, .node.external text.name { font-style: italic; }
 .node:hover rect { fill: #eef2ff; }
 .node.center rect { stroke-width: 3; fill: #f8fafc; }

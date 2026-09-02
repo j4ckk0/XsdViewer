@@ -20,54 +20,72 @@ package org.jtools.xsdviewer.schema;
  * #L%
  */
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
+import org.jtools.xsdviewer.schema.DeclarationLineIndex.Tag;
 import org.jtools.xsdviewer.schema.SchemaGraph.Cardinality;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 /**
- * Turns the text of an XSD into a {@link SchemaGraph}: one node per global declaration, one edge
- * per direct reference. Only this file is read: what it references without declaring becomes a
- * placeholder node ({@link NodeKind#EXTERNAL}, {@link NodeKind#BUILTIN}).
+ * Turns an XSD into a {@link SchemaGraph}: one node per global declaration, one edge per direct
+ * reference. Only this file is read: what it references without declaring becomes a placeholder
+ * node ({@link NodeKind#EXTERNAL}, {@link NodeKind#BUILTIN}). The passes work on any {@code xs:schema}
+ * element, so that {@link WsdlParser} runs them on the schemas inline in a WSDL, into its own graph.
+ * Entry point for a file: {@link SchemaParser}.
  */
-public final class XsdParser {
+final class XsdParser {
 
     /** Documentation longer than this is cut (the details panel shows it whole, the graph a tooltip). */
     private static final int MAX_DOCUMENTATION_LENGTH = 1000;
     private static final String WHITESPACE = "\\s+";
     private static final String LINE_BREAK_WITH_INDENT = "[ \\t]*\\n[ \\t]*";
 
-    private final SchemaGraph graph = new SchemaGraph();
+    private final SchemaGraph graph;
     /** An edge whose target is not resolved yet ("type:X", "element:X", "group:X"...), with the namespace of X. */
     private record Pending(SchemaGraph.Edge edge, String ns) {}
 
     private final List<Pending> pending = new ArrayList<>();
-    private Map<String, Integer> lines = Map.of();
+    private final Map<String, Integer> lines;
 
-    private XsdParser() {}
-
-    public static SchemaGraph parse(String xsdText) throws Exception {
-        return new XsdParser().doParse(xsdText);
+    /** A parser adding to {@code graph}; {@code lines}: the line of each declaration by node id (see {@link DeclarationLineIndex}). */
+    XsdParser(SchemaGraph graph, Map<String, Integer> lines) {
+        this.graph = graph;
+        this.lines = lines;
     }
 
-    private SchemaGraph doParse(String text) throws Exception {
-        lines = DeclarationLineIndex.build(text);
-        Document doc = SecureXmlFactories.newDocumentBuilder().parse(new InputSource(new StringReader(text)));
-
-        Element schema = doc.getDocumentElement();
-        if (!XsdVocabulary.NAMESPACE.equals(schema.getNamespaceURI()) || !XsdVocabulary.SCHEMA.equals(schema.getLocalName())) {
-            throw new IllegalArgumentException(Messages.get(MessageKey.NOT_A_SCHEMA, schema.getTagName()));
-        }
+    /** The graph of an XSD file: {@code schema} is its root, {@code text} the file (for the line numbers). */
+    static SchemaGraph parse(Element schema, String text) throws Exception {
+        SchemaGraph graph = new SchemaGraph();
         graph.targetNamespace = schema.getAttribute(XsdVocabulary.ATTR_TARGET_NAMESPACE);
+        XsdParser parser = new XsdParser(graph, DeclarationLineIndex.build(text, XsdParser::declarationId));
+        parser.collectSchema(schema);
+        parser.resolve();
+        return graph;
+    }
+
+    /** The node declared by a tag path: a named global declaration right under the xs:schema root. */
+    static String declarationId(List<Tag> path) {
+        return path.size() == 2 ? globalDeclarationId(path.get(1)) : null;
+    }
+
+    /** The id of the node a tag declares when it is a named XSD global declaration (its parent being an xs:schema), else null. */
+    static String globalDeclarationId(Tag t) {
+        boolean declaration = XsdVocabulary.NAMESPACE.equals(t.uri()) && NodeKind.GLOBAL_DECLARATIONS.contains(t.localName());
+        return declaration && t.name() != null ? SchemaGraph.nodeId(t.localName(), t.name()) : null;
+    }
+
+    /**
+     * Passes 1 and 2 on one xs:schema element: its imports, its global declarations as nodes (in the
+     * schema's own target namespace), their references as links to resolve. Call {@link #resolve()} once at the end.
+     */
+    void collectSchema(Element schema) {
+        String targetNamespace = schema.getAttribute(XsdVocabulary.ATTR_TARGET_NAMESPACE);
 
         // Pass 1: the global declarations become nodes.
         for (Element c : children(schema)) {
@@ -80,7 +98,7 @@ public final class XsdParser {
             if (isGlobalDeclaration(c)) {
                 String name = c.getAttribute(XsdVocabulary.ATTR_NAME);
                 String id = SchemaGraph.nodeId(ln, name);
-                graph.nodes.put(id, new SchemaGraph.Node(id, ln, name, graph.targetNamespace,
+                graph.nodes.put(id, new SchemaGraph.Node(id, ln, name, targetNamespace,
                         lines.getOrDefault(id, 0), documentation(c)));
             }
         }
@@ -91,8 +109,10 @@ public final class XsdParser {
                 collect(c, SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME)), true, Cardinality.ONE);
             }
         }
+    }
 
-        // Pass 3: resolve targets, creating placeholder nodes for what this file does not declare.
+    /** Pass 3: resolves the targets of the links, creating placeholder nodes for what the file does not declare. */
+    void resolve() {
         for (Pending p : pending) {
             SchemaGraph.Edge e = p.edge();
             String to = e.to();
@@ -110,7 +130,7 @@ public final class XsdParser {
             }
             graph.edges.add(new SchemaGraph.Edge(e.from(), to, e.label(), e.cardinality()));
         }
-        return graph;
+        pending.clear();
     }
 
     private static boolean isGlobalDeclaration(Element c) {
@@ -239,7 +259,7 @@ public final class XsdParser {
     }
 
     /** A reference to a named type: built-in XSD types are resolved now, the others at the end. */
-    private void linkType(String owner, String qname, Element ctx, String label, Cardinality card) {
+    void linkType(String owner, String qname, Element ctx, String label, Cardinality card) {
         QName q = QName.resolve(qname, ctx);
         // A name in the XSD namespace is a built-in type, unless this file declares it: schemas
         // that use the XSD namespace as their default namespace refer to their own types unprefixed.
@@ -253,8 +273,8 @@ public final class XsdParser {
         }
     }
 
-    /** A reference (ref=, substitutionGroup=) to a named declaration of a given kind. */
-    private void link(String owner, String kind, String qname, Element ctx, String label, Cardinality card) {
+    /** A reference (ref=, substitutionGroup=, a WSDL message=, element=...) to a named declaration of a given kind. */
+    void link(String owner, String kind, String qname, Element ctx, String label, Cardinality card) {
         QName q = QName.resolve(qname, ctx);
         pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(kind, q.local()), label, card), q.ns()));
     }
@@ -276,7 +296,7 @@ public final class XsdParser {
         return "";
     }
 
-    private static List<Element> children(Element e) {
+    static List<Element> children(Element e) {
         NodeList nl = e.getChildNodes();
         List<Element> out = new ArrayList<>(nl.getLength());
         for (int i = 0; i < nl.getLength(); i++) {

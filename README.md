@@ -2,7 +2,8 @@
 
 [![build](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml/badge.svg)](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml)
 
-A small tool to explore an XML Schema (`.xsd`) file in the browser.
+A small tool to explore an XML Schema (`.xsd`) file in the browser — and the WSDL 1.1
+(`.wsdl`) services built on such schemas.
 
 A Java server parses the schema and serves a web page offering two views:
 
@@ -199,6 +200,23 @@ content (anonymous nested types included):
 | `extension base` / `restriction base` | `extends` / `restricts` |
 | `list itemType` / `union memberTypes` | `list of` / `union of` |
 | `substitutionGroup` | `substitutes` |
+
+A **WSDL 1.1** file (`wsdl:definitions`) gets five more kinds of object — *service*,
+*portType*, *operation*, *binding*, *message* —, listed in the legend when such a file is
+shown, and the schemas inline in its `wsdl:types` are parsed as if they were the file's own
+(their `xs:import`s are followed like a schema's). The links follow the chain from the service
+to the schema objects, so that **2 levels** from an operation reaches the elements its messages carry:
+
+| WSDL construct | Link label |
+|---|---|
+| `service/port binding="B"` | the port's name, from the service to the portType that `B` binds (to `B` itself when it is declared elsewhere) |
+| `portType/operation` | `operation` |
+| `operation/input`, `output`, `fault` `message="M"` | `input` / `output` / `fault` |
+| `message/part element="E"` or `type="T"` | the part's name |
+| `binding type="P"` | `binds` |
+
+An operation is named within its portType (`operation:Orders.submit` as an id); a WSDL opens on
+its first service. `samples/wsdl/purchaseOrderService.wsdl` is a small example over `samples/purchaseOrder.xsd`.
 
 XSD built-in types (`xs:string`…) appear as grey-filled nodes with a grey border (toggle with
 the **built-in types** checkbox). Objects referenced but not declared in the file (imported /

@@ -68,6 +68,11 @@
   "graph.nodeTitle": "{0} {1}",
   "graph.kindInFile": "{0} · {1}",
 
+  "kind.service": "service",
+  "kind.portType": "portType",
+  "kind.operation": "opération",
+  "kind.binding": "binding",
+  "kind.message": "message",
   "kind.element": "element",
   "kind.complexType": "complexType",
   "kind.simpleType": "simpleType",
@@ -77,6 +82,11 @@
   "kind.builtin": "prédéfini",
   "kind.external": "externe",
 
+  "group.service": "Services",
+  "group.portType": "Port types",
+  "group.operation": "Opérations",
+  "group.binding": "Bindings",
+  "group.message": "Messages",
   "group.element": "Éléments",
   "group.complexType": "Types complexes",
   "group.simpleType": "Types simples",

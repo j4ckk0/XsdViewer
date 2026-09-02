@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A WSDL 1.1 service over the purchase order schema: its messages carry elements of ../purchaseOrder.xsd
+     (imported by the inline schema) and two elements declared here. -->
+<wsdl:definitions name="PurchaseOrderService"
+                  targetNamespace="http://example.com/po/service"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                  xmlns:tns="http://example.com/po/service"
+                  xmlns:po="http://example.com/po">
+  <wsdl:documentation>Submits purchase orders and reports their status.</wsdl:documentation>
+
+  <wsdl:types>
+    <xs:schema targetNamespace="http://example.com/po/service" elementFormDefault="qualified">
+      <xs:import namespace="http://example.com/po" schemaLocation="../purchaseOrder.xsd"/>
+      <xs:element name="submitPurchaseOrderResponse">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="orderId" type="po:Identifier"/>
+            <xs:element name="accepted" type="xs:boolean"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="orderFault" type="xs:string"/>
+    </xs:schema>
+  </wsdl:types>
+
+  <wsdl:message name="SubmitPurchaseOrderRequest">
+    <wsdl:part name="order" element="po:purchaseOrder"/>
+  </wsdl:message>
+  <wsdl:message name="SubmitPurchaseOrderResponse">
+    <wsdl:part name="response" element="tns:submitPurchaseOrderResponse"/>
+  </wsdl:message>
+  <wsdl:message name="OrderFault">
+    <wsdl:part name="detail" element="tns:orderFault"/>
+  </wsdl:message>
+  <wsdl:message name="GetOrderStatusRequest">
+    <wsdl:part name="orderId" type="po:Identifier"/>
+  </wsdl:message>
+  <wsdl:message name="GetOrderStatusResponse">
+    <wsdl:part name="status" type="xs:string"/>
+  </wsdl:message>
+
+  <wsdl:portType name="PurchaseOrderPortType">
+    <wsdl:documentation>The operations of the purchase order service.</wsdl:documentation>
+    <wsdl:operation name="submitPurchaseOrder">
+      <wsdl:documentation>Files a purchase order; answers its identifier.</wsdl:documentation>
+      <wsdl:input message="tns:SubmitPurchaseOrderRequest"/>
+      <wsdl:output message="tns:SubmitPurchaseOrderResponse"/>
+      <wsdl:fault name="orderFault" message="tns:OrderFault"/>
+    </wsdl:operation>
+    <wsdl:operation name="getOrderStatus">
+      <wsdl:input message="tns:GetOrderStatusRequest"/>
+      <wsdl:output message="tns:GetOrderStatusResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="PurchaseOrderSoapBinding" type="tns:PurchaseOrderPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="submitPurchaseOrder">
+      <soap:operation soapAction="http://example.com/po/service/submitPurchaseOrder"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+      <wsdl:fault name="orderFault"><soap:fault name="orderFault" use="literal"/></wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getOrderStatus">
+      <soap:operation soapAction="http://example.com/po/service/getOrderStatus"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="PurchaseOrderService">
+    <wsdl:documentation>The purchase order service, over SOAP 1.1.</wsdl:documentation>
+    <wsdl:port name="PurchaseOrderPort" binding="tns:PurchaseOrderSoapBinding">
+      <soap:address location="http://localhost:8080/po"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

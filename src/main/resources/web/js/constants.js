@@ -4,8 +4,13 @@ export const APP_NAME = 'XsdViewer';
 export const PROJECT_URL = 'https://github.com/j4ckk0/XsdViewer';
 export const LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 
-/** Kinds of node of the schema graph (see NodeKind on the server). */
+/** Kinds of node of the schema graph (see NodeKind on the server); the first five are those of a WSDL. */
 export const NODE_KIND = {
+  SERVICE: 'service',
+  PORT_TYPE: 'portType',
+  OPERATION: 'operation',
+  BINDING: 'binding',
+  MESSAGE: 'message',
   ELEMENT: 'element',
   COMPLEX_TYPE: 'complexType',
   SIMPLE_TYPE: 'simpleType',
@@ -16,9 +21,12 @@ export const NODE_KIND = {
   EXTERNAL: 'external',
 };
 export const KINDS = [
+  NODE_KIND.SERVICE, NODE_KIND.PORT_TYPE, NODE_KIND.OPERATION, NODE_KIND.BINDING, NODE_KIND.MESSAGE,
   NODE_KIND.ELEMENT, NODE_KIND.COMPLEX_TYPE, NODE_KIND.SIMPLE_TYPE, NODE_KIND.GROUP,
   NODE_KIND.ATTRIBUTE_GROUP, NODE_KIND.ATTRIBUTE, NODE_KIND.BUILTIN, NODE_KIND.EXTERNAL,
 ];
+/** The kinds declared by a WSDL file: a model holding one is a WSDL, whose legend shows them. */
+export const WSDL_KINDS = new Set([NODE_KIND.SERVICE, NODE_KIND.PORT_TYPE, NODE_KIND.OPERATION, NODE_KIND.BINDING, NODE_KIND.MESSAGE]);
 /** Kind in the id of an external type reference ("type:X"): the server could not tell complexType from simpleType. */
 export const TYPE_REFERENCE_KIND = 'type';
 /** Node ids are "kind:name". */
@@ -30,12 +38,15 @@ export const kindOfId = (id) => id.slice(0, id.indexOf(ID_SEPARATOR));
 export const LINK_LABEL = {
   TYPE: 'type', REF: 'ref', ATTRIBUTE_REF: 'attribute ref', SUBSTITUTES: 'substitutes', GROUP: 'group',
   ATTRIBUTE_GROUP: 'attributeGroup', EXTENDS: 'extends', RESTRICTS: 'restricts', LIST_OF: 'list of', UNION_OF: 'union of',
+  // WSDL: a portType to its operations, an operation to its messages, a binding to its portType
+  OPERATION: 'operation', INPUT: 'input', OUTPUT: 'output', FAULT: 'fault', BINDS: 'binds',
   /** "attribute <name>": a nested attribute's type link. */
   ATTRIBUTE_PREFIX: 'attribute ',
 };
 export const STRUCTURAL_LINK_LABELS = new Set([
   LINK_LABEL.TYPE, LINK_LABEL.REF, LINK_LABEL.ATTRIBUTE_REF, LINK_LABEL.SUBSTITUTES, LINK_LABEL.GROUP,
   LINK_LABEL.ATTRIBUTE_GROUP, LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.LIST_OF, LINK_LABEL.UNION_OF,
+  LINK_LABEL.OPERATION, LINK_LABEL.INPUT, LINK_LABEL.OUTPUT, LINK_LABEL.FAULT, LINK_LABEL.BINDS,
 ]);
 /** Edge labels of a type derivation (a type to its base type): drawn with a hollow arrowhead, as a UML generalisation. */
 export const DERIVATION_LINK_LABELS = new Set([LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS]);
@@ -78,9 +89,9 @@ export const HTTP = {
 /** A schemaLocation with a scheme (http://...) is never fetched. */
 export const REMOTE_LOCATION_MARK = '://';
 /** Files of an opened folder worth keeping at hand for following links. */
-export const SCHEMA_FILE_PATTERN = /\.(xsd|xml)$/i;
+export const SCHEMA_FILE_PATTERN = /\.(xsd|wsdl|xml)$/i;
 /** Files of an opened folder that are opened as tabs. */
-export const XSD_FILE_PATTERN = /\.xsd$/i;
+export const XSD_FILE_PATTERN = /\.(xsd|wsdl)$/i;
 /** At most this many schemas of a folder opened in the browser are listed. */
 export const MAX_FOLDER_FILES = 2000;
 /** A folder, a workspace or a set of linked schemas larger than this is only listed in the Files panel: one tab opens. */

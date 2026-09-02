@@ -22,7 +22,8 @@ package org.jtools.xsdviewer.schema;
 
 /**
  * Labels of the edges of a {@link SchemaGraph}: the nature of a reference. Model vocabulary handed
- * to the page, not user-interface text (a nested element's type link is labelled with the element's name).
+ * to the page, not user-interface text (a nested element's type link is labelled with the element's name,
+ * a WSDL service's link to a portType with the port's name, a message's link to an element with the part's name).
  */
 public final class LinkLabel {
 
@@ -44,6 +45,14 @@ public final class LinkLabel {
     public static final String RESTRICTS = "restricts";
     public static final String LIST_OF = "list of";
     public static final String UNION_OF = "union of";
+    /** A WSDL portType to one of its operations. */
+    public static final String OPERATION = "operation";
+    /** A WSDL operation to its input / output / fault message. */
+    public static final String INPUT = "input";
+    public static final String OUTPUT = "output";
+    public static final String FAULT = "fault";
+    /** A WSDL binding to the portType it binds. */
+    public static final String BINDS = "binds";
 
     private static final String ATTRIBUTE_PREFIX = "attribute ";
 
