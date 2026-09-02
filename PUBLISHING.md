@@ -1,7 +1,7 @@
 # Publishing XsdViewer on GitHub
 
 What a public repository needs, what this repository already has, and the steps to publish.
-Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>; current release [v3.1.0](https://github.com/j4ckk0/XsdViewer/releases/tag/v3.1.0) (first one: v2.5.0).
+Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>; current release [v3.2.0](https://github.com/j4ckk0/XsdViewer/releases/tag/v3.2.0) (first one: v2.5.0).
 
 ## 1. Required
 
@@ -54,7 +54,7 @@ Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 
 
 ## 5. Next release
 
-Followed for v2.6.0, v2.7.1 (30 August 2026) , v2.8.0, v3.0.0 and v3.1.0 (2 September 2026): version bump, tag, `scripts/package.sh`, release through the API — about ten minutes. When bumping, change the project's `<version>` only: a plugin in the `dist` profile may carry the same number (launch4j was 2.7.0).
+Followed for v2.6.0, v2.7.1 (30 August 2026) , v2.8.0, v3.0.0, v3.1.0 and v3.2.0 (2 September 2026): version bump, tag, `scripts/package.sh`, release through the API — about ten minutes. When bumping, change the project's `<version>` only: a plugin in the `dist` profile may carry the same number (launch4j was 2.7.0).
 
 1. Bump the version in `pom.xml`, commit `Version X.Y.Z`, `git tag -a vX.Y.Z -m "X.Y.Z"`, `git push github master vX.Y.Z`.
 2. `scripts/package.sh`.
