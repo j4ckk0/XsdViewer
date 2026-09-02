@@ -59,6 +59,8 @@ export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };
 export const IMPORT_TAG = { IMPORT: 'import', INCLUDE: 'include', REDEFINE: 'redefine' };
 
 export const VIEW = { GRAPH: 'graph', TEXT: 'text' };
+/** The theme choices of the Settings menu (js/theme.js; the values are stored, and stamped on <html> as data-theme). */
+export const THEME = { SYSTEM: 'system', LIGHT: 'light', DARK: 'dark' };
 
 // ---- server API (ApiPath on the server) ----
 export const API = {
@@ -113,6 +115,8 @@ export const STORAGE_KEY = {
   COMPARE_BUSINESS_ONLY: 'xsdviewer.compareBusinessOnly',
   COMPARE_DIFF_ONLY: 'xsdviewer.compareDiffOnly',
   LANGUAGE: 'xsdviewer.language',
+  /** Read by js/theme-boot.js too, before the modules load. */
+  THEME: 'xsdviewer.theme',
 };
 export const STORAGE_TRUE = '1';
 export const STORAGE_FALSE = '0';

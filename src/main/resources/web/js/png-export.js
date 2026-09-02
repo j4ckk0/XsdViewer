@@ -9,7 +9,9 @@ import { toast } from './toast.js';
 const EXPORT_SCALE = 2;        // device pixels per CSS pixel
 const EXPORT_MAX_DIM = 16000;  // keep canvases within what browsers can allocate
 const GRAPH_MARGIN = 24;
-const BACKGROUND = '#ffffff';
+const FALLBACK_BACKGROUND = '#ffffff';
+/** The page's background (the theme's), so that the image looks like the page. */
+const background = () => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || FALLBACK_BACKGROUND;
 const FILE_EXTENSION = '.png';
 const TEXT_SUFFIX = '-text';
 const DEFAULT_BASENAME = 'schema';
@@ -58,7 +60,7 @@ function exportGraphPng(fileName) {
   style.textContent = pageCss() + '\nsvg { font: ' + font + '; }';
   svg.insertBefore(style, svg.firstChild);
   const bg = document.createElementNS(SVG_NS, SVG_RECT_TAG);
-  bg.setAttribute('x', x); bg.setAttribute('y', y); bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', BACKGROUND);
+  bg.setAttribute('x', x); bg.setAttribute('y', y); bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', background());
   svg.insertBefore(bg, style.nextSibling);
 
   const scale = Math.min(EXPORT_SCALE, EXPORT_MAX_DIM / Math.max(w, h));
@@ -111,7 +113,7 @@ function exportTextPng(fileName) {
   canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
   const ctx = canvas.getContext('2d');
   ctx.scale(scale, scale);
-  ctx.fillStyle = BACKGROUND;
+  ctx.fillStyle = background();
   ctx.fillRect(0, 0, w, h);
   ctx.font = font;
   ctx.textBaseline = 'middle';

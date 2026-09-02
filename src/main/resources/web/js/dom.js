@@ -22,6 +22,9 @@ export const ID = {
   SETTINGS_MENU_BUTTON: 'settingsMenuBtn',
   SETTINGS_MENU: 'settingsMenu',
   MENU_AUTO_STOP: 'menuAutoStop',
+  MENU_THEME_SYSTEM: 'menuThemeSystem',
+  MENU_THEME_LIGHT: 'menuThemeLight',
+  MENU_THEME_DARK: 'menuThemeDark',
   HELP_MENU_BUTTON: 'helpMenuBtn',
   HELP_MENU: 'helpMenu',
   MENU_ABOUT: 'menuAbout',
@@ -154,6 +157,8 @@ export const CLS = {
   OPTIONAL: 'optional',
   /** An edge to a base type (extends / restricts). */
   DERIVATION: 'derivation',
+  /** The arrowhead of an edge (a marker path), coloured by the stylesheet. */
+  ARROW_HEAD: 'arrow-head',
   /** On the legend: the shown file is a WSDL (its kinds are listed). */
   WSDL: 'wsdl',
   // details

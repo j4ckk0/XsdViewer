@@ -22,7 +22,6 @@ const NAME_MAX_CHARS_CENTER = 24, NAME_MAX_CHARS = 26, KIND_MAX_CHARS = 30, CAPT
 /** Distance between the caption's baseline and the top of the node. */
 const CAPTION_LIFT = 6;
 const ELLIPSIS = '…';
-const ARROW_COLOR = '#9aa3af', DERIVATION_ARROW_FILL = '#fff';
 /** Length in px of the hollow arrowhead (9 marker units at markerWidth 12 x stroke 1.5): a derivation's line stops at its base. */
 const DERIVATION_ARROW_LENGTH = 16;
 
@@ -106,10 +105,10 @@ export function renderGraph() {
 
   let svg = '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
     + '<defs><marker id="' + SVG_ID.ARROW + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
-    + '<path d="M0,0 L10,5 L0,10 z" fill="' + ARROW_COLOR + '"/></marker>'
+    + '<path class="' + CLS.ARROW_HEAD + '" d="M0,0 L10,5 L0,10 z"/></marker>'
     // a derivation: a hollow triangle, larger, as a UML generalisation
     + '<marker id="' + SVG_ID.DERIVATION_ARROW + '" viewBox="0 0 10 10" refX="0.5" refY="5" markerWidth="12" markerHeight="12" orient="auto">'
-    + '<path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="' + DERIVATION_ARROW_FILL + '" stroke="' + ARROW_COLOR + '"/></marker></defs>';
+    + '<path class="' + CLS.ARROW_HEAD + ' ' + CLS.DERIVATION + '" d="M0.5,0.5 L9.5,5 L0.5,9.5 z"/></marker></defs>';
 
   const edges = [], labels = [], nodes = [];
 

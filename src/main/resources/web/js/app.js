@@ -6,6 +6,7 @@ import { initI18n } from './i18n.js';
 import { initLanguageSelector } from './language-selector.js';
 import { renderPage } from './page.js';
 import { startPresence } from './presence.js';
+import { initTheme } from './theme.js';
 import { applySettings, loadSettings } from './settings.js';
 import { session } from './state.js';
 
@@ -14,6 +15,7 @@ await Promise.all([loadCapabilities(), loadSettings()]);   // first: the machine
 await initI18n(session.serverLanguage);
 applyCapabilities();
 applySettings();
+initTheme();
 await initLanguageSelector();
 wireEvents();
 renderPage();
