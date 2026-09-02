@@ -30,8 +30,8 @@ A Java server parses the schema and serves a web page offering two views:
 Files are opened with **File ▸ Open…** (Ctrl+O) or by dropping them anywhere in the window.
 Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸ New tab
 opens an empty one, × or a middle click closes one); every tab keeps its own view,
-selection, history and search filter. The **search box** in the left panel (Ctrl+F)
-filters the object list and the Files panel — every schema of the workspace, open in a tab or
+selection, history and search filter. The **search box** at the top of the left panel (Ctrl+F)
+filters the Files panel and the object list below it — every schema of the workspace, open in a tab or
 not, is searched; **⤓ PNG** in the top bar saves the current view (graph or
 text) as a PNG image. **File ▸ Quit** stops the server and closes the page.
 

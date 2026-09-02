@@ -93,6 +93,7 @@
   "files.expand": "Unfold the file list",
   "files.notASchema": "not an XML Schema",
   "files.openAsWorkspace": "Open the folder {0} as a workspace of its own",
+  "objects.title": "Objects",
   "info.title": "Schema",
   "info.collapse": "Fold the schema header",
   "info.expand": "Unfold the schema header",

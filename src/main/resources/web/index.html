@@ -61,6 +61,9 @@
 
 <div id="body">
   <aside id="sidebar">
+    <div id="searchBar">
+      <input id="search" type="search" data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false">
+    </div>
     <div id="files">
       <div class="panel-head"><span><span data-i18n="files.title">Files</span> <span id="filesCount" class="count"></span></span>
         <span class="panel-tools"><button id="filesExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="filesCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button><button id="filesToggle" class="panel-toggle" type="button" data-i18n-title="files.collapse">▾</button></span></div>
@@ -70,10 +73,8 @@
       <div class="panel-head"><span data-i18n="info.title">Schema</span><button id="schemaInfoToggle" class="panel-toggle" type="button" data-i18n-title="info.collapse">▾</button></div>
       <div id="schemaInfoContent"></div>
     </div>
-    <div id="searchBar">
-      <input id="search" type="search" data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false">
-      <span class="panel-tools"><button id="objectsExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="objectsCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span>
-    </div>
+    <div id="objectsHead" class="panel-head"><span data-i18n="objects.title">Objects</span>
+      <span class="panel-tools"><button id="objectsExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="objectsCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span></div>
     <div id="nodeList"></div>
   </aside>
 

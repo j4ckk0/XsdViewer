@@ -397,8 +397,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   margin-bottom: 4px;
 }
 .panel-tools { display: inline-flex; align-items: center; gap: 2px; }
-#searchBar { display: flex; align-items: center; gap: 4px; }
-#searchBar #search { flex: 1; min-width: 0; }
+/* the header of the object list: like the other panels' heads, with the list's expand / collapse buttons */
+#objectsHead { padding: 6px 12px 0; font-size: 12px; }
 .panel-toggle {
   width: 20px;
   height: 20px;
@@ -413,6 +413,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 }
 .panel-toggle:hover { background: #e7e9ee; color: var(--text); }
 
+/* the search box, at the top of the sidebar, stays in view while it scrolls: it filters the Files panel and the object list */
 #searchBar {
   position: sticky;
   top: 0;
