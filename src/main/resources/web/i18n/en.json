@@ -51,6 +51,7 @@
   "tab.close": "Close tab",
 
   "search.placeholder": "Search objects… (Ctrl+F)",
+  "search.clear": "Clear the search (Escape)",
   "empty.title": "Open an XSD file",
   "empty.hint": "File ▸ Open… (Ctrl+O), or drop a file anywhere in this window.",
   "drop.hint": "Drop the XSD file to open it",

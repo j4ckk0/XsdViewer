@@ -68,6 +68,7 @@ export const ID = {
   SCHEMA_INFO_CONTENT: 'schemaInfoContent',
   SCHEMA_INFO_TOGGLE: 'schemaInfoToggle',
   SEARCH: 'search',
+  SEARCH_CLEAR: 'searchClear',
   NODE_LIST: 'nodeList',
   EMPTY: 'empty',
   GRAPH: 'graph',

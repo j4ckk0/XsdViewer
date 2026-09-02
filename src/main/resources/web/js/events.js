@@ -199,6 +199,7 @@ function wireSearch() {
   search.addEventListener('keydown', (e) => {
     if (e.key === KEY.ESCAPE) { e.target.value = ''; apply(''); e.target.blur(); }
   });
+  $(ID.SEARCH_CLEAR).addEventListener('click', () => { search.value = ''; apply(''); search.focus(); });
 }
 
 /** Everything that selects a node: the object list, the graph, the details links, the line numbers of the text. */

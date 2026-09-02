@@ -51,6 +51,7 @@
   "tab.close": "Fermer l'onglet",
 
   "search.placeholder": "Rechercher un objet… (Ctrl+F)",
+  "search.clear": "Effacer la recherche (Échap)",
   "empty.title": "Ouvrir un fichier XSD",
   "empty.hint": "Fichier ▸ Ouvrir… (Ctrl+O), ou déposer un fichier n'importe où dans cette fenêtre.",
   "drop.hint": "Déposer le fichier XSD pour l'ouvrir",
