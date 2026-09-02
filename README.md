@@ -115,7 +115,7 @@ the *Custom Setup* screen — or the `.zip`: unzip it into a folder without spac
 again), or call it with its full path, no PATH change needed:
 
 ```bat
-"C:\Java\jdk-21\bin\java" -jar xsdviewer-3.0.0.jar
+"C:\Java\jdk-21\bin\java" -jar xsdviewer-3.1.0.jar
 ```
 
 **Linux.** Your distribution's package is the simplest — `sudo apt install openjdk-21-jre`
@@ -128,7 +128,7 @@ sudo tar xzf OpenJDK21U-jre_x64_linux_hotspot_*.tar.gz -C /opt   # → /opt/jdk-
 export PATH=/opt/jdk-21.0.12.1+1-jre/bin:$PATH                     # in ~/.profile to make it permanent
 ```
 
-or call it with its full path: `/opt/jdk-21.0.12.1+1-jre/bin/java -jar xsdviewer-3.0.0.jar`.
+or call it with its full path: `/opt/jdk-21.0.12.1+1-jre/bin/java -jar xsdviewer-3.1.0.jar`.
 
 **macOS.** The Temurin `.pkg` installer, or `brew install --cask temurin@21`.
 
