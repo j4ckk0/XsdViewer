@@ -338,8 +338,8 @@ numbers. Each side of the line comparison scrolls sideways on its own when a lin
 comparison to its changed lines with one line of context. The comparison is a tab of its own
 (`v1 ⇄ v2`) in the workspace it was started from: switch to and from it like any tab, close
 it with its `×`; closing one of the compared workspaces closes it too, and comparing the same
-pair again brings it back to front. **One file's differences in a tab**: the `⧉` button at the
-right of a *different* or *moved lines only* row (shown when the row is hovered), or a double-click on
+pair again brings it back to front. **One file's differences in a tab**: the *⧉ In a tab* button
+next to the status of a *different* or *moved lines only* row, or a double-click on
 the row, opens that pair's differences in their own tab (`product.xsd (v1 ⇄ v2)`), next to the
 comparison, with the whole page's height; the two options apply there too, and opening the same
 pair again brings its tab to front. To try it: `scripts/run.sh samples/compare/v1.xsdviewer.json`,

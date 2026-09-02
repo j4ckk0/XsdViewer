@@ -4,7 +4,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
-- **A file's differences in a tab of their own.** In a comparison, the ⧉ button at the right of a *different* or *moved lines only* row (or a double-click on the row) opens that file pair's differences — the declarations and links on one side only, the two sources side by side — in a tab named `file.xsd (v1 ⇄ v2)`, next to the comparison, with the full height of the page; the same two options apply, and opening the same pair again brings its tab to front.
+- **A file's differences in a tab of their own.** In a comparison, the *⧉ In a tab* button next to the status of a *different* or *moved lines only* row (or a double-click on the row) opens that file pair's differences — the declarations and links on one side only, the two sources side by side — in a tab named `file.xsd (v1 ⇄ v2)`, next to the comparison, with the full height of the page; the same two options apply, and opening the same pair again brings its tab to front.
 
 ## 3.4.0 — 2026-09-02
 

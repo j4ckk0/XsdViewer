@@ -149,19 +149,20 @@ export function renderCompare() {
   const side = (p) => p.status === STATUS.ONLY_LEFT ? ln : p.status === STATUS.ONLY_RIGHT ? rn : '';
   $(ID.COMPARE_TITLE).textContent = file ? t(MSG.COMPARE_FILE_TITLE, file, ln, rn) : t(MSG.COMPARE_TITLE, ln, rn);
   $(ID.COMPARE_SUMMARY).textContent = file ? (one ? t(STATUS_TEXT[one.status], side(one)) : '')
-    : t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT), count(STATUS.MOVED), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn);
+    : t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT), count(STATUS.MOVED), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn)
+;
   $(ID.COMPARE_TOOLS).classList.toggle(CLS.HIDDEN, !!file);
   // the colours of the line comparison: lines only on the left (red), only on the right (green), moved (blue)
   $(ID.COMPARE_LEGEND).innerHTML = [[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, ln)], [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, rn)], [CLS.MOVED, t(MSG.COMPARE_LEGEND_MOVED)]]
     .map(([cls, text]) => '<span class="' + CLS.LEGEND_ENTRY + ' ' + cls + '">' + esc(text) + '</span>').join('');
   let html = '<thead><tr><th>' + esc(t(MSG.COMPARE_FILE)) + '</th><th>' + esc(ln) + '</th><th>' + esc(t(MSG.COMPARE_STATUS)) + '</th><th>' + esc(rn) + '</th></tr></thead><tbody>';
-  const openButton = '<button class="' + CLS.PANEL_TOGGLE + ' ' + CLS.COMPARE_OPEN + '" type="button" title="' + esc(t(MSG.COMPARE_OPEN_TAB)) + '">⧉</button>';
+  const openButton = '<button class="' + CLS.COMPARE_OPEN + '" type="button" title="' + esc(t(MSG.COMPARE_OPEN_TAB)) + '">' + esc(t(MSG.COMPARE_OPEN_TAB_LABEL)) + '</button>';
   pairs.forEach((p, i) => {
     if (!file && isDiffOnly() && p.status === STATUS.SAME) return;
     html += '<tr class="' + CLS.COMPARE_ROW + ' ' + p.status + (isExpandable(p) ? ' ' + CLS.EXPANDABLE : '') + '"' + dataAttr(DATA.ROW_INDEX, i) + '>'
-      + '<td class="' + CLS.COMPARE_NAME + '">' + esc(p.name) + (isExpandable(p) && !file ? openButton : '') + '</td>'
+      + '<td class="' + CLS.COMPARE_NAME + '">' + esc(p.name) + '</td>'
       + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.left ? shownPath(p.left) : '') + '">' + esc(p.left ? shownPath(p.left) : '') + '</td>'
-      + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side(p))) + '</td>'
+      + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side(p))) + (isExpandable(p) && !file ? openButton : '') + '</td>'
       + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.right ? shownPath(p.right) : '') + '">' + esc(p.right ? shownPath(p.right) : '') + '</td></tr>';
   });
   $(ID.COMPARE_TABLE).innerHTML = html + '</tbody>';

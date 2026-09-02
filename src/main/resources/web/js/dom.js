@@ -130,8 +130,6 @@ export const CLS = {
   COMPARE_PATH: 'cpath',
   COMPARE_STATUS: 'cstatus',
   COMPARE_OPEN: 'copen',
-  /** The small square buttons of a panel's head (expand all, collapse all…). */
-  PANEL_TOGGLE: 'panel-toggle',
   COMPARE_MODEL: 'cmodel',
   LEGEND_ENTRY: 'lg',
   DIFF_SIDES: 'csides',

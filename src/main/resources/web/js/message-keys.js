@@ -20,6 +20,7 @@ export const MSG = {
   COMPARE_FILE_TAB: 'compare.fileTab',
   COMPARE_FILE_TITLE: 'compare.fileTitle',
   COMPARE_OPEN_TAB: 'compare.openTab',
+  COMPARE_OPEN_TAB_LABEL: 'compare.openTab.label',
   COMPARE_TITLE: 'compare.title',
   COMPARE_SUMMARY: 'compare.summary',
   COMPARE_FILE: 'compare.file',

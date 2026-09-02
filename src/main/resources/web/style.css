@@ -320,10 +320,20 @@ html, body {
 .crow.only-left .cstatus, .crow.only-right .cstatus { color: var(--blue); }
 .crow.open .cname::before { content: "▾ "; }
 .crow.expandable:not(.open) .cname::before { content: "▸ "; color: var(--muted); }
-/* the button opening one file's differences in a tab, at the right of its name; shown while the row is hovered or focused */
-.crow .cname { display: flex; align-items: center; gap: 6px; }
-.copen { visibility: hidden; margin-left: auto; }
-.crow:hover .copen, .copen:focus-visible { visibility: visible; }
+/* the button opening one file's differences in a tab, after the status of a row that has some */
+.copen {
+  margin-left: 10px;
+  padding: 1px 7px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.copen:hover { border-color: var(--accent); color: var(--accent); }
 .cdetail td { padding: 8px 12px 14px; background: var(--panel); }
 .cmodel { display: flex; gap: 24px; margin-bottom: 10px; }
 .cmodel > div { flex: 1; min-width: 0; }

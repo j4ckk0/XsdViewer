@@ -88,6 +88,11 @@ SCENES = [
          checks={'tabs': "document.querySelectorAll('#tabs .dtab').length",
                  'files': "document.getElementById('filesCount').textContent"},
          expect={'tabs': 4, 'files': '4'}),
+    dict(name='compare', file='samples/compare/v1.xsdviewer.json', theme='light', action=OPEN_V2,
+         checks={'rows': "document.querySelectorAll('#compareTable .crow').length",
+                 'openButtons': "document.querySelectorAll('#compareTable .copen').length",
+                 'label': "document.querySelector('#compareTable .copen').textContent"},
+         expect={'rows': 5, 'openButtons': 1, 'label': '⧉ In a tab'}),   # product.xsd is the one file differing in its business lines
     dict(name='compare-file-tab', file='samples/compare/v1.xsdviewer.json', theme='light',
          action=OPEN_V2 + "document.querySelector('#compareTable .crow.different .copen').click();"
                 "await new Promise(r => setTimeout(r, 300));",
