@@ -133,6 +133,8 @@ export const CLS = {
   OBJECTS: 'objects',
   EXPANDER: 'expander',
   EMPTY: 'empty',
+  /** The row of the Files panel counting the files still being parsed. */
+  PARSING: 'parsing',
   DOT: 'dot',
   COUNT: 'count',
   // graph (SVG)

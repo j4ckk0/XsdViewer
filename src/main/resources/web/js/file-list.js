@@ -1,11 +1,12 @@
 /**
  * The Files panel: every file the active workspace knows, as a tree by folder, each unfoldable to
  * its objects; a click shows the file's tab (events.js opens it when needed). While the search box
- * holds a text, only the objects whose name contains it are listed, in the files holding one (unfolded).
+ * holds a text, only the objects whose name contains it are listed, in the files holding one (unfolded),
+ * and a last row counts the files still being parsed, whose objects are not searchable yet.
  */
 import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
-import { t } from './i18n.js';
+import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
 import { fileKeys, tabOfFile } from './workspace-files.js';
@@ -108,8 +109,15 @@ export function renderFileList() {
   const list = rows();
   $(ID.FILES_COUNT).textContent = list.length;
   const filter = session.active.filter.toLowerCase();
-  const html = nodeHtml(tree(list), '', filter);
-  $(ID.FILES_CONTENT).innerHTML = html || (filter ? '<div class="' + CLS.ITEM + ' ' + CLS.NO_MATCH + '">' + esc(t(MSG.LIST_NO_MATCH)) + '</div>' : '');
+  let html = nodeHtml(tree(list), '', filter);
+  if (!html && filter) html = '<div class="' + CLS.ITEM + ' ' + CLS.NO_MATCH + '">' + esc(t(MSG.LIST_NO_MATCH)) + '</div>';
+  // files not parsed yet cannot answer the search: say so rather than let them silently miss
+  const parsing = filter ? session.active.workspace.files.filter(entry => !entry.model && !entry.failed).length : 0;
+  if (parsing) {
+    html += '<div class="' + CLS.ITEM + ' ' + CLS.EMPTY + ' ' + CLS.PARSING + '" title="' + esc(t(MSG.FILES_PARSING_TITLE)) + '">'
+      + esc(plural(parsing, MSG.FILES_PARSING_ONE, MSG.FILES_PARSING_OTHER)) + '</div>';
+  }
+  $(ID.FILES_CONTENT).innerHTML = html;
 }
 
 /** A click in the panel: folds are handled here (null); else what was hit — {entry}, {entry, id} for an object, {tab} for an empty tab, {folder, entries} for a folder's "open as workspace". */

@@ -22,7 +22,6 @@ package org.jtools.xsdviewer.server;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -45,8 +44,8 @@ final class SchemaFileFinder {
             while (it.hasNext()) {
                 Path p = it.next();
                 try {
-                    if (canonical(Files.readString(p, StandardCharsets.UTF_8)).equals(wanted)) return p.toAbsolutePath().normalize();
-                } catch (IOException | UncheckedIOException e) { /* unreadable or not UTF-8: not this one */ }
+                    if (canonical(SchemaText.read(p)).equals(wanted)) return p.toAbsolutePath().normalize();
+                } catch (IOException | UncheckedIOException e) { /* unreadable: not this one */ }
             }
         } catch (IOException | UncheckedIOException e) { /* unreadable directory */ }
         return null;

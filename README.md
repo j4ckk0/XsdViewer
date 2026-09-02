@@ -260,7 +260,8 @@ While the search box holds a text, the panel lists only the objects whose name c
 the files holding one — a way to find a type across a whole folder without opening its files.
 The ⊞ / ⊟ buttons expand or collapse a whole tree at once (the Files panel, the object list,
 the rows of a comparison). Large sets stay light: a folder or a workspace holding more than 10 schemas, or more
-than 10 linked schemas found at once, are only listed (parsed in the background) and a single
+than 10 linked schemas found at once, are only listed (parsed in the background, a few at a time —
+while a search runs before they are all parsed, a last row counts the files it cannot see yet) and a single
 tab is opened; the others open on demand from the panel.
 
 A **workspace is a group of tabs**: the workspace bar, above the tabs, shows one chip per

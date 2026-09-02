@@ -21,8 +21,6 @@ package org.jtools.xsdviewer.server;
  */
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +64,7 @@ final class ServedSchemaFiles {
     /** Writes {@code {name, path, text}} of a schema file into {@code w} and remembers the file. */
     void writeFile(JsonWriter w, Path file) throws IOException {
         Path abs = file.toAbsolutePath().normalize();
-        String text = Files.readString(abs, StandardCharsets.UTF_8);
+        String text = SchemaText.read(abs);
         remember(abs);
         w.beginObject()
                 .property(JsonKey.NAME, abs.getFileName().toString())

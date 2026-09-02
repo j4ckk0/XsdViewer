@@ -2,6 +2,7 @@
 import { parseSchema } from './api.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
+import { renderFileList } from './file-list.js';
 import { fillTab } from './schema-loader.js';
 import { newTab, renderNavigation, tabsOf } from './tabs.js';
 import { toast } from './toast.js';
@@ -34,17 +35,26 @@ export async function ensureTab(entry) {
   return tab;
 }
 
-/** Runs are serialised: one parse at a time. */
+/** Runs are serialised: one workspace at a time. */
 let chain = Promise.resolve();
+/** Parses in flight at once within a run (the server handles each request on its own thread). */
+const PARALLEL_PARSES = 4;
+/** The Files panel is redrawn at most this often while files are being parsed: a search sees the new objects without a redraw per file. */
+const REDRAW_INTERVAL_MS = 300;
 
-/** Parses, one after the other, the files of {@code ws} that have no model yet, redrawing the Files panel as they come. */
+/** Parses the files of {@code ws} that have no model yet (a few at a time), redrawing the Files panel as they come. */
 export function parseInBackground(ws) {
   chain = chain.then(async () => {
-    for (const entry of ws.files) {
-      if (entry.model || entry.failed) continue;
-      await ensureModel(entry, false);
-      renderNavigation();
-    }
+    const queue = ws.files.filter(entry => !entry.model && !entry.failed);
+    let lastRedraw = 0;
+    const worker = async () => {
+      for (let entry = queue.shift(); entry; entry = queue.shift()) {
+        await ensureModel(entry, false);
+        if (Date.now() - lastRedraw >= REDRAW_INTERVAL_MS) { lastRedraw = Date.now(); renderFileList(); }
+      }
+    };
+    await Promise.all(Array.from({ length: PARALLEL_PARSES }, worker));
+    renderFileList();
   }).catch(() => { /* nothing to report: a file that fails is shown as such */ });
   return chain;
 }

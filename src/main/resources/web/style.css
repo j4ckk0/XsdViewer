@@ -379,6 +379,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .tree .item.file.open { color: var(--text); font-weight: 600; }
 .tree .item.file .expander { display: inline-block; width: 12px; color: var(--muted); font-weight: 400; }
 .tree .item .empty { color: var(--muted); font-style: italic; font-weight: 400; }
+/* the count of files still being parsed, under the search results: wraps rather than being cut */
+.tree .item.parsing { white-space: normal; color: var(--muted); font-style: italic; }
 .tree .objects { padding-left: 22px; }
 .tree .objects .item { padding: 1px 12px; font-size: 12px; }
 .tree .objects .item.empty { color: var(--muted); font-style: italic; }

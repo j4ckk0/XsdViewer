@@ -40,6 +40,9 @@ export const MSG = {
 
   FILES_COLLAPSE: 'files.collapse',
   FILES_NOT_A_SCHEMA: 'files.notASchema',
+  FILES_PARSING_ONE: 'files.parsing.one',
+  FILES_PARSING_OTHER: 'files.parsing.other',
+  FILES_PARSING_TITLE: 'files.parsing.title',
   FILES_OPEN_AS_WORKSPACE: 'files.openAsWorkspace',
   FILES_EXPAND: 'files.expand',
   INFO_TITLE: 'info.title',
