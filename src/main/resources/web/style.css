@@ -52,6 +52,11 @@ html, body {
 
 .menu { position: relative; }
 
+/* the busy indicator: a spinning wheel and what is going on, while a long action runs */
+.busy { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.busy .wheel { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 .menubtn, .dropdown button, .tab, #backBtn {
   font: inherit;
   color: inherit;

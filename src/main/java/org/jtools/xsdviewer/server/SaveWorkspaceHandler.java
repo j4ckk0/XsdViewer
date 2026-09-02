@@ -60,7 +60,7 @@ final class SaveWorkspaceHandler implements HttpHandler {
         }
         Path dir = suggested != null ? suggested.getParent() : ws.files().isEmpty() ? null : ws.files().get(0).getParent();
         String name = suggested != null ? suggested.getFileName().toString() : Workspace.DEFAULT_FILE_NAME;
-        Path target = FileDialogs.chooseFileToSave(Messages.get(MessageKey.DIALOG_SAVE_WORKSPACE), dir, name);
+        Path target = FileDialogs.chooseFileToSave(Messages.get(MessageKey.DIALOG_SAVE_WORKSPACE), dir, name, OpenWorkspaceHandler.workspaceFilter());
         if (target == null) {
             HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.CANCELLED, true));
             return;

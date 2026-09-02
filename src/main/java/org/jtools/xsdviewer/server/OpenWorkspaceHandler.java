@@ -43,6 +43,11 @@ final class OpenWorkspaceHandler implements HttpHandler {
         this.files = files;
     }
 
+    /** What the workspace dialogs let pick: {@code *.xsdviewer.json}. */
+    static FileDialogs.Filter workspaceFilter() {
+        return new FileDialogs.Filter(Messages.get(MessageKey.DIALOG_FILTER_WORKSPACES), List.of("*" + Workspace.FILE_SUFFIX));
+    }
+
     @Override
     public void handle(HttpExchange ex) throws IOException {
         if (!HttpResponses.requirePost(ex)) return;
@@ -50,8 +55,7 @@ final class OpenWorkspaceHandler implements HttpHandler {
             HttpResponses.error(ex, HttpStatus.CONFLICT, Messages.get(MessageKey.NO_DISPLAY));
             return;
         }
-        List<Path> chosen = FileDialogs.chooseFilesToOpen(Messages.get(MessageKey.DIALOG_OPEN_WORKSPACE), false,
-                name -> name.endsWith(Workspace.FILE_SUFFIX));
+        List<Path> chosen = FileDialogs.chooseFilesToOpen(Messages.get(MessageKey.DIALOG_OPEN_WORKSPACE), false, workspaceFilter());
         if (chosen.isEmpty()) {
             HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.CANCELLED, true));
             return;

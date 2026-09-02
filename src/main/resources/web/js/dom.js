@@ -33,6 +33,8 @@ export const ID = {
   ABOUT_LICENSE_LINK: 'aboutLicenseLink',
   ABOUT_CLOSE: 'aboutClose',
   FILE_NAME: 'fileName',
+  BUSY: 'busy',
+  BUSY_LABEL: 'busyLabel',
   EXPORT_BUTTON: 'exportBtn',
   SHOW_BUILTINS: 'showBuiltins',
   LANGUAGE: 'language',

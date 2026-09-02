@@ -63,6 +63,9 @@ public final class MessageKey {
     public static final String DIALOG_OPEN_FOLDER = "dialog.openFolder";
     public static final String DIALOG_OPEN_WORKSPACE = "dialog.openWorkspace";
     public static final String DIALOG_SAVE_WORKSPACE = "dialog.saveWorkspace";
+    public static final String DIALOG_FILTER_SCHEMAS = "dialog.filterSchemas";
+    public static final String DIALOG_FILTER_WORKSPACES = "dialog.filterWorkspaces";
+    public static final String DIALOG_OVERWRITE = "dialog.overwrite";
 
     // schema parsing
     public static final String NOT_A_SCHEMA = "xsd.notASchema";

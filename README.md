@@ -238,7 +238,9 @@ both in the page (toast) and in the log.
 ## Where the files are
 
 A browser never tells a page where a chosen file sits on disk, but the server runs on the same
-machine: **File ▸ Open…** (Ctrl+O) therefore goes through the server's own, native file dialog
+machine: **File ▸ Open…** (Ctrl+O) therefore goes through the server's own file dialog — the
+native one on Windows and macOS; on Linux the desktop's, through `kdialog` (KDE, LXQt) or `zenity`
+(GNOME and others) when one is installed, else a Swing chooser in the system look and feel —
 whenever it has a display, and the files it returns come with their location. Without a
 display (headless server), the browser's dialog is used and the server tries to locate the file
 by name and content under the folders it already knows. Dropped files always go through the
@@ -352,7 +354,7 @@ src/main/java/org/jtools/xsdviewer/
                          ParseSchemaHandler, InitialFileHandler, OpenSchemaLocationHandler,
                          LocateSchemaFileHandler, ChooseFilesHandler, SaveWorkspaceHandler,
                          OpenWorkspaceHandler, CapabilitiesHandler, QuitHandler, StaticResourceHandler;
-                         FileDialogs (native java.awt.FileDialog)
+                         FileDialogs (native dialog; kdialog / zenity on Linux)
   workspace/             Workspace (the *.xsdviewer.json format)
   json/                  JsonWriter, JsonReader, JsonStrings, JsonKey
 src/main/resources/org/jtools/xsdviewer/   messages.properties (English), messages_fr.properties – server texts

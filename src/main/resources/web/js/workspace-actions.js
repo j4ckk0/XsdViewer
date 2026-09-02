@@ -1,5 +1,6 @@
 /** The File menu on workspaces: new / open / save / close a workspace, and opening a folder as one. */
 import { chooseFolder, openWorkspaceFile, saveWorkspaceFile } from './api.js';
+import { busy } from './busy.js';
 import { MAX_AUTO_OPEN, MAX_FOLDER_FILES, TEXT, XSD_FILE_PATTERN } from './constants.js';
 import { ensureTab, parseInBackground } from './file-tabs.js';
 import { registerFile } from './workspace-files.js';
@@ -56,7 +57,11 @@ export async function openWorkspace() {
 }
 
 /** Opens a workspace answered by the server as its own group of tabs (an empty unsaved workspace is taken over; one already open is brought to front). */
-export async function applyWorkspace(answer) {
+export function applyWorkspace(answer) {
+  return busy(t(MSG.BUSY_WORKSPACE), () => doApplyWorkspace(answer));
+}
+
+async function doApplyWorkspace(answer) {
   const already = session.workspaces.find(w => w.path === answer.workspace);
   if (already) {
     const own = tabsOf(already);
@@ -84,26 +89,32 @@ export async function applyWorkspace(answer) {
 export async function openFolder() {
   if (!session.dialogs) { $(ID.FOLDER_INPUT).click(); return; }
   try {
-    const r = await chooseFolder();
+    const r = await busy(t(MSG.BUSY_READING_FOLDER), chooseFolder());
     if (r.cancelled) return;
-    await openFolderAsWorkspace(r.name || r.folder, r.files, r.truncated);
+    await busy(t(MSG.BUSY_WORKSPACE), openFolderAsWorkspace(r.name || r.folder, r.files, r.truncated));
   } catch (e) {
     toastServerError(e);
   }
 }
 
 /** A folder opened or dropped in the browser: its files feed the library, its .xsd files become a workspace named after it ({@code relOf}: a File's path in the folder). */
-export async function openBrowserFolder(files, relOf, folderName) {
-  addToLibrary(files, relOf);
-  const schemas = files.filter(f => XSD_FILE_PATTERN.test(relOf(f))).sort((a, b) => relOf(a).localeCompare(relOf(b)));
-  const kept = schemas.slice(0, MAX_FOLDER_FILES);
-  const read = [];
-  for (const f of kept) read.push({ name: f.name, path: null, text: await f.text(), rel: normPath(relOf(f)) });   // rel: what links resolve to in the library
-  await openFolderAsWorkspace(folderName, read, schemas.length > kept.length);
+export function openBrowserFolder(files, relOf, folderName) {
+  return busy(t(MSG.BUSY_READING_FOLDER), async () => {
+    addToLibrary(files, relOf);
+    const schemas = files.filter(f => XSD_FILE_PATTERN.test(relOf(f))).sort((a, b) => relOf(a).localeCompare(relOf(b)));
+    const kept = schemas.slice(0, MAX_FOLDER_FILES);
+    const read = [];
+    for (const f of kept) read.push({ name: f.name, path: null, text: await f.text(), rel: normPath(relOf(f)) });   // rel: what links resolve to in the library
+    await openFolderAsWorkspace(folderName, read, schemas.length > kept.length);
+  });
 }
 
 /** A sub-folder of the Files panel opened as its own workspace: the files beneath it, with their text and model already at hand. */
-export async function openEntriesAsWorkspace(name, entries) {
+export function openEntriesAsWorkspace(name, entries) {
+  return busy(t(MSG.BUSY_WORKSPACE), () => doOpenEntriesAsWorkspace(name, entries));
+}
+
+async function doOpenEntriesAsWorkspace(name, entries) {
   const ws = newWorkspace();
   ws.label = name;
   const copies = entries.map(e => registerFile(ws, { name: e.name, path: e.path, rel: e.rel, text: e.text, model: e.model }));

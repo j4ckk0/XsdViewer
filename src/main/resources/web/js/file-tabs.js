@@ -1,5 +1,6 @@
 /** Opening a workspace file in a tab (from its cached text and model), and parsing listed files in the background. */
 import { parseSchema } from './api.js';
+import { beginBusy } from './busy.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { renderFileList } from './file-list.js';
@@ -46,14 +47,20 @@ const REDRAW_INTERVAL_MS = 300;
 export function parseInBackground(ws) {
   chain = chain.then(async () => {
     const queue = ws.files.filter(entry => !entry.model && !entry.failed);
+    if (!queue.length) return;
+    const task = beginBusy(t(MSG.BUSY_PARSING, queue.length));
     let lastRedraw = 0;
     const worker = async () => {
       for (let entry = queue.shift(); entry; entry = queue.shift()) {
         await ensureModel(entry, false);
-        if (Date.now() - lastRedraw >= REDRAW_INTERVAL_MS) { lastRedraw = Date.now(); renderFileList(); }
+        if (Date.now() - lastRedraw >= REDRAW_INTERVAL_MS) { lastRedraw = Date.now(); renderFileList(); task.update(t(MSG.BUSY_PARSING, queue.length)); }
       }
     };
-    await Promise.all(Array.from({ length: PARALLEL_PARSES }, worker));
+    try {
+      await Promise.all(Array.from({ length: PARALLEL_PARSES }, worker));
+    } finally {
+      task.end();
+    }
     renderFileList();
   }).catch(() => { /* nothing to report: a file that fails is shown as such */ });
   return chain;

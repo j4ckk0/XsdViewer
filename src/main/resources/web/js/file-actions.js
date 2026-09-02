@@ -1,5 +1,6 @@
 /** The File menu on files: opening schemas (dialog, drop, start-up file), closing, quitting. Workspaces and folders: workspace-actions.js. */
 import { chooseFiles, fetchInitialFile, quitServer } from './api.js';
+import { busy } from './busy.js';
 import { $, CLS, ID, esc } from './dom.js';
 import { t } from './i18n.js';
 import { openLinkedSchemas } from './linked-schemas.js';
@@ -25,12 +26,16 @@ export async function openSchemas() {
 
 /** Opens files from the browser's file dialog / a drop: the first one in the current tab if it is empty, the others in new tabs. */
 export async function openFiles(files) {
-  for (const file of files) await openInFreshTab(file.name, await file.text(), null);
+  await busy(t(MSG.BUSY_OPENING), async () => {
+    for (const file of files) await openInFreshTab(file.name, await file.text(), null);
+  });
 }
 
 /** Opens files read by the server ({name, path, text}), the same way. */
 export async function openServerFiles(files) {
-  for (const f of files) await openInFreshTab(f.name, f.text, f.path);
+  await busy(t(MSG.BUSY_OPENING), async () => {
+    for (const f of files) await openInFreshTab(f.name, f.text, f.path);
+  });
 }
 
 async function openInFreshTab(name, text, path) {
@@ -85,6 +90,6 @@ export async function loadInitialFile() {
     const f = await fetchInitialFile();
     if (!f) return;
     if (f.files) await applyWorkspace(f);
-    else await loadText(f.name, f.text, f.path);
+    else await busy(t(MSG.BUSY_OPENING), loadText(f.name, f.text, f.path));
   } catch (e) { /* server unreachable: reported when the user loads a file */ }
 }

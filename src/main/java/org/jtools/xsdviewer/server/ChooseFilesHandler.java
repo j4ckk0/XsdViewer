@@ -50,6 +50,12 @@ final class ChooseFilesHandler implements HttpHandler {
         return n.endsWith(SCHEMA_EXTENSION) || n.endsWith(WSDL_EXTENSION) || n.endsWith(XML_EXTENSION);
     }
 
+    /** What the "open" dialog lets pick: schema files, WSDL files, any XML. */
+    static FileDialogs.Filter schemaFilter() {
+        return new FileDialogs.Filter(Messages.get(MessageKey.DIALOG_FILTER_SCHEMAS),
+                List.of("*" + SCHEMA_EXTENSION, "*" + WSDL_EXTENSION, "*" + XML_EXTENSION));
+    }
+
     @Override
     public void handle(HttpExchange ex) throws IOException {
         if (!HttpResponses.requirePost(ex)) return;
@@ -57,7 +63,7 @@ final class ChooseFilesHandler implements HttpHandler {
             HttpResponses.error(ex, HttpStatus.CONFLICT, Messages.get(MessageKey.NO_DISPLAY));
             return;
         }
-        List<Path> chosen = FileDialogs.chooseFilesToOpen(Messages.get(MessageKey.DIALOG_OPEN_SCHEMA), true, ChooseFilesHandler::isSchemaName);
+        List<Path> chosen = FileDialogs.chooseFilesToOpen(Messages.get(MessageKey.DIALOG_OPEN_SCHEMA), true, schemaFilter());
         JsonWriter w = new JsonWriter(4096).beginObject().name(JsonKey.FILES).beginArray();
         for (Path p : chosen) files.writeFile(w, p);
         HttpResponses.json(ex, HttpStatus.OK, w.endArray().endObject().toString());

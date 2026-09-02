@@ -3,10 +3,11 @@
  * location, recursively): they join the workspace's Files panel and open as tabs only when at most MAX_AUTO_OPEN.
  */
 import { parseSchema } from './api.js';
+import { busy } from './busy.js';
 import { MAX_AUTO_OPEN, TEXT } from './constants.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
-import { plural } from './i18n.js';
+import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { resolveLocation } from './schema-loader.js';
 import { session } from './state.js';
@@ -22,7 +23,7 @@ let chain = Promise.resolve();
 
 /** Finds the schemas linked from {@code root} (recursively) that the workspace does not know yet. Returns when done. */
 export function openLinkedSchemas(root) {
-  chain = chain.then(() => discover(root)).catch(() => { /* reported by resolveLocation */ });
+  chain = chain.then(() => busy(t(MSG.BUSY_LINKED), discover(root))).catch(() => { /* reported by resolveLocation */ });
   return chain;
 }
 
