@@ -41,7 +41,8 @@ text) as a PNG image. **File ▸ Quit** stops the server and closes the page.
 **Graph view** — `CatalogType` in the centre, what it links to on the right (two levels:
 `publisher` is an `Address` from `common.xsd`, expanded from its own tab), what uses it on the
 left; cardinalities after each link, optional links dashed. The details panel on the right
-lists the links and the documentation.
+lists the links and the documentation — and, for an enumeration (a simpleType, an element or an
+attribute restricted to `xs:enumeration` values), the values with their own documentation.
 
 ![Graph view](screenshots/XsdViewer-graph-view.jpg)
 

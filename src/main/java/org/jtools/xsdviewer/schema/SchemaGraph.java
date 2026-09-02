@@ -35,12 +35,20 @@ public final class SchemaGraph {
     /** Separator between kind and name in a node id: {@code element:purchaseOrder}. */
     public static final char ID_SEPARATOR = ':';
 
+    /** One {@code xs:enumeration} of a declaration: its value and the documentation of that value (may be empty). */
+    public record Value(String value, String doc) {}
+
     /**
      * A global schema object: a declaration, or a placeholder ({@link NodeKind#BUILTIN}, {@link NodeKind#EXTERNAL}).
      * {@code ns}: the namespace the name lives in (for a placeholder, where the client looks for the
-     * declaring file); {@code line}: 1-based, 0 when unknown.
+     * declaring file); {@code line}: 1-based, 0 when unknown; {@code values}: the enumeration the
+     * declaration restricts its type to, empty when it is not an enumeration.
      */
-    public record Node(String id, String kind, String name, String ns, int line, String doc) {}
+    public record Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values) {
+        public Node(String id, String kind, String name, String ns, int line, String doc) {
+            this(id, kind, name, ns, line, doc, List.of());
+        }
+    }
 
     /**
      * How many times a link's target occurs in its owner: minOccurs..maxOccurs through the enclosing

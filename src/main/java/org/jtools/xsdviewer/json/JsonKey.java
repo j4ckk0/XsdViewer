@@ -38,6 +38,9 @@ public final class JsonKey {
     public static final String NS = "ns";
     public static final String LINE = "line";
     public static final String DOC = "doc";
+    /** The enumeration of a node: [{value, doc}], only when it has one. */
+    public static final String VALUES = "values";
+    public static final String VALUE = "value";
     public static final String EDGES = "edges";
     public static final String FROM = "from";
     public static final String TO = "to";

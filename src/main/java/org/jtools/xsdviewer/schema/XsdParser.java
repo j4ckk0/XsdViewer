@@ -99,7 +99,7 @@ final class XsdParser {
                 String name = c.getAttribute(XsdVocabulary.ATTR_NAME);
                 String id = SchemaGraph.nodeId(ln, name);
                 graph.nodes.put(id, new SchemaGraph.Node(id, ln, name, targetNamespace,
-                        lines.getOrDefault(id, 0), documentation(c)));
+                        lines.getOrDefault(id, 0), documentation(c), enumeration(c)));
             }
         }
 
@@ -277,6 +277,42 @@ final class XsdParser {
     void link(String owner, String kind, String qname, Element ctx, String label, Cardinality card) {
         QName q = QName.resolve(qname, ctx);
         pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(kind, q.local()), label, card), q.ns()));
+    }
+
+    /**
+     * The values a declaration enumerates: the {@code xs:enumeration}s of its restriction — that of a
+     * simpleType, of the anonymous simpleType of an element or attribute, of the simpleContent of a
+     * complexType. Nothing deeper: the enumerations of nested elements are theirs.
+     */
+    private static List<SchemaGraph.Value> enumeration(Element decl) {
+        Element restriction = switch (decl.getLocalName()) {
+            case XsdVocabulary.SIMPLE_TYPE -> child(decl, XsdVocabulary.RESTRICTION);
+            case XsdVocabulary.ELEMENT, XsdVocabulary.ATTRIBUTE -> {
+                Element simple = child(decl, XsdVocabulary.SIMPLE_TYPE);
+                yield simple == null ? null : child(simple, XsdVocabulary.RESTRICTION);
+            }
+            case XsdVocabulary.COMPLEX_TYPE -> {
+                Element content = child(decl, XsdVocabulary.SIMPLE_CONTENT);
+                yield content == null ? null : child(content, XsdVocabulary.RESTRICTION);
+            }
+            default -> null;
+        };
+        if (restriction == null) return List.of();
+        List<SchemaGraph.Value> values = new ArrayList<>();
+        for (Element e : children(restriction)) {
+            if (XsdVocabulary.NAMESPACE.equals(e.getNamespaceURI()) && XsdVocabulary.ENUMERATION.equals(e.getLocalName())) {
+                values.add(new SchemaGraph.Value(e.getAttribute(XsdVocabulary.ATTR_VALUE), documentation(e)));
+            }
+        }
+        return values;
+    }
+
+    /** The first child element of {@code e} in the XSD namespace named {@code localName}, or null. */
+    private static Element child(Element e, String localName) {
+        for (Element c : children(e)) {
+            if (XsdVocabulary.NAMESPACE.equals(c.getNamespaceURI()) && localName.equals(c.getLocalName())) return c;
+        }
+        return null;
     }
 
     /** The xs:documentation texts of the declaration's first xs:annotation, joined by line breaks. */

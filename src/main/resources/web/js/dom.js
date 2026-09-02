@@ -155,6 +155,9 @@ export const CLS = {
   BADGE: 'badge',
   META: 'meta',
   DOC: 'doc',
+  /** A row of the enumeration of the selected object in the details panel. */
+  VALUE: 'value',
+  VALUE_DOC: 'value-doc',
   LINK: 'link',
   LINK_LABEL: 'lbl',
   LINK_TARGET: 'tgt',

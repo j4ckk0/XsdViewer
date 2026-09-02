@@ -58,6 +58,7 @@ export const MSG = {
   DETAILS_NO_DECLARATION: 'details.noDeclaration',
   DETAILS_LINKS_OUT: 'details.linksOut',
   DETAILS_USED_BY: 'details.usedBy',
+  DETAILS_VALUES: 'details.values',
   DETAILS_NONE: 'details.none',
   DETAILS_COLLAPSE: 'details.collapse',
   DETAILS_EXPAND: 'details.expand',

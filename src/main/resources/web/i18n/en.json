@@ -117,6 +117,7 @@
   "details.noDeclaration": "no declaration in this file",
   "details.linksOut": "Links out ({0})",
   "details.usedBy": "Used by ({0})",
+  "details.values": "Values ({0})",
   "details.none": "none",
   "details.collapse": "Collapse the details panel",
   "details.expand": "Expand the details panel",

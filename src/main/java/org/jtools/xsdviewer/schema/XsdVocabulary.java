@@ -42,6 +42,8 @@ public final class XsdVocabulary {
     public static final String DOCUMENTATION = "documentation";
     public static final String EXTENSION = "extension";
     public static final String RESTRICTION = "restriction";
+    public static final String SIMPLE_CONTENT = "simpleContent";
+    public static final String ENUMERATION = "enumeration";
     public static final String LIST = "list";
     public static final String UNION = "union";
     public static final String SEQUENCE = "sequence";
@@ -63,6 +65,7 @@ public final class XsdVocabulary {
     public static final String ATTR_MAX_OCCURS = "maxOccurs";
     public static final String MAX_OCCURS_UNBOUNDED = "unbounded";
     public static final String ATTR_USE = "use";
+    public static final String ATTR_VALUE = "value";
     public static final String USE_REQUIRED = "required";
     public static final String USE_PROHIBITED = "prohibited";
 

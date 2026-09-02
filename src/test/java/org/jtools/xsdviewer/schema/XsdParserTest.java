@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,7 +69,29 @@ class XsdParserTest {
                 "complexType:InternationalAddress", "complexType:Category",
                 "group:ItemExtras", "attributeGroup:AuditAttributes", "attribute:version",
                 "simpleType:SKU", "simpleType:Message", "simpleType:LimitedText",
-                "simpleType:SKUList", "simpleType:Identifier"), declared);
+                "simpleType:SKUList", "simpleType:Identifier", "simpleType:Currency"), declared);
+    }
+
+    @Test
+    void enumerationValues() throws Exception {
+        assertEquals(List.of(new SchemaGraph.Value("USD", "US dollar"), new SchemaGraph.Value("EUR", "Euro"), new SchemaGraph.Value("GBP", "")),
+                model.nodes.get("simpleType:Currency").values());
+        assertTrue(model.nodes.get("simpleType:SKU").values().isEmpty(), "a pattern restriction enumerates nothing");
+        assertTrue(model.nodes.get("complexType:Items").values().isEmpty(), "the enumeration of a nested element is not its container's");
+        // an element and an attribute with an anonymous enumerated type, a complexType with an enumerated simpleContent
+        SchemaGraph m = SchemaParser.parse("""
+                <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+                  <xs:element name="status"><xs:simpleType><xs:restriction base="xs:string">
+                    <xs:enumeration value="open"/><xs:enumeration value="closed"/>
+                  </xs:restriction></xs:simpleType></xs:element>
+                  <xs:attribute name="unit"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="kg"/></xs:restriction></xs:simpleType></xs:attribute>
+                  <xs:complexType name="Code"><xs:simpleContent><xs:restriction base="xs:string"><xs:enumeration value="A"/></xs:restriction></xs:simpleContent></xs:complexType>
+                  <xs:complexType name="Wrapper"><xs:sequence><xs:element ref="status"/></xs:sequence></xs:complexType>
+                </xs:schema>""");
+        assertEquals(List.of("open", "closed"), m.nodes.get("element:status").values().stream().map(SchemaGraph.Value::value).toList());
+        assertEquals(List.of("kg"), m.nodes.get("attribute:unit").values().stream().map(SchemaGraph.Value::value).toList());
+        assertEquals(List.of("A"), m.nodes.get("complexType:Code").values().stream().map(SchemaGraph.Value::value).toList());
+        assertTrue(m.nodes.get("complexType:Wrapper").values().isEmpty());
     }
 
     @Test

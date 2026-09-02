@@ -621,6 +621,10 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   margin-bottom: 8px;
 }
 #details .meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+/* the enumeration of the selected object: one value per row, its documentation in grey after it */
+#details .value { display: flex; align-items: baseline; gap: 8px; padding: 2px 4px; font-size: 12px; }
+#details .value code { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; font-size: 12px; color: var(--text); flex: none; }
+#details .value .value-doc { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #details .meta a { color: var(--accent); cursor: pointer; }
 #details .doc {
   white-space: pre-wrap;

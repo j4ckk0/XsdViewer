@@ -111,6 +111,26 @@
     <xs:union memberTypes="po:SKU xs:positiveInteger"/>
   </xs:simpleType>
 
+  <!-- An enumeration: the details panel lists its values -->
+  <xs:simpleType name="Currency">
+    <xs:annotation>
+      <xs:documentation>The currencies a price may be given in.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="USD">
+        <xs:annotation>
+          <xs:documentation>US dollar</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="EUR">
+        <xs:annotation>
+          <xs:documentation>Euro</xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="GBP"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:complexType name="InternationalAddress">
     <xs:complexContent>
       <xs:extension base="po:USAddress">

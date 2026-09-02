@@ -1,4 +1,4 @@
-/** The right panel: the selected object, its documentation, its links out and the objects using it. Collapsible to a strip. */
+/** The right panel: the selected object, its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
 import { cardinalityText, isOptional } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
@@ -17,6 +17,11 @@ export function renderDetails() {
     + (n.line > 0 ? '<a' + dataAttr(DATA.LINE, n.line) + '>' + esc(t(MSG.DETAILS_SHOW_IN_TEXT, n.line)) + '</a>' : esc(t(MSG.DETAILS_NO_DECLARATION)))
     + '</div>';
   if (n.doc) html += '<div class="' + CLS.DOC + '">' + esc(n.doc) + '</div>';
+  if (n.values && n.values.length) {
+    html += '<h3>' + esc(t(MSG.DETAILS_VALUES, n.values.length)) + '</h3>'
+      + n.values.map(v => '<div class="' + CLS.VALUE + '"><code>' + esc(v.value) + '</code>'
+        + (v.doc ? '<span class="' + CLS.VALUE_DOC + '" title="' + esc(v.doc) + '">' + esc(v.doc) + '</span>' : '') + '</div>').join('');
+  }
 
   const out = (st.outEdges.get(n.id) || []).filter(e => st.nodes.has(e.to));
   const inn = (st.inEdges.get(n.id) || []).filter(e => st.nodes.has(e.from));

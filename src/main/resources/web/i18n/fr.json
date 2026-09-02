@@ -117,6 +117,7 @@
   "details.noDeclaration": "pas de déclaration dans ce fichier",
   "details.linksOut": "Liens sortants ({0})",
   "details.usedBy": "Utilisé par ({0})",
+  "details.values": "Valeurs ({0})",
   "details.none": "aucun",
   "details.collapse": "Replier le panneau de détails",
   "details.expand": "Déplier le panneau de détails",

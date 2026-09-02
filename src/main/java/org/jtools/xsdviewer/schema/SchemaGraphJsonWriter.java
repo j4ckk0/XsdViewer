@@ -50,8 +50,15 @@ public final class SchemaGraphJsonWriter {
                     .property(JsonKey.NAME, n.name())
                     .property(JsonKey.NS, n.ns())
                     .property(JsonKey.LINE, n.line())
-                    .property(JsonKey.DOC, n.doc())
-                    .endObject();
+                    .property(JsonKey.DOC, n.doc());
+            if (!n.values().isEmpty()) {
+                w.name(JsonKey.VALUES).beginArray();
+                for (SchemaGraph.Value v : n.values()) {
+                    w.beginObject().property(JsonKey.VALUE, v.value()).property(JsonKey.DOC, v.doc()).endObject();
+                }
+                w.endArray();
+            }
+            w.endObject();
         }
         w.endArray();
         w.name(JsonKey.EDGES).beginArray();
