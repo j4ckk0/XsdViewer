@@ -45,6 +45,14 @@ public final class LinkLabel {
     public static final String RESTRICTS = "restricts";
     public static final String LIST_OF = "list of";
     public static final String UNION_OF = "union of";
+    /** Prefix of the label of a {@code xs:keyref}'s link to the element declaring the key it refers to: {@code "keyref name"}. */
+    public static final String KEYREF_PREFIX = "keyref ";
+
+    /** The label of a keyref named {@code name}. */
+    public static String keyref(String name) {
+        return KEYREF_PREFIX + name;
+    }
+
     /** A WSDL portType to one of its operations. */
     public static final String OPERATION = "operation";
     /** A WSDL operation to its input / output / fault message. */

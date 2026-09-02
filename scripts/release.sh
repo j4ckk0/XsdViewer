@@ -2,14 +2,16 @@
 #
 # Publish a version on GitHub: creates the Release from the tag and attaches the archives of releases/.
 #
-#   scripts/release.sh <version> <whats-new.md>            # e.g. scripts/release.sh 2.8.0 notes.md
-#   scripts/release.sh --draft <version> <whats-new.md>    # a draft, to check on GitHub before publishing
-#   scripts/release.sh --dry-run <version> <whats-new.md>  # prints the notes, calls nothing
+#   scripts/release.sh <version>                           # e.g. scripts/release.sh 2.8.0: the notes are CHANGELOG.md's section
+#   scripts/release.sh <version> <whats-new.md>            # the notes from a file instead
+#   scripts/release.sh --draft <version> [<whats-new.md>]  # a draft, to check on GitHub before publishing
+#   scripts/release.sh --dry-run <version> [<whats-new.md>]  # prints the notes, calls nothing
 #
-# Before: bump the version in pom.xml (the project's <version> only), commit, tag vX.Y.Z, push the
-# tag, run scripts/package.sh (see PUBLISHING.md, section 5). The notes file holds the "What's new"
-# part only (Markdown, a bullet list); the script adds the intro, the downloads table and the
-# SHA-256 checksums.
+# Before: bump the version in pom.xml (the project's <version> only), write the version's section in
+# CHANGELOG.md, commit, tag vX.Y.Z, push the tag, run scripts/package.sh (see PUBLISHING.md,
+# section 5). The notes hold the "What's new" part only (Markdown, a bullet list); the script adds
+# the intro, the downloads table and the SHA-256 checksums. The release workflow on GitHub does the
+# same on a pushed tag: this script is the way by hand.
 #
 # Token: $GITHUB_TOKEN, else ~/.config/github/xsdviewer-release-token (one line, mode 600) — a
 # fine-grained token for this repository only, with Contents: read and write. Never echoed.
@@ -28,9 +30,17 @@ while [ $# -gt 0 ]; do
     *) break ;;
   esac
 done
-[ $# -eq 2 ] || { sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
-version=$1; notes=$2; tag=v$version
-[ -r "$notes" ] || { echo "notes file not found: $notes" >&2; exit 1; }
+[ $# -eq 1 ] || [ $# -eq 2 ] || { sed -n '3,16p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+version=$1; tag=v$version
+if [ $# -eq 2 ]; then
+  notes=$2
+  [ -r "$notes" ] || { echo "notes file not found: $notes" >&2; exit 1; }
+else
+  # the version's section of CHANGELOG.md, its heading replaced by "What's new"
+  notes=$(mktemp)
+  trap 'rm -f "$notes"' EXIT
+  scripts/changelog-section.py "$version" > "$notes" || exit 1
+fi
 for tool in curl python3 sha256sum git; do command -v "$tool" >/dev/null || { echo "$tool not found in PATH" >&2; exit 1; }; done
 
 # What is attached: the three archives of scripts/package.sh, for this version.

@@ -42,6 +42,8 @@ export const LINK_LABEL = {
   OPERATION: 'operation', INPUT: 'input', OUTPUT: 'output', FAULT: 'fault', BINDS: 'binds',
   /** "attribute <name>": a nested attribute's type link. */
   ATTRIBUTE_PREFIX: 'attribute ',
+  /** "keyref <name>": a keyref's link to the element declaring its key. */
+  KEYREF_PREFIX: 'keyref ',
 };
 export const STRUCTURAL_LINK_LABELS = new Set([
   LINK_LABEL.TYPE, LINK_LABEL.REF, LINK_LABEL.ATTRIBUTE_REF, LINK_LABEL.SUBSTITUTES, LINK_LABEL.GROUP,

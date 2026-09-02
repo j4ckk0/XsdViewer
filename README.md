@@ -177,11 +177,11 @@ previous builds, whatever their version, are deleted from `releases/` first):
 When started without a console (the Windows launcher, a double-clicked jar), a start-up
 failure such as a port already in use is shown in a dialog instead of being lost.
 
-`scripts/release.sh <version> <whats-new.md>` then publishes them: it creates the GitHub Release
-from the tag `v<version>` (which must be pushed) and attaches the three archives, with release
-notes made of your "what's new" file, the downloads table and the SHA-256 checksums
-(`--dry-run` prints the notes, `--draft` creates a draft). It reads a GitHub token from
-`$GITHUB_TOKEN` or `~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
+A pushed tag `v<version>` makes GitHub Actions build and publish the release (`release.yml`: the
+runtimes, the archives, the notes from `CHANGELOG.md`'s section for that version, the checksums).
+By hand, `scripts/release.sh <version>` does the same from `releases/` (`--dry-run` prints the
+notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` or
+`~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
 
 The JREs are not tracked in git: before packaging, download the Temurin JRE 21
 archives from <https://adoptium.net/temurin/releases/> and put them in
@@ -215,6 +215,10 @@ content (anonymous nested types included):
 | `extension base` / `restriction base` | `extends` / `restricts` |
 | `list itemType` / `union memberTypes` | `list of` / `union of` |
 | `substitutionGroup` | `substitutes` |
+| `keyref refer="K"` | `keyref name`, to the element declaring the key `K` |
+
+`xs:any` and `xs:anyAttribute` are not links: they appear among a declaration's *members* (what
+the search sees) as `any (##other)`, with their namespace constraint.
 
 A **WSDL 1.1** file (`wsdl:definitions`) gets five more kinds of object — *service*,
 *portType*, *operation*, *binding*, *message* —, listed in the legend when such a file is

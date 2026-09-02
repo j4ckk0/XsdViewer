@@ -82,6 +82,25 @@ class XsdParserTest {
     }
 
     @Test
+    void keyrefsAndWildcards() throws Exception {
+        SchemaGraph m = SchemaParser.parse("""
+                <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:t="urn:t" targetNamespace="urn:t">
+                  <xs:element name="library">
+                    <xs:complexType><xs:sequence>
+                      <xs:element name="book" maxOccurs="unbounded"/><xs:any namespace="##other" processContents="lax"/>
+                    </xs:sequence><xs:anyAttribute/></xs:complexType>
+                    <xs:key name="bookId"><xs:selector xpath="t:book"/><xs:field xpath="@id"/></xs:key>
+                  </xs:element>
+                  <xs:element name="loan">
+                    <xs:complexType><xs:sequence><xs:element name="of" type="xs:string"/></xs:sequence></xs:complexType>
+                    <xs:keyref name="loanOfBook" refer="t:bookId"><xs:selector xpath="."/><xs:field xpath="@book"/></xs:keyref>
+                  </xs:element>
+                </xs:schema>""");
+        assertTrue(hasEdge(m, "element:loan", "element:library", "keyref loanOfBook"));
+        assertEquals(List.of("book", "any (##other)", "anyAttribute (##any)"), m.nodes.get("element:library").members());
+    }
+
+    @Test
     void enumerationValues() throws Exception {
         assertEquals(List.of(new SchemaGraph.Value("USD", "US dollar"), new SchemaGraph.Value("EUR", "Euro"), new SchemaGraph.Value("GBP", "")),
                 model.nodes.get("simpleType:Currency").values());

@@ -57,6 +57,12 @@ final class XsdParser {
     private final Map<String, Integer> lines;
     /** The names of the elements and attributes met inside each declaration, by owner id (for the search). */
     private final Map<String, Set<String>> members = new HashMap<>();
+    /** The element declaring each xs:key / xs:unique, by the key's name: what a keyref refers to. */
+    private final Map<String, String> keyOwners = new HashMap<>();
+    /** The keyrefs met: (owner, keyref name, key's qualified name, the keyref element) — resolved once every key is known. */
+    private record KeyRef(String owner, String name, String refer, Element ctx) {}
+
+    private final List<KeyRef> keyRefs = new ArrayList<>();
 
     /** A parser adding to {@code graph}; {@code lines}: the line of each declaration by node id (see {@link DeclarationLineIndex}). */
     XsdParser(SchemaGraph graph, Map<String, Integer> lines) {
@@ -117,12 +123,20 @@ final class XsdParser {
                 if (found != null) graph.nodes.computeIfPresent(id, (k, n) -> n.withMembers(List.copyOf(found)));
             }
         }
+        // A keyref links to the element declaring the key it refers to (a key of this schema; else the keyref's owner, being what is known).
+        for (KeyRef kr : keyRefs) {
+            String local = kr.refer().substring(kr.refer().indexOf(XsdVocabulary.QNAME_SEPARATOR) + 1);
+            String keyOwner = keyOwners.get(local);
+            if (keyOwner != null) graph.edges.add(new SchemaGraph.Edge(kr.owner(), keyOwner, LinkLabel.keyref(kr.name())));
+        }
+        keyRefs.clear();
     }
 
     /** Records a name met inside {@code owner}'s declaration: a nested element or attribute, by name or by the local name of its ref. */
     private void member(String owner, String name) {
         int colon = name.indexOf(XsdVocabulary.QNAME_SEPARATOR);
-        members.computeIfAbsent(owner, k -> new LinkedHashSet<>()).add(colon < 0 ? name : name.substring(colon + 1));
+        boolean wildcard = name.indexOf('(') >= 0;   // "any (##other)": the constraint may hold a colon
+        members.computeIfAbsent(owner, k -> new LinkedHashSet<>()).add(colon < 0 || wildcard ? name : name.substring(colon + 1));
     }
 
     /** Pass 3: resolves the targets of the links, creating placeholder nodes for what the file does not declare. */
@@ -213,6 +227,18 @@ final class XsdParser {
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
                     link(owner, NodeKind.ATTRIBUTE_GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_GROUP, null);
                     return;
+                }
+            }
+            case XsdVocabulary.ANY, XsdVocabulary.ANY_ATTRIBUTE -> {   // a wildcard: listed among the members with its namespace constraint
+                String ns = e.hasAttribute(XsdVocabulary.ATTR_NAMESPACE) ? e.getAttribute(XsdVocabulary.ATTR_NAMESPACE) : XsdVocabulary.NAMESPACE_ANY;
+                member(owner, ln + " (" + ns + ")");
+            }
+            case XsdVocabulary.KEY, XsdVocabulary.UNIQUE -> {
+                if (e.hasAttribute(XsdVocabulary.ATTR_NAME)) keyOwners.putIfAbsent(e.getAttribute(XsdVocabulary.ATTR_NAME), owner);
+            }
+            case XsdVocabulary.KEYREF -> {
+                if (e.hasAttribute(XsdVocabulary.ATTR_REFER)) {
+                    keyRefs.add(new KeyRef(owner, e.getAttribute(XsdVocabulary.ATTR_NAME), e.getAttribute(XsdVocabulary.ATTR_REFER), e));
                 }
             }
             case XsdVocabulary.SEQUENCE, XsdVocabulary.ALL -> inner = particle(e).within(enclosing);

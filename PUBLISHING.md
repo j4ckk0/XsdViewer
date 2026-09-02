@@ -56,9 +56,9 @@ Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 
 
 Followed for v2.6.0, v2.7.1 (30 August 2026) , v2.8.0, v3.0.0, v3.1.0, v3.2.0, v3.3.0 and v3.3.1 (2 September 2026): version bump, tag, `scripts/package.sh`, release through the API — about ten minutes. When bumping, change the project's `<version>` only: a plugin in the `dist` profile may carry the same number (launch4j was 2.7.0).
 
-1. Bump the version in `pom.xml`, commit `Version X.Y.Z`, `git tag -a vX.Y.Z -m "X.Y.Z"`, `git push github master vX.Y.Z`.
-2. `scripts/package.sh`.
-3. Write the "What's new since A.B.C" bullets in a file, then `scripts/release.sh X.Y.Z notes.md` (`--dry-run` to read the notes first, `--draft` to check the page before publishing): it creates the Release from the tag and uploads the three files of `releases/`, with the downloads table and the checksums added to the notes. By hand instead: *Releases ▸ Draft a new release* from the tag, attach the files, `sha256sum releases/*` for the notes.
+1. Turn the *Unreleased* section of `CHANGELOG.md` into `## X.Y.Z — date` (the release notes come from it), bump the version in `pom.xml`, commit `Version X.Y.Z`, `git tag -a vX.Y.Z -m "X.Y.Z"`, `git push github master vX.Y.Z`.
+2. The `release` workflow (`.github/workflows/release.yml`) does the rest on the pushed tag: it downloads the Temurin JDKs, runs `mvn package -Pdist` (jlink runtimes for Windows, Linux and macOS), and creates the Release from the changelog section with the archives and their checksums. Check the Actions run, then the release page.
+3. By hand instead (the workflow failed, or offline): `scripts/package.sh` with the JDK archives in `jre/`, then `scripts/release.sh X.Y.Z` (`--dry-run` to read the notes first, `--draft` to check the page before publishing).
 4. Update the "current release" line at the top of this file.
 
 Token for the API (the SSH key only serves `git push`): a **fine-grained** personal access token with *Repository access* = **Only select repositories → XsdViewer** — the default *Public repositories (read-only)* greys out the permissions and every write answers `403 Resource not accessible` — and *Contents: Read and write* (releases); *Administration: Read and write* is also needed to change the description or topics. Short expiry, revoke it afterwards. Kept in `~/.config/github/xsdviewer-release-token` (mode 600, outside the repository) for `scripts/release.sh` to read, or given as `$GITHUB_TOKEN`.

@@ -185,7 +185,7 @@ function captionSvg(edge) {
   const optional = isOptional(edge) ? ' ' + CLS.OPTIONAL : '';
   const structural = (word) => '<text class="' + CLS.LINK_NAME + ' ' + CLS.STRUCTURAL + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(word) + cardSvg + '</text>';
   if (label === LINK_LABEL.ATTRIBUTE_REF) return structural(LINK_LABEL.REF);
-  if (STRUCTURAL_LINK_LABELS.has(label)) return structural(label);
+  if (STRUCTURAL_LINK_LABELS.has(label) || label.startsWith(LINK_LABEL.KEYREF_PREFIX)) return structural(label);
   const name = label.startsWith(LINK_LABEL.ATTRIBUTE_PREFIX) ? label.slice(LINK_LABEL.ATTRIBUTE_PREFIX.length) : label;
   return '<text class="' + CLS.LINK_NAME + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(shorten(name, CAPTION_MAX_CHARS)) + cardSvg + '</text>';
 }

@@ -49,6 +49,11 @@ public final class XsdVocabulary {
     public static final String SEQUENCE = "sequence";
     public static final String CHOICE = "choice";
     public static final String ALL = "all";
+    public static final String ANY = "any";
+    public static final String ANY_ATTRIBUTE = "anyAttribute";
+    public static final String KEY = "key";
+    public static final String UNIQUE = "unique";
+    public static final String KEYREF = "keyref";
 
     // attributes
     public static final String ATTR_NAME = "name";
@@ -66,6 +71,9 @@ public final class XsdVocabulary {
     public static final String MAX_OCCURS_UNBOUNDED = "unbounded";
     public static final String ATTR_USE = "use";
     public static final String ATTR_VALUE = "value";
+    public static final String ATTR_REFER = "refer";
+    /** A wildcard's namespace constraint ({@code ##any} when absent). */
+    public static final String NAMESPACE_ANY = "##any";
     public static final String USE_REQUIRED = "required";
     public static final String USE_PROHIBITED = "prohibited";
 
