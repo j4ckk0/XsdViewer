@@ -301,7 +301,7 @@ Build and test:
 | maven-compiler-plugin | 3.13.0 | `--release 21` |
 | maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` (no shading needed: no dependencies) |
 | maven-surefire-plugin | 3.2.5 | runs the tests |
-| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest` and `SchemaGraphJsonWriterTest` (against `samples/purchaseOrder.xsd`), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `CommandLineOptionsTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` (the HTTP interface on an ephemeral port) |
+| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, `WsdlParserTest` and `SchemaGraphJsonWriterTest` (against the samples), `PageContractTest` (the vocabulary shared with `js/constants.js`: node kinds, link labels, API paths), `JavaScriptTestsTest` (runs `src/test/js/*.test.mjs` — the page's pure modules: diff, business lines, cardinalities, schema diff… — under Node when it is installed, skipped otherwise; the CI installs it), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `CommandLineOptionsTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` (the HTTP interface on an ephemeral port) |
 | `scripts/run.sh` / `scripts\run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
 | `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; on Windows the `.bat` starts `javaw.exe` from a command line (`--console` to keep one) |
 | launch4j-maven-plugin | 2.7.0 | `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
