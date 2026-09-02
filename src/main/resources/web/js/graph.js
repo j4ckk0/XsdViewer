@@ -5,7 +5,7 @@
  * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
 import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, WSDL_KINDS, isDerivation } from './constants.js';
-import { findInTabs, kindsOf, usersInOtherTabs } from './declarations.js';
+import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declarations.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc } from './dom.js';
 import { t } from './i18n.js';
@@ -38,9 +38,9 @@ export function renderGraph() {
   $(ID.GRAPH_LEGEND).classList.toggle(CLS.WSDL, st.model.nodes.some(n => WSDL_KINDS.has(n.kind)));
   const visible = (n) => n && (showBuiltins || n.kind !== NODE_KIND.BUILTIN);
   const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name) || a.edge.label.localeCompare(b.edge.label);
-  const fileKind = (n, tab) => ({ kindText: t(MSG.GRAPH_KIND_IN_FILE, kindLabel(n.kind), tab.fileName) });
-  /** One row per link: {n, edge, tab} (tab: the other file the node belongs to, or null); children: its level-2 targets. */
-  const link = (n, edge, tab) => ({ n, edge, tab, children: [] });
+  const fileKind = (n, place) => ({ kindText: t(MSG.GRAPH_KIND_IN_FILE, kindLabel(n.kind), place.fileName) });
+  /** One row per link: {n, edge, place} (place: the other file the node belongs to — a tab or a listed file —, or null); children: its level-2 targets. */
+  const link = (n, edge, place) => ({ n, edge, place, children: [] });
 
   // Level 1: one row per outgoing edge on the right, per incoming edge on the left.
   const selfLabels = [];
@@ -55,32 +55,39 @@ export function renderGraph() {
     const n = st.nodes.get(e.from);
     if (visible(n)) left.push(link(n, e, null));
   }
-  // Users of the centre in the other open tabs, where it appears as an external placeholder.
-  for (const u of usersInOtherTabs(center, st)) {
-    if (visible(u.n)) for (const e of u.edges) left.push(link(u.n, e, u.tab));
+  // Users of the centre in the other files of the workspace (open or only listed), where it appears as an external placeholder.
+  for (const u of usersInWorkspace(center, st)) {
+    if (visible(u.n)) for (const e of u.edges) left.push(link(u.n, e, u.place));
   }
   right.sort(byName); left.sort(byName);
+  // An external target declared elsewhere in the workspace shows as what it is there (its kind, its file).
+  for (const r of right) {
+    if (r.n.kind !== NODE_KIND.EXTERNAL) continue;
+    const found = findInWorkspace(r.n.name, kindsOf(r.n), r.n.ns || '', st);
+    if (found) r.resolved = { n: found.place.nodes.get(found.id), place: found.place };
+  }
 
   // Level 2, on the right only, drawn as trees: what each level-1 target links to. An object
   // reached by several links is expanded once, under its first copy; the other copies stay leaves.
   if (depth === 2) {
-    const expandedKey = (n, tab) => (tab ? session.tabs.indexOf(tab) : -1) + ID_SEPARATOR + n.id;
+    const placeKey = (place) => (place ? (place.tab ? 't' + session.tabs.indexOf(place.tab) : 'f' + st.workspace.files.indexOf(place.entry)) : '');
+    const expandedKey = (n, place) => placeKey(place) + ID_SEPARATOR + n.id;
     const expanded = new Set();
-    // an external target declared in another tab is expanded from there
     for (const r of right) {
-      let src = st, id = r.n.id;
-      if (r.n.kind === NODE_KIND.EXTERNAL) {
-        const found = findInTabs(r.n.name, kindsOf(r.n), r.n.ns || '', st);
-        if (!found) continue;
-        src = found.tab; id = found.id;
-        r.resolved = { n: src.nodes.get(id), tab: src };
-      }
-      if (expanded.has(expandedKey(r.n, r.tab))) continue;
-      expanded.add(expandedKey(r.n, r.tab));
+      // an external target declared elsewhere is expanded from there
+      const src = r.resolved ? r.resolved.place : r.n.kind === NODE_KIND.EXTERNAL ? null : st;
+      if (!src) continue;
+      const id = r.resolved ? r.resolved.n.id : r.n.id;
+      if (expanded.has(expandedKey(r.n, r.place))) continue;
+      expanded.add(expandedKey(r.n, r.place));
       for (const e of src.outEdges.get(id) || []) {
         if (e.to === id) continue;
-        const n = src.nodes.get(e.to);
-        if (visible(n)) r.children.push(link(n, e, src === st ? null : src));
+        let n = src.nodes.get(e.to), place = src === st ? null : src;
+        if (n && n.kind === NODE_KIND.EXTERNAL) {   // a level-2 target declared elsewhere shows as what it is there too
+          const found = findInWorkspace(n.name, kindsOf(n), n.ns || '', st);
+          if (found) { n = found.place.nodes.get(found.id); place = found.place; }
+        }
+        if (visible(n)) r.children.push(link(n, e, place));
       }
       r.children.sort(byName);
     }
@@ -101,7 +108,7 @@ export function renderGraph() {
   const xR2 = depth === 2 ? colX(ci + 2) : 0;
   const yOf = (i, count) => cy - ((count - 1) * ROW) / 2 + i * ROW;
   /** Drawing options of a row's node: its caption (the link) and, for a node of another file, that file. */
-  const rowOpt = (row) => Object.assign({ link: row.edge }, row.tab ? { tab: session.tabs.indexOf(row.tab) } : {}, row.tab ? fileKind(row.n, row.tab) : {});
+  const rowOpt = (row) => Object.assign({ link: row.edge }, row.place ? { place: row.place } : {}, row.place ? fileKind(row.n, row.place) : {});
 
   let svg = '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
     + '<defs><marker id="' + SVG_ID.ARROW + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
@@ -119,7 +126,7 @@ export function renderGraph() {
     const y = first + ((spanR(r) - 1) * ROW) / 2;   // a parent sits in the middle of its children
     edges.push(curve(cx + NODE_W / 2, cy, xR1, y, r.edge));
     nodes.push(r.resolved
-      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge }, fileKind(r.resolved.n, r.resolved.tab)))
+      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge }, fileKind(r.resolved.n, r.resolved.place)))
       : nodeSvg(r.n, xR1, y - NODE_H / 2, false, { link: r.edge }));
     r.children.forEach((c, k) => {
       const yc = first + k * ROW;
@@ -186,14 +193,14 @@ function captionSvg(edge) {
 /** The link as written in a tooltip: "shipTo 1 → complexType USAddress". */
 const linkTitle = (edge) => edge.label + (cardinalityText(edge) ? ' ' + cardinalityText(edge) : '');
 
-/** @param opts {id} selected on click, {tab} index of the node's tab when it is another file's, {kindText} replaces the kind, {link} the edge captioned above the node */
+/** @param opts {id} selected on click, {place} where the node lives when it is another file's (a tab or a listed file), {kindText} replaces the kind, {link} the edge captioned above the node */
 function nodeSvg(n, x, y, isCenter, opts) {
   const o = opts || {};
   const name = shorten(n.name, isCenter ? NAME_MAX_CHARS_CENTER : NAME_MAX_CHARS);
   const kindText = o.kindText || kindLabel(n.kind);
   const caption = o.link ? captionSvg(o.link) : '';
   return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + '"' + dataAttr(DATA.ID, o.id || n.id)
-    + (o.tab != null ? dataAttr(DATA.TAB, o.tab) : '') + ' transform="translate(' + x + ',' + y + ')">'
+    + placeAttributes(o.place, session.active.workspace, dataAttr, DATA) + ' transform="translate(' + x + ',' + y + ')">'
     + '<title>' + (o.link ? esc(linkTitle(o.link)) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
     + caption
     + '<rect width="' + NODE_W + '" height="' + NODE_H + '"/>'

@@ -1,6 +1,12 @@
-/** Finding declarations across the open tabs: what an external placeholder resolves to, and who uses what. */
+/**
+ * Finding declarations across the whole workspace — its open tabs and its listed files, parsed in
+ * the background but not open —: what an external placeholder resolves to, and who uses what.
+ * A "place" is where a declaration lives: {tab} or {entry}, with {model, nodes, outEdges, inEdges, fileName} alike.
+ */
 import { IMPORT_TAG, NODE_KIND, TYPE_REFERENCE_KIND, kindOfId, nodeId } from './constants.js';
+import { session } from './state.js';
 import { tabsOf } from './tabs.js';
+import { tabOfFile } from './workspace-files.js';
 
 /** The kinds of declaration an external placeholder ("type:X", "element:X"...) can resolve to. */
 export function kindsOf(node) {
@@ -12,43 +18,77 @@ export function kindsOf(node) {
 export const externalIdOf = (n) =>
   nodeId(n.kind === NODE_KIND.COMPLEX_TYPE || n.kind === NODE_KIND.SIMPLE_TYPE ? TYPE_REFERENCE_KIND : n.kind, n.name);
 
-/** Looks for the declaration of {@code name} (one of {@code kinds}, in namespace {@code ns}) in the tab {@code t}. */
-export function findIn(t, name, kinds, ns) {
-  if (!t.model) return null;
+/** Looks for the declaration of {@code name} (one of {@code kinds}, in namespace {@code ns}) in a place (a tab, or a listed file's place). */
+export function findIn(place, name, kinds, ns) {
+  if (!place.model) return null;
   for (const k of kinds) {
-    const n = t.nodes.get(nodeId(k, name));
+    const n = place.nodes.get(nodeId(k, name));
     // a schema without targetNamespace (chameleon include) takes the namespace of the including one
     if (n && n.kind !== NODE_KIND.EXTERNAL && (n.ns === ns || n.ns === '')) return n.id;
   }
   return null;
 }
 
-/** The declaration of {@code name} in the other tabs of {@code skip}'s workspace: {tab, id} or null. */
-export function findInTabs(name, kinds, ns, skip) {
-  for (const t of tabsOf(skip.workspace)) {
-    if (t === skip) continue;
-    const id = findIn(t, name, kinds, ns);
-    if (id) return { tab: t, id };
+/** The indexes of a listed file's model (nodes by id, edges by end), built once per model. */
+function indexOf(entry) {
+  if (!entry.index || entry.index.model !== entry.model) {
+    const nodes = new Map(entry.model.nodes.map(n => [n.id, n]));
+    const outEdges = new Map(), inEdges = new Map();
+    for (const e of entry.model.edges) {
+      if (!outEdges.has(e.from)) outEdges.set(e.from, []);
+      outEdges.get(e.from).push(e);
+      if (!inEdges.has(e.to)) inEdges.set(e.to, []);
+      inEdges.get(e.to).push(e);
+    }
+    entry.index = { model: entry.model, nodes, outEdges, inEdges };
+  }
+  return entry.index;
+}
+
+/** The place of a tab. */
+const tabPlace = (tab) => ({ tab, model: tab.model, nodes: tab.nodes, outEdges: tab.outEdges, inEdges: tab.inEdges, fileName: tab.fileName });
+
+/** The places of {@code ws} other than the tab {@code skip}: its open tabs, then its parsed files not open in a tab. */
+export function placesOf(ws, skip) {
+  const out = [];
+  for (const t of tabsOf(ws)) if (t !== skip && t.model) out.push(tabPlace(t));
+  for (const entry of ws.files) {
+    if (!entry.model || tabOfFile(entry)) continue;
+    out.push(Object.assign({ entry, fileName: entry.name }, indexOf(entry)));
+  }
+  return out;
+}
+
+/** The declaration of {@code name} elsewhere in {@code skip}'s workspace (open tabs first, then listed files): {place, id} or null. */
+export function findInWorkspace(name, kinds, ns, skip) {
+  for (const place of placesOf(skip.workspace, skip)) {
+    const id = findIn(place, name, kinds, ns);
+    if (id) return { place, id };
   }
   return null;
 }
 
-/** The nodes of the other tabs of {@code home}'s workspace that link to {@code n} (declared in {@code home}), where it is an external placeholder: [{n, edges, tab}]. */
-export function usersInOtherTabs(n, home) {
+/** The nodes of the other files of {@code home}'s workspace that link to {@code n} (declared in {@code home}), where it is an external placeholder: [{n, edges, place}]. */
+export function usersInWorkspace(n, home) {
   const extId = externalIdOf(n);
   const out = [];
-  for (const t of tabsOf(home.workspace)) {
-    if (t === home || !t.model) continue;
-    const ext = t.nodes.get(extId);
+  for (const place of placesOf(home.workspace, home)) {
+    const ext = place.nodes.get(extId);
     if (!ext || ext.kind !== NODE_KIND.EXTERNAL || !(ext.ns === (n.ns || '') || ext.ns === '' || !n.ns)) continue;
     const users = new Map();
-    for (const e of t.inEdges.get(extId) || []) {
+    for (const e of place.inEdges.get(extId) || []) {
       if (!users.has(e.from)) users.set(e.from, []);
       users.get(e.from).push(e);
     }
-    for (const [id, edges] of users) { const u = t.nodes.get(id); if (u) out.push({ n: u, edges, tab: t }); }
+    for (const [id, edges] of users) { const u = place.nodes.get(id); if (u) out.push({ n: u, edges, place }); }
   }
   return out;
+}
+
+/** The data attributes naming a place on a drawn node or row: the tab's index, or the listed file's index in the workspace. */
+export function placeAttributes(place, ws, dataAttr, DATA) {
+  if (!place) return '';
+  return place.tab ? dataAttr(DATA.TAB, session.tabs.indexOf(place.tab)) : dataAttr(DATA.FILE, ws.files.indexOf(place.entry));
 }
 
 /** The schemaLocations declared by tab {@code t} that may hold namespace {@code ns}. */

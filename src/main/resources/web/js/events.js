@@ -10,7 +10,7 @@ import { fileListClick, initFiles, renderFileList, setAllUnfolded, toggleFiles }
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
-import { followExternal, goBack, select } from './navigation.js';
+import { followExternal, goBack, jumpTo, select } from './navigation.js';
 import { renderPage, showView } from './page.js';
 import { exportPng, exportSvg } from './png-export.js';
 import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, toggleSchemaInfo } from './sidebar.js';
@@ -225,6 +225,13 @@ function wireSearch() {
   $(ID.TEXT_FIND_CLOSE).addEventListener('click', () => { clearFind(); find.blur(); });
 }
 
+/** Shows node {@code id} of another file of the workspace: an open tab (data-tab), or a listed file (data-file) opened in a tab first. */
+async function jumpToPlace(dataset, id) {
+  if (dataset[DATA.TAB] != null) { jumpTo(session.tabs[+dataset[DATA.TAB]], id); return; }
+  const tab = await ensureTab(session.active.workspace.files[+dataset[DATA.FILE]]);
+  if (tab) jumpTo(tab, id);
+}
+
 /** Everything that selects a node: the object list, the graph, the details links, the line numbers of the text. */
 function wireSelectionSources() {
   $(ID.NODE_LIST).addEventListener('click', (e) => {
@@ -237,9 +244,8 @@ function wireSelectionSources() {
     const g = e.target.closest(selector(CLS.NODE));
     if (!g) return;
     const st = session.active, id = g.dataset[DATA.ID];
-    if (g.dataset[DATA.TAB] != null) {   // level-2 node of another file
-      if (activateTab(session.tabs[+g.dataset[DATA.TAB]])) renderPage();
-      select(id);
+    if (g.dataset[DATA.TAB] != null || g.dataset[DATA.FILE] != null) {   // a node of another file
+      jumpToPlace(g.dataset, id);
     } else if (id !== st.selected) {
       select(id);
     } else if (st.nodes.get(id).kind === NODE_KIND.EXTERNAL) {
@@ -249,7 +255,9 @@ function wireSelectionSources() {
   $(ID.DETAILS).addEventListener('click', (e) => {
     if (e.target.closest('a[data-' + DATA.LINE + ']')) { showView(VIEW.TEXT); return; }
     const link = e.target.closest(selector(CLS.LINK));
-    if (link) select(link.dataset[DATA.ID]);
+    if (!link) return;
+    if (link.dataset[DATA.TAB] != null || link.dataset[DATA.FILE] != null) jumpToPlace(link.dataset, link.dataset[DATA.ID]);
+    else select(link.dataset[DATA.ID]);
   });
   $(ID.TEXT).addEventListener('click', (e) => {
     const ln = e.target.closest(selector(CLS.LINE_NUMBER));

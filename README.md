@@ -12,10 +12,12 @@ A Java server parses the schema and serves a web page offering two views:
   sits in the middle, what it links to is on the right, what uses it is on the left.
   **2 levels** adds a column on the right: what each linked object links to in turn,
   drawn as trees (e.g. complexType → element type → its own types and attributes); the
-  left side, what uses the selected object, stays one step deep. Objects of the other open tabs take part: an external
-  object whose file is open is expanded from that tab (its box shows the real kind and
-  the file), and objects of other files that use the centre appear on the left, marked
-  with their file; clicking one of them switches to that tab.
+  left side, what uses the selected object, stays one step deep. The other files of the workspace take part, open in
+  a tab or only listed in the Files panel (they are parsed in the background): an external
+  object declared elsewhere shows as what it is there (its real kind, its file) and is expanded
+  from there at the second level, and objects of other files that use the centre appear on the
+  left, marked with their file; clicking one of them switches to that file's tab, opening it when
+  needed. The details panel lists those users too.
   Each link shows its **cardinality** after its name (`items 1..*`, `orderDate 0..1`): the
   `minOccurs`/`maxOccurs` of a nested element or group reference — through the enclosing
   `sequence`/`all`/`choice`, counted from the nearest enclosing element — or the `use` of an

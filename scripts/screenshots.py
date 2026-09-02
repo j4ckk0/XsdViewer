@@ -69,6 +69,12 @@ SCENES = [
                  'current': "document.querySelectorAll('#text .line.found.current').length",
                  'svgButton': "document.getElementById('exportSvgBtn').disabled"},
          expect={'count': '1/7', 'current': 1, 'svgButton': True}),
+    dict(name='listed-files', file='target/screenshots/listed/listed.xsdviewer.json', theme='light', setup='listed',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:OrderType\"]').click();",
+         checks={'resolved': "document.querySelectorAll('#graphCanvas .node.complexType, #graphCanvas .node.simpleType').length",
+                 'external': "document.querySelectorAll('#graphCanvas .node.external').length",
+                 'fromFiles': "[...document.querySelectorAll('#graphCanvas .node .kind')].filter(k => k.textContent.includes('.xsd')).length"},
+         expect={'resolved': 5, 'external': 0, 'fromFiles': 4}),   # the centre and its four targets, resolved from the listed files
     dict(name='imports', file='samples/import/order.xsd', theme='light', action="",
          checks={'tabs': "document.querySelectorAll('#tabs .dtab').length",
                  'files': "document.getElementById('filesCount').textContent"},
@@ -111,7 +117,8 @@ class Proxy(http.server.BaseHTTPRequestHandler):
 
     @staticmethod
     def head():
-        return ("<head><script>try{localStorage.setItem('xsdviewer.theme','%s')}catch(e){}</script>" % Proxy.scene['theme']).encode()
+        # a clean storage for every scene (the profile is shared): only the theme is set
+        return ("<head><script>try{localStorage.clear();localStorage.setItem('xsdviewer.theme','%s')}catch(e){}</script>" % Proxy.scene['theme']).encode()
 
     @staticmethod
     def tail():
@@ -125,6 +132,23 @@ class Proxy(http.server.BaseHTTPRequestHandler):
         pass
 
 
+def setup_listed():
+    """A workspace of more than ten files, the import sample first: the others stay listed, parsed in the background."""
+    d = OUT / 'listed'
+    d.mkdir(parents=True, exist_ok=True)
+    for f in (ROOT / 'samples' / 'import').glob('*.xsd'):
+        shutil.copy(f, d / f.name)
+    names = ['order.xsd', 'address.xsd', 'items.xsd', 'types.xsd']
+    for i in range(8):
+        name = 'filler%d.xsd' % i
+        (d / name).write_text('<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:filler:%d"><xs:element name="f%d" type="xs:string"/></xs:schema>' % (i, i))
+        names.append(name)
+    (d / 'listed.xsdviewer.json').write_text(json.dumps({'xsdviewer': 1, 'files': names, 'active': 0}))
+
+
+SETUPS = {'listed': setup_listed}
+
+
 def wait_for(port, seconds=15):
     for _ in range(seconds * 10):
         try:
@@ -136,6 +160,8 @@ def wait_for(port, seconds=15):
 
 
 def shoot(scene, profile):
+    if scene.get('setup'):
+        SETUPS[scene['setup']]()
     app = subprocess.Popen(['java', '-jar', str(JAR), '--no-browser', '--keep-alive', '--port', str(APP_PORT), str(ROOT / scene['file'])],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:

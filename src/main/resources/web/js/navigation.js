@@ -1,6 +1,6 @@
 /** Moving the selection: within the file (with a back history) and across files, following links to external declarations. */
 import { NODE_KIND, TEXT } from './constants.js';
-import { findIn, kindsOf, locationsFor } from './declarations.js';
+import { findIn, findInWorkspace, kindsOf, locationsFor } from './declarations.js';
 import { renderDetails } from './details.js';
 import { $, ID } from './dom.js';
 import { renderGraph } from './graph.js';
@@ -43,12 +43,13 @@ export function jumpTo(tab, id) {
   select(id);
 }
 
-/** Follows a link to something this file does not declare: an open tab of the workspace, else the files its imports / includes name (opened on the way), else the user's file chooser. */
+/** Follows a link to something this file does not declare: another file of the workspace (open, or listed and opened now), else the files its imports / includes name (opened on the way), else the user's file chooser. */
 export async function followExternal(node) {
   const from = session.active, name = node.name, kinds = kindsOf(node), ns = node.ns || '';
-  for (const tab of tabsOf(from.workspace)) {
-    const id = findIn(tab, name, kinds, ns);
-    if (id) { jumpTo(tab, id); return; }
+  const found = findInWorkspace(name, kinds, ns, from);
+  if (found) {
+    const tab = found.place.tab || await ensureTab(found.place.entry);
+    if (tab) { jumpTo(tab, found.id); return; }
   }
   const locs = locationsFor(from, ns);
   if (!locs.length) {
