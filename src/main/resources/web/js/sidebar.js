@@ -4,6 +4,7 @@ import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { t } from './i18n.js';
 import { groupLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
+import { matchedBy, matches } from './search.js';
 import { session } from './state.js';
 
 export function renderSchemaInfo() {
@@ -50,7 +51,7 @@ export function renderNodeList() {
   const f = st.filter.toLowerCase();
   const byKind = new Map(KINDS.map(k => [k, []]));
   for (const n of st.model.nodes) {
-    if (f && !n.name.toLowerCase().includes(f)) continue;
+    if (!matches(n, f)) continue;
     (byKind.get(n.kind) || byKind.get(NODE_KIND.EXTERNAL)).push(n);
   }
   let html = '';
@@ -62,8 +63,10 @@ export function renderNodeList() {
       + '<span>' + esc(groupLabel(k)) + '</span><span class="' + CLS.COUNT + '">' + items.length + '</span></div>'
       + '<div class="' + CLS.GROUP_ITEMS + '">';
     for (const n of items) {
+      const why = matchedBy(n, f);
       html += '<div class="' + CLS.ITEM + (n.id === st.selected ? ' ' + CLS.SELECTED : '') + '"' + dataAttr(DATA.ID, n.id) + ' title="' + esc(n.id) + '">'
-        + '<span class="' + CLS.DOT + ' ' + k + '"></span><span>' + esc(n.name) + '</span></div>';
+        + '<span class="' + CLS.DOT + ' ' + k + '"></span><span>' + esc(n.name) + '</span>'
+        + (why ? '<span class="' + CLS.WHY + '" title="' + esc(why) + '">' + esc(why) + '</span>' : '') + '</div>';
     }
     html += '</div>';
   }

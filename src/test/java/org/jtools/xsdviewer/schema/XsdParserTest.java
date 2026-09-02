@@ -73,6 +73,15 @@ class XsdParserTest {
     }
 
     @Test
+    void membersOfADeclaration() {
+        List<String> members = model.nodes.get("complexType:PurchaseOrderType").members();
+        assertTrue(members.containsAll(List.of("shipTo", "billTo", "comment", "items", "orderDate")), "nested elements, a ref (its local name), an attribute: " + members);
+        assertTrue(model.nodes.get("complexType:Items").members().contains("partNum"), "an attribute of a nested element's anonymous type");
+        assertTrue(model.nodes.get("simpleType:SKU").members().isEmpty());
+        assertTrue(model.nodes.get("element:purchaseOrder").members().isEmpty(), "a type reference has no members of its own");
+    }
+
+    @Test
     void enumerationValues() throws Exception {
         assertEquals(List.of(new SchemaGraph.Value("USD", "US dollar"), new SchemaGraph.Value("EUR", "Euro"), new SchemaGraph.Value("GBP", "")),
                 model.nodes.get("simpleType:Currency").values());

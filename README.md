@@ -33,8 +33,11 @@ Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸
 opens an empty one, × or a middle click closes one); every tab keeps its own view,
 selection, history and search filter. The **search box** at the top of the left panel (Ctrl+F)
 filters the Files panel and the object list below it — every schema of the workspace, open in a tab or
-not, is searched; **⤓ PNG** in the top bar saves the current view (graph or
-text) as a PNG image. **File ▸ Quit** stops the server and closes the page.
+not, is searched, by the objects' names but also by the names of the elements and attributes inside
+a declaration (a message's parts) and by the documentation, the reason being shown in grey after a
+listed object; **⤓ PNG** in the top bar saves the current view (graph or
+text) as a PNG image, **⤓ SVG** the graph as a vector image (for documents). In the Text view, a
+**find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter. **File ▸ Quit** stops the server and closes the page.
 
 ## Screenshots
 

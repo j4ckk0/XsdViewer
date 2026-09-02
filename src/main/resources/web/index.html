@@ -49,6 +49,7 @@
     <button class="tab" data-view="text" type="button" data-i18n="view.text">Text</button>
   </nav>
   <button id="exportBtn" class="menubtn" type="button" data-i18n="export.button" data-i18n-title="export.title" disabled>⤓ PNG</button>
+  <button id="exportSvgBtn" class="menubtn" type="button" data-i18n="export.svg" data-i18n-title="export.svg.title" disabled>⤓ SVG</button>
   <select id="language" class="opt" data-i18n-title="language.title"></select>
 </header>
 
@@ -118,6 +119,13 @@
       <div id="graphCanvas"></div>
     </div>
     <div id="text" class="view hidden"></div>
+    <div id="textFind" class="hidden">
+      <input id="textFindInput" type="search" data-i18n-placeholder="text.find.placeholder" autocomplete="off" spellcheck="false">
+      <span id="textFindCount" class="count"></span>
+      <button id="textFindPrev" class="panel-toggle" type="button" data-i18n-title="text.find.prev">▲</button>
+      <button id="textFindNext" class="panel-toggle" type="button" data-i18n-title="text.find.next">▼</button>
+      <button id="textFindClose" class="panel-toggle" type="button" data-i18n-title="text.find.close">×</button>
+    </div>
     <div id="compare" class="view hidden">
       <div id="compareHeader">
         <div><span id="compareTitle"></span><br><span id="compareSummary" class="muted"></span></div>

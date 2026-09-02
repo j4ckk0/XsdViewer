@@ -12,11 +12,12 @@ import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, select } from './navigation.js';
 import { renderPage, showView } from './page.js';
-import { exportPng } from './png-export.js';
+import { exportPng, exportSvg } from './png-export.js';
 import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, toggleSchemaInfo } from './sidebar.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
+import { clearFind, findStep, focusFind, refreshFind } from './text-find.js';
 import { toggleTheme } from './theme.js';
 import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderNavigation, tabToShow } from './tabs.js';
@@ -128,7 +129,12 @@ function wireKeyboard() {
     const ctrl = e.ctrlKey || e.metaKey;
     if (ctrl && e.key.toLowerCase() === KEY.OPEN) { e.preventDefault(); openSchemas(); }
     if (ctrl && e.key.toLowerCase() === KEY.SAVE) { e.preventDefault(); saveWorkspace(); }
-    if (ctrl && e.key.toLowerCase() === KEY.FIND) { e.preventDefault(); $(ID.SEARCH).focus(); $(ID.SEARCH).select(); }
+    if (ctrl && e.key.toLowerCase() === KEY.FIND) {
+      e.preventDefault();
+      // in the Text view, the find bar; elsewhere the object search
+      if (session.active.model && !session.active.compare && session.active.view === VIEW.TEXT) focusFind();
+      else { $(ID.SEARCH).focus(); $(ID.SEARCH).select(); }
+    }
     if (e.altKey && e.key === KEY.ARROW_LEFT) goBack();
   });
 }
@@ -191,6 +197,7 @@ function wireViews() {
     if (hit.id) select(hit.id);
   });
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
+  $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
   window.addEventListener('resize', () => { const st = session.active; if (st.model && st.view === VIEW.GRAPH) renderGraph(); });
 }
 
@@ -202,6 +209,16 @@ function wireSearch() {
     if (e.key === KEY.ESCAPE) { e.target.value = ''; apply(''); e.target.blur(); }
   });
   $(ID.SEARCH_CLEAR).addEventListener('click', () => { search.value = ''; apply(''); search.focus(); });
+  // the find bar of the Text view
+  const find = $(ID.TEXT_FIND_INPUT);
+  find.addEventListener('input', refreshFind);
+  find.addEventListener('keydown', (e) => {
+    if (e.key === KEY.ENTER) { e.preventDefault(); findStep(e.shiftKey ? -1 : 1); }
+    if (e.key === KEY.ESCAPE) { clearFind(); find.blur(); }
+  });
+  $(ID.TEXT_FIND_PREV).addEventListener('click', () => findStep(-1));
+  $(ID.TEXT_FIND_NEXT).addEventListener('click', () => findStep(1));
+  $(ID.TEXT_FIND_CLOSE).addEventListener('click', () => { clearFind(); find.blur(); });
 }
 
 /** Everything that selects a node: the object list, the graph, the details links, the line numbers of the text. */

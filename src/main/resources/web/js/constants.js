@@ -125,6 +125,6 @@ export const SVG_NS = 'http://www.w3.org/2000/svg';
 /** dataTransfer.types entry of a drag that carries files. */
 export const DATA_TRANSFER_FILES = 'Files';
 export const DROP_EFFECT_COPY = 'copy';
-export const KEY = { ESCAPE: 'Escape', ARROW_LEFT: 'ArrowLeft', OPEN: 'o', FIND: 'f', SAVE: 's' };
+export const KEY = { ESCAPE: 'Escape', ENTER: 'Enter', ARROW_LEFT: 'ArrowLeft', OPEN: 'o', FIND: 'f', SAVE: 's' };
 export const TEXT = { LIST_SEPARATOR: ', ', TOAST_SEPARATOR: ' — ' };
 export const MIDDLE_BUTTON = 1;

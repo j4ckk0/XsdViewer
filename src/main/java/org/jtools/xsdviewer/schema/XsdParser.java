@@ -21,8 +21,11 @@ package org.jtools.xsdviewer.schema;
  */
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
@@ -52,6 +55,8 @@ final class XsdParser {
 
     private final List<Pending> pending = new ArrayList<>();
     private final Map<String, Integer> lines;
+    /** The names of the elements and attributes met inside each declaration, by owner id (for the search). */
+    private final Map<String, Set<String>> members = new HashMap<>();
 
     /** A parser adding to {@code graph}; {@code lines}: the line of each declaration by node id (see {@link DeclarationLineIndex}). */
     XsdParser(SchemaGraph graph, Map<String, Integer> lines) {
@@ -103,12 +108,21 @@ final class XsdParser {
             }
         }
 
-        // Pass 2: the links.
+        // Pass 2: the links, and the members met on the way.
         for (Element c : children(schema)) {
             if (isGlobalDeclaration(c)) {
-                collect(c, SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME)), true, Cardinality.ONE);
+                String id = SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME));
+                collect(c, id, true, Cardinality.ONE);
+                Set<String> found = members.get(id);
+                if (found != null) graph.nodes.computeIfPresent(id, (k, n) -> n.withMembers(List.copyOf(found)));
             }
         }
+    }
+
+    /** Records a name met inside {@code owner}'s declaration: a nested element or attribute, by name or by the local name of its ref. */
+    private void member(String owner, String name) {
+        int colon = name.indexOf(XsdVocabulary.QNAME_SEPARATOR);
+        members.computeIfAbsent(owner, k -> new LinkedHashSet<>()).add(colon < 0 ? name : name.substring(colon + 1));
     }
 
     /** Pass 3: resolves the targets of the links, creating placeholder nodes for what the file does not declare. */
@@ -160,6 +174,8 @@ final class XsdParser {
             case XsdVocabulary.ANNOTATION -> { return; }
             case XsdVocabulary.ELEMENT -> {
                 Cardinality card = self ? null : particle(e).within(enclosing);
+                if (!self && e.hasAttribute(XsdVocabulary.ATTR_REF)) member(owner, e.getAttribute(XsdVocabulary.ATTR_REF));
+                if (!self && e.hasAttribute(XsdVocabulary.ATTR_NAME)) member(owner, e.getAttribute(XsdVocabulary.ATTR_NAME));
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
                     link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.REF, card);
                     return;
@@ -176,6 +192,8 @@ final class XsdParser {
             }
             case XsdVocabulary.ATTRIBUTE -> {
                 Cardinality card = self ? null : attributeUse(e);
+                if (!self && e.hasAttribute(XsdVocabulary.ATTR_REF)) member(owner, e.getAttribute(XsdVocabulary.ATTR_REF));
+                if (!self && e.hasAttribute(XsdVocabulary.ATTR_NAME)) member(owner, e.getAttribute(XsdVocabulary.ATTR_NAME));
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
                     link(owner, NodeKind.ATTRIBUTE, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_REF, card);
                     return;

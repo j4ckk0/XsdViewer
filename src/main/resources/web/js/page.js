@@ -54,7 +54,9 @@ export function showView(view) {
   $(ID.EMPTY).classList.toggle(CLS.HIDDEN, loaded || comparing);
   $(ID.GRAPH).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.GRAPH);
   $(ID.TEXT).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.TEXT);
+  $(ID.TEXT_FIND).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.TEXT);
   $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || comparing);   // the schema header, then the selected object
   $(ID.EXPORT_BUTTON).disabled = !loaded || comparing;
+  $(ID.EXPORT_SVG_BUTTON).disabled = !loaded || comparing || view !== VIEW.GRAPH;
   if (loaded && !comparing && view === VIEW.TEXT) highlightTextLine(true);
 }

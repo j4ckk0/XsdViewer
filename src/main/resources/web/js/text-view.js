@@ -4,6 +4,7 @@ import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
+import { refreshFind } from './text-find.js';
 import { highlightXml } from './xml-highlighter.js';
 
 export function renderText() {
@@ -18,6 +19,7 @@ export function renderText() {
       + '<span class="' + CLS.CODE + '">' + (lines[i] || ' ') + '</span></div>';
   }
   $(ID.TEXT).innerHTML = html;
+  refreshFind();
 }
 
 /** Highlights the line of the selected declaration; scrolls to it when {@code scroll} and the text view is shown. */

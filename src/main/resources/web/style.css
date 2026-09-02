@@ -453,6 +453,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .tree .item.file.open { color: var(--text); font-weight: 600; }
 .tree .item.file .expander { display: inline-block; width: 12px; color: var(--muted); font-weight: 400; }
 .tree .item .empty { color: var(--muted); font-style: italic; font-weight: 400; }
+/* why a searched object is listed when its name does not match: the member or "documentation", grey, at the right */
+.item .why { margin-left: auto; padding-left: 8px; color: var(--muted); font-size: 11px; font-style: italic; overflow: hidden; text-overflow: ellipsis; }
 /* the count of files still being parsed, under the search results: wraps rather than being cut */
 .tree .item.parsing { white-space: normal; color: var(--muted); font-style: italic; }
 .tree .objects { padding-left: 22px; }
@@ -699,6 +701,26 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .line.decl .ln { color: var(--accent); cursor: pointer; font-weight: 700; }
 .line.decl .ln:hover { text-decoration: underline; }
 .line.hl { background: var(--hl); }
+.line.found { background: var(--accent-soft); }
+.line.found.current { box-shadow: inset 3px 0 0 var(--accent); }
+/* the find bar of the Text view, over its top right corner */
+#textFind {
+  position: absolute;
+  top: 8px;
+  right: 24px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.15);
+}
+#textFind input { font: inherit; width: 220px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
+#textFind input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+#textFind .count { font-size: 11px; color: var(--muted); min-width: 3em; text-align: center; }
 .line.hl .ln { color: var(--amber); }
 
 .t { color: var(--blue); }

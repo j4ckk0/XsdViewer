@@ -42,11 +42,20 @@ public final class SchemaGraph {
      * A global schema object: a declaration, or a placeholder ({@link NodeKind#BUILTIN}, {@link NodeKind#EXTERNAL}).
      * {@code ns}: the namespace the name lives in (for a placeholder, where the client looks for the
      * declaring file); {@code line}: 1-based, 0 when unknown; {@code values}: the enumeration the
-     * declaration restricts its type to, empty when it is not an enumeration.
+     * declaration restricts its type to, empty when it is not an enumeration; {@code members}: the
+     * names of the elements and attributes inside the declaration (a message's parts), for the search.
      */
-    public record Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values) {
+    public record Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values, List<String> members) {
         public Node(String id, String kind, String name, String ns, int line, String doc) {
-            this(id, kind, name, ns, line, doc, List.of());
+            this(id, kind, name, ns, line, doc, List.of(), List.of());
+        }
+
+        public Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values) {
+            this(id, kind, name, ns, line, doc, values, List.of());
+        }
+
+        public Node withMembers(List<String> members) {
+            return new Node(id, kind, name, ns, line, doc, values, members);
         }
     }
 

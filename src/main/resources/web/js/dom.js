@@ -62,6 +62,7 @@ export const ID = {
   FILES_COLLAPSE_ALL: 'filesCollapseAll',
   OBJECTS_EXPAND_ALL: 'objectsExpandAll',
   GRAPH_LEGEND: 'graphLegend',
+  EXPORT_SVG_BUTTON: 'exportSvgBtn',
   OBJECTS_COLLAPSE_ALL: 'objectsCollapseAll',
   COMPARE_EXPAND_ALL: 'compareExpandAll',
   COMPARE_COLLAPSE_ALL: 'compareCollapseAll',
@@ -78,6 +79,12 @@ export const ID = {
   TWO_LEVELS: 'twoLevels',
   GRAPH_CANVAS: 'graphCanvas',
   TEXT: 'text',
+  TEXT_FIND: 'textFind',
+  TEXT_FIND_INPUT: 'textFindInput',
+  TEXT_FIND_COUNT: 'textFindCount',
+  TEXT_FIND_PREV: 'textFindPrev',
+  TEXT_FIND_NEXT: 'textFindNext',
+  TEXT_FIND_CLOSE: 'textFindClose',
   DETAILS: 'details',
   DETAILS_CONTENT: 'detailsContent',
   DETAILS_TOGGLE: 'detailsToggle',
@@ -139,6 +146,8 @@ export const CLS = {
   EMPTY: 'empty',
   /** The row of the Files panel counting the files still being parsed. */
   PARSING: 'parsing',
+  /** Why a searched object is listed when its name does not match (the member or the documentation that does). */
+  WHY: 'why',
   DOT: 'dot',
   COUNT: 'count',
   // graph (SVG)
@@ -173,6 +182,9 @@ export const CLS = {
   LINE: 'line',
   LINE_DECLARATION: 'decl',
   LINE_HIGHLIGHT: 'hl',
+  /** A line holding the text of the find bar; the one the bar is at. */
+  FOUND: 'found',
+  CURRENT: 'current',
   LINE_NUMBER: 'ln',
   CODE: 'code',
 };

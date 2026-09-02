@@ -1,4 +1,4 @@
-/** ⤓ PNG: the graph (rendered from its SVG) or the text view (drawn line by line) as a PNG file. */
+/** ⤓ PNG: the graph (rendered from its SVG) or the text view (drawn line by line) as a PNG file; ⤓ SVG: the graph as it is. */
 import { MIME, SVG_NS, VIEW } from './constants.js';
 import { $, CLS, ID, selector } from './dom.js';
 import { t } from './i18n.js';
@@ -13,6 +13,8 @@ const FALLBACK_BACKGROUND = '#ffffff';
 /** The page's background (the theme's), so that the image looks like the page. */
 const background = () => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || FALLBACK_BACKGROUND;
 const FILE_EXTENSION = '.png';
+const SVG_EXTENSION = '.svg';
+const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n';
 const TEXT_SUFFIX = '-text';
 const DEFAULT_BASENAME = 'schema';
 const UNSAFE_FILE_CHARS = /[^\w.-]+/g;
@@ -45,10 +47,22 @@ function pageCss() {
   return css;
 }
 
-function exportGraphPng(fileName) {
+/** ⤓ SVG: the graph as a vector image (its SVG, cropped, with the page's styles embedded). */
+export function exportSvg() {
+  const st = session.active;
+  if (!st.model || st.view !== VIEW.GRAPH) return;
+  if (!st.selected) { toast(t(MSG.EXPORT_SELECT_FIRST)); return; }
+  const g = graphSvg();
+  if (!g) return;
+  const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');
+  const name = st.nodes.get(st.selected).name.replace(UNSAFE_FILE_CHARS, '_');
+  saveBlob(new Blob([XML_DECLARATION + new XMLSerializer().serializeToString(g.svg)], { type: MIME.SVG }), base + '-' + name + SVG_EXTENSION);
+}
+
+/** The graph's SVG cropped to what is drawn (it fills the whole panel) plus a margin, the page's CSS and background embedded so that it renders alone: {svg, w, h}, or null. */
+function graphSvg() {
   const src = $(ID.GRAPH_CANVAS).querySelector('svg');
-  if (!src) return;
-  // Crop to what is drawn (the SVG itself fills the whole panel) plus a margin.
+  if (!src) return null;
   const M = GRAPH_MARGIN, bb = src.getBBox();
   const x = Math.floor(bb.x - M), y = Math.floor(bb.y - M);
   const w = Math.ceil(bb.width + 2 * M), h = Math.ceil(bb.height + 2 * M);
@@ -62,7 +76,13 @@ function exportGraphPng(fileName) {
   const bg = document.createElementNS(SVG_NS, SVG_RECT_TAG);
   bg.setAttribute('x', x); bg.setAttribute('y', y); bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', background());
   svg.insertBefore(bg, style.nextSibling);
+  return { svg, w, h };
+}
 
+function exportGraphPng(fileName) {
+  const g = graphSvg();
+  if (!g) return;
+  const { svg, w, h } = g;
   const scale = Math.min(EXPORT_SCALE, EXPORT_MAX_DIM / Math.max(w, h));
   const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: MIME.SVG });
   const url = URL.createObjectURL(blob);
@@ -150,12 +170,17 @@ function exportTextPng(fileName) {
 function saveCanvas(canvas, fileName) {
   canvas.toBlob((blob) => {
     if (!blob) { toast(t(MSG.EXPORT_PNG_FAILED)); return; }
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), REVOKE_DELAY_MS);
+    saveBlob(blob, fileName);
   }, MIME.PNG);
+}
+
+/** Hands a file to the browser to save. */
+function saveBlob(blob, fileName) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), REVOKE_DELAY_MS);
 }

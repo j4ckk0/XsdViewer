@@ -41,6 +41,8 @@ public final class JsonKey {
     /** The enumeration of a node: [{value, doc}], only when it has one. */
     public static final String VALUES = "values";
     public static final String VALUE = "value";
+    /** The names inside a declaration (nested elements and attributes, a message's parts), only when there are some. */
+    public static final String MEMBERS = "members";
     public static final String EDGES = "edges";
     public static final String FROM = "from";
     public static final String TO = "to";

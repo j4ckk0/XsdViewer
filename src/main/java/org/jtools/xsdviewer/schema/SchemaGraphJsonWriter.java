@@ -51,6 +51,11 @@ public final class SchemaGraphJsonWriter {
                     .property(JsonKey.NS, n.ns())
                     .property(JsonKey.LINE, n.line())
                     .property(JsonKey.DOC, n.doc());
+            if (!n.members().isEmpty()) {
+                w.name(JsonKey.MEMBERS).beginArray();
+                for (String m : n.members()) w.value(m);
+                w.endArray();
+            }
             if (!n.values().isEmpty()) {
                 w.name(JsonKey.VALUES).beginArray();
                 for (SchemaGraph.Value v : n.values()) {

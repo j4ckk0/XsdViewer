@@ -43,6 +43,7 @@ export const MSG = {
   FILES_PARSING_ONE: 'files.parsing.one',
   FILES_PARSING_OTHER: 'files.parsing.other',
   FILES_PARSING_TITLE: 'files.parsing.title',
+  SEARCH_IN_DOC: 'search.inDoc',
   MENU_THEME_LIGHT: 'menu.theme.light',
   MENU_THEME_DARK: 'menu.theme.dark',
   BUSY_OPENING: 'busy.opening',

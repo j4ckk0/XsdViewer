@@ -8,6 +8,7 @@ import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_T
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
+import { matchedBy, matches } from './search.js';
 import { session } from './state.js';
 import { fileKeys, tabOfFile } from './workspace-files.js';
 
@@ -67,13 +68,16 @@ function tree(list) {
 const byKindThenName = (a, b) => (KIND_ORDER.get(a.kind) - KIND_ORDER.get(b.kind)) || a.name.localeCompare(b.name);
 
 /** The objects of a file to list: its declared ones — only those whose name contains {@code filter} when there is one —, by kind then name. */
-const listedObjects = (entry, filter) => entry.model.nodes.filter(n => declared(n) && (!filter || n.name.toLowerCase().includes(filter))).sort(byKindThenName);
+const listedObjects = (entry, filter) => entry.model.nodes.filter(n => declared(n) && matches(n, filter)).sort(byKindThenName);
 
 function objectsHtml(entry, filter) {
   if (!entry.model) return entry.failed && !filter ? '<div class="' + CLS.ITEM + ' ' + CLS.EMPTY + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</div>' : '';
-  return listedObjects(entry, filter).map(n =>
-    '<div class="' + CLS.ITEM + ' ' + CLS.OBJECT + '"' + dataAttr(DATA.ID, n.id) + ' title="' + esc(n.id) + '">'
-    + '<span class="' + CLS.DOT + ' ' + n.kind + '"></span><span>' + esc(n.name) + '</span></div>').join('');
+  return listedObjects(entry, filter).map(n => {
+    const why = matchedBy(n, filter);
+    return '<div class="' + CLS.ITEM + ' ' + CLS.OBJECT + '"' + dataAttr(DATA.ID, n.id) + ' title="' + esc(n.id) + '">'
+      + '<span class="' + CLS.DOT + ' ' + n.kind + '"></span><span>' + esc(n.name) + '</span>'
+      + (why ? '<span class="' + CLS.WHY + '" title="' + esc(why) + '">' + esc(why) + '</span>' : '') + '</div>';
+  }).join('');
 }
 
 /** The HTML of a folder of the tree; while filtering (lower-cased {@code filter}), folders and files without a matching object are left out and the others unfolded. */

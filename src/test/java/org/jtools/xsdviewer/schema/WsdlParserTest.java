@@ -62,6 +62,7 @@ class WsdlParserTest {
                 "message:GetOrderStatusRequest", "message:GetOrderStatusResponse",
                 "element:submitPurchaseOrderResponse", "element:orderFault"), declared);
         assertEquals("submitPurchaseOrder", node("operation:PurchaseOrderPortType.submitPurchaseOrder").name());
+        assertEquals(java.util.List.of("order"), node("message:SubmitPurchaseOrderRequest").members(), "a message's parts are its members");
         assertEquals(NodeKind.ELEMENT, node("element:orderFault").kind());
     }
 

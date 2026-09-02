@@ -129,6 +129,8 @@ final class WsdlParser {
             String id = SchemaGraph.nodeId(c.getLocalName(), name);
             switch (c.getLocalName()) {
                 case WsdlVocabulary.MESSAGE -> {
+                    List<String> parts = children(c, WsdlVocabulary.PART).stream().map(p -> p.getAttribute(XsdVocabulary.ATTR_NAME)).filter(n -> !n.isEmpty()).toList();
+                    if (!parts.isEmpty()) graph.nodes.computeIfPresent(id, (k, n) -> n.withMembers(parts));
                     for (Element part : children(c, WsdlVocabulary.PART)) {
                         String partName = part.getAttribute(XsdVocabulary.ATTR_NAME);
                         if (part.hasAttribute(WsdlVocabulary.ATTR_ELEMENT)) {
