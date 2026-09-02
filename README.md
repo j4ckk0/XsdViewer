@@ -189,6 +189,10 @@ The build picks the `*windows*.zip` and `*linux*.tar.gz` found there, so upgradi
 is just replacing the archives. Extra arguments (e.g. `-DskipTests`) are passed to
 `mvn` by all four scripts.
 
+`scripts/screenshots.py` is a visual smoke test: with the jar built and Firefox installed, it opens
+the samples, drives the page (a selection, the text view, two levels, the dark theme), checks a few
+facts on it and saves a screenshot of each scene in `target/screenshots/`.
+
 ## What counts as a link
 
 For each global declaration, the links attributed to it are collected from its whole
