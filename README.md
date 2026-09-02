@@ -19,7 +19,9 @@ A Java server parses the schema and serves a web page offering two views:
   `minOccurs`/`maxOccurs` of a nested element or group reference — through the enclosing
   `sequence`/`all`/`choice`, counted from the nearest enclosing element — or the `use` of an
   attribute. **Optional** links (minimum 0: `minOccurs="0"`, optional attribute, branch of a
-  `choice`) are drawn dashed and lighter; mandatory ones solid.
+  `choice`) are drawn dashed and lighter; mandatory ones solid. A **derivation** (`extends`,
+  `restricts`: a type to its base type) ends with a hollow arrowhead, as a UML generalisation,
+  where a content link (a nested element, a `ref`, a `type`) ends with a filled one.
   Click any node to make it the centre; **← Back** (or Alt+←) returns to the previous one.
 - **Text** – the schema source with line numbers and syntax colouring. The selected
   object's declaration is highlighted; click a highlighted line number to select that
@@ -201,7 +203,7 @@ content (anonymous nested types included):
 XSD built-in types (`xs:string`…) appear as grey-filled nodes with a grey border (toggle with
 the **built-in types** checkbox). Objects referenced but not declared in the file (imported /
 included ones) appear as grey-filled *external* nodes with a red border. Dashed lines are
-reserved for optional links.
+reserved for optional links, hollow arrowheads for derivations (`extends`, `restricts`).
 
 **Help ▸ About XsdViewer…** shows the version (from the jar's manifest), the Java runtime, the
 log file, the licence and the project page.

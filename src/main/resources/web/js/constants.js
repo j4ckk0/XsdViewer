@@ -37,6 +37,9 @@ export const STRUCTURAL_LINK_LABELS = new Set([
   LINK_LABEL.TYPE, LINK_LABEL.REF, LINK_LABEL.ATTRIBUTE_REF, LINK_LABEL.SUBSTITUTES, LINK_LABEL.GROUP,
   LINK_LABEL.ATTRIBUTE_GROUP, LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.LIST_OF, LINK_LABEL.UNION_OF,
 ]);
+/** Edge labels of a type derivation (a type to its base type): drawn with a hollow arrowhead, as a UML generalisation. */
+export const DERIVATION_LINK_LABELS = new Set([LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS]);
+export const isDerivation = (edge) => DERIVATION_LINK_LABELS.has(edge.label);
 
 /** Cardinality of a link (edge.min / edge.max, absent on type links); how it is written. */
 export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };

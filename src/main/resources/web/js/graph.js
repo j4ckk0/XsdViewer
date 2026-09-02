@@ -1,9 +1,10 @@
 /**
  * The graph view: the selected object in the centre, what it links to on the right (one arrow per
- * link, its name and cardinality above the target, dashed when optional), what uses it on the
+ * link, its name and cardinality above the target, dashed when optional, a hollow arrowhead for
+ * a derivation from a base type), what uses it on the
  * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
-import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT } from './constants.js';
+import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, isDerivation } from './constants.js';
 import { findInTabs, kindsOf, usersInOtherTabs } from './declarations.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc } from './dom.js';
@@ -21,7 +22,9 @@ const NAME_MAX_CHARS_CENTER = 24, NAME_MAX_CHARS = 26, KIND_MAX_CHARS = 30, CAPT
 /** Distance between the caption's baseline and the top of the node. */
 const CAPTION_LIFT = 6;
 const ELLIPSIS = '…';
-const ARROW_COLOR = '#9aa3af';
+const ARROW_COLOR = '#9aa3af', DERIVATION_ARROW_FILL = '#fff';
+/** Length in px of the hollow arrowhead (9 marker units at markerWidth 12 x stroke 1.5): a derivation's line stops at its base. */
+const DERIVATION_ARROW_LENGTH = 16;
 
 const shorten = (s, max) => (s.length > max ? s.slice(0, max - 1) + ELLIPSIS : s);
 
@@ -102,7 +105,10 @@ export function renderGraph() {
 
   let svg = '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
     + '<defs><marker id="' + SVG_ID.ARROW + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
-    + '<path d="M0,0 L10,5 L0,10 z" fill="' + ARROW_COLOR + '"/></marker></defs>';
+    + '<path d="M0,0 L10,5 L0,10 z" fill="' + ARROW_COLOR + '"/></marker>'
+    // a derivation: a hollow triangle, larger, as a UML generalisation
+    + '<marker id="' + SVG_ID.DERIVATION_ARROW + '" viewBox="0 0 10 10" refX="0.5" refY="5" markerWidth="12" markerHeight="12" orient="auto">'
+    + '<path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="' + DERIVATION_ARROW_FILL + '" stroke="' + ARROW_COLOR + '"/></marker></defs>';
 
   const edges = [], labels = [], nodes = [];
 
@@ -111,13 +117,13 @@ export function renderGraph() {
   for (const r of right) {
     const first = yOf(row, rightRows);
     const y = first + ((spanR(r) - 1) * ROW) / 2;   // a parent sits in the middle of its children
-    edges.push(curve(cx + NODE_W / 2, cy, xR1, y, isOptional(r.edge)));
+    edges.push(curve(cx + NODE_W / 2, cy, xR1, y, r.edge));
     nodes.push(r.resolved
       ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge }, fileKind(r.resolved.n, r.resolved.tab)))
       : nodeSvg(r.n, xR1, y - NODE_H / 2, false, { link: r.edge }));
     r.children.forEach((c, k) => {
       const yc = first + k * ROW;
-      edges.push(curve(xR1 + NODE_W, y, xR2, yc, isOptional(c.edge)));
+      edges.push(curve(xR1 + NODE_W, y, xR2, yc, c.edge));
       nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, rowOpt(c)));
     });
     row += spanR(r);
@@ -125,7 +131,7 @@ export function renderGraph() {
   // incoming: level 1 -> centre, one step only
   left.forEach((l, i) => {
     const y = yOf(i, leftRows);
-    edges.push(curve(xLeft + NODE_W, y, cx - NODE_W / 2, cy, isOptional(l.edge)));
+    edges.push(curve(xLeft + NODE_W, y, cx - NODE_W / 2, cy, l.edge));
     nodes.push(nodeSvg(l.n, xLeft, y - NODE_H / 2, false, rowOpt(l)));
   });
   // self reference (recursive type)
@@ -146,10 +152,13 @@ export function renderGraph() {
   canvas.scrollLeft = Math.max(0, cx - canvas.clientWidth / 2);
 }
 
-/** A bezier arrow; dashed when the link is optional. */
-function curve(x1, y1, x2, y2, optional) {
+/** A bezier arrow for {@code edge}; dashed when the link is optional, a hollow arrowhead when it is a derivation. */
+function curve(x1, y1, x2, y2, edge) {
   const dx = (x2 - x1) / 2;
-  return '<path class="' + CLS.EDGE + (optional ? ' ' + CLS.OPTIONAL : '') + '" marker-end="url(#' + SVG_ID.ARROW + ')" d="M' + x1 + ',' + y1
+  const derivation = isDerivation(edge);
+  if (derivation) x2 -= DERIVATION_ARROW_LENGTH;   // the hollow head, anchored at its base, fills the gap up to the node
+  const cls = CLS.EDGE + (isOptional(edge) ? ' ' + CLS.OPTIONAL : '') + (derivation ? ' ' + CLS.DERIVATION : '');
+  return '<path class="' + cls + '" marker-end="url(#' + (derivation ? SVG_ID.DERIVATION_ARROW : SVG_ID.ARROW) + ')" d="M' + x1 + ',' + y1
     + ' C' + (x1 + dx) + ',' + y1 + ' ' + (x2 - dx) + ',' + y2 + ' ' + x2 + ',' + y2 + '"/>';
 }
 

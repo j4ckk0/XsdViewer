@@ -514,11 +514,12 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .lg.del { background: #fee2e2; color: #991b1b; }
 .lg.ins { background: #dcfce7; color: #166534; }
 .lg.mov { background: #e0e7ff; color: #3730a3; font-style: italic; }
-/* the arrow entries of the legend: a small arrow, plain or dashed, then its meaning */
+/* the arrow entries of the legend: a small arrow, plain, dashed or with a hollow head, then its meaning */
 .lg.arrow { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); padding: 0 2px; }
 .lg.arrow svg line { stroke: #9aa3af; stroke-width: 1.5; }
 .lg.arrow svg line.optional { stroke-dasharray: 4 3; }
 .lg.arrow svg path { fill: #9aa3af; }
+.lg.arrow svg path.derivation { fill: #fff; stroke: #9aa3af; stroke-width: 1.2; }
 
 #graphCanvas { flex: 1; overflow: auto; }
 #graphCanvas svg { display: block; }

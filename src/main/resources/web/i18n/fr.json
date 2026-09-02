@@ -63,6 +63,8 @@
   "legend.mandatory.title": "Une flèche pleine est un lien obligatoire (minimum 1). Le nombre après le nom d'un lien est sa cardinalité : 1, 0..1, 1..*…",
   "legend.optional": "optionnel",
   "legend.optional.title": "Une flèche pointillée est un lien optionnel : minOccurs 0, attribut optionnel, branche d'un choice",
+  "legend.derivation": "type de base",
+  "legend.derivation.title": "Une pointe de flèche creuse est une dérivation : le type étend ou restreint le type pointé (son type de base)",
   "graph.nodeTitle": "{0} {1}",
   "graph.kindInFile": "{0} · {1}",
 

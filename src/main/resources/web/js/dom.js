@@ -146,6 +146,8 @@ export const CLS = {
   STRUCTURAL: 'structural',
   CARDINALITY: 'card',
   OPTIONAL: 'optional',
+  /** An edge to a base type (extends / restricts). */
+  DERIVATION: 'derivation',
   // details
   BADGE: 'badge',
   META: 'meta',
@@ -181,6 +183,6 @@ export const DATA = {
 export const dataAttr = (name, value) => ' data-' + name + '="' + esc(value) + '"';
 
 /** Ids inside the graph SVG. */
-export const SVG_ID = { ARROW: 'arrow' };
+export const SVG_ID = { ARROW: 'arrow', DERIVATION_ARROW: 'arrowDerivation' };
 
 export const selector = (cls) => '.' + cls;
