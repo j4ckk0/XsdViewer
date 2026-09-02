@@ -6,8 +6,11 @@ import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { newTabState, newWorkspaceState, session } from './state.js';
 
-/** The name of a comparison tab: "v1 ⇄ v2". */
-export const compareTitle = (tab) => t(MSG.COMPARE_TAB, workspaceName(tab.compare.left), workspaceName(tab.compare.right));
+/** The name of a comparison tab: "v1 ⇄ v2", or "x.xsd (v1 ⇄ v2)" for the differences of one file. */
+export function compareTitle(tab) {
+  const { left, right, file } = tab.compare;
+  return t(file ? MSG.COMPARE_FILE_TAB : MSG.COMPARE_TAB, ...(file ? [file] : []), workspaceName(left), workspaceName(right));
+}
 
 /**
  * After tabs went: comparisons of a gone workspace go too, a workspace left without tabs goes

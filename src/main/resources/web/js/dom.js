@@ -72,6 +72,7 @@ export const ID = {
   GRAPH_LEGEND: 'graphLegend',
   EXPORT_SVG_BUTTON: 'exportSvgBtn',
   OBJECTS_COLLAPSE_ALL: 'objectsCollapseAll',
+  COMPARE_TOOLS: 'compareTools',
   COMPARE_EXPAND_ALL: 'compareExpandAll',
   COMPARE_COLLAPSE_ALL: 'compareCollapseAll',
   SCHEMA_INFO: 'schemaInfo',
@@ -128,6 +129,9 @@ export const CLS = {
   COMPARE_NAME: 'cname',
   COMPARE_PATH: 'cpath',
   COMPARE_STATUS: 'cstatus',
+  COMPARE_OPEN: 'copen',
+  /** The small square buttons of a panel's head (expand all, collapse all…). */
+  PANEL_TOGGLE: 'panel-toggle',
   COMPARE_MODEL: 'cmodel',
   LEGEND_ENTRY: 'lg',
   DIFF_SIDES: 'csides',

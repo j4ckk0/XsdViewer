@@ -12,7 +12,7 @@ export function newTabState() {
     located: null,      // promise of the server's search for the path of a file opened in the browser
     workspace: null,    // always set
     file: null,         // the entry of workspace.files shown, when the tab shows one
-    compare: null,      // {left, right} workspaces when the tab is a comparison
+    compare: null,      // {left, right} workspaces when the tab is a comparison; file: the name of the one file pair shown, when the tab shows one
     text: '',
     model: null,
     nodes: new Map(),

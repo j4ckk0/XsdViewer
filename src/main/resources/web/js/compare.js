@@ -1,7 +1,7 @@
 /**
  * Comparing two workspaces (selected with Ctrl+click on their chips), folder-comparison style:
  * files paired by name and marked identical / different / only on one side, a different pair
- * expandable to its schema and line differences.
+ * expandable to its schema and line differences — or opened in a tab of its own (compare.file).
  */
 import { businessLines } from './business-lines.js';
 import { cardinalityText } from './cardinality.js';
@@ -69,6 +69,9 @@ function lineDiff(pair) {
 /** The pairs of the comparison being shown, by row index. */
 let pairs = [];
 
+const isExpandable = (pair) => pair.status === STATUS.DIFFERENT || pair.status === STATUS.MOVED;
+const sameSides = (tab, left, right) => tab.compare && tab.compare.left === left && tab.compare.right === right;
+
 /** Ctrl+click on a chip: toggles the workspace's selection; the oldest selection gives way to a third. */
 export function toggleSelection(ws) {
   const sel = session.compareSelection;
@@ -83,10 +86,27 @@ export const canCompare = () => session.compareSelection.length === COMPARED_WOR
 export function startCompare() {
   if (!canCompare()) return false;
   const [left, right] = session.compareSelection;
-  let tab = session.tabs.find(x => x.compare && x.compare.left === left && x.compare.right === right);
+  let tab = session.tabs.find(x => sameSides(x, left, right) && !x.compare.file);
   if (!tab) {
     tab = newTab();
-    tab.compare = { left, right };
+    tab.compare = { left, right, file: null };
+  }
+  activateTab(tab);
+  return true;
+}
+
+/**
+ * The row's button, or a double-click on it: opens (or brings to front) a tab showing the differences of that file
+ * pair only, next to the comparison; the caller redraws the page. Returns false for a row without differences.
+ */
+export function openPairTab(row) {
+  const pair = pairs[+row.dataset[DATA.ROW_INDEX]];
+  if (!pair || !isExpandable(pair)) return false;
+  const { left, right } = session.active.compare;
+  let tab = session.tabs.find(x => sameSides(x, left, right) && x.compare.file === pair.name);
+  if (!tab) {
+    tab = newTab();
+    tab.compare = { left, right, file: pair.name };
   }
   activateTab(tab);
   return true;
@@ -118,33 +138,40 @@ function pairFiles(left, right) {
   });
 }
 
+/** Draws the active comparison tab: every pair of the two workspaces, or the one file pair of a tab opened from a row (its differences shown at once). */
 export function renderCompare() {
-  const { left, right } = session.active.compare;
+  const { left, right, file } = session.active.compare;
   const ln = workspaceName(left), rn = workspaceName(right);
   pairs = pairFiles(left, right);
+  if (file) pairs = pairs.filter(p => p.name === file);
   const count = (s) => pairs.filter(p => p.status === s).length;
-  $(ID.COMPARE_TITLE).textContent = t(MSG.COMPARE_TITLE, ln, rn);
-  $(ID.COMPARE_SUMMARY).textContent = t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT), count(STATUS.MOVED), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn);
+  const one = file ? pairs[0] : null;
+  const side = (p) => p.status === STATUS.ONLY_LEFT ? ln : p.status === STATUS.ONLY_RIGHT ? rn : '';
+  $(ID.COMPARE_TITLE).textContent = file ? t(MSG.COMPARE_FILE_TITLE, file, ln, rn) : t(MSG.COMPARE_TITLE, ln, rn);
+  $(ID.COMPARE_SUMMARY).textContent = file ? (one ? t(STATUS_TEXT[one.status], side(one)) : '')
+    : t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT), count(STATUS.MOVED), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn);
+  $(ID.COMPARE_TOOLS).classList.toggle(CLS.HIDDEN, !!file);
   // the colours of the line comparison: lines only on the left (red), only on the right (green), moved (blue)
   $(ID.COMPARE_LEGEND).innerHTML = [[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, ln)], [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, rn)], [CLS.MOVED, t(MSG.COMPARE_LEGEND_MOVED)]]
     .map(([cls, text]) => '<span class="' + CLS.LEGEND_ENTRY + ' ' + cls + '">' + esc(text) + '</span>').join('');
   let html = '<thead><tr><th>' + esc(t(MSG.COMPARE_FILE)) + '</th><th>' + esc(ln) + '</th><th>' + esc(t(MSG.COMPARE_STATUS)) + '</th><th>' + esc(rn) + '</th></tr></thead><tbody>';
+  const openButton = '<button class="' + CLS.PANEL_TOGGLE + ' ' + CLS.COMPARE_OPEN + '" type="button" title="' + esc(t(MSG.COMPARE_OPEN_TAB)) + '">⧉</button>';
   pairs.forEach((p, i) => {
-    if (isDiffOnly() && p.status === STATUS.SAME) return;
-    const side = p.status === STATUS.ONLY_LEFT ? ln : p.status === STATUS.ONLY_RIGHT ? rn : '';
-    html += '<tr class="' + CLS.COMPARE_ROW + ' ' + p.status + (p.status === STATUS.DIFFERENT || p.status === STATUS.MOVED ? ' ' + CLS.EXPANDABLE : '') + '"' + dataAttr(DATA.ROW_INDEX, i) + '>'
-      + '<td class="' + CLS.COMPARE_NAME + '">' + esc(p.name) + '</td>'
+    if (!file && isDiffOnly() && p.status === STATUS.SAME) return;
+    html += '<tr class="' + CLS.COMPARE_ROW + ' ' + p.status + (isExpandable(p) ? ' ' + CLS.EXPANDABLE : '') + '"' + dataAttr(DATA.ROW_INDEX, i) + '>'
+      + '<td class="' + CLS.COMPARE_NAME + '">' + esc(p.name) + (isExpandable(p) && !file ? openButton : '') + '</td>'
       + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.left ? shownPath(p.left) : '') + '">' + esc(p.left ? shownPath(p.left) : '') + '</td>'
-      + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side)) + '</td>'
+      + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side(p))) + '</td>'
       + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.right ? shownPath(p.right) : '') + '">' + esc(p.right ? shownPath(p.right) : '') + '</td></tr>';
   });
   $(ID.COMPARE_TABLE).innerHTML = html + '</tbody>';
+  if (one && isExpandable(one)) toggleDetail($(ID.COMPARE_TABLE).querySelector('.' + CLS.EXPANDABLE));
 }
 
 /** Click on a row: shows / hides the differences of that pair under it (the files are parsed first when they were only listed). */
 export async function toggleDetail(row) {
   const pair = pairs[+row.dataset[DATA.ROW_INDEX]];
-  if (!pair || (pair.status !== STATUS.DIFFERENT && pair.status !== STATUS.MOVED)) return;
+  if (!pair || !isExpandable(pair)) return;
   const next = row.nextElementSibling;
   if (next && next.classList.contains(CLS.COMPARE_DETAIL)) { next.remove(); row.classList.remove(CLS.OPEN); return; }
   if (row.classList.contains(CLS.OPEN)) return;   // being opened

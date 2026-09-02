@@ -9,8 +9,9 @@ a view, the theme), checks a few facts on it and saves a screenshot of each scen
 
 Needs Firefox (its headless --screenshot) and the jar in target/. The page is reached through a
 small proxy that injects the scene's script and holds the page's load event until the script has
-run (a hidden image answered late), which is when Firefox takes the screenshot. Exit code 1 when a
-check fails or a scene cannot be shot.
+run (a hidden image answered late), which is when Firefox takes the screenshot. A scene's script may
+await (it runs in an async function) and fetch a file of the repository from /__sample/<path>. Exit
+code 1 when a check fails or a scene cannot be shot.
 """
 import http.client
 import http.server
@@ -31,10 +32,18 @@ OUT = ROOT / 'target' / 'screenshots'
 FIREFOX = os.environ.get('FIREFOX', 'firefox')
 APP_PORT, PROXY_PORT = 8765, 8766
 SIZE = '1500,800'
-HOLD_SECONDS = 4          # the load event is held this long: the scene's script runs at 1.5 s
+HOLD_SECONDS = 6          # the load event is held this long: the scene's script runs at 1.5 s (the comparison scene opens a workspace first)
 ACTION_DELAY_MS = 1500
 
-# name, file, theme, the script run on the page (may use the page's DOM), the checks (an expression per check name)
+# a second workspace, "v2" of the comparison sample, opened from files fetched through the proxy as if a folder had been dropped
+OPEN_V2 = ("const names = ['common.xsd', 'catalog.xsd', 'product.xsd', 'shipping.xsd'];"
+           "const files = await Promise.all(names.map(async n => new File([await (await fetch('/__sample/samples/compare/v2/' + n)).text()], n)));"
+           "const wa = await import('/js/workspace-actions.js'), st = await import('/js/state.js'), cmp = await import('/js/compare.js'), pg = await import('/js/page.js');"
+           "await wa.openBrowserFolder(files, f => 'v2/' + f.name, 'v2');"
+           "for (const ws of st.session.workspaces) cmp.toggleSelection(ws);"
+           "cmp.startCompare(); pg.renderPage();")
+
+# name, file, theme, the script run on the page (may use the page's DOM and await), the checks (an expression per check name)
 SCENES = [
     dict(name='graph-light', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();",
@@ -79,6 +88,15 @@ SCENES = [
          checks={'tabs': "document.querySelectorAll('#tabs .dtab').length",
                  'files': "document.getElementById('filesCount').textContent"},
          expect={'tabs': 4, 'files': '4'}),
+    dict(name='compare-file-tab', file='samples/compare/v1.xsdviewer.json', theme='light',
+         action=OPEN_V2 + "document.querySelector('#compareTable .crow.different .copen').click();"
+                "await new Promise(r => setTimeout(r, 300));",
+         checks={'tab': "document.querySelector('#tabs .dtab.active .tname').textContent",
+                 'title': "document.getElementById('compareTitle').textContent",
+                 'rows': "document.querySelectorAll('#compareTable .crow').length",
+                 'detail': "document.querySelectorAll('#compareTable .cdetail').length",
+                 'tools': "document.getElementById('compareTools').classList.contains('hidden')"},
+         expect={'tab': 'product.xsd (v1 ⇄ v2)', 'title': 'product.xsd: v1 compared with v2', 'rows': 1, 'detail': 1, 'tools': True}),   # catalog.xsd differs in its documentation only: identical business lines
 ]
 
 
@@ -101,6 +119,9 @@ class Proxy(http.server.BaseHTTPRequestHandler):
         if self.path == '/__hold':
             time.sleep(HOLD_SECONDS); self.send_response(204); self.end_headers()
             return
+        if self.path.startswith('/__sample/'):
+            self.sample(self.path[len('/__sample/'):])
+            return
         length = int(self.headers.get('Content-Length') or 0)
         body = self.rfile.read(length) if length else None
         c = http.client.HTTPConnection('127.0.0.1', APP_PORT)
@@ -115,17 +136,27 @@ class Proxy(http.server.BaseHTTPRequestHandler):
                 self.send_header(k, v)
         self.send_header('Content-Length', str(len(data))); self.end_headers(); self.wfile.write(data)
 
+    def sample(self, rel):
+        """A file of the repository (under samples/), for a scene opening files the page cannot read from disk."""
+        f = (ROOT / rel).resolve()
+        if not rel.startswith('samples/') or not f.is_relative_to(ROOT / 'samples') or not f.is_file():
+            self.send_response(404); self.end_headers()
+            return
+        data = f.read_bytes()
+        self.send_response(200); self.send_header('Content-Type', 'application/octet-stream')
+        self.send_header('Content-Length', str(len(data))); self.end_headers(); self.wfile.write(data)
+
     @staticmethod
     def head():
-        # a clean storage for every scene (the profile is shared): only the theme is set
-        return ("<head><script>try{localStorage.clear();localStorage.setItem('xsdviewer.theme','%s')}catch(e){}</script>" % Proxy.scene['theme']).encode()
+        # a clean storage for every scene (the profile is shared): only the theme and the language (English, so that the texts checked do not depend on the machine) are set
+        return ("<head><script>try{localStorage.clear();localStorage.setItem('xsdviewer.theme','%s');localStorage.setItem('xsdviewer.language','en')}catch(e){}</script>" % Proxy.scene['theme']).encode()
 
     @staticmethod
     def tail():
         s = Proxy.scene
         checks = ','.join('%s: (() => { try { return %s; } catch (e) { return "error: " + e.message; } })()' % (json.dumps(k), v) for k, v in s['checks'].items())
-        return ('<script>setTimeout(() => { try { %s } catch (e) { console.error(e); }'
-                ' setTimeout(() => fetch("/__check", {method: "POST", body: JSON.stringify({%s})}), 300); }, %d);</script>'
+        return ('<script>setTimeout(() => (async () => { %s })().catch(e => console.error(e)).then(() =>'
+                ' setTimeout(() => fetch("/__check", {method: "POST", body: JSON.stringify({%s})}), 300)), %d);</script>'
                 '<img src="/__hold" style="display:none">' % (s['action'], checks, ACTION_DELAY_MS)).encode()
 
     def log_message(self, *a):

@@ -2,7 +2,7 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { initOptions, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
+import { initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
@@ -126,7 +126,17 @@ function wireDocumentTabs() {
   for (const id of [ID.COMPARE_BUSINESS_ONLY, ID.COMPARE_DIFF_ONLY]) {
     $(id).addEventListener('change', () => { rememberOptions(); if (session.active.compare) renderCompare(); });
   }
-  $(ID.COMPARE_TABLE).addEventListener('click', (e) => { const row = e.target.closest(selector(CLS.COMPARE_ROW)); if (row) toggleDetail(row); });
+  // a row shows / hides its differences; its ⧉ button, or a double-click, opens them in a tab of their own
+  $(ID.COMPARE_TABLE).addEventListener('click', (e) => {
+    const row = e.target.closest(selector(CLS.COMPARE_ROW));
+    if (!row) return;
+    if (e.target.closest(selector(CLS.COMPARE_OPEN))) { if (openPairTab(row)) renderPage(); }
+    else toggleDetail(row);
+  });
+  $(ID.COMPARE_TABLE).addEventListener('dblclick', (e) => {
+    const row = e.target.closest(selector(CLS.COMPARE_ROW));
+    if (row && !e.target.closest(selector(CLS.COMPARE_OPEN)) && openPairTab(row)) { window.getSelection()?.removeAllRanges(); renderPage(); }
+  });
 }
 
 function wireKeyboard() {

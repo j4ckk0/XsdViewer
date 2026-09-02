@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **A file's differences in a tab of their own.** In a comparison, the ⧉ button at the right of a *different* or *moved lines only* row (or a double-click on the row) opens that file pair's differences — the declarations and links on one side only, the two sources side by side — in a tab named `file.xsd (v1 ⇄ v2)`, next to the comparison, with the full height of the page; the same two options apply, and opening the same pair again brings its tab to front.
+
 ## 3.4.0 — 2026-09-02
 
 - **The graph and the details resolve declarations across the whole workspace**, not only the open tabs: the files listed in the Files panel (parsed in the background) count too. An external object declared elsewhere shows as what it is there (its kind, its file) at both levels, level-2 targets are expanded from where they are declared, the users of the centre in other files appear on the left and in the details panel, and following a link opens a listed file's tab when needed.
