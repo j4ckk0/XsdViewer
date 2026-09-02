@@ -1,4 +1,4 @@
-/** The right panel: the selected object, its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
+/** The right panel, under the schema header (sidebar.js): the selected object, its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
 import { cardinalityText, isOptional } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
@@ -10,7 +10,7 @@ import { session } from './state.js';
 export function renderDetails() {
   const st = session.active;
   const panel = $(ID.DETAILS);
-  if (!st.selected) { panel.classList.add(CLS.HIDDEN); return; }
+  if (!st.selected) { $(ID.DETAILS_CONTENT).innerHTML = ''; panel.classList.remove(CLS.HIDDEN); return; }
   const n = st.nodes.get(st.selected);
   let html = '<h2>' + esc(n.name) + '</h2><span class="' + CLS.BADGE + ' ' + n.kind + '">' + esc(kindLabel(n.kind)) + '</span>';
   html += '<div class="' + CLS.META + '">'

@@ -348,7 +348,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   position: relative;
 }
 #details.collapsed { width: 26px; padding: 6px 0; overflow: hidden; }
-#details.collapsed #detailsContent { display: none; }
+#details.collapsed #detailsContent, #details.collapsed #schemaInfo { display: none; }
 #detailsToggle { position: absolute; top: 6px; right: 6px; }
 #details.collapsed #detailsToggle { right: 3px; }
 #details h2 { padding-right: 22px; }
@@ -390,13 +390,16 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .tree .objects .item { padding: 1px 12px; font-size: 12px; }
 .tree .objects .item.empty { color: var(--muted); font-style: italic; }
 
+/* the schema header (namespace, imports, counts) at the top of the details panel, foldable; its fold button sits left of the panel's collapse button */
 #schemaInfo {
-  padding: 6px 12px 10px;
+  margin: -12px -12px 12px;
+  padding: 8px 12px 10px;
   border-bottom: 1px solid var(--border);
   font-size: 12px;
   color: var(--muted);
   word-break: break-all;
 }
+#schemaInfo .panel-head { padding-right: 22px; }
 #schemaInfo b { color: var(--text); }
 #schemaInfo div { margin-bottom: 2px; }
 #schemaInfo.collapsed { padding-bottom: 6px; }

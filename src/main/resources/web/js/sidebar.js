@@ -1,4 +1,4 @@
-/** The left panel: the schema header (namespace, imports, counts) and the searchable list of objects by kind. */
+/** The searchable list of objects by kind (left panel) and the schema header (namespace, imports, counts) at the top of the details panel (right). */
 import { KINDS, NODE_KIND, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { t } from './i18n.js';

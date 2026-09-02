@@ -21,7 +21,6 @@ export function renderPage() {
   $(ID.FILE_NAME).title = loaded ? (st.path || st.fileName) : '';
   $(ID.SEARCH).value = st.filter;
   $(ID.BACK_BUTTON).disabled = st.history.length === 0;
-  $(ID.SCHEMA_INFO).classList.toggle(CLS.HIDDEN, !loaded);
   if (loaded) {
     renderSchemaInfo();
     renderNodeList();
@@ -55,7 +54,7 @@ export function showView(view) {
   $(ID.EMPTY).classList.toggle(CLS.HIDDEN, loaded || comparing);
   $(ID.GRAPH).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.GRAPH);
   $(ID.TEXT).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.TEXT);
-  $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || comparing || !st.selected);
+  $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || comparing);   // the schema header, then the selected object
   $(ID.EXPORT_BUTTON).disabled = !loaded || comparing;
   if (loaded && !comparing && view === VIEW.TEXT) highlightTextLine(true);
 }
