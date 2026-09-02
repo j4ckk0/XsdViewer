@@ -1,5 +1,5 @@
 /** Wiring of the page's controls to the actions: menu, tabs, keyboard, drag and drop, clicks in the views. */
-import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, THEME, VIEW } from './constants.js';
+import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { initOptions, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
@@ -17,7 +17,7 @@ import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, togg
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
-import { setTheme } from './theme.js';
+import { toggleTheme } from './theme.js';
 import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderNavigation, tabToShow } from './tabs.js';
 import { toggleAutoStop } from './settings.js';
@@ -55,9 +55,7 @@ function wireMenus() {
 
 function wireSettingsMenu() {
   $(ID.MENU_AUTO_STOP).addEventListener('click', () => { closeMenus(); toggleAutoStop(); });
-  for (const [id, theme] of [[ID.MENU_THEME_SYSTEM, THEME.SYSTEM], [ID.MENU_THEME_LIGHT, THEME.LIGHT], [ID.MENU_THEME_DARK, THEME.DARK]]) {
-    $(id).addEventListener('click', () => { closeMenus(); setTheme(theme); });
-  }
+  $(ID.MENU_THEME).addEventListener('click', () => { closeMenus(); toggleTheme(); });
 }
 
 function wireHelpMenu() {

@@ -91,8 +91,8 @@ the server up; a reload, a browser restart or a laptop waking up reconnect withi
 from the page — the choice is kept for the next runs (in the user's Java preferences) — for a
 server you open pages on now and then, or that other computers reach (`--host 0.0.0.0`).
 On the command line, `--keep-alive` turns it off for a run, and `--no-browser` implies it (you
-start it without a page and will open one later). **Settings ▸ Theme** picks the page's colours:
-the system's (its light or dark setting, followed as it changes — the default), light, or dark;
+start it without a page and will open one later). **Settings ▸ Dark theme** / **Light theme** flips the
+page's colours (the system's light or dark setting, followed as it changes, until you choose);
 the browser remembers it, and the PNG export takes the page's background. One caveat:
 Chrome's and Edge's *Memory Saver* may *discard* a background tab after a long idle time, which
 is indistinguishable from closing it — the visible tab is never discarded; if the tool lives in

@@ -59,8 +59,8 @@ export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };
 export const IMPORT_TAG = { IMPORT: 'import', INCLUDE: 'include', REDEFINE: 'redefine' };
 
 export const VIEW = { GRAPH: 'graph', TEXT: 'text' };
-/** The theme choices of the Settings menu (js/theme.js; the values are stored, and stamped on <html> as data-theme). */
-export const THEME = { SYSTEM: 'system', LIGHT: 'light', DARK: 'dark' };
+/** The themes (js/theme.js): stored once chosen, stamped on <html> as data-theme. */
+export const THEME = { LIGHT: 'light', DARK: 'dark' };
 
 // ---- server API (ApiPath on the server) ----
 export const API = {
