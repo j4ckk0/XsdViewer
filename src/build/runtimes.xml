@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The distributions of XsdViewer, called by the dist profile of the pom (mvn package -Pdist):
+
+  "runtimes"       unpacks the Temurin JDK archives found in jre/ (*jdk*windows*.zip, *jdk*linux*.tar.gz,
+                   *jdk*mac*.tar.gz - only the platforms present) and links a trimmed runtime for each
+                   with jlink, from the jmods of the archive. The jlink used is the one of the JDK
+                   unpacked for this machine's platform (same version as the others: download them together).
+  "distributions"  packs the archives: xsdviewer-<version>-windows.zip (XsdViewer.exe, xsdviewer.bat),
+                   -linux.tar.gz and -macos.tar.gz (xsdviewer.sh), each with its runtime, the jar,
+                   the README and the samples.
+-->
+<project name="xsdviewer-runtimes" default="runtimes">
+
+  <target name="detect">
+    <condition property="jdk.windows"><resourcecount when="greater" count="0"><fileset dir="${jre.archives}" includes="*jdk*windows*.zip" erroronmissingdir="false"/></resourcecount></condition>
+    <condition property="jdk.linux"><resourcecount when="greater" count="0"><fileset dir="${jre.archives}" includes="*jdk*linux*.tar.gz" erroronmissingdir="false"/></resourcecount></condition>
+    <condition property="jdk.macos"><resourcecount when="greater" count="0"><fileset dir="${jre.archives}" includes="*jdk*mac*.tar.gz" erroronmissingdir="false"/></resourcecount></condition>
+    <condition property="host" value="windows"><os family="windows"/></condition>
+    <condition property="host" value="macos"><os family="mac"/></condition>
+    <property name="host" value="linux"/>
+    <condition property="exe" value=".exe" else=""><os family="windows"/></condition>
+    <fail unless="jdk.${host}" message="no Temurin JDK archive for this machine (*jdk*${host}*) in ${jre.archives}: its jlink links the runtimes (see README: Packaging)"/>
+  </target>
+
+  <!-- cutdirsmapper strips the archives' top directory (jdk-21.x+y/; Contents/Home/ too on macOS) -->
+  <target name="unpack-windows" if="jdk.windows">
+    <unzip dest="${jdk.unpacked}/windows"><fileset dir="${jre.archives}" includes="*jdk*windows*.zip"/><cutdirsmapper dirs="1"/></unzip>
+  </target>
+  <target name="unpack-linux" if="jdk.linux">
+    <untar dest="${jdk.unpacked}/linux" compression="gzip"><fileset dir="${jre.archives}" includes="*jdk*linux*.tar.gz"/><cutdirsmapper dirs="1"/></untar>
+    <chmod perm="755"><fileset dir="${jdk.unpacked}/linux" includes="bin/**,lib/jspawnhelper,lib/jexec"/></chmod>
+  </target>
+  <target name="unpack-macos" if="jdk.macos">
+    <untar dest="${jdk.unpacked}/macos" compression="gzip"><fileset dir="${jre.archives}" includes="*jdk*mac*.tar.gz"/><cutdirsmapper dirs="3"/></untar>
+    <chmod perm="755"><fileset dir="${jdk.unpacked}/macos" includes="bin/**,lib/jspawnhelper,lib/jexec"/></chmod>
+  </target>
+
+  <macrodef name="runtime">
+    <attribute name="os"/>
+    <sequential>
+      <delete dir="${jre.unpacked}/@{os}"/>
+      <echo message="jlink: the @{os} runtime from ${jdk.unpacked}/@{os}/jmods (${runtime.modules})"/>
+      <exec executable="${jdk.unpacked}/${host}/bin/jlink${exe}" failonerror="true">
+        <arg value="--module-path"/><arg value="${jdk.unpacked}/@{os}/jmods"/>
+        <arg value="--add-modules"/><arg value="${runtime.modules}"/>
+        <arg value="--output"/><arg value="${jre.unpacked}/@{os}"/>
+        <arg value="--strip-debug"/>
+        <arg value="--no-man-pages"/>
+        <arg value="--no-header-files"/>
+        <arg value="--compress"/><arg value="zip-6"/>
+      </exec>
+    </sequential>
+  </macrodef>
+  <target name="runtime-windows" if="jdk.windows"><runtime os="windows"/></target>
+  <target name="runtime-linux" if="jdk.linux"><runtime os="linux"/></target>
+  <target name="runtime-macos" if="jdk.macos"><runtime os="macos"/></target>
+
+  <target name="runtimes" depends="detect,unpack-windows,unpack-linux,unpack-macos,runtime-windows,runtime-linux,runtime-macos"/>
+
+  <!-- ==== the archives ==== -->
+
+  <target name="prepare-dist">
+    <mkdir dir="${dist.directory}"/>
+    <delete dir="${work}"/>
+    <!-- the text files with the line endings of each platform -->
+    <copy todir="${work}/crlf"><fileset dir="${basedir.project}" includes="README.md,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.bat"/></copy>
+    <fixcrlf srcdir="${work}/crlf" eol="crlf" includes="**/*.md,**/*.xsd,**/*.wsdl,**/*.json,**/*.bat"/>
+    <copy todir="${work}/lf"><fileset dir="${basedir.project}" includes="README.md,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.sh"/></copy>
+    <fixcrlf srcdir="${work}/lf" eol="lf" includes="**/*.md,**/*.xsd,**/*.wsdl,**/*.json,**/*.sh"/>
+  </target>
+
+  <target name="dist-windows" if="jdk.windows" depends="detect,prepare-dist">
+    <zip destfile="${dist.directory}/${dist.name}-windows.zip">
+      <zipfileset file="${jar}" fullpath="${dist.name}/xsdviewer.jar"/>
+      <zipfileset file="${exe}" fullpath="${dist.name}/XsdViewer.exe"/>
+      <zipfileset file="${work}/crlf/xsdviewer.bat" fullpath="${dist.name}/xsdviewer.bat"/>
+      <zipfileset file="${work}/crlf/README.md" fullpath="${dist.name}/README.md"/>
+      <zipfileset dir="${work}/crlf/samples" prefix="${dist.name}/samples"/>
+      <zipfileset dir="${jre.unpacked}/windows" prefix="${dist.name}/jre"/>
+    </zip>
+  </target>
+
+  <!-- a tar keeps no permissions from Ant's copies: the executables are said explicitly -->
+  <macrodef name="unix-dist">
+    <attribute name="os"/>
+    <sequential>
+      <tar destfile="${dist.directory}/${dist.name}-@{os}.tar.gz" compression="gzip" longfile="gnu">
+        <tarfileset file="${jar}" fullpath="${dist.name}/xsdviewer.jar" filemode="644"/>
+        <tarfileset file="${work}/lf/xsdviewer.sh" fullpath="${dist.name}/xsdviewer.sh" filemode="755"/>
+        <tarfileset file="${work}/lf/README.md" fullpath="${dist.name}/README.md" filemode="644"/>
+        <tarfileset dir="${work}/lf/samples" prefix="${dist.name}/samples" filemode="644" dirmode="755"/>
+        <tarfileset dir="${jre.unpacked}/@{os}" prefix="${dist.name}/jre" filemode="755" dirmode="755" includes="bin/**,lib/jspawnhelper,lib/jexec"/>
+        <tarfileset dir="${jre.unpacked}/@{os}" prefix="${dist.name}/jre" filemode="644" dirmode="755" excludes="bin/**,lib/jspawnhelper,lib/jexec"/>
+      </tar>
+    </sequential>
+  </macrodef>
+  <target name="dist-linux" if="jdk.linux" depends="detect,prepare-dist"><unix-dist os="linux"/></target>
+  <target name="dist-macos" if="jdk.macos" depends="detect,prepare-dist"><unix-dist os="macos"/></target>
+
+  <target name="distributions" depends="dist-windows,dist-linux,dist-macos">
+    <delete dir="${work}"/>
+  </target>
+</project>

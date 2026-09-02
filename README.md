@@ -25,7 +25,10 @@ A Java server parses the schema and serves a web page offering two views:
   `choice`) are drawn dashed and lighter; mandatory ones solid. A **derivation** (`extends`,
   `restricts`: a type to its base type) ends with a hollow arrowhead, as a UML generalisation,
   where a content link (a nested element, a `ref`, a `type`) ends with a filled one.
-  Click any node to make it the centre; **← Back** (or Alt+←) returns to the previous one.
+  Click any node to make it the centre; **← Back** (or Alt+←) returns to the previous one. The
+  graph works from the keyboard too: Tab into it, the arrow keys walk the nodes, Home is the
+  centre, Enter or Space acts as a click. **File ▸ Open all listed files** opens in tabs the files
+  a large folder left listed only.
 - **Text** – the schema source with line numbers and syntax colouring. The selected
   object's declaration is highlighted; click a highlighted line number to select that
   object.
@@ -163,15 +166,17 @@ as they are into `jre/` — see [Packaging](#packaging).
 scripts/package.sh            # or scripts\package.bat on Windows; runs: mvn package -Pdist
 ```
 
-builds two self-contained distributions that need no Java installed, each with a
-bundled JRE 21 (Eclipse Temurin, redistributed under the GPLv2 with Classpath Exception; its
-notices stay in `jre/legal`) and a launcher taking the same options as above (the archives of
-previous builds, whatever their version, are deleted from `releases/` first):
+builds self-contained distributions that need no Java installed, each with a **trimmed runtime**
+made with `jlink` from a Temurin JDK 21 — the modules the tool needs, about a third of a full JRE
+(Eclipse Temurin, redistributed under the GPLv2 with Classpath Exception; its notices stay in
+`jre/legal`) — and a launcher taking the same options as above (the archives of previous builds,
+whatever their version, are deleted from `releases/` first):
 
 | Archive | Launcher |
 |---|---|
-| `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled JRE, no console window at all. The exe is built with launch4j from any OS. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
+| `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled runtime, no console window at all. The exe is built with launch4j from any OS. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
 | `releases/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
+| `releases/xsdviewer-<version>-macos.tar.gz` | `xsdviewer.sh` — Apple silicon; a downloaded archive is quarantined by macOS, so once: `xattr -dr com.apple.quarantine xsdviewer-<version>` |
 | `releases/xsdviewer-<version>.jar` | copy of `target/xsdviewer.jar`, for people who have [Java 21](#installing-java-21): `java -jar xsdviewer-<version>.jar` |
 
 When started without a console (the Windows launcher, a double-clicked jar), a start-up
@@ -183,19 +188,21 @@ By hand, `scripts/release.sh <version>` does the same from `releases/` (`--dry-r
 notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` or
 `~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
 
-The JREs are not tracked in git: before packaging, download the Temurin JRE 21
-archives from <https://adoptium.net/temurin/releases/> and put them in
-`jre/` at the root of the project:
+The JDKs are not tracked in git: before packaging, download the Temurin **JDK** 21 archives
+(a JDK, for its `jmods`; a JRE has none) from <https://adoptium.net/temurin/releases/> and put
+them in `jre/` at the root of the project:
 
 ```
 jre/
-├── OpenJDK21U-jre_x64_windows_hotspot_<version>.zip
-└── OpenJDK21U-jre_x64_linux_hotspot_<version>.tar.gz
+├── OpenJDK21U-jdk_x64_windows_hotspot_<version>.zip
+├── OpenJDK21U-jdk_x64_linux_hotspot_<version>.tar.gz
+└── OpenJDK21U-jdk_aarch64_mac_hotspot_<version>.tar.gz
 ```
 
-The build picks the `*windows*.zip` and `*linux*.tar.gz` found there, so upgrading
-is just replacing the archives. Extra arguments (e.g. `-DskipTests`) are passed to
-`mvn` by all four scripts.
+Only the platforms whose archive is there are built; the archive of the machine doing the build
+is required, since its `jlink` links every runtime (download them together: they must be the same
+version). `src/build/runtimes.xml` (Ant, driven by the `dist` profile) does the unpacking, the
+linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
 
 `scripts/screenshots.py` is a visual smoke test: with the jar built and Firefox installed, it opens
 the samples, drives the page (a selection, the text view, two levels, the dark theme), checks a few

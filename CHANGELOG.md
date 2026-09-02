@@ -10,6 +10,10 @@ What each version brought, newest first. The GitHub Releases carry the same note
 - **A find bar in the Text view** (Ctrl+F there): the lines holding a text are marked, Enter / Shift+Enter walk them.
 - **⤓ SVG** saves the graph as a vector image.
 - **Links for `xs:keyref`** (to the element declaring the key it refers to, labelled `keyref name`), and `xs:any` / `xs:anyAttribute` listed among a declaration's members (`any`, `anyAttribute`, with their namespace constraint).
+- **Trimmed runtimes and a macOS build.** The distributions bundle a `jlink` image of Temurin 21 (the modules the tool needs: about a third of a full JRE — the Linux archive goes from 53 MB to 38 MB) instead of a whole JRE, and a macOS (Apple silicon) archive joins the Windows and Linux ones. `src/build/runtimes.xml` (Ant) links and packs them from the Temurin JDK archives in `jre/`.
+- **The release is built by GitHub Actions**: a pushed tag `vX.Y.Z` downloads the JDKs, packages, and creates the release with the archives, the notes from this changelog's section and the checksums (`release.yml`). `scripts/release.sh` stays the way by hand.
+- **File ▸ Open all listed files** opens in tabs the files a large folder left listed only (asked first from 30 files).
+- **The graph from the keyboard**: Tab into it, the arrow keys walk the nodes, Home is the centre, Enter or Space acts as a click; landmarks and roles for assistive technology.
 - Tests of the page's modules under Node (`src/test/js`), a contract test between the server's and the page's vocabularies, and `scripts/screenshots.py`, a visual smoke test with headless Firefox.
 
 ## 3.3.1 — 2026-09-02

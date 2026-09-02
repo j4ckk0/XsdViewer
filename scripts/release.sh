@@ -6,6 +6,7 @@
 #   scripts/release.sh <version> <whats-new.md>            # the notes from a file instead
 #   scripts/release.sh --draft <version> [<whats-new.md>]  # a draft, to check on GitHub before publishing
 #   scripts/release.sh --dry-run <version> [<whats-new.md>]  # prints the notes, calls nothing
+#   scripts/release.sh --body <version> [<whats-new.md>]     # prints the notes alone (the release workflow uses them)
 #
 # Before: bump the version in pom.xml (the project's <version> only), write the version's section in
 # CHANGELOG.md, commit, tag vX.Y.Z, push the tag, run scripts/package.sh (see PUBLISHING.md,
@@ -21,11 +22,12 @@ cd "$(dirname "$(readlink -f "$0")")/.."
 
 REPO=j4ckk0/XsdViewer
 TOKEN_FILE=$HOME/.config/github/xsdviewer-release-token
-draft=false; dry=false
+draft=false; dry=false; body_only=false
 while [ $# -gt 0 ]; do
   case "$1" in
     --draft) draft=true; shift ;;
     --dry-run) dry=true; shift ;;
+    --body) body_only=true; dry=true; shift ;;
     -*) echo "unknown option $1" >&2; exit 2 ;;
     *) break ;;
   esac
@@ -43,9 +45,9 @@ else
 fi
 for tool in curl python3 sha256sum git; do command -v "$tool" >/dev/null || { echo "$tool not found in PATH" >&2; exit 1; }; done
 
-# What is attached: the three archives of scripts/package.sh, for this version.
-jar=xsdviewer-$version.jar; zip=xsdviewer-$version-windows.zip; tgz=xsdviewer-$version-linux.tar.gz
-for f in "$jar" "$zip" "$tgz"; do
+# What is attached: the four archives of scripts/package.sh, for this version.
+jar=xsdviewer-$version.jar; zip=xsdviewer-$version-windows.zip; tgz=xsdviewer-$version-linux.tar.gz; mac=xsdviewer-$version-macos.tar.gz
+for f in "$jar" "$zip" "$tgz" "$mac"; do
   [ -f "releases/$f" ] || { echo "releases/$f missing - run scripts/package.sh after the version bump" >&2; exit 1; }
 done
 grep -q "<version>$version</version>" pom.xml || { echo "pom.xml is not at version $version" >&2; exit 1; }
@@ -54,8 +56,8 @@ if ! $dry && ! git ls-remote --exit-code --tags github "refs/tags/$tag" >/dev/nu
   echo "tag $tag is not on GitHub - git push github $tag" >&2; exit 1
 fi
 
-# The bundled JRE, from the archive name (OpenJDK21U-jre_x64_linux_hotspot_21.0.12.1_1.tar.gz -> 21.0.12).
-jre_version=$(compgen -G 'jre/*linux*.tar.gz' | head -1 | sed -E 's/.*hotspot_([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+# The bundled runtime's version, from the image's release file (JAVA_VERSION="21.0.12.1").
+jre_version=$(grep -h '^JAVA_VERSION=' target/jre/*/release 2>/dev/null | head -1 | cut -d'"' -f2)
 [ -n "$jre_version" ] || jre_version=21
 
 body=$(
@@ -67,19 +69,21 @@ body=$(
   echo
   echo "| File | For |"
   echo "|---|---|"
-  echo "| \`$zip\` | Windows, no Java needed — unzip and double-click \`XsdViewer.exe\` (bundled Temurin JRE 21) |"
-  echo "| \`$tgz\` | Linux x64, no Java needed — untar and run \`xsdviewer.sh\` (bundled Temurin JRE 21) |"
+  echo "| \`$zip\` | Windows x64, no Java needed — unzip and double-click \`XsdViewer.exe\` (a trimmed Temurin runtime is bundled) |"
+  echo "| \`$tgz\` | Linux x64, no Java needed — untar and run \`xsdviewer.sh\` (a trimmed Temurin runtime is bundled) |"
+  echo "| \`$mac\` | macOS on Apple silicon, no Java needed — untar, \`xattr -dr com.apple.quarantine xsdviewer-$version\` once (a download is quarantined), then \`./xsdviewer.sh\` (a trimmed Temurin runtime is bundled) |"
   echo "| \`$jar\` | Any OS with Java 21 installed ([how to install it](https://github.com/$REPO#installing-java-21)) — \`java -jar $jar [--port 9090] [--keep-alive] [some.xsd]\` |"
   echo
-  echo "The bundled JRE is Eclipse Temurin $jre_version, redistributed under the GPLv2 with Classpath Exception (notices in \`jre/legal\`). XsdViewer itself is Apache 2.0."
+  echo "The bundled runtime is a jlink image of Eclipse Temurin $jre_version (the modules the tool needs), redistributed under the GPLv2 with Classpath Exception (notices in \`jre/legal\`). XsdViewer itself is Apache 2.0."
   echo
   echo "## Checksums (SHA-256)"
   echo
   echo '```'
-  (cd releases && sha256sum "$jar" "$zip" "$tgz")
+  (cd releases && sha256sum "$jar" "$zip" "$tgz" "$mac")
   echo '```'
 )
 
+if $body_only; then echo "$body"; exit 0; fi
 if $dry; then echo "$body"; echo; echo "(dry run: release $tag not created)"; exit 0; fi
 
 if [ -z "${GITHUB_TOKEN:-}" ] && [ -r "$TOKEN_FILE" ]; then GITHUB_TOKEN=$(tr -d '[:space:]' < "$TOKEN_FILE"); fi
@@ -97,7 +101,7 @@ print(r["id"])' <<<"$resp")
 echo "release $tag created (id $id$($draft && echo ', draft'))"
 
 # An upload of a large archive sometimes answers nothing (the connection dropped): tried again, a few times.
-for f in "$jar" "$zip" "$tgz"; do
+for f in "$jar" "$zip" "$tgz" "$mac"; do
   case $f in *.jar) type=application/java-archive ;; *.zip) type=application/zip ;; *) type=application/gzip ;; esac
   for attempt in 1 2 3; do
     if curl -sS "${auth[@]}" -H "Content-Type: $type" --data-binary @"releases/$f" \

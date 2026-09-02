@@ -10,13 +10,14 @@
 <body>
 <!-- Labels come from i18n/<language>.json: data-i18n = text, data-i18n-title = tooltip, data-i18n-placeholder. -->
 
-<header id="topbar">
+<header id="topbar" role="banner">
   <div class="menu">
     <button id="fileMenuBtn" class="menubtn" type="button" data-i18n="menu.file">File ▾</button>
     <div id="fileMenu" class="dropdown hidden">
       <button id="menuOpen" type="button" data-i18n-title="menu.open.title"><span data-i18n="menu.open">Open…</span><span class="kbd">Ctrl+O</span></button>
       <button id="menuOpenFolder" type="button" data-i18n="menu.openFolder" data-i18n-title="menu.openFolder.title">Open folder…</button>
       <button id="menuValidate" type="button" data-i18n="menu.validate" data-i18n-title="menu.validate.title" disabled>Validate an XML file…</button>
+      <button id="menuOpenAll" type="button" data-i18n="menu.openAll" data-i18n-title="menu.openAll.title" disabled>Open all listed files</button>
       <div class="sep"></div>
       <button id="menuNewWorkspace" type="button" data-i18n="menu.newWorkspace" data-i18n-title="menu.newWorkspace.title">New workspace</button>
       <button id="menuOpenWorkspace" type="button" data-i18n="menu.openWorkspace" data-i18n-title="menu.openWorkspace.title">Open workspace…</button>
@@ -61,12 +62,12 @@
 </div>
 
 <div id="tabbar">
-  <div id="tabs"></div>
+  <div id="tabs" role="tablist"></div>
   <button id="newTabBtn" type="button" data-i18n-title="tab.new.title">+</button>
 </div>
 
 <div id="body">
-  <aside id="sidebar">
+  <aside id="sidebar" role="navigation" aria-label="Files and objects">
     <div id="searchBar">
       <input id="search" type="search" data-i18n-placeholder="search.placeholder" autocomplete="off" spellcheck="false">
       <button id="searchClear" class="clear" type="button" data-i18n-title="search.clear">×</button>
@@ -144,7 +145,7 @@
     </div>
   </main>
 
-  <aside id="details" class="hidden">
+  <aside id="details" class="hidden" role="complementary" aria-label="Details">
     <button id="detailsToggle" class="panel-toggle" type="button" data-i18n-title="details.collapse">»</button>
     <div id="schemaInfo">
       <div class="panel-head"><span data-i18n="info.title">Schema</span><button id="schemaInfoToggle" class="panel-toggle" type="button" data-i18n-title="info.collapse">▾</button></div>
@@ -166,7 +167,7 @@
 </dialog>
 
 <div id="dropOverlay" class="hidden"><div data-i18n="drop.hint">Drop the XSD file to open it</div></div>
-<div id="toast" class="hidden"></div>
+<div id="toast" class="hidden" role="status" aria-live="polite"></div>
 <input type="file" id="fileInput" accept=".xsd,.wsdl,.xml,text/xml,application/xml" multiple hidden>
 <input type="file" id="folderInput" webkitdirectory hidden>
 <input type="file" id="validateInput" accept=".xml,text/xml,application/xml" hidden>

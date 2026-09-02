@@ -27,6 +27,7 @@ export const ID = {
   HELP_MENU: 'helpMenu',
   MENU_ABOUT: 'menuAbout',
   MENU_VALIDATE: 'menuValidate',
+  MENU_OPEN_ALL: 'menuOpenAll',
   VALIDATE_INPUT: 'validateInput',
   VALIDATE_DIALOG: 'validateDialog',
   VALIDATE_TITLE: 'validateTitle',

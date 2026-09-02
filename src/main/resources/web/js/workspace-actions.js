@@ -3,7 +3,7 @@ import { chooseFolder, openWorkspaceFile, saveWorkspaceFile } from './api.js';
 import { busy } from './busy.js';
 import { MAX_AUTO_OPEN, MAX_FOLDER_FILES, TEXT, XSD_FILE_PATTERN } from './constants.js';
 import { ensureTab, parseInBackground } from './file-tabs.js';
-import { registerFile } from './workspace-files.js';
+import { registerFile, tabOfFile } from './workspace-files.js';
 import { $, ID } from './dom.js';
 import { addToLibrary, normPath } from './folder-library.js';
 import { plural, t } from './i18n.js';
@@ -18,6 +18,23 @@ import { toast, toastServerError } from './toast.js';
 export function startWorkspace() {
   activateTab(newTab(newWorkspace()));
   renderPage();
+}
+
+/** The files of the active workspace listed but not open in a tab. */
+export const listedOnly = () => activeWorkspace().files.filter(entry => !tabOfFile(entry));
+
+/** Warns before opening this many tabs at once. */
+const OPEN_ALL_CONFIRM_FROM = 30;
+
+/** File ▸ Open all listed files: every listed file of the active workspace gets a tab (asked first when there are many). */
+export async function openAllListed() {
+  const entries = listedOnly();
+  if (!entries.length) return;
+  if (entries.length >= OPEN_ALL_CONFIRM_FROM && !window.confirm(t(MSG.OPEN_ALL_CONFIRM, entries.length))) return;
+  const ws = activeWorkspace();
+  const opened = await busy(t(MSG.BUSY_OPENING), () => openInWorkspace(ws, entries));
+  renderPage();
+  toast(t(MSG.OPEN_ALL_DONE, opened.length));
 }
 
 /** File ▸ Close workspace: the active workspace and all its tabs. */

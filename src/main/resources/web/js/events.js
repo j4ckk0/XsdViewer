@@ -4,7 +4,7 @@ import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { initOptions, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
-import { closeActiveWorkspace, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
+import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { fileListClick, initFiles, renderFileList, setAllUnfolded, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
@@ -63,6 +63,7 @@ function wireSettingsMenu() {
 function wireHelpMenu() {
   $(ID.MENU_ABOUT).addEventListener('click', () => { closeMenus(); showAbout(); });
   $(ID.MENU_VALIDATE).addEventListener('click', () => { closeMenus(); validateFile(); });
+  $(ID.MENU_OPEN_ALL).addEventListener('click', () => { closeMenus(); openAllListed(); });
   $(ID.VALIDATE_CLOSE).addEventListener('click', closeValidation);
   $(ID.ABOUT_CLOSE).addEventListener('click', closeAbout);
 }
@@ -240,8 +241,20 @@ function wireSelectionSources() {
     const item = e.target.closest(selector(CLS.ITEM));
     if (item && item.dataset[DATA.ID]) select(item.dataset[DATA.ID]);
   });
-  $(ID.GRAPH_CANVAS).addEventListener('click', (e) => {
+  $(ID.GRAPH_CANVAS).addEventListener('click', (e) => activateNode(e.target.closest(selector(CLS.NODE))));
+  // the keyboard in the graph: arrows walk the nodes (drawn in reading order), Home is the centre, Enter / Space act as a click
+  $(ID.GRAPH_CANVAS).addEventListener('keydown', (e) => {
     const g = e.target.closest(selector(CLS.NODE));
+    if (!g || e.altKey || e.ctrlKey || e.metaKey) return;
+    const nodes = [...$(ID.GRAPH_CANVAS).querySelectorAll(selector(CLS.NODE))];
+    const i = nodes.indexOf(g);
+    if (e.key === KEY.ENTER || e.key === KEY.SPACE) { e.preventDefault(); activateNode(g); }
+    else if (e.key === KEY.ARROW_RIGHT || e.key === KEY.ARROW_DOWN) { e.preventDefault(); nodes[(i + 1) % nodes.length].focus(); }
+    else if (e.key === KEY.ARROW_LEFT || e.key === KEY.ARROW_UP) { e.preventDefault(); nodes[(i - 1 + nodes.length) % nodes.length].focus(); }
+    else if (e.key === KEY.HOME) { e.preventDefault(); $(ID.GRAPH_CANVAS).querySelector(selector(CLS.NODE) + selector(CLS.CENTER)).focus(); }
+  });
+  /** What a click (or Enter) on a drawn node does: selects it, jumps to its file, or follows it. */
+  function activateNode(g) {
     if (!g) return;
     const st = session.active, id = g.dataset[DATA.ID];
     if (g.dataset[DATA.TAB] != null || g.dataset[DATA.FILE] != null) {   // a node of another file
@@ -251,7 +264,7 @@ function wireSelectionSources() {
     } else if (st.nodes.get(id).kind === NODE_KIND.EXTERNAL) {
       followExternal(st.nodes.get(id));   // retry (e.g. the file chooser was cancelled)
     }
-  });
+  }
   $(ID.DETAILS).addEventListener('click', (e) => {
     if (e.target.closest('a[data-' + DATA.LINE + ']')) { showView(VIEW.TEXT); return; }
     const link = e.target.closest(selector(CLS.LINK));

@@ -649,7 +649,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 #graphCanvas { flex: 1; overflow: auto; }
 #graphCanvas svg { display: block; }
 
-.node { cursor: pointer; }
+.node { cursor: pointer; outline: none; }
+.node:focus-visible rect { stroke-width: 3; filter: drop-shadow(0 0 3px var(--accent)); }
 .node rect {
   fill: var(--surface);
   stroke-width: 2;

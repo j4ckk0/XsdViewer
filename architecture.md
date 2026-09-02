@@ -355,6 +355,9 @@ XsdViewer/
   the client from one tab per file (links followed on demand, linked schemas opened
   automatically when the file's location is known, workspaces to reopen a set). A merged
   single graph would need the parser to take several texts keyed by target namespace.
+- **Packaging**: `src/build/runtimes.xml` (Ant, called by the pom's `dist` profile) unpacks the
+  Temurin JDK archives of `jre/`, links a trimmed runtime per platform with `jlink` and packs the
+  archives; `.github/workflows/release.yml` runs it on a pushed tag and publishes the release.
 - **More link kinds** are a new `case` in `XsdParser.collect()` plus a `LinkLabel`; the
   client needs nothing (labels are free text). **More node kinds** (as the WSDL ones) need
   their `NodeKind`, a colour, a legend chip and the `kind.` / `group.` texts on the page.

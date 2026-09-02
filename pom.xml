@@ -134,17 +134,25 @@
         releases/xsdviewer-<version>.jar           copy of target/xsdviewer.jar
     -->
     <profile>
+      <!-- mvn package -Pdist (scripts/package.sh): the self-contained distributions. A trimmed runtime
+           per platform is made with jlink from the Temurin JDK archives found in jre/ (their jmods; see
+           README: Packaging) — only the platforms whose archive is there —, XsdViewer.exe with launch4j,
+           then the archives: src/build/runtimes.xml does the unpacking, the linking and the packing. -->
       <id>dist</id>
       <properties>
         <jre.archives>${project.basedir}/jre</jre.archives>
+        <jdk.unpacked>${project.build.directory}/jdk</jdk.unpacked>
         <jre.unpacked>${project.build.directory}/jre</jre.unpacked>
         <!-- where the distributions land (git-ignored) -->
         <dist.directory>${project.basedir}/releases</dist.directory>
+        <!-- what the runtimes hold: what the jar needs (jdeps, print-module-deps), java.xml said
+             explicitly, jdk.charsets for schema files in any encoding -->
+        <runtime.modules>java.base,java.desktop,java.logging,java.prefs,java.xml,jdk.httpserver,jdk.charsets</runtime.modules>
       </properties>
       <build>
         <plugins>
-          <!-- Previous distributions (any version) and the unpacked JREs are removed first,
-               so that releases/ only ever holds the artefacts of this build. -->
+          <!-- Previous distributions (any version), the unpacked JDKs and the runtimes are removed
+               first, so that releases/ only ever holds the artefacts of this build. -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-clean-plugin</artifactId>
@@ -164,6 +172,7 @@
                       <includes>
                         <include>${project.artifactId}-*-windows.zip</include>
                         <include>${project.artifactId}-*-linux.tar.gz</include>
+                        <include>${project.artifactId}-*-macos.tar.gz</include>
                         <include>${project.artifactId}-*.jar</include>
                       </includes>
                     </fileset>
@@ -171,7 +180,9 @@
                       <directory>${project.build.directory}</directory>
                       <includes>
                         <include>XsdViewer.exe</include>
+                        <include>jdk/**</include>
                         <include>jre/**</include>
+                        <include>dist/**</include>
                       </includes>
                     </fileset>
                   </filesets>
@@ -185,41 +196,26 @@
             <version>3.1.0</version>
             <executions>
               <execution>
-                <id>unpack-jre</id>
+                <!-- the JDK archives unpacked, a runtime linked for each platform present -->
+                <id>runtimes</id>
                 <phase>prepare-package</phase>
                 <goals>
                   <goal>run</goal>
                 </goals>
                 <configuration>
                   <target>
-                    <fail message="no *windows*.zip in ${jre.archives} (see README: Packaging)">
-                      <condition>
-                        <resourcecount count="0">
-                          <fileset dir="${jre.archives}" includes="*windows*.zip" erroronmissingdir="false"/>
-                        </resourcecount>
-                      </condition>
-                    </fail>
-                    <fail message="no *linux*.tar.gz in ${jre.archives} (see README: Packaging)">
-                      <condition>
-                        <resourcecount count="0">
-                          <fileset dir="${jre.archives}" includes="*linux*.tar.gz" erroronmissingdir="false"/>
-                        </resourcecount>
-                      </condition>
-                    </fail>
-                    <!-- cutdirsmapper strips the archives' top-level "jdk-xx-jre/" directory -->
-                    <unzip dest="${jre.unpacked}/windows">
-                      <fileset dir="${jre.archives}" includes="*windows*.zip"/>
-                      <cutdirsmapper dirs="1"/>
-                    </unzip>
-                    <untar dest="${jre.unpacked}/linux" compression="gzip">
-                      <fileset dir="${jre.archives}" includes="*linux*.tar.gz"/>
-                      <cutdirsmapper dirs="1"/>
-                    </untar>
+                    <ant antfile="${project.basedir}/src/build/runtimes.xml" target="runtimes" inheritAll="false">
+                      <property name="jre.archives" value="${jre.archives}"/>
+                      <property name="jdk.unpacked" value="${jdk.unpacked}"/>
+                      <property name="jre.unpacked" value="${jre.unpacked}"/>
+                      <property name="runtime.modules" value="${runtime.modules}"/>
+                    </ant>
                   </target>
                 </configuration>
               </execution>
               <execution>
-                <id>copy-jar-to-releases</id>
+                <!-- the archives, after the jar and the exe -->
+                <id>distributions</id>
                 <phase>package</phase>
                 <goals>
                   <goal>run</goal>
@@ -228,6 +224,17 @@
                   <target>
                     <copy file="${project.build.directory}/${project.build.finalName}.jar"
                           tofile="${dist.directory}/${project.artifactId}-${project.version}.jar"/>
+                    <ant antfile="${project.basedir}/src/build/runtimes.xml" target="distributions" inheritAll="false">
+                      <property name="jre.archives" value="${jre.archives}"/>
+                      <property name="jdk.unpacked" value="${jdk.unpacked}"/>
+                      <property name="jre.unpacked" value="${jre.unpacked}"/>
+                      <property name="dist.directory" value="${dist.directory}"/>
+                      <property name="dist.name" value="${project.artifactId}-${project.version}"/>
+                      <property name="jar" value="${project.build.directory}/${project.build.finalName}.jar"/>
+                      <property name="exe" value="${project.build.directory}/XsdViewer.exe"/>
+                      <property name="basedir.project" value="${project.basedir}"/>
+                      <property name="work" value="${project.build.directory}/dist"/>
+                    </ant>
                   </target>
                 </configuration>
               </execution>
@@ -242,7 +249,7 @@
             <executions>
               <execution>
                 <id>windows-launcher</id>
-                <phase>package</phase>
+                <phase>prepare-package</phase>
                 <goals>
                   <goal>launch4j</goal>
                 </goals>
@@ -270,29 +277,6 @@
                     <internalName>xsdviewer</internalName>
                     <originalFilename>XsdViewer.exe</originalFilename>
                   </versionInfo>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>3.7.1</version>
-            <executions>
-              <execution>
-                <id>dist</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${dist.directory}</outputDirectory>
-                  <finalName>${project.artifactId}-${project.version}</finalName>
-                  <appendAssemblyId>true</appendAssemblyId>
-                  <descriptors>
-                    <descriptor>src/assembly/windows.xml</descriptor>
-                    <descriptor>src/assembly/linux.xml</descriptor>
-                  </descriptors>
                 </configuration>
               </execution>
             </executions>

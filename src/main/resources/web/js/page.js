@@ -3,6 +3,7 @@ import { VIEW } from './constants.js';
 import { renderCompare } from './compare.js';
 import { renderDetails } from './details.js';
 import { canValidate } from './validate.js';
+import { listedOnly } from './workspace-actions.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { renderGraph } from './graph.js';
 import { t } from './i18n.js';
@@ -60,5 +61,6 @@ export function showView(view) {
   $(ID.EXPORT_BUTTON).disabled = !loaded || comparing;
   $(ID.EXPORT_SVG_BUTTON).disabled = !loaded || comparing || view !== VIEW.GRAPH;
   $(ID.MENU_VALIDATE).disabled = !canValidate();
+  $(ID.MENU_OPEN_ALL).disabled = comparing || !listedOnly().length;
   if (loaded && !comparing && view === VIEW.TEXT) highlightTextLine(true);
 }

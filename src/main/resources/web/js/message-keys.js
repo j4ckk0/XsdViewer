@@ -46,6 +46,8 @@ export const MSG = {
   SEARCH_IN_DOC: 'search.inDoc',
   MENU_THEME_LIGHT: 'menu.theme.light',
   MENU_THEME_DARK: 'menu.theme.dark',
+  OPEN_ALL_CONFIRM: 'openAll.confirm',
+  OPEN_ALL_DONE: 'openAll.done',
   VALIDATE_NEEDS_LOCATION: 'validate.needsLocation',
   VALIDATE_VALID: 'validate.valid',
   VALIDATE_INVALID_ONE: 'validate.invalid.one',

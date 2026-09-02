@@ -7,7 +7,7 @@
 import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, WSDL_KINDS, isDerivation } from './constants.js';
 import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declarations.js';
 import { cardinalityText, isOptional } from './cardinality.js';
-import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc } from './dom.js';
+import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc, selector } from './dom.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
@@ -152,7 +152,11 @@ export function renderGraph() {
   nodes.push(nodeSvg(center, cx - NODE_W / 2, cy - NODE_H / 2, true));
 
   svg += edges.join('') + labels.join('') + nodes.join('') + '</svg>';
+  const hadFocus = canvas.contains(document.activeElement);
   canvas.innerHTML = svg;
+  canvas.querySelector('svg').setAttribute('role', 'img');
+  canvas.querySelector('svg').setAttribute('aria-label', t(MSG.GRAPH_NODE_TITLE, kindLabel(center.kind), center.name));
+  if (hadFocus) canvas.querySelector(selector(CLS.NODE) + selector(CLS.CENTER)).focus({ preventScroll: true });   // the keyboard stays in the graph
 
   // keep the centre in view
   canvas.scrollTop = Math.max(0, cy - canvas.clientHeight / 2);
@@ -199,7 +203,7 @@ function nodeSvg(n, x, y, isCenter, opts) {
   const name = shorten(n.name, isCenter ? NAME_MAX_CHARS_CENTER : NAME_MAX_CHARS);
   const kindText = o.kindText || kindLabel(n.kind);
   const caption = o.link ? captionSvg(o.link) : '';
-  return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + '"' + dataAttr(DATA.ID, o.id || n.id)
+  return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + '" tabindex="0" role="button" aria-label="' + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + '"' + dataAttr(DATA.ID, o.id || n.id)
     + placeAttributes(o.place, session.active.workspace, dataAttr, DATA) + ' transform="translate(' + x + ',' + y + ')">'
     + '<title>' + (o.link ? esc(linkTitle(o.link)) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
     + caption

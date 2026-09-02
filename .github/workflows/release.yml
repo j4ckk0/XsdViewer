@@ -1,0 +1,58 @@
+# A pushed tag vX.Y.Z publishes the release: the trimmed runtimes (jlink, from the Temurin JDKs),
+# the archives, the notes from CHANGELOG.md's "## X.Y.Z" section, the checksums. The by-hand way
+# is scripts/package.sh then scripts/release.sh (see PUBLISHING.md, section 5).
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check that the tag matches the pom
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          grep -q "<version>$version</version>" pom.xml || { echo "pom.xml is not at version $version"; exit 1; }
+          scripts/changelog-section.py "$version" > /dev/null
+
+      - name: Download the Temurin JDK 21 archives (their jmods feed jlink)
+        run: |
+          mkdir -p jre
+          base=https://api.adoptium.net/v3/binary/latest/21/ga
+          curl -sSL -o jre/OpenJDK21U-jdk_x64_windows_hotspot.zip    "$base/windows/x64/jdk/hotspot/normal/eclipse"
+          curl -sSL -o jre/OpenJDK21U-jdk_x64_linux_hotspot.tar.gz   "$base/linux/x64/jdk/hotspot/normal/eclipse"
+          curl -sSL -o jre/OpenJDK21U-jdk_aarch64_mac_hotspot.tar.gz "$base/mac/aarch64/jdk/hotspot/normal/eclipse"
+          ls -la jre
+
+      - name: Build and test, then package
+        run: mvn -B --no-transfer-progress package -Pdist
+
+      - name: Release notes
+        run: scripts/release.sh --body "${GITHUB_REF_NAME#v}" > body.md && cat body.md
+
+      - name: Create the release with the archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" --title "XsdViewer $version" --notes-file body.md \
+            "releases/xsdviewer-$version.jar" "releases/xsdviewer-$version-windows.zip" \
+            "releases/xsdviewer-$version-linux.tar.gz" "releases/xsdviewer-$version-macos.tar.gz"
