@@ -22,8 +22,8 @@ export async function validateFile() {
   if (!canValidate()) { toast(t(MSG.VALIDATE_NEEDS_LOCATION)); return; }
   if (!session.dialogs) { $(ID.VALIDATE_INPUT).click(); return; }
   try {
-    const r = await chooseFiles();
-    if (r.files && r.files.length) await validateText(r.files[0].name, r.files[0].text);
+    const files = await chooseFiles();   // the files chosen: [{name, path, text}], empty when cancelled
+    if (files.length) await validateText(files[0].name, files[0].text);
   } catch (e) {
     toastServerError(e);
   }
