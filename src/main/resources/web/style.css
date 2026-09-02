@@ -183,7 +183,7 @@ html, body {
 
 /* ---- layout ------------------------------------------------------------------------ */
 
-#aboutDialog {
+#aboutDialog, #validateDialog {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 20px 24px;
@@ -192,10 +192,18 @@ html, body {
   background: var(--surface);
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
-#aboutDialog::backdrop { background: rgba(0,0,0,.3); }
-#aboutDialog h2 { margin: 0 0 8px; font-size: 18px; }
-#aboutDialog p { margin: 6px 0; }
-#aboutDialog .muted { color: var(--muted); font-size: 12px; }
+#aboutDialog::backdrop, #validateDialog::backdrop { background: rgba(0,0,0,.3); }
+/* the validation dialog: the verdict, then the problems with where they are */
+#validateDialog { max-width: min(900px, 90vw); }
+#validateDialog .valid { color: var(--green); font-weight: 600; }
+#validateDialog .invalid { color: var(--diff-del-fg); font-weight: 600; }
+#validateProblems { max-height: 50vh; overflow: auto; font-size: 12px; }
+#validateProblems .problem { padding: 4px 0; border-top: 1px solid var(--sep); }
+#validateProblems .problem .meta { display: inline-block; min-width: 10em; color: var(--muted); }
+#validateProblems .problem.warning { color: var(--muted); }
+#aboutDialog h2, #validateDialog h2 { margin: 0 0 8px; font-size: 18px; }
+#aboutDialog p, #validateDialog p { margin: 6px 0; }
+#aboutDialog .muted, #validateDialog .muted { color: var(--muted); font-size: 12px; }
 #aboutDialog a { color: var(--accent); word-break: break-all; }
 #aboutDialog .actions { margin-top: 14px; text-align: right; }
 #aboutDialog .actions button { border-color: var(--border); }

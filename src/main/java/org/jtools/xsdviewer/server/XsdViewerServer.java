@@ -72,6 +72,7 @@ public final class XsdViewerServer {
         http.createContext(ApiPath.CHOOSE_FOLDER, localized(new ChooseFolderHandler(files)));
         http.createContext(ApiPath.WORKSPACE_SAVE, localized(new SaveWorkspaceHandler()));
         http.createContext(ApiPath.WORKSPACE_OPEN, localized(new OpenWorkspaceHandler(files)));
+        http.createContext(ApiPath.VALIDATE, localized(new ValidateHandler(files)));
         http.createContext(ApiPath.ROOT, localized(new StaticResourceHandler()));
         http.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         http.start();

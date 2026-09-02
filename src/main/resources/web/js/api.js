@@ -31,6 +31,14 @@ export async function parseSchema(text) {
   return json;
 }
 
+/** POST /api/validate?schema=: validates an XML text against the schema file at {@code schemaPath} (one the server served); {valid, problems, truncated}. */
+export async function validateXml(schemaPath, xml) {
+  const resp = await request(API.VALIDATE + query({ [API_PARAM.SCHEMA]: schemaPath }), textBody(xml));
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json.error || String(resp.status));
+  return json;
+}
+
 /** POST /api/locate: where a file with this name and content sits on disk, or null. */
 export async function locateFile(name, text) {
   const resp = await request(API.LOCATE + query({ [API_PARAM.NAME]: name }), textBody(text));

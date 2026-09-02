@@ -43,6 +43,13 @@ public final class JsonKey {
     public static final String VALUE = "value";
     /** The names inside a declaration (nested elements and attributes, a message's parts), only when there are some. */
     public static final String MEMBERS = "members";
+
+    // POST /api/validate
+    public static final String VALID = "valid";
+    public static final String PROBLEMS = "problems";
+    public static final String SEVERITY = "severity";
+    public static final String COLUMN = "column";
+    public static final String MESSAGE = "message";
     public static final String EDGES = "edges";
     public static final String FROM = "from";
     public static final String TO = "to";

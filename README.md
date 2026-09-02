@@ -35,7 +35,10 @@ selection, history and search filter. The **search box** at the top of the left 
 filters the Files panel and the object list below it — every schema of the workspace, open in a tab or
 not, is searched, by the objects' names but also by the names of the elements and attributes inside
 a declaration (a message's parts) and by the documentation, the reason being shown in grey after a
-listed object; **⤓ PNG** in the top bar saves the current view (graph or
+listed object; **File ▸ Validate an XML file…** checks a
+document against the shown schema with the JDK's validator, from the schema's file on disk (imports
+included, so the schema needs a location: a file opened through the server's dialog or a folder); the
+problems are listed with their line and column. **⤓ PNG** in the top bar saves the current view (graph or
 text) as a PNG image, **⤓ SVG** the graph as a vector image (for documents). In the Text view, a
 **find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter. **File ▸ Quit** stops the server and closes the page.
 

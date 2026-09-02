@@ -26,6 +26,13 @@ export const ID = {
   HELP_MENU_BUTTON: 'helpMenuBtn',
   HELP_MENU: 'helpMenu',
   MENU_ABOUT: 'menuAbout',
+  MENU_VALIDATE: 'menuValidate',
+  VALIDATE_INPUT: 'validateInput',
+  VALIDATE_DIALOG: 'validateDialog',
+  VALIDATE_TITLE: 'validateTitle',
+  VALIDATE_SUMMARY: 'validateSummary',
+  VALIDATE_PROBLEMS: 'validateProblems',
+  VALIDATE_CLOSE: 'validateClose',
   ABOUT_DIALOG: 'aboutDialog',
   ABOUT_VERSION: 'aboutVersion',
   ABOUT_JAVA: 'aboutJava',
@@ -148,6 +155,10 @@ export const CLS = {
   PARSING: 'parsing',
   /** Why a searched object is listed when its name does not match (the member or the documentation that does). */
   WHY: 'why',
+  /** The rows of the validation dialog. */
+  PROBLEM: 'problem',
+  VALID: 'valid',
+  INVALID: 'invalid',
   DOT: 'dot',
   COUNT: 'count',
   // graph (SVG)

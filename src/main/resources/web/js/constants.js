@@ -77,8 +77,9 @@ export const API = {
   CHOOSE_FOLDER: '/api/choose-folder',
   WORKSPACE_SAVE: '/api/workspace/save',
   WORKSPACE_OPEN: '/api/workspace/open',
+  VALIDATE: '/api/validate',
 };
-export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location', STRICT: 'strict', ID: 'id' };
+export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location', STRICT: 'strict', ID: 'id', SCHEMA: 'schema' };
 export const HTTP = {
   POST: 'POST',
   CONTENT_TYPE_HEADER: 'Content-Type',

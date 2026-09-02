@@ -51,6 +51,8 @@ public final class ApiPath {
     public static final String WORKSPACE_SAVE = "/api/workspace/save";
     /** {@code POST}: native "open" dialog, answers the workspace and its schemas. */
     public static final String WORKSPACE_OPEN = "/api/workspace/open";
+    /** {@code POST ?schema=<path>}, body = an XML document: validates it against that schema file. */
+    public static final String VALIDATE = "/api/validate";
     /** Everything else: the static files of the page. */
     public static final String ROOT = "/";
 
@@ -62,5 +64,6 @@ public final class ApiPath {
     public static final String PARAM_ID = "id";
     /** {@code /api/open}: resolve only against the directory of {@code base}. */
     public static final String PARAM_STRICT = "strict";
+    public static final String PARAM_SCHEMA = "schema";
     public static final String TRUE = "true";
 }

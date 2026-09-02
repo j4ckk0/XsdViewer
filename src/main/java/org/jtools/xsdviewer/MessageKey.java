@@ -54,6 +54,8 @@ public final class MessageKey {
     public static final String NO_DISPLAY = "api.noDisplay";
     public static final String INTERNAL_ERROR = "api.internalError";
     public static final String DIALOG_FAILED = "api.dialogFailed";
+    public static final String SCHEMA_EXPECTED = "api.schemaExpected";
+    public static final String SCHEMA_NOT_COMPILED = "api.schemaNotCompiled";
     public static final String NOT_A_WORKSPACE = "api.notAWorkspace";
     public static final String WORKSPACE_EXPECTED = "api.workspaceExpected";
     public static final String INVALID_JSON = "json.invalid";

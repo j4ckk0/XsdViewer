@@ -19,6 +19,7 @@ import { MSG } from './message-keys.js';
 import { session } from './state.js';
 import { clearFind, findStep, focusFind, refreshFind } from './text-find.js';
 import { toggleTheme } from './theme.js';
+import { closeValidation, validateFile, validateText } from './validate.js';
 import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderNavigation, tabToShow } from './tabs.js';
 import { toggleAutoStop } from './settings.js';
@@ -61,6 +62,8 @@ function wireSettingsMenu() {
 
 function wireHelpMenu() {
   $(ID.MENU_ABOUT).addEventListener('click', () => { closeMenus(); showAbout(); });
+  $(ID.MENU_VALIDATE).addEventListener('click', () => { closeMenus(); validateFile(); });
+  $(ID.VALIDATE_CLOSE).addEventListener('click', closeValidation);
   $(ID.ABOUT_CLOSE).addEventListener('click', closeAbout);
 }
 
@@ -77,6 +80,7 @@ function wireFileMenu() {
   $(ID.MENU_QUIT).addEventListener('click', () => { closeMenu(); quit(); });
   $(ID.FILE_INPUT).addEventListener('change', (e) => { openFiles([...e.target.files]); e.target.value = ''; });
   $(ID.FILE_INPUT).addEventListener('cancel', () => { session.pendingJump = null; });
+  $(ID.VALIDATE_INPUT).addEventListener('change', async (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) validateText(f.name, await f.text()); });
   $(ID.MENU_OPEN_FOLDER).addEventListener('click', () => { closeMenu(); openFolder(); });
   $(ID.FOLDER_INPUT).addEventListener('change', (e) => {
     const files = [...e.target.files];
