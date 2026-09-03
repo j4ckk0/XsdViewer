@@ -32,6 +32,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.jtools.xsdviewer.schema.Severity;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -74,13 +75,13 @@ final class XmlValidator {
         boolean[] failed = { false };
         validator.setErrorHandler(new ErrorHandler() {
             @Override
-            public void warning(SAXParseException e) { add("warning", e); }
+            public void warning(SAXParseException e) { add(Severity.WARNING, e); }
 
             @Override
-            public void error(SAXParseException e) { failed[0] = true; add("error", e); }
+            public void error(SAXParseException e) { failed[0] = true; add(Severity.ERROR, e); }
 
             @Override
-            public void fatalError(SAXParseException e) throws SAXException { failed[0] = true; add("error", e); throw e; }
+            public void fatalError(SAXParseException e) throws SAXException { failed[0] = true; add(Severity.ERROR, e); throw e; }
 
             private void add(String severity, SAXParseException e) {
                 if (problems.size() >= MAX_PROBLEMS) { truncated[0] = true; return; }

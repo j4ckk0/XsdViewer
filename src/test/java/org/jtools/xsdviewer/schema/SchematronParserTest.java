@@ -64,7 +64,7 @@ class SchematronParserTest {
                 "rule:amounts/po:USPrice", "rule:nonEmpty/$element", "rule:Addresses/po:shipTo | po:billTo",
                 "assert:PO-001", "assert:structure/po:purchaseOrder/count(po:items/po:item) > 0", "assert:structure/po:item/po:quantity < 100",
                 "report:hasComment/po:USPrice > 1000 and not(po:comment)",
-                "assert:dates/po:item[po:shipDate]/xs:date(po:shipDate) >= xs:date(../../@orderDate)",
+                "assert:dates/po:item[po:shipDate]/translate(po:shipDate, '-', '') >= translate(../../@orderDate, '-', '')",
                 "assert:amounts/po:USPrice/. >= 0", "report:amounts/po:USPrice/. = 0",
                 "assert:nonEmpty/$element/normalize-space(.) != ''",
                 "assert:Addresses/po:shipTo | po:billTo/string-length(po:zip) = 5",
@@ -106,7 +106,7 @@ class SchematronParserTest {
         // messages: the role or flag first, a value-of and a name shown as placeholders
         assertEquals("[error] An order names both a shipping and a billing address.", node("assert:PO-001").doc());
         assertEquals("At most 99 of {po:productName} per line.", node("assert:structure/po:item/po:quantity < 100").doc());
-        assertEquals("[fatal] An item cannot ship before its order date.", node("assert:dates/po:item[po:shipDate]/xs:date(po:shipDate) >= xs:date(../../@orderDate)").doc());
+        assertEquals("[fatal] An item cannot ship before its order date.", node("assert:dates/po:item[po:shipDate]/translate(po:shipDate, '-', '') >= translate(../../@orderDate, '-', '')").doc());
         assertEquals("A price is never negative ({name()}).", node("assert:amounts/po:USPrice/. >= 0").doc());
         assertEquals("The item {po:productName} costs {po:USPrice}.", node("diagnostic:priceTooHigh").doc());
     }

@@ -31,9 +31,9 @@ export async function parseSchema(text) {
   return json;
 }
 
-/** POST /api/validate?schema=: validates an XML text against the schema file at {@code schemaPath} (one the server served); {valid, problems, truncated}. */
-export async function validateXml(schemaPath, xml) {
-  const resp = await request(API.VALIDATE + query({ [API_PARAM.SCHEMA]: schemaPath }), textBody(xml));
+/** POST /api/validate: the document checked against the XSD and / or the Schematron (server paths; empty = none), in the given phase (empty = the schema's default). */
+export async function validateXml(schemaPath, schematronPath, phase, xml) {
+  const resp = await request(API.VALIDATE + query({ [API_PARAM.SCHEMA]: schemaPath, [API_PARAM.SCHEMATRON]: schematronPath, [API_PARAM.PHASE]: phase }), textBody(xml));
   const json = await resp.json();
   if (!resp.ok) throw new Error(json.error || String(resp.status));
   return json;

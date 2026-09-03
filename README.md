@@ -41,12 +41,39 @@ filters the Files panel and the object list below it — every schema of the wor
 not, is searched, by the objects' names but also by the names of the elements and attributes inside
 a declaration (a message's parts) and by the documentation, the reason being shown in grey after a
 listed object; **File ▸ Validate an XML file…** checks a
-document against the shown schema with the JDK's validator, from the schema's file on disk (imports
-included, so the schema needs a location: a file opened through the server's dialog or a folder); the
-problems are listed with their line and column (`samples/purchaseOrder.xml` is a document valid against
-`samples/purchaseOrder.xsd`, and passing every rule of `samples/schematron/purchaseOrder.sch`). **⤓ PNG** in the top bar saves the current view (graph or
+document against the shown schema, in a tab of its own (see *Validation* below). **⤓ PNG** in the top bar saves the current view (graph or
 text) as a PNG image, **⤓ SVG** the graph as a vector image (for documents). In the Text view, a
 **find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter. **File ▸ Quit** stops the server and closes the page.
+
+### Validation
+
+**File ▸ Validate an XML file…** (or an `.xml` file dropped on a schema's tab) checks a document
+against the shown schema and opens the outcome in a tab named `order.xml ⇢ purchaseOrder.xsd`:
+
+- against an **XSD** with the JDK's validator, from the schema's file on disk (imports included, so
+  the schema needs a location: a file opened through the server's dialog or a folder);
+- against a **Schematron** with the server's own evaluator over the JDK's XPath 1.0 engine: phases
+  (the schema's `defaultPhase`, or the one picked in the tab's *phase* list), abstract patterns
+  and their parameters, abstract rules (`extends`), `let` variables, `include`s next to the file,
+  the messages with their `value-of` and `name` filled in. Each node fires the first rule of a
+  pattern whose context matches it, as ISO Schematron says. A test the engine cannot compile —
+  XPath 2 and later, such as `xs:date()` — is listed once as *not evaluated* rather than passed silently;
+- against **both** when the workspace holds the other one too (a located `.sch` next to the XSD, or
+  the reverse). The tab's header holds one list per kind, *XSD* and *SCH*, with every file of that
+  kind the workspace knows with a location on disk (and *none*, as long as the other kind stays):
+  picking another checks the document again, and each list carries its own verdict.
+
+The problems are listed on the left with their line (and column for the XSD's), the document on
+the right with the lines marked; clicking a problem or a marked line shows the other, the arrow
+keys walk the list. A Schematron problem names the assertion, rule and pattern that fired: each is
+a link that selects it in the Schematron's tab. *errors only* hides the warnings (an assertion
+with a `role` or `flag` naming a warning), the informative reports and what could not be evaluated;
+the document's path is shown next to the verdict when the server knows it (a file opened in the
+browser comes without its folder); *↻ Run again* validates again (the document read again from disk
+when its path is known, the schemas always), *Another XML document…* keeps the schemas.
+`samples/purchaseOrder.xml` is a document valid against `samples/purchaseOrder.xsd` and passing
+every rule of `samples/schematron/purchaseOrder.sch`; its header comment says what to change to
+see the rules fire.
 
 ## Screenshots
 
@@ -267,8 +294,8 @@ first in brackets, a `value-of` shown as `{select}`, a `name` as `{name()}`. The
 
 A Schematron opens on its first phase, else its first pattern; **2 levels** from a pattern shows
 its rules and their assertions. `samples/schematron/purchaseOrder.sch` is an example over
-`samples/purchaseOrder.xsd`. (**File ▸ Validate an XML file…** validates against XML Schemas only:
-the JDK has no Schematron validator.)
+`samples/purchaseOrder.xsd`; documents are checked against it with **File ▸ Validate an XML file…**
+(see *Validation* above).
 
 XSD built-in types (`xs:string`…) appear as grey-filled nodes with a grey border (toggle with
 the **built-in types** checkbox). Objects referenced but not declared in the file (imported /

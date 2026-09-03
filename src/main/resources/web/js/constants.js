@@ -96,7 +96,12 @@ export const API = {
   WORKSPACE_OPEN: '/api/workspace/open',
   VALIDATE: '/api/validate',
 };
-export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location', STRICT: 'strict', ID: 'id', SCHEMA: 'schema' };
+export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location', STRICT: 'strict', ID: 'id', SCHEMA: 'schema', SCHEMATRON: 'schematron', PHASE: 'phase' };
+/** A validation problem (POST /api/validate): which validation found it, how bad it is (Severity on the server). */
+export const PROBLEM_SOURCE = { XSD: 'xsd', SCHEMATRON: 'schematron' };
+export const PROBLEM_SEVERITY = { ERROR: 'error', WARNING: 'warning', INFO: 'info', UNSUPPORTED: 'unsupported' };
+/** The Schematron phase running every pattern (SchematronValidator.ALL_PHASES). */
+export const ALL_PHASES = '#ALL';
 export const HTTP = {
   POST: 'POST',
   CONTENT_TYPE_HEADER: 'Content-Type',
@@ -112,6 +117,10 @@ export const REMOTE_LOCATION_MARK = '://';
 export const SCHEMA_FILE_PATTERN = /\.(xsd|wsdl|sch|xml)$/i;
 /** Files of an opened folder that are opened as tabs. */
 export const XSD_FILE_PATTERN = /\.(xsd|wsdl|sch)$/i;
+/** What a not yet parsed workspace file is, by its name: an XML Schema, a Schematron (a document to validate: XML_FILE_PATTERN). */
+export const XSD_ONLY_FILE_PATTERN = /\.xsd$/i;
+export const SCHEMATRON_FILE_PATTERN = /\.sch$/i;
+export const XML_FILE_PATTERN = /\.xml$/i;
 /** At most this many schemas of a folder opened in the browser are listed. */
 export const MAX_FOLDER_FILES = 2000;
 /** A folder, a workspace or a set of linked schemas larger than this is only listed in the Files panel: one tab opens. */
@@ -132,6 +141,7 @@ export const STORAGE_KEY = {
   FILES_COLLAPSED: 'xsdviewer.filesCollapsed',
   COMPARE_BUSINESS_ONLY: 'xsdviewer.compareBusinessOnly',
   COMPARE_DIFF_ONLY: 'xsdviewer.compareDiffOnly',
+  VALIDATE_ERRORS_ONLY: 'xsdviewer.validateErrorsOnly',
   LANGUAGE: 'xsdviewer.language',
   /** Read by js/theme-boot.js too, before the modules load. */
   THEME: 'xsdviewer.theme',

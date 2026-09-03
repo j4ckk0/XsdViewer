@@ -49,9 +49,21 @@ public final class JsonKey {
     // POST /api/validate
     public static final String VALID = "valid";
     public static final String PROBLEMS = "problems";
+    /** Of a problem: which validation found it ({@code xsd} / {@code schematron}), how bad, where, what. */
+    public static final String SOURCE = "source";
     public static final String SEVERITY = "severity";
     public static final String COLUMN = "column";
     public static final String MESSAGE = "message";
+    /** Of a Schematron problem: the path of the node in the document, and the assertion / rule / pattern (node ids of the Schematron's graph) and test that fired; only when known. */
+    public static final String LOCATION = "location";
+    public static final String ASSERTION = "assertion";
+    public static final String RULE = "rule";
+    public static final String PATTERN = "pattern";
+    public static final String TEST = "test";
+    /** Of a Schematron validation: the phases the schema declares, the one run, the number of tests evaluated. */
+    public static final String PHASES = "phases";
+    public static final String PHASE = "phase";
+    public static final String CHECKED = "checked";
     public static final String EDGES = "edges";
     public static final String FROM = "from";
     public static final String TO = "to";

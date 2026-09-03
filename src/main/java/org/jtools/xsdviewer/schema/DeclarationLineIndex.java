@@ -101,20 +101,30 @@ final class DeclarationLineIndex {
         return result.stream().mapToInt(Integer::intValue).toArray();
     }
 
-    /** The line of the '<' of the start tag the locator points after (a tag spread over several lines gets its first). */
+    /** A place in the text, 1-based. */
+    record Position(int line, int column) {}
+
     private static int startTagLine(String text, int[] lineStarts, Locator locator) {
+        return startTag(text, lineStarts, locator).line();
+    }
+
+    /** Where the '<' of the start tag the locator points after is (a tag spread over several lines gets its first line). */
+    static Position startTag(String text, int[] lineStarts, Locator locator) {
         int line = locator.getLineNumber();
         int col = locator.getColumnNumber();
         if (line > 0 && line <= lineStarts.length) {
             int offset = Math.min(text.length(), lineStarts[line - 1] + Math.max(0, col - 1));
             int lt = text.lastIndexOf('<', Math.max(0, offset - 1));
-            if (lt >= 0) line = lineOf(lineStarts, lt);
+            if (lt >= 0) {
+                line = lineOf(lineStarts, lt);
+                col = lt - lineStarts[line - 1] + 1;
+            }
         }
-        return line;
+        return new Position(line, col);
     }
 
     /** Offset of the first character of each line. */
-    private static int[] lineStarts(String text) {
+    static int[] lineStarts(String text) {
         List<Integer> starts = new ArrayList<>();
         starts.add(0);
         for (int i = 0; i < text.length(); i++) {

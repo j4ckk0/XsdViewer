@@ -71,6 +71,8 @@ final class SchematronParser {
     private final Map<Element, Integer> ranks = new IdentityHashMap<>();
     private final List<Pending> pending = new ArrayList<>();
     private final Set<String> ids = new HashSet<>();
+    /** The id of the node each declaring element got: what {@link SchematronValidator} reports a firing assertion as. */
+    private final Map<Element, String> elementIds = new IdentityHashMap<>();
     private int patterns;
 
     private SchematronParser(int[] lines) {
@@ -79,7 +81,15 @@ final class SchematronParser {
 
     /** The graph of a Schematron file: {@code root} is its root element, {@code text} the file (for the line numbers). */
     static SchemaGraph parse(Element root, String text) throws Exception {
-        SchematronParser parser = new SchematronParser(DeclarationLineIndex.elementLines(text));
+        return parse(root, new SchematronParser(DeclarationLineIndex.elementLines(text))).graph;
+    }
+
+    /** The node id of each declaring element of {@code root} (phases, patterns, rules, assertions, diagnostics), without line numbers. */
+    static Map<Element, String> elementIds(Element root) {
+        return parse(root, new SchematronParser(new int[0])).elementIds;
+    }
+
+    private static SchematronParser parse(Element root, SchematronParser parser) {
         parser.rank(root);
         if (SchematronVocabulary.SCHEMA.equals(root.getLocalName())) {
             for (Element c : children(root)) parser.topLevel(c);
@@ -87,7 +97,7 @@ final class SchematronParser {
             parser.topLevel(root);   // a fragment: a pattern, a rule, a phase... to be included by a schema
         }
         parser.resolve();
-        return parser.graph;
+        return parser;
     }
 
     private void rank(Element e) {
@@ -212,6 +222,7 @@ final class SchematronParser {
         String id = SchemaGraph.nodeId(kind, key);
         for (int n = 2; !ids.add(id); n++) id = SchemaGraph.nodeId(kind, key + DUPLICATE_MARK + n);
         graph.nodes.put(id, new SchemaGraph.Node(id, kind, name, "", line(decl), doc).withXpath(xpath));
+        elementIds.put(decl, id);
         return id;
     }
 

@@ -149,6 +149,23 @@
       </div>
       <div id="compareBody"><table id="compareTable"></table></div>
     </div>
+    <div id="validation" class="view hidden">
+      <div id="validationHeader">
+        <div><span id="validateTitle"></span> <span id="validatePath" class="muted"></span><br><span id="validateSummary" class="muted"></span></div>
+        <span id="validateSchemas"></span>
+        <label id="validatePhaseBox" class="opt hidden" data-i18n-title="validate.phase.title"><span data-i18n="validate.phase">phase</span> <select id="validatePhase"></select></label>
+        <label class="opt" data-i18n-title="validate.errorsOnly.title">
+          <input type="checkbox" id="validateErrorsOnly"> <span data-i18n="validate.errorsOnly">errors only</span>
+        </label>
+        <button id="validateRerun" type="button" class="menubtn" data-i18n="validate.rerun" data-i18n-title="validate.rerun.title">↻ Run again</button>
+        <button id="validateAnother" type="button" class="menubtn" data-i18n="validate.another" data-i18n-title="validate.another.title">Another document…</button>
+        <button id="validateClose" type="button" class="menubtn" data-i18n="validate.close">Close</button>
+      </div>
+      <div id="validationBody">
+        <div id="validateProblems" role="list" aria-label="Problems"></div>
+        <div id="validateDoc"></div>
+      </div>
+    </div>
   </main>
 
   <aside id="details" class="hidden" role="complementary" aria-label="Details">
@@ -177,13 +194,6 @@
 <input type="file" id="fileInput" accept=".xsd,.wsdl,.sch,.xml,text/xml,application/xml" multiple hidden>
 <input type="file" id="folderInput" webkitdirectory hidden>
 <input type="file" id="validateInput" accept=".xml,text/xml,application/xml" hidden>
-
-<dialog id="validateDialog">
-  <h2 id="validateTitle" data-i18n="validate.title">Validation</h2>
-  <p id="validateSummary"></p>
-  <div id="validateProblems"></div>
-  <div class="actions"><button id="validateClose" type="button" class="menubtn" data-i18n="validate.close">Close</button></div>
-</dialog>
 
 <script type="module" src="js/app.js"></script>
 </body>

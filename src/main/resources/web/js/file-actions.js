@@ -12,7 +12,9 @@ import { loadInto } from './schema-loader.js';
 import { session } from './state.js';
 import { activateTab, closeAllTabs, newTab, resetTab } from './tabs.js';
 import { toast, toastServerError } from './toast.js';
+import { canValidate, replaceDocument, validateText } from './validate.js';
 import { applyWorkspace } from './workspace-actions.js';
+import { XML_FILE_PATTERN } from './constants.js';
 
 /** File ▸ Open…: the server's native dialog when it has a display (files then come with their location), else the browser's. */
 export async function openSchemas() {
@@ -24,10 +26,19 @@ export async function openSchemas() {
   }
 }
 
-/** Opens files from the browser's file dialog / a drop: the first one in the current tab if it is empty, the others in new tabs. */
+/**
+ * Opens files from the browser's file dialog / a drop: the first one in the current tab if it is empty, the others in new tabs.
+ * An .xml file dropped on a schema that can be validated, or on a validation, is a document to validate, not a schema to open.
+ */
 export async function openFiles(files) {
+  const documents = files.filter(f => XML_FILE_PATTERN.test(f.name) && (canValidate() || session.active.validation));
+  for (const doc of documents) {
+    if (session.active.validation) await replaceDocument(doc.name, await doc.text());
+    else await validateText(doc.name, await doc.text());
+  }
+  const schemas = files.filter(f => !documents.includes(f));
   await busy(t(MSG.BUSY_OPENING), async () => {
-    for (const file of files) await openInFreshTab(file.name, await file.text(), null);
+    for (const file of schemas) await openInFreshTab(file.name, await file.text(), null);
   });
 }
 
@@ -39,7 +50,7 @@ export async function openServerFiles(files) {
 }
 
 async function openInFreshTab(name, text, path) {
-  if (session.active.model) {
+  if (session.active.model || session.active.compare || session.active.validation) {
     activateTab(newTab());
     renderPage();
   }

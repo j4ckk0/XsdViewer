@@ -196,7 +196,7 @@ html, body {
 
 /* ---- layout ------------------------------------------------------------------------ */
 
-#aboutDialog, #validateDialog {
+#aboutDialog {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 20px 24px;
@@ -205,18 +205,10 @@ html, body {
   background: var(--surface);
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
-#aboutDialog::backdrop, #validateDialog::backdrop { background: rgba(0,0,0,.3); }
-/* the validation dialog: the verdict, then the problems with where they are */
-#validateDialog { max-width: min(900px, 90vw); }
-#validateDialog .valid { color: var(--green); font-weight: 600; }
-#validateDialog .invalid { color: var(--diff-del-fg); font-weight: 600; }
-#validateProblems { max-height: 50vh; overflow: auto; font-size: 12px; }
-#validateProblems .problem { padding: 4px 0; border-top: 1px solid var(--sep); }
-#validateProblems .problem .meta { display: inline-block; min-width: 10em; color: var(--muted); }
-#validateProblems .problem.warning { color: var(--muted); }
-#aboutDialog h2, #validateDialog h2 { margin: 0 0 8px; font-size: 18px; }
-#aboutDialog p, #validateDialog p { margin: 6px 0; }
-#aboutDialog .muted, #validateDialog .muted { color: var(--muted); font-size: 12px; }
+#aboutDialog::backdrop { background: rgba(0,0,0,.3); }
+#aboutDialog h2 { margin: 0 0 8px; font-size: 18px; }
+#aboutDialog p { margin: 6px 0; }
+#aboutDialog .muted { color: var(--muted); font-size: 12px; }
 #aboutDialog a { color: var(--accent); word-break: break-all; }
 #aboutDialog .actions { margin-top: 14px; text-align: right; }
 #aboutDialog .actions button { border-color: var(--border); }
@@ -398,6 +390,9 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .dtab.active { background: var(--bg); border-color: var(--border); color: var(--text); margin-bottom: -1px; height: 29px; }
 .dtab .tname { overflow: hidden; text-overflow: ellipsis; }
 .dtab.ctab .tname::before { content: "⇄ "; color: var(--accent); }
+.dtab.vtab.pending .tname::before { content: "… "; color: var(--muted); }
+.dtab.vtab.valid .tname::before { content: "✓ "; color: var(--green); }
+.dtab.vtab.invalid .tname::before { content: "✗ "; color: var(--diff-del-fg); }
 .dtab .tclose {
   font: inherit;
   color: inherit;
@@ -633,6 +628,74 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .legend .lg.wsdl, .legend .lg.schematron { display: none; }
 .legend.wsdl .lg.wsdl, .legend.schematron .lg.schematron { display: inline; }
 .legend.schematron .lg.xsd { display: none; }
+
+/* ---- validation: the verdict and the schemas above, the problems on the left, the document on the right ---- */
+
+#validation { display: flex; flex-direction: column; min-height: 0; }
+#validationHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  flex-wrap: wrap;
+}
+#validationHeader > div:first-child { flex: 1; min-width: 200px; }
+#validationHeader .muted { color: var(--muted); font-size: 12px; }
+#validateTitle { font-weight: 600; }
+#validatePath { font-size: 11px; word-break: break-all; }
+#validateTitle.valid { color: var(--green); }
+#validateTitle.invalid { color: var(--diff-del-fg); }
+#validateSchemas { display: flex; gap: 8px; }
+.vchip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 8px; border-radius: 12px; font-size: 12px;
+  background: var(--chip); border: 1px solid var(--border);
+}
+.vchip.valid { border-color: var(--green); }
+.vchip.invalid { border-color: var(--diff-del-fg); }
+.vchip select { font: inherit; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 1px 2px; max-width: 220px; }
+.vchip .vverdict { font-weight: 600; }
+.vchip.valid .vverdict { color: var(--green); }
+.vchip.invalid .vverdict { color: var(--diff-del-fg); }
+.vsrc { font-size: 10px; font-weight: 700; letter-spacing: .04em; color: var(--muted); text-transform: uppercase; }
+#validatePhase { font: inherit; font-size: 12px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; }
+#validationBody { flex: 1; display: flex; min-height: 0; }
+#validateProblems { flex: 0 0 42%; min-width: 280px; overflow: auto; border-right: 1px solid var(--border); font-size: 12px; }
+#validateDoc {
+  flex: 1; overflow: auto; padding: 8px 0;
+  font: 12px/1.5 ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  white-space: pre;
+}
+.vprob {
+  display: grid; grid-template-columns: 14px auto auto 1fr; gap: 4px 8px; align-items: baseline;
+  padding: 6px 12px; border-bottom: 1px solid var(--sep); cursor: pointer; outline: none;
+}
+.vprob:hover { background: var(--row-hover); }
+.vprob.selected, .vprob:focus-visible { background: var(--selected); }
+.vprob .vsev { width: 10px; height: 10px; border-radius: 50%; background: var(--c-external); align-self: center; }
+.vprob.warning .vsev { background: var(--amber); }
+.vprob.info .vsev { background: var(--blue); }
+.vprob.unsupported .vsev { background: var(--muted); }
+.vprob.unsupported .vmsg { color: var(--muted); }
+.vprob .vwhere { color: var(--muted); white-space: nowrap; }
+.vprob .vmsg { overflow-wrap: anywhere; }
+.vprob .vmsg code { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; font-size: 11px; color: var(--muted); }
+.vlinks { margin-top: 3px; font-size: 11px; }
+.vlinks .meta { color: var(--muted); }
+.vlink { color: var(--accent); cursor: pointer; }
+.vlink:hover { text-decoration: underline; }
+.vlink .dot { width: 7px; height: 7px; margin-right: 3px; }
+.vnone { padding: 12px; }
+#validateDoc .line.vline .ln { font-weight: 700; }
+#validateDoc .line.vline.error .ln { color: var(--c-external); }
+#validateDoc .line.vline.warning .ln { color: var(--amber); }
+#validateDoc .line.vline.info .ln { color: var(--blue); }
+#validateDoc .line.vline { cursor: pointer; }
+#validateDoc .line.vline.error .code { background: var(--diff-del-bg); }
+#validateDoc .line.vline.warning .code { background: var(--hl); }
+#validateDoc .line.hl { box-shadow: inset 3px 0 0 var(--accent); }
 
 /* ---- empty state ------------------------------------------------------------------- */
 

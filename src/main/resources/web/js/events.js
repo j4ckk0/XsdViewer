@@ -1,5 +1,6 @@
 /** Wiring of the page's controls to the actions: menu, tabs, keyboard, drag and drop, clicks in the views. */
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
+import * as validation from './validate.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
@@ -19,7 +20,6 @@ import { MSG } from './message-keys.js';
 import { session } from './state.js';
 import { clearFind, findStep, focusFind, refreshFind } from './text-find.js';
 import { toggleTheme } from './theme.js';
-import { closeValidation, validateFile, validateText } from './validate.js';
 import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderNavigation, tabToShow } from './tabs.js';
 import { toggleAutoStop } from './settings.js';
@@ -62,9 +62,8 @@ function wireSettingsMenu() {
 
 function wireHelpMenu() {
   $(ID.MENU_ABOUT).addEventListener('click', () => { closeMenus(); showAbout(); });
-  $(ID.MENU_VALIDATE).addEventListener('click', () => { closeMenus(); validateFile(); });
+  $(ID.MENU_VALIDATE).addEventListener('click', () => { closeMenus(); validation.validateFile(); });
   $(ID.MENU_OPEN_ALL).addEventListener('click', () => { closeMenus(); openAllListed(); });
-  $(ID.VALIDATE_CLOSE).addEventListener('click', closeValidation);
   $(ID.ABOUT_CLOSE).addEventListener('click', closeAbout);
 }
 
@@ -81,7 +80,12 @@ function wireFileMenu() {
   $(ID.MENU_QUIT).addEventListener('click', () => { closeMenu(); quit(); });
   $(ID.FILE_INPUT).addEventListener('change', (e) => { openFiles([...e.target.files]); e.target.value = ''; });
   $(ID.FILE_INPUT).addEventListener('cancel', () => { session.pendingJump = null; });
-  $(ID.VALIDATE_INPUT).addEventListener('change', async (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) validateText(f.name, await f.text()); });
+  $(ID.VALIDATE_INPUT).addEventListener('change', async (e) => {   // the browser's file input: a document for the shown schema, or another one for the shown validation
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    if (session.active.validation) validation.replaceDocument(f.name, await f.text());
+    else validation.validateText(f.name, await f.text());
+  });
   $(ID.MENU_OPEN_FOLDER).addEventListener('click', () => { closeMenu(); openFolder(); });
   $(ID.FOLDER_INPUT).addEventListener('change', (e) => {
     const files = [...e.target.files];
@@ -126,6 +130,7 @@ function wireDocumentTabs() {
   for (const id of [ID.COMPARE_BUSINESS_ONLY, ID.COMPARE_DIFF_ONLY]) {
     $(id).addEventListener('change', () => { rememberOptions(); if (session.active.compare) renderCompare(); });
   }
+  wireValidation();
   // a row shows / hides its differences; its ⧉ button, or a double-click, opens them in a tab of their own
   $(ID.COMPARE_TABLE).addEventListener('click', (e) => {
     const row = e.target.closest(selector(CLS.COMPARE_ROW));
@@ -139,6 +144,43 @@ function wireDocumentTabs() {
   });
 }
 
+/** The validation tab: its buttons, the phase, the problem rows (a click selects, arrows walk, a link selects the assertion in the Schematron), the document's lines. */
+function wireValidation() {
+  validation.initOptions();
+  validation.onChange(renderPage);
+  $(ID.VALIDATE_ERRORS_ONLY).addEventListener('change', () => { validation.rememberOptions(); if (session.active.validation) validation.renderValidation(); });
+  $(ID.VALIDATE_PHASE).addEventListener('change', (e) => validation.setPhase(e.target.value));
+  $(ID.VALIDATE_SCHEMAS).addEventListener('change', (e) => { if (e.target.dataset[DATA.SOURCE]) validation.setSchema(e.target.dataset[DATA.SOURCE], e.target.value); });
+  $(ID.VALIDATE_RERUN).addEventListener('click', () => validation.rerun());
+  $(ID.VALIDATE_ANOTHER).addEventListener('click', () => validation.chooseAnotherDocument());
+  $(ID.VALIDATE_CLOSE).addEventListener('click', () => { if (session.active.validation) closeTab(session.active); renderPage(); });
+  $(ID.VALIDATE_PROBLEMS).addEventListener('click', async (e) => {
+    const link = e.target.closest(selector(CLS.VALIDATE_LINK));
+    if (link) {
+      const entry = validation.schematronEntryOf(session.active);
+      const tab = entry && await ensureTab(entry);
+      if (tab) jumpTo(tab, link.dataset[DATA.ID]);
+      return;
+    }
+    const row = e.target.closest(selector(CLS.VALIDATE_PROBLEM));
+    if (row) validation.selectProblem(+row.dataset[DATA.PROBLEM_INDEX]);
+  });
+  $(ID.VALIDATE_PROBLEMS).addEventListener('keydown', (e) => {
+    if (e.key === KEY.ARROW_DOWN) { e.preventDefault(); validation.stepProblem(1); }
+    else if (e.key === KEY.ARROW_UP) { e.preventDefault(); validation.stepProblem(-1); }
+    else if (e.key === KEY.ENTER || e.key === KEY.SPACE) {
+      const row = e.target.closest(selector(CLS.VALIDATE_PROBLEM));
+      if (row) { e.preventDefault(); validation.selectProblem(+row.dataset[DATA.PROBLEM_INDEX]); }
+    }
+  });
+  $(ID.VALIDATE_DOC).addEventListener('click', (e) => {
+    const line = e.target.closest(selector(CLS.LINE));
+    if (!line) return;
+    const i = validation.problemAtLine(+line.dataset[DATA.LINE_NUMBER]);
+    if (i >= 0) validation.selectProblem(i, false);
+  });
+}
+
 function wireKeyboard() {
   document.addEventListener('keydown', (e) => {
     const ctrl = e.ctrlKey || e.metaKey;
@@ -147,7 +189,7 @@ function wireKeyboard() {
     if (ctrl && e.key.toLowerCase() === KEY.FIND) {
       e.preventDefault();
       // in the Text view, the find bar; elsewhere the object search
-      if (session.active.model && !session.active.compare && session.active.view === VIEW.TEXT) focusFind();
+      if (session.active.model && !session.active.compare && !session.active.validation && session.active.view === VIEW.TEXT) focusFind();
       else { $(ID.SEARCH).focus(); $(ID.SEARCH).select(); }
     }
     if (e.altKey && e.key === KEY.ARROW_LEFT) goBack();

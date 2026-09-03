@@ -1,10 +1,25 @@
-/** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. */
+/** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. A tab shows a file, a comparison (compare.js) or a validation (validate.js). */
 import { WORKSPACE_FILE_SUFFIX } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { renderFileList } from './file-list.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { newTabState, newWorkspaceState, session } from './state.js';
+
+const SCHEMA_SEPARATOR = ' + ';
+
+/** The name of a validation tab: "order.xml ⇢ purchaseOrder.xsd + purchaseOrder.sch". */
+export function validationTitle(tab) {
+  const v = tab.validation;
+  return t(MSG.VALIDATE_TAB, v.name, [v.xsd, v.sch].filter(Boolean).map(s => s.name).join(SCHEMA_SEPARATOR));
+}
+
+/** The state class of a validation tab: pending, valid, invalid. */
+export function validationStatus(tab) {
+  const v = tab.validation;
+  if (!v.result) return v.error ? CLS.INVALID : CLS.PENDING;
+  return v.result.valid ? CLS.VALID : CLS.INVALID;
+}
 
 /** The name of a comparison tab: "v1 ⇄ v2", or "x.xsd (v1 ⇄ v2)" for the differences of one file. */
 export function compareTitle(tab) {
@@ -41,7 +56,7 @@ const PATH_SEPARATORS = /[\\/]/;
 export const tabsOf = (ws) => session.tabs.filter(tab => tab.workspace === ws);
 export const activeWorkspace = () => session.active.workspace;
 /** An unsaved workspace knowing no file: it can take the next workspace opened. */
-export const isEmptyWorkspace = (ws) => !ws.path && !ws.files.length && tabsOf(ws).every(tab => !tab.model && !tab.compare);
+export const isEmptyWorkspace = (ws) => !ws.path && !ws.files.length && tabsOf(ws).every(tab => !tab.model && !tab.compare && !tab.validation);
 
 /** The workspace file's name without its suffix, else the name it was given (an opened folder), else "Workspace n". */
 export function workspaceName(ws) {
@@ -148,8 +163,9 @@ export function renderNavigation() {
   $(ID.WORKSPACES).innerHTML = chips;
   let tabs = '';
   for (const tab of tabsOf(session.active.workspace)) {
-    const tabName = tab.compare ? compareTitle(tab) : tab.fileName || t(MSG.TAB_UNTITLED);
-    tabs += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + (tab.compare ? ' ' + CLS.COMPARE_TAB : '') + '"'
+    const tabName = tab.compare ? compareTitle(tab) : tab.validation ? validationTitle(tab) : tab.fileName || t(MSG.TAB_UNTITLED);
+    tabs += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + (tab.compare ? ' ' + CLS.COMPARE_TAB : '')
+      + (tab.validation ? ' ' + CLS.VALIDATION_TAB + ' ' + validationStatus(tab) : '') + '"'
       + dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(tab)) + ' title="' + esc(tab.path || tabName) + '">'
       + '<span class="' + CLS.DOC_TAB_NAME + '">' + esc(tabName) + '</span>'
       + '<button class="' + CLS.DOC_TAB_CLOSE + '" type="button" title="' + esc(t(MSG.TAB_CLOSE)) + '">×</button></div>';

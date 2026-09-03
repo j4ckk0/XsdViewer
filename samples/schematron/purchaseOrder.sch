@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Business rules over the purchase order schema (../purchaseOrder.xsd): what XSD cannot say —
      dates that must agree, amounts to flag, a comment required on expensive items. -->
-<sch:schema xmlns:sch="http://purl.oclc.org/dsdl/schematron" queryBinding="xslt2" defaultPhase="full">
+<sch:schema xmlns:sch="http://purl.oclc.org/dsdl/schematron" queryBinding="xslt" defaultPhase="full">
   <sch:title>Purchase order business rules</sch:title>
   <sch:ns prefix="po" uri="http://example.com/po"/>
 
@@ -36,7 +36,8 @@
     <sch:title>Dates</sch:title>
     <sch:p>The dates of an order must agree with each other.</sch:p>
     <sch:rule context="po:item[po:shipDate]">
-      <sch:assert test="xs:date(po:shipDate) >= xs:date(../../@orderDate)" flag="fatal">An item cannot ship before its order date.</sch:assert>
+      <!-- XPath 1.0 has no dates: an ISO date without its dashes compares as a number -->
+      <sch:assert test="translate(po:shipDate, '-', '') >= translate(../../@orderDate, '-', '')" flag="fatal">An item cannot ship before its order date.</sch:assert>
     </sch:rule>
   </sch:pattern>
 

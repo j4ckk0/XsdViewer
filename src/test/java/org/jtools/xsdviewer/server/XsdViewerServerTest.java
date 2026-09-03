@@ -28,6 +28,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.InputStream;
 
@@ -136,6 +137,24 @@ class XsdViewerServerTest {
         assertEquals(400, post("/api/settings", "nonsense").statusCode());
         post("/api/settings", "{\"autoStop\": false}");
         assertFalse(UserSettings.autoStop());
+    }
+
+    @Test
+    void validatesAgainstServedSchemasOnly() throws Exception {
+        String xsd = Path.of("samples/purchaseOrder.xsd").toAbsolutePath().toString();
+        String sch = Path.of("samples/schematron/purchaseOrder.sch").toAbsolutePath().toString();
+        String xml = Files.readString(Path.of("samples/purchaseOrder.xml"));
+        assertEquals(400, post("/api/validate", xml).statusCode(), "no schema named");
+        assertEquals(404, post("/api/validate?schematron=" + sch, xml).statusCode(), "not served yet");
+        get("/api/initial");
+        get("/api/open?base=" + xsd + "&location=schematron/purchaseOrder.sch&strict=true");   // now served
+        String both = post("/api/validate?schema=" + xsd + "&schematron=" + sch, xml).body();
+        assertTrue(both.startsWith("{\"valid\":true,\"problems\":[],\"truncated\":false,\"phases\":[\"basic\",\"full\"],\"phase\":\"full\",\"checked\":14}"), both);
+        String bad = post("/api/validate?schematron=" + sch + "&phase=basic", xml.replace("<po:quantity>1</po:quantity>", "<po:quantity>120</po:quantity>")).body();
+        assertTrue(bad.contains("\"valid\":false"), bad);
+        assertTrue(bad.contains("\"source\":\"schematron\",\"severity\":\"error\",\"line\":24,\"column\":5,\"message\":\"At most 99 of Lawnmower per line.\",\"location\":\"/po:purchaseOrder/po:items/po:item[1]\",\"assertion\":\"assert:structure/po:item/po:quantity < 100\",\"rule\":\"rule:structure/po:item\",\"pattern\":\"pattern:structure\",\"test\":\"po:quantity < 100\"}"), bad);
+        assertTrue(bad.endsWith("\"phase\":\"basic\",\"checked\":6}"), bad);
+        assertEquals(400, post("/api/validate?schematron=" + sch + "&phase=nope", xml).statusCode());
     }
 
     @Test

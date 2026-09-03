@@ -13,6 +13,7 @@ export function newTabState() {
     workspace: null,    // always set
     file: null,         // the entry of workspace.files shown, when the tab shows one
     compare: null,      // {left, right} workspaces when the tab is a comparison; file: the name of the one file pair shown, when the tab shows one
+    validation: null,   // {name, path, text, xsd, sch, phase, result, error, selected} when the tab shows the validation of a document (validate.js)
     text: '',
     model: null,
     nodes: new Map(),

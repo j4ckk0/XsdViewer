@@ -77,6 +77,37 @@ SCENES = [
                  'groups': "[...document.querySelectorAll('#nodeList .group-h > span:first-child')].map(g => g.textContent).join('|')"},
          expect={'title': 'rule po:item', 'assertions': 2, 'xpath': 'po:item', 'legend': True,
                  'groups': 'Phases|Patterns|Rules|Asserts|Reports|Diagnostics'}),   # its own assert, the report of the abstract rule it extends (level 2)
+    dict(name='validation-schematron', file='samples/schematron/purchaseOrder.sch', theme='light',
+         action="const xml = (await (await fetch('/__sample/samples/purchaseOrder.xml')).text())"
+                ".replace('<po:quantity>1</po:quantity>', '<po:quantity>120</po:quantity>').replace('<po:comment>Confirm this is electric</po:comment>', '');"
+                "const v = await import('/js/validate.js'); await v.validateText('purchaseOrder.xml', xml);",
+         checks={'tab': "document.querySelector('#tabs .dtab.active').className",
+                 'title': "document.getElementById('validateTitle').textContent",
+                 'rows': "[...document.querySelectorAll('#validateProblems .vprob')].map(r => r.className.replace('vprob ', '')).join('|')",
+                 'links': "document.querySelectorAll('#validateProblems .vlink').length",
+                 'marked': "document.querySelectorAll('#validateDoc .line.vline').length",
+                 'phases': "[...document.querySelectorAll('#validatePhase option')].map(o => o.value).join('|')",
+                 'chips': "[...document.querySelectorAll('#validateSchemas select')].map(s => [...s.options].map(o => o.textContent).join(',')).join('|')"},
+         expect={'tab': 'dtab active vtab invalid', 'title': '✗ purchaseOrder.xml does not conform: 1 error', 'rows': 'warning|error selected',
+                 'links': 6, 'marked': 1, 'phases': '#ALL|basic|full', 'chips': 'none|purchaseOrder.sch'}),   # no XSD in this workspace; the Schematron cannot be dropped, being the only schema   # the report and the assert both point at item 1: one marked line
+    dict(name='validation-xsd', file='samples/purchaseOrder.xsd', theme='dark',
+         action="const xml = (await (await fetch('/__sample/samples/purchaseOrder.xml')).text()).replace('<po:zip>90952</po:zip>', '<po:zip>abc</po:zip>');"
+                "const v = await import('/js/validate.js'); await v.validateText('purchaseOrder.xml', xml);",
+         checks={'chips': "document.querySelectorAll('#validateSchemas .vchip.invalid').length",
+                 'lists': "[...document.querySelectorAll('#validateSchemas select')].map(s => [...s.options].map(o => o.textContent).join(',')).join('|')",
+                 'rows': "document.querySelectorAll('#validateProblems .vprob.error').length",
+                 'where': "document.querySelector('#validateProblems .vprob .vwhere').textContent",
+                 'highlighted': "document.querySelectorAll('#validateDoc .line.hl').length"},
+         expect={'chips': 1, 'lists': 'purchaseOrder.xsd,ext.xsd|none', 'rows': 2, 'where': 'line 13, column 25', 'highlighted': 1}),   # the datatype facet and the type: two problems on the zip line
+    dict(name='validation-switch', file='samples/purchaseOrder.xsd', theme='light',
+         action="const xml = await (await fetch('/__sample/samples/purchaseOrder.xml')).text();"
+                "const v = await import('/js/validate.js'); await v.validateText('purchaseOrder.xml', xml);"
+                "const list = document.querySelector('#validateSchemas select[data-source=\"xsd\"]'); list.value = [...list.options].find(o => o.textContent === 'ext.xsd').value;"
+                "list.dispatchEvent(new Event('change', {bubbles: true})); await new Promise(r => setTimeout(r, 800));",
+         checks={'tab': "document.querySelector('#tabs .dtab.active .tname').textContent",
+                 'valid': "document.getElementById('validateTitle').className",
+                 'rows': "document.querySelectorAll('#validateProblems .vprob.error').length"},
+         expect={'tab': 'purchaseOrder.xml ⇢ ext.xsd', 'valid': 'invalid', 'rows': 1}),   # ext.xsd declares no element: the document's root is unknown to it
     dict(name='search-member', file='samples/purchaseOrder.xsd', theme='light',
 
          action="const s = document.getElementById('search'); s.value = 'shipTo'; s.dispatchEvent(new Event('input', {bubbles: true}));",

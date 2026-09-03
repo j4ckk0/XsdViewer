@@ -65,5 +65,7 @@ public final class ApiPath {
     /** {@code /api/open}: resolve only against the directory of {@code base}. */
     public static final String PARAM_STRICT = "strict";
     public static final String PARAM_SCHEMA = "schema";
+    public static final String PARAM_SCHEMATRON = "schematron";
+    public static final String PARAM_PHASE = "phase";
     public static final String TRUE = "true";
 }

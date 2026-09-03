@@ -71,6 +71,12 @@ public final class MessageKey {
 
     // schema parsing
     public static final String NOT_A_SCHEMA = "xsd.notASchema";
+    // Schematron validation
+    public static final String NOT_A_SCHEMATRON = "sch.notASchematron";
+    public static final String PHASE_UNKNOWN = "sch.phaseUnknown";
+    public static final String ABSTRACT_PATTERN_MISSING = "sch.abstractPatternMissing";
+    public static final String ABSTRACT_RULE_MISSING = "sch.abstractRuleMissing";
+    public static final String INCLUDE_NOT_FOUND = "sch.includeNotFound";
     public static final String EXTERNAL_DECLARATION_DOC = "xsd.externalDeclarationDoc";
     public static final String BUILTIN_TYPE_DOC = "xsd.builtinTypeDoc";
 }
