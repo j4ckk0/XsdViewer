@@ -29,7 +29,6 @@ import java.util.Set;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 /**
  * Turns a Schematron ({@code sch:schema}) into a {@link SchemaGraph}: the phases, patterns, rules,
@@ -56,10 +55,6 @@ final class SchematronParser {
     private static final char DUPLICATE_MARK = '#';
     /** The name of a pattern that has neither id, name nor title: "pattern 3". */
     private static final String UNNAMED_PATTERN = "pattern ";
-    /** Around the expression a {@code value-of} or {@code name} stands for in a message: {@code {count(item)}}. */
-    private static final char PLACEHOLDER_OPEN = '{', PLACEHOLDER_CLOSE = '}';
-    private static final String NAME_FUNCTION = "name(";
-    private static final String NAME_FUNCTION_END = ")";
     private static final String ROLE_OPEN = "[", ROLE_CLOSE = "] ";
 
     /** A link to a node this file may not declare: (from, to, label), the target checked once everything is read. */
@@ -143,7 +138,7 @@ final class SchematronParser {
     private void pattern(Element pattern) {
         patterns++;
         String key = first(pattern, SchematronVocabulary.ATTR_ID, XsdVocabulary.ATTR_NAME);
-        String title = text(child(pattern, SchematronVocabulary.TITLE));
+        String title = SchematronDom.text(SchematronDom.child(pattern, SchematronVocabulary.TITLE));
         if (key == null) key = !title.isEmpty() ? title : UNNAMED_PATTERN + patterns;
         String doc = paragraphs(pattern);
         if (!title.isEmpty() && !title.equals(key)) doc = doc.isEmpty() ? title : title + '\n' + doc;
@@ -245,18 +240,12 @@ final class SchematronParser {
         return null;
     }
 
-    /** The child elements of {@code e} in a Schematron namespace. */
     private static List<Element> children(Element e) {
-        return XsdParser.children(e).stream().filter(c -> c.getNamespaceURI() != null && SchematronVocabulary.NAMESPACES.contains(c.getNamespaceURI())).toList();
+        return SchematronDom.children(e);
     }
 
     private static List<Element> children(Element e, String localName) {
-        return children(e).stream().filter(c -> localName.equals(c.getLocalName())).toList();
-    }
-
-    private static Element child(Element e, String localName) {
-        List<Element> found = children(e, localName);
-        return found.isEmpty() ? null : found.get(0);
+        return SchematronDom.children(e, localName);
     }
 
     /** The {@code p} paragraphs of a phase or pattern, one per line. */
@@ -264,34 +253,14 @@ final class SchematronParser {
         StringBuilder sb = new StringBuilder();
         for (Element p : children(e, SchematronVocabulary.PARAGRAPH)) {
             if (sb.length() > 0) sb.append('\n');
-            sb.append(text(p));
+            sb.append(SchematronDom.text(p));
         }
         return cut(sb.toString());
     }
 
     /** The text of an assertion or diagnostic: its message, a {@code value-of} shown as {@code {select}}, a {@code name} as {@code {name()}}. */
     private static String message(Element e) {
-        StringBuilder sb = new StringBuilder();
-        for (Node n = e.getFirstChild(); n != null; n = n.getNextSibling()) {
-            if (n.getNodeType() == Node.TEXT_NODE || n.getNodeType() == Node.CDATA_SECTION_NODE) {
-                sb.append(n.getNodeValue());
-            } else if (n.getNodeType() == Node.ELEMENT_NODE) {
-                Element c = (Element) n;
-                if (SchematronVocabulary.VALUE_OF.equals(c.getLocalName())) {
-                    sb.append(PLACEHOLDER_OPEN).append(c.getAttribute(SchematronVocabulary.ATTR_SELECT)).append(PLACEHOLDER_CLOSE);
-                } else if (SchematronVocabulary.NAME.equals(c.getLocalName())) {
-                    sb.append(PLACEHOLDER_OPEN).append(NAME_FUNCTION).append(c.getAttribute(SchematronVocabulary.ATTR_PATH)).append(NAME_FUNCTION_END).append(PLACEHOLDER_CLOSE);
-                } else {
-                    sb.append(message(c));   // emph, dir, span: their text
-                }
-            }
-        }
-        return cut(sb.toString().replaceAll(WHITESPACE, " ").trim());
-    }
-
-    /** The text of {@code e} with its whitespace collapsed; empty for null. */
-    private static String text(Element e) {
-        return e == null ? "" : e.getTextContent().replaceAll(WHITESPACE, " ").trim();
+        return cut(SchematronMessage.render(e, SchematronMessage.PLACEHOLDERS));
     }
 
     private static String cut(String s) {

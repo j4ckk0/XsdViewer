@@ -196,6 +196,24 @@ class SchematronValidatorTest {
         assertThrows(IllegalArgumentException.class, () -> SchematronValidator.validate(xsd, "<a/>", null));
     }
 
+    /** The contract with the graph: what a problem names is a node of the Schematron as the page parsed it. */
+    @Test
+    void problemsNameNodesOfTheGraph() throws Exception {
+        SchemaGraph graph = SchemaParser.parse(Files.readString(SCH));
+        String xml = Files.readString(XML)
+                .replace("<po:quantity>1</po:quantity>", "<po:quantity>120</po:quantity>")
+                .replace("<po:name>Alice Smith</po:name>", "<po:name> </po:name>")
+                .replace("<po:USPrice>39.98</po:USPrice>", "<po:USPrice>0</po:USPrice>");
+        SchematronValidator.Result r = SchematronValidator.validate(SCH, xml, SchematronValidator.ALL_PHASES);
+        assertEquals(3, r.problems().size(), r.problems().toString());   // the quantity, the free item, the empty name
+        for (SchematronValidator.Problem p : r.problems()) {
+            for (String id : List.of(p.assertion(), p.rule(), p.pattern())) {
+                assertTrue(graph.declares(id), id + " is a node of the graph (" + p + ")");
+            }
+            assertEquals(p.test(), graph.nodes.get(p.assertion()).xpath(), "the test is the assertion's expression");
+        }
+    }
+
     @Test
     void contextsBecomeSelections() {
         assertEquals("//po:item", SchematronValidator.selection("po:item"));

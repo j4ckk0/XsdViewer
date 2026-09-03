@@ -20,7 +20,6 @@ package org.jtools.xsdviewer.schema;
  * #L%
  */
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,9 +32,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
@@ -48,7 +47,6 @@ import javax.xml.xpath.XPathFactory;
 
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -58,11 +56,16 @@ import org.xml.sax.SAXParseException;
 /**
  * Checks an XML document against a Schematron with the JDK's XPath 1.0 engine: phases, abstract
  * patterns and their parameters, abstract rules ({@code extends}), {@code let} variables,
- * {@code include}s next to the file, the messages with {@code value-of} and {@code name} filled in
- * and the diagnostics an assertion names appended. Each node fires at most one rule per pattern (the first whose context
- * matches, as in ISO Schematron). An expression the engine cannot compile — XPath 2 and later —
- * is reported once as {@link Severity#UNSUPPORTED}, and nothing is checked there. A problem names
- * the assertion, rule and pattern as {@link SchematronParser} names them, so the page can select them.
+ * {@code include}s next to the file ({@link SchematronIncludes}), the messages with {@code value-of}
+ * and {@code name} filled in and the diagnostics an assertion names appended ({@link SchematronMessage}).
+ * Each node fires at most one rule per pattern (the first whose context matches, as in ISO
+ * Schematron). An expression the engine cannot compile — XPath 2 and later — is reported once as
+ * {@link Severity#UNSUPPORTED}, and nothing is checked there. A problem names the assertion, rule
+ * and pattern as {@link SchematronParser} names them, so the page can select them.
+ * <p>
+ * What changes as the evaluation goes down the schema — the variables in force, the parameters of
+ * the abstract pattern being instantiated — travels as a {@link Frame}; the validator itself only
+ * accumulates the problems.
  */
 public final class SchematronValidator {
 
@@ -70,15 +73,11 @@ public final class SchematronValidator {
     public static final String ALL_PHASES = "#ALL";
     /** Problems beyond this many are not collected. */
     static final int MAX_PROBLEMS = 200;
-    private static final int MAX_INCLUDE_DEPTH = 16;
-    private static final String REMOTE_LOCATION_MARK = "://";
     private static final String WARNING_ROLE = "warn", INFO_ROLE = "info";
-    /** Between an assertion's message and each diagnostic it names. */
-    private static final String DIAGNOSTIC_SEPARATOR = " — ";
     private static final String UNION = "|", DESCENDANTS = "//", ROOT = "/";
     private static final String WHITESPACE = "\\s+";
-    private static final String PLACEHOLDER = "{%s}";
-    private static final String ATTRIBUTE_STEP = "/@";
+    /** Between an assertion's message and each diagnostic it names. */
+    private static final String DIAGNOSTIC_SEPARATOR = " — ";
 
     /**
      * A firing assertion (or a failure to evaluate one): where in the document ({@code line},
@@ -91,26 +90,50 @@ public final class SchematronValidator {
     /** The outcome: valid when no assertion of error severity fired; the phases the schema declares and the one run; how many tests were evaluated. */
     public record Result(boolean valid, List<Problem> problems, boolean truncated, List<String> phases, String phase, int checked) {}
 
-    /** A variable scope: the {@code let}s in force, innermost last. */
-    private record Scope(Map<String, Object> variables) {
-        Scope child() { return new Scope(new LinkedHashMap<>(variables)); }
+    /**
+     * What an expression is evaluated with at one point of the schema: the {@code let} variables in
+     * force (innermost last) and the parameters of the abstract pattern being instantiated
+     * ({@code $name} → value; none outside one). Immutable: a level of the schema gets its own.
+     */
+    private record Frame(Map<String, Object> variables, Map<String, String> params) {
+        static final Frame ROOT = new Frame(Map.of(), Map.of());
+
+        Frame with(String variable, Object value) {
+            Map<String, Object> v = new LinkedHashMap<>(variables);
+            v.put(variable, value);
+            return new Frame(v, params);
+        }
+
+        Frame withParams(Map<String, String> p) {
+            return new Frame(variables, p);
+        }
+
+        /** {@code $name} replaced by the parameter's value, longest names first. */
+        String substitute(String expression) {
+            if (params.isEmpty()) return expression;
+            String s = expression;
+            List<String> names = new ArrayList<>(params.keySet());
+            names.sort((a, b) -> b.length() - a.length());
+            for (String n : names) s = s.replaceAll("\\$" + Pattern.quote(n) + "(?![\\w.-])", Matcher.quoteReplacement(params.get(n)));
+            return s;
+        }
     }
 
-    private final Path file;
+    private final Element schema;
     private final Document instance;
     private final XPath xpath = XPathFactory.newInstance().newXPath();
     private final Map<String, String> prefixes = new HashMap<>();
     private final Map<String, XPathExpression> compiled = new HashMap<>();
+    /** The node id of each declaring element ({@link SchematronParser#elementIds}). */
     private final Map<Element, String> ids;
+    /** The frame of the expression being evaluated: what the variable resolver reads. */
+    private Frame evaluating = Frame.ROOT;
     private final List<Problem> problems = new ArrayList<>();
     private boolean truncated;
     private int checked;
-    private Scope scope = new Scope(new LinkedHashMap<>());
-    /** The parameters of the abstract pattern being run as an instance ({@code $name} → value), empty otherwise. */
-    private Map<String, String> params = Map.of();
 
-    private SchematronValidator(Path file, Document instance, Map<Element, String> ids) {
-        this.file = file;
+    private SchematronValidator(Element schema, Document instance, Map<Element, String> ids) {
+        this.schema = schema;
         this.instance = instance;
         this.ids = ids;
         xpath.setNamespaceContext(new NamespaceContext() {
@@ -123,7 +146,10 @@ public final class SchematronValidator {
             @Override
             public Iterator<String> getPrefixes(String uri) { return Collections.emptyIterator(); }
         });
-        xpath.setXPathVariableResolver(name -> scope.variables().get(name.getLocalPart()));
+        xpath.setXPathVariableResolver(name -> evaluating.variables().get(name.getLocalPart()));
+        for (Element ns : SchematronDom.children(schema, SchematronVocabulary.NS)) {
+            prefixes.put(ns.getAttribute(SchematronVocabulary.ATTR_PREFIX), ns.getAttribute(SchematronVocabulary.ATTR_URI));
+        }
     }
 
     /**
@@ -135,104 +161,103 @@ public final class SchematronValidator {
      * @throws IllegalArgumentException when the file is not a Schematron or the phase unknown
      */
     public static Result validate(Path schematronFile, String xml, String phase) throws Exception {
-        Document sch = SecureXmlFactories.newDocumentBuilder().parse(schematronFile.toFile());
-        Element root = sch.getDocumentElement();
-        if (root.getNamespaceURI() == null || !SchematronVocabulary.NAMESPACES.contains(root.getNamespaceURI())
-                || !SchematronVocabulary.SCHEMA.equals(root.getLocalName())) {
+        Element root = SecureXmlFactories.newDocumentBuilder().parse(schematronFile.toFile()).getDocumentElement();
+        if (!SchematronDom.isSchematron(root) || !SchematronVocabulary.SCHEMA.equals(root.getLocalName())) {
             throw new IllegalArgumentException(Messages.get(MessageKey.NOT_A_SCHEMATRON, root.getTagName()));
         }
         Document instance = LocatedDocument.parse(xml);
-        SchematronValidator v = new SchematronValidator(schematronFile, instance, new IdentityHashMap<>());
-        v.includes(root, 0);
-        v.ids.putAll(SchematronParser.elementIds(root));
-        return v.run(root, phase);
+        List<String> unread = SchematronIncludes.resolve(root, schematronFile);
+        SchematronValidator v = new SchematronValidator(root, instance, SchematronParser.elementIds(root));
+        for (String why : unread) v.unsupported(why, "", "", "", "");
+        return v.run(phase);
     }
 
-    private Result run(Element schema, String phase) throws XPathExpressionException {
-        for (Element ns : children(schema, SchematronVocabulary.NS)) prefixes.put(ns.getAttribute(SchematronVocabulary.ATTR_PREFIX), ns.getAttribute(SchematronVocabulary.ATTR_URI));
-        List<String> phases = children(schema, SchematronVocabulary.PHASE).stream()
+    private Result run(String phase) throws XPathExpressionException {
+        List<String> phases = SchematronDom.children(schema, SchematronVocabulary.PHASE).stream()
                 .map(p -> p.getAttribute(SchematronVocabulary.ATTR_ID)).filter(id -> !id.isEmpty()).toList();
-        if (phase == null || phase.isEmpty()) phase = schema.hasAttribute(SchematronVocabulary.ATTR_DEFAULT_PHASE) ? schema.getAttribute(SchematronVocabulary.ATTR_DEFAULT_PHASE) : ALL_PHASES;
+        if (phase == null || phase.isEmpty()) {
+            phase = schema.hasAttribute(SchematronVocabulary.ATTR_DEFAULT_PHASE) ? schema.getAttribute(SchematronVocabulary.ATTR_DEFAULT_PHASE) : ALL_PHASES;
+        }
         Set<String> active = null;
         if (!ALL_PHASES.equals(phase)) {
-            Element p = byId(schema, SchematronVocabulary.PHASE, phase);
+            Element p = SchematronDom.byId(schema, SchematronVocabulary.PHASE, phase);
             if (p == null) throw new IllegalArgumentException(Messages.get(MessageKey.PHASE_UNKNOWN, phase));
-            active = children(p, SchematronVocabulary.ACTIVE).stream().map(a -> a.getAttribute(SchematronVocabulary.ATTR_PATTERN)).collect(Collectors.toSet());
+            active = SchematronDom.children(p, SchematronVocabulary.ACTIVE).stream().map(a -> a.getAttribute(SchematronVocabulary.ATTR_PATTERN)).collect(Collectors.toSet());
         }
-        lets(schema, instance);
-        Scope schemaScope = scope;
-        for (Element pattern : children(schema, SchematronVocabulary.PATTERN)) {
-            if (SchematronVocabulary.TRUE.equals(pattern.getAttribute(SchematronVocabulary.ATTR_ABSTRACT))) continue;
+        Frame frame = lets(schema, instance, Frame.ROOT);
+        for (Element pattern : SchematronDom.children(schema, SchematronVocabulary.PATTERN)) {
+            if (isAbstract(pattern)) continue;
             if (active != null && !active.contains(pattern.getAttribute(SchematronVocabulary.ATTR_ID))) continue;
-            scope = schemaScope.child();
-            params = Map.of();
+            String patternId = ids.get(pattern);
             Element body = pattern;
-            if (pattern.hasAttribute(SchematronVocabulary.ATTR_IS_A)) {
+            Frame own = frame;
+            if (pattern.hasAttribute(SchematronVocabulary.ATTR_IS_A)) {   // an instance of an abstract pattern: its rules, with the parameters
                 String name = pattern.getAttribute(SchematronVocabulary.ATTR_IS_A);
-                body = byId(schema, SchematronVocabulary.PATTERN, name);
+                body = SchematronDom.byId(schema, SchematronVocabulary.PATTERN, name);
                 if (body == null) {
-                    unsupported(Messages.get(MessageKey.ABSTRACT_PATTERN_MISSING, name), "", "", ids.get(pattern), "");
+                    unsupported(Messages.get(MessageKey.ABSTRACT_PATTERN_MISSING, name), "", "", patternId, "");
                     continue;
                 }
-                Map<String, String> p = new LinkedHashMap<>();
-                for (Element param : children(pattern, SchematronVocabulary.PARAM)) p.put(param.getAttribute(XsdVocabulary.ATTR_NAME), param.getAttribute(SchematronVocabulary.ATTR_VALUE));
-                params = p;
+                Map<String, String> params = new LinkedHashMap<>();
+                for (Element param : SchematronDom.children(pattern, SchematronVocabulary.PARAM)) {
+                    params.put(param.getAttribute(XsdVocabulary.ATTR_NAME), param.getAttribute(SchematronVocabulary.ATTR_VALUE));
+                }
+                own = frame.withParams(params);
             }
-            pattern(body, ids.get(pattern));
+            pattern(body, patternId, own);
         }
         boolean valid = problems.stream().noneMatch(p -> Severity.ERROR.equals(p.severity()));
         return new Result(valid, problems, truncated, phases, phase, checked);
     }
 
     /** Runs the rules of a pattern (its own, or those of the abstract pattern it instantiates): a node fires the first rule whose context matches it. */
-    private void pattern(Element pattern, String patternId) {
+    private void pattern(Element pattern, String patternId, Frame frame) {
         try {
-            lets(pattern, instance);
+            frame = lets(pattern, instance, frame);
         } catch (XPathExpressionException e) {
             unsupported(e.getMessage(), "", "", patternId, "");
             return;
         }
-        Scope patternScope = scope;
         Set<Node> fired = Collections.newSetFromMap(new IdentityHashMap<>());
-        for (Element rule : children(pattern, SchematronVocabulary.RULE)) {
-            if (SchematronVocabulary.TRUE.equals(rule.getAttribute(SchematronVocabulary.ATTR_ABSTRACT)) || !rule.hasAttribute(SchematronVocabulary.ATTR_CONTEXT)) continue;
+        for (Element rule : SchematronDom.children(pattern, SchematronVocabulary.RULE)) {
+            if (isAbstract(rule) || !rule.hasAttribute(SchematronVocabulary.ATTR_CONTEXT)) continue;
             String ruleId = ids.get(rule);
-            String context = substitute(rule.getAttribute(SchematronVocabulary.ATTR_CONTEXT));
+            String context = frame.substitute(rule.getAttribute(SchematronVocabulary.ATTR_CONTEXT));
             NodeList nodes;
             try {
-                nodes = (NodeList) compile(selection(context)).evaluate(instance, XPathConstants.NODESET);
+                nodes = (NodeList) evaluate(selection(context), instance, XPathConstants.NODESET, frame);
             } catch (XPathExpressionException e) {
                 unsupported(e.getMessage(), "", ruleId, patternId, context);
                 continue;
             }
-            List<Element> assertions = new ArrayList<>();
-            List<Element> lets = new ArrayList<>();
-            collect(rule, pattern.getOwnerDocument().getDocumentElement(), assertions, lets, new ArrayList<>());
+            List<Element> assertions = new ArrayList<>(), lets = new ArrayList<>();
+            collect(rule, assertions, lets, new ArrayList<>());
             for (int i = 0; i < nodes.getLength() && !truncated; i++) {
                 Node node = nodes.item(i);
                 if (!fired.add(node)) continue;
-                scope = patternScope.child();
+                Frame at;
                 try {
-                    for (Element let : lets) let(let, node);
+                    at = lets(lets, node, frame);
                 } catch (XPathExpressionException e) {
                     unsupported(e.getMessage(), "", ruleId, patternId, context);
                     break;
                 }
-                for (Element a : assertions) assertion(a, node, ruleId, patternId);
+                for (Element a : assertions) assertion(a, node, ruleId, patternId, at);
             }
         }
     }
 
     /** The assertions and lets of a rule: those of the abstract rules it extends first (recursively, each once), then its own. */
-    private void collect(Element rule, Element schema, List<Element> assertions, List<Element> lets, List<Element> visited) {
+    private void collect(Element rule, List<Element> assertions, List<Element> lets, List<Element> visited) {
         if (visited.contains(rule)) return;
         visited.add(rule);
-        for (Element c : children(rule)) {
+        for (Element c : SchematronDom.children(rule)) {
             switch (c.getLocalName()) {
                 case SchematronVocabulary.EXTENDS -> {
-                    Element base = c.hasAttribute(SchematronVocabulary.ATTR_RULE) ? byId(schema, SchematronVocabulary.RULE, c.getAttribute(SchematronVocabulary.ATTR_RULE)) : null;
-                    if (base != null) collect(base, schema, assertions, lets, visited);
-                    else unsupported(Messages.get(MessageKey.ABSTRACT_RULE_MISSING, c.getAttribute(SchematronVocabulary.ATTR_RULE)), "", ids.get(rule), "", "");
+                    String name = c.getAttribute(SchematronVocabulary.ATTR_RULE);
+                    Element base = name.isEmpty() ? null : SchematronDom.byId(schema, SchematronVocabulary.RULE, name);
+                    if (base != null) collect(base, assertions, lets, visited);
+                    else unsupported(Messages.get(MessageKey.ABSTRACT_RULE_MISSING, name), "", ids.get(rule), "", "");
                 }
                 case SchematronVocabulary.LET -> lets.add(c);
                 case SchematronVocabulary.ASSERT, SchematronVocabulary.REPORT -> assertions.add(c);
@@ -241,12 +266,12 @@ public final class SchematronValidator {
         }
     }
 
-    private void assertion(Element a, Node node, String ruleId, String patternId) {
-        String test = substitute(a.getAttribute(SchematronVocabulary.ATTR_TEST));
+    private void assertion(Element a, Node node, String ruleId, String patternId, Frame frame) {
+        String test = frame.substitute(a.getAttribute(SchematronVocabulary.ATTR_TEST));
         String id = ids.get(a);
         boolean value;
         try {
-            value = (Boolean) compile(test).evaluate(node, XPathConstants.BOOLEAN);
+            value = (Boolean) evaluate(test, node, XPathConstants.BOOLEAN, frame);
         } catch (XPathExpressionException e) {
             unsupported(e.getMessage(), id, ruleId, patternId, test);
             return;
@@ -254,15 +279,40 @@ public final class SchematronValidator {
         checked++;
         boolean fires = SchematronVocabulary.REPORT.equals(a.getLocalName()) == value;
         if (!fires) return;
-        String role = a.hasAttribute(SchematronVocabulary.ATTR_ROLE) ? a.getAttribute(SchematronVocabulary.ATTR_ROLE)
-                : a.getAttribute(SchematronVocabulary.ATTR_FLAG);
-        StringBuilder message = new StringBuilder(message(a, node));
+        String role = a.hasAttribute(SchematronVocabulary.ATTR_ROLE) ? a.getAttribute(SchematronVocabulary.ATTR_ROLE) : a.getAttribute(SchematronVocabulary.ATTR_FLAG);
+        StringBuilder message = new StringBuilder(message(a, node, frame));
         // the diagnostics the assertion names, rendered on the same node, follow the message
         for (String d : a.getAttribute(SchematronVocabulary.ATTR_DIAGNOSTICS).trim().split(WHITESPACE)) {
-            Element diagnostic = d.isEmpty() ? null : byId(a.getOwnerDocument().getDocumentElement(), SchematronVocabulary.DIAGNOSTIC, d);
-            if (diagnostic != null) message.append(DIAGNOSTIC_SEPARATOR).append(message(diagnostic, node));
+            Element diagnostic = d.isEmpty() ? null : SchematronDom.byId(schema, SchematronVocabulary.DIAGNOSTIC, d);
+            if (diagnostic != null) message.append(DIAGNOSTIC_SEPARATOR).append(message(diagnostic, node, frame));
         }
-        add(new Problem(severity(role), LocatedDocument.line(node), LocatedDocument.column(node), message.toString(), location(node), id, ruleId, patternId, test));
+        add(new Problem(severity(role), LocatedDocument.line(node), LocatedDocument.column(node), message.toString(), LocatedDocument.location(node), id, ruleId, patternId, test));
+    }
+
+    /** The message of an assertion or diagnostic on {@code node}: its {@code value-of}s evaluated there, a {@code name} the node's name (or the named node's). */
+    private String message(Element e, Node node, Frame frame) {
+        return SchematronMessage.render(e, new SchematronMessage.Leaf() {
+            @Override
+            public String valueOf(String select) {
+                String expression = frame.substitute(select);
+                try {
+                    return (String) evaluate(expression, node, XPathConstants.STRING, frame);
+                } catch (XPathExpressionException ex) {
+                    return SchematronMessage.PLACEHOLDERS.valueOf(expression);
+                }
+            }
+
+            @Override
+            public String name(String path) {
+                if (path.isEmpty()) return node.getNodeName();
+                try {
+                    Node named = (Node) evaluate(frame.substitute(path), node, XPathConstants.NODE, frame);
+                    return named == null ? "" : named.getNodeName();
+                } catch (XPathExpressionException ex) {
+                    return "";
+                }
+            }
+        });
     }
 
     /** An expression that could not be evaluated (or a piece of the schema that could not be read): reported once, at no line, with the reason. */
@@ -277,6 +327,10 @@ public final class SchematronValidator {
         problems.add(p);
     }
 
+    private static boolean isAbstract(Element e) {
+        return SchematronVocabulary.TRUE.equals(e.getAttribute(SchematronVocabulary.ATTR_ABSTRACT));
+    }
+
     private static String severity(String role) {
         String r = role.toLowerCase(Locale.ROOT);
         if (r.contains(WARNING_ROLE)) return Severity.WARNING;
@@ -284,22 +338,34 @@ public final class SchematronValidator {
         return Severity.ERROR;
     }
 
-    /** The {@code let}s that are direct children of {@code e}, evaluated on {@code context} into the current scope. */
-    private void lets(Element e, Node context) throws XPathExpressionException {
-        scope = scope.child();
-        for (Element let : children(e, SchematronVocabulary.LET)) let(let, context);
+    /** {@code frame} plus the {@code let}s that are direct children of {@code e}, evaluated on {@code context}. */
+    private Frame lets(Element e, Node context, Frame frame) throws XPathExpressionException {
+        return lets(SchematronDom.children(e, SchematronVocabulary.LET), context, frame);
     }
 
-    private void let(Element let, Node context) throws XPathExpressionException {
-        String name = let.getAttribute(XsdVocabulary.ATTR_NAME);
-        if (!let.hasAttribute(SchematronVocabulary.ATTR_VALUE)) { scope.variables().put(name, let.getTextContent()); return; }
-        XPathExpression expr = compile(substitute(let.getAttribute(SchematronVocabulary.ATTR_VALUE)));
-        XPathEvaluationResult<?> r = expr.evaluateExpression(context);
-        Object value = switch (r.type()) {
-            case NODESET -> expr.evaluate(context, XPathConstants.NODESET);   // as a NodeList, which the engine takes back as a variable
-            default -> r.value();
-        };
-        scope.variables().put(name, value);
+    private Frame lets(List<Element> lets, Node context, Frame frame) throws XPathExpressionException {
+        for (Element let : lets) {
+            String name = let.getAttribute(XsdVocabulary.ATTR_NAME);
+            if (!let.hasAttribute(SchematronVocabulary.ATTR_VALUE)) {
+                frame = frame.with(name, let.getTextContent());
+                continue;
+            }
+            XPathExpression expr = compile(frame.substitute(let.getAttribute(SchematronVocabulary.ATTR_VALUE)));
+            evaluating = frame;
+            XPathEvaluationResult<?> r = expr.evaluateExpression(context);
+            Object value = switch (r.type()) {
+                case NODESET -> expr.evaluate(context, XPathConstants.NODESET);   // as a NodeList, which the engine takes back as a variable
+                default -> r.value();
+            };
+            frame = frame.with(name, value);
+        }
+        return frame;
+    }
+
+    /** Evaluates {@code expression} on {@code context} with the variables of {@code frame}; the result is of {@code type} ({@link XPathConstants}). */
+    private Object evaluate(String expression, Node context, QName type, Frame frame) throws XPathExpressionException {
+        evaluating = frame;
+        return compile(expression).evaluate(context, type);
     }
 
     private XPathExpression compile(String expression) throws XPathExpressionException {
@@ -309,16 +375,6 @@ public final class SchematronValidator {
             compiled.put(expression, e);
         }
         return e;
-    }
-
-    /** {@code $name} replaced by the value of the abstract pattern's parameter, longest names first. */
-    private String substitute(String expression) {
-        if (params.isEmpty()) return expression;
-        String s = expression;
-        List<String> names = new ArrayList<>(params.keySet());
-        names.sort((a, b) -> b.length() - a.length());
-        for (String n : names) s = s.replaceAll("\\$" + Pattern.quote(n) + "(?![\\w.-])", Matcher.quoteReplacement(params.get(n)));
-        return s;
     }
 
     /** A rule's context (an XSLT-style pattern) as a selection from the root: each alternative not starting at the root gets {@code //}. */
@@ -347,102 +403,5 @@ public final class SchematronValidator {
         }
         out.add(s.substring(start));
         return out;
-    }
-
-    /** The message of an assertion on {@code node}: its text, a {@code value-of} evaluated, a {@code name} the node's name. */
-    private String message(Element a, Node node) {
-        StringBuilder sb = new StringBuilder();
-        for (Node n = a.getFirstChild(); n != null; n = n.getNextSibling()) {
-            if (n.getNodeType() == Node.TEXT_NODE || n.getNodeType() == Node.CDATA_SECTION_NODE) {
-                sb.append(n.getNodeValue());
-            } else if (n instanceof Element c) {
-                switch (c.getLocalName()) {
-                    case SchematronVocabulary.VALUE_OF -> {
-                        String select = substitute(c.getAttribute(SchematronVocabulary.ATTR_SELECT));
-                        try {
-                            sb.append(compile(select).evaluate(node, XPathConstants.STRING));
-                        } catch (XPathExpressionException e) {
-                            sb.append(String.format(PLACEHOLDER, select));
-                        }
-                    }
-                    case SchematronVocabulary.NAME -> {
-                        Node named = node;
-                        if (c.hasAttribute(SchematronVocabulary.ATTR_PATH)) {
-                            try {
-                                named = (Node) compile(substitute(c.getAttribute(SchematronVocabulary.ATTR_PATH))).evaluate(node, XPathConstants.NODE);
-                            } catch (XPathExpressionException e) {
-                                named = null;
-                            }
-                        }
-                        sb.append(named == null ? "" : named.getNodeName());
-                    }
-                    case SchematronVocabulary.EMPH, SchematronVocabulary.SPAN, SchematronVocabulary.DIR -> sb.append(message(c, node));
-                    default -> { }
-                }
-            }
-        }
-        return sb.toString().replaceAll(WHITESPACE, " ").trim();
-    }
-
-    /** The path of a node in the document: {@code /po:purchaseOrder/po:items/po:item[2]/po:quantity}, {@code .../@partNum} for an attribute. */
-    static String location(Node node) {
-        if (node instanceof Attr a) return location(a.getOwnerElement()) + ATTRIBUTE_STEP + a.getNodeName();
-        Element e = LocatedDocument.elementOf(node);
-        if (e == null) return ROOT;
-        StringBuilder sb = new StringBuilder();
-        for (Element x = e; x != null; x = x.getParentNode() instanceof Element p ? p : null) {
-            int index = 1, count = 0;
-            for (Node s = x.getParentNode() == null ? null : x.getParentNode().getFirstChild(); s != null; s = s.getNextSibling()) {
-                if (s.getNodeType() != Node.ELEMENT_NODE || !s.getNodeName().equals(x.getNodeName())) continue;
-                count++;
-                if (s == x) index = count;
-            }
-            sb.insert(0, ROOT + x.getNodeName() + (count > 1 ? "[" + index + "]" : ""));
-        }
-        return sb.toString();
-    }
-
-    /** Replaces each {@code include} under {@code e} by the root of the file it names, read next to the Schematron (files only). */
-    private void includes(Element e, int depth) throws IOException {
-        for (Element inc : new ArrayList<>(descendants(e, SchematronVocabulary.INCLUDE))) {
-            String href = inc.getAttribute(SchematronVocabulary.ATTR_HREF);
-            Path target = file.resolveSibling(href).normalize();
-            if (href.isEmpty() || href.contains(REMOTE_LOCATION_MARK) || !Files.isRegularFile(target) || depth >= MAX_INCLUDE_DEPTH) {
-                unsupported(Messages.get(MessageKey.INCLUDE_NOT_FOUND, href), "", "", "", "");
-                continue;
-            }
-            Element root;
-            try {
-                root = SecureXmlFactories.newDocumentBuilder().parse(target.toFile()).getDocumentElement();
-            } catch (Exception ex) {
-                unsupported(ex.getMessage(), "", "", "", "");
-                continue;
-            }
-            Node imported = inc.getOwnerDocument().importNode(root, true);
-            inc.getParentNode().replaceChild(imported, inc);
-            if (imported instanceof Element ie) includes(ie, depth + 1);
-        }
-    }
-
-    private static Element byId(Element schema, String localName, String id) {
-        for (Element e : descendants(schema, localName)) if (id.equals(e.getAttribute(SchematronVocabulary.ATTR_ID))) return e;
-        return null;
-    }
-
-    private static List<Element> descendants(Element e, String localName) {
-        List<Element> out = new ArrayList<>();
-        for (Element c : children(e)) {
-            if (localName.equals(c.getLocalName())) out.add(c);
-            out.addAll(descendants(c, localName));
-        }
-        return out;
-    }
-
-    private static List<Element> children(Element e) {
-        return XsdParser.children(e).stream().filter(c -> c.getNamespaceURI() != null && SchematronVocabulary.NAMESPACES.contains(c.getNamespaceURI())).toList();
-    }
-
-    private static List<Element> children(Element e, String localName) {
-        return children(e).stream().filter(c -> localName.equals(c.getLocalName())).toList();
     }
 }
