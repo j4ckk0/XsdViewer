@@ -36,7 +36,8 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * A DOM built from text through SAX so that every element remembers where its start tag opens
  * (user data {@link #LINE}, {@link #COLUMN}): a Schematron problem is reported at the line of the
- * node it is about. Namespace declarations are kept as attributes, so the DOM resolves prefixes.
+ * node it is about. Namespace declarations are kept as attributes, so the DOM resolves prefixes;
+ * comments and processing instructions are not kept, so a rule on {@code comment()} never fires.
  */
 final class LocatedDocument {
 

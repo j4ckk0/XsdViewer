@@ -49,9 +49,16 @@ public final class SchematronVocabulary {
     public static final String REPORT = "report";
     public static final String DIAGNOSTICS = "diagnostics";
     public static final String DIAGNOSTIC = "diagnostic";
-    /** Inside a message: the value of an expression, the name of the context node. */
+    /** A namespace prefix declared for the expressions; a variable; a parameter of an abstract pattern. */
+    public static final String NS = "ns";
+    public static final String LET = "let";
+    public static final String PARAM = "param";
+    /** Inside a message: the value of an expression, the name of the context node, marked-up text. */
     public static final String VALUE_OF = "value-of";
     public static final String NAME = "name";
+    public static final String EMPH = "emph";
+    public static final String SPAN = "span";
+    public static final String DIR = "dir";
 
     // attributes (name is XsdVocabulary's)
     public static final String ATTR_ID = "id";
@@ -66,4 +73,12 @@ public final class SchematronVocabulary {
     public static final String ATTR_HREF = "href";
     public static final String ATTR_SELECT = "select";
     public static final String ATTR_PATH = "path";
+    public static final String ATTR_ABSTRACT = "abstract";
+    public static final String ATTR_DEFAULT_PHASE = "defaultPhase";
+    /** Of an {@code ns}: the prefix and the namespace it stands for. */
+    public static final String ATTR_PREFIX = "prefix";
+    public static final String ATTR_URI = "uri";
+    /** Of a {@code let} or a {@code param}: what it is worth (an expression for a {@code let}). */
+    public static final String ATTR_VALUE = "value";
+    public static final String TRUE = "true";
 }

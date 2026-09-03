@@ -31,7 +31,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,8 +58,8 @@ import org.xml.sax.SAXParseException;
 /**
  * Checks an XML document against a Schematron with the JDK's XPath 1.0 engine: phases, abstract
  * patterns and their parameters, abstract rules ({@code extends}), {@code let} variables,
- * {@code include}s next to the file, diagnostics-free messages with {@code value-of} and
- * {@code name} filled in. Each node fires at most one rule per pattern (the first whose context
+ * {@code include}s next to the file, the messages with {@code value-of} and {@code name} filled in
+ * and the diagnostics an assertion names appended. Each node fires at most one rule per pattern (the first whose context
  * matches, as in ISO Schematron). An expression the engine cannot compile — XPath 2 and later —
  * is reported once as {@link Severity#UNSUPPORTED}, and nothing is checked there. A problem names
  * the assertion, rule and pattern as {@link SchematronParser} names them, so the page can select them.
@@ -70,10 +72,9 @@ public final class SchematronValidator {
     static final int MAX_PROBLEMS = 200;
     private static final int MAX_INCLUDE_DEPTH = 16;
     private static final String REMOTE_LOCATION_MARK = "://";
-    private static final String ATTR_ABSTRACT = "abstract", ATTR_DEFAULT_PHASE = "defaultPhase", ATTR_PREFIX = "prefix", ATTR_URI = "uri", ATTR_VALUE = "value";
-    private static final String NS = "ns", LET = "let", PARAM = "param", EMPH = "emph", SPAN = "span", DIR = "dir";
-    private static final String TRUE = "true";
     private static final String WARNING_ROLE = "warn", INFO_ROLE = "info";
+    /** Between an assertion's message and each diagnostic it names. */
+    private static final String DIAGNOSTIC_SEPARATOR = " — ";
     private static final String UNION = "|", DESCENDANTS = "//", ROOT = "/";
     private static final String WHITESPACE = "\\s+";
     private static final String PLACEHOLDER = "{%s}";
@@ -148,20 +149,20 @@ public final class SchematronValidator {
     }
 
     private Result run(Element schema, String phase) throws XPathExpressionException {
-        for (Element ns : children(schema, NS)) prefixes.put(ns.getAttribute(ATTR_PREFIX), ns.getAttribute(ATTR_URI));
+        for (Element ns : children(schema, SchematronVocabulary.NS)) prefixes.put(ns.getAttribute(SchematronVocabulary.ATTR_PREFIX), ns.getAttribute(SchematronVocabulary.ATTR_URI));
         List<String> phases = children(schema, SchematronVocabulary.PHASE).stream()
                 .map(p -> p.getAttribute(SchematronVocabulary.ATTR_ID)).filter(id -> !id.isEmpty()).toList();
-        if (phase == null || phase.isEmpty()) phase = schema.hasAttribute(ATTR_DEFAULT_PHASE) ? schema.getAttribute(ATTR_DEFAULT_PHASE) : ALL_PHASES;
+        if (phase == null || phase.isEmpty()) phase = schema.hasAttribute(SchematronVocabulary.ATTR_DEFAULT_PHASE) ? schema.getAttribute(SchematronVocabulary.ATTR_DEFAULT_PHASE) : ALL_PHASES;
         Set<String> active = null;
         if (!ALL_PHASES.equals(phase)) {
             Element p = byId(schema, SchematronVocabulary.PHASE, phase);
             if (p == null) throw new IllegalArgumentException(Messages.get(MessageKey.PHASE_UNKNOWN, phase));
-            active = children(p, SchematronVocabulary.ACTIVE).stream().map(a -> a.getAttribute(SchematronVocabulary.ATTR_PATTERN)).collect(java.util.stream.Collectors.toSet());
+            active = children(p, SchematronVocabulary.ACTIVE).stream().map(a -> a.getAttribute(SchematronVocabulary.ATTR_PATTERN)).collect(Collectors.toSet());
         }
         lets(schema, instance);
         Scope schemaScope = scope;
         for (Element pattern : children(schema, SchematronVocabulary.PATTERN)) {
-            if (TRUE.equals(pattern.getAttribute(ATTR_ABSTRACT))) continue;
+            if (SchematronVocabulary.TRUE.equals(pattern.getAttribute(SchematronVocabulary.ATTR_ABSTRACT))) continue;
             if (active != null && !active.contains(pattern.getAttribute(SchematronVocabulary.ATTR_ID))) continue;
             scope = schemaScope.child();
             params = Map.of();
@@ -174,7 +175,7 @@ public final class SchematronValidator {
                     continue;
                 }
                 Map<String, String> p = new LinkedHashMap<>();
-                for (Element param : children(pattern, PARAM)) p.put(param.getAttribute(XsdVocabulary.ATTR_NAME), param.getAttribute(ATTR_VALUE));
+                for (Element param : children(pattern, SchematronVocabulary.PARAM)) p.put(param.getAttribute(XsdVocabulary.ATTR_NAME), param.getAttribute(SchematronVocabulary.ATTR_VALUE));
                 params = p;
             }
             pattern(body, ids.get(pattern));
@@ -194,7 +195,7 @@ public final class SchematronValidator {
         Scope patternScope = scope;
         Set<Node> fired = Collections.newSetFromMap(new IdentityHashMap<>());
         for (Element rule : children(pattern, SchematronVocabulary.RULE)) {
-            if (TRUE.equals(rule.getAttribute(ATTR_ABSTRACT)) || !rule.hasAttribute(SchematronVocabulary.ATTR_CONTEXT)) continue;
+            if (SchematronVocabulary.TRUE.equals(rule.getAttribute(SchematronVocabulary.ATTR_ABSTRACT)) || !rule.hasAttribute(SchematronVocabulary.ATTR_CONTEXT)) continue;
             String ruleId = ids.get(rule);
             String context = substitute(rule.getAttribute(SchematronVocabulary.ATTR_CONTEXT));
             NodeList nodes;
@@ -233,7 +234,7 @@ public final class SchematronValidator {
                     if (base != null) collect(base, schema, assertions, lets, visited);
                     else unsupported(Messages.get(MessageKey.ABSTRACT_RULE_MISSING, c.getAttribute(SchematronVocabulary.ATTR_RULE)), "", ids.get(rule), "", "");
                 }
-                case LET -> lets.add(c);
+                case SchematronVocabulary.LET -> lets.add(c);
                 case SchematronVocabulary.ASSERT, SchematronVocabulary.REPORT -> assertions.add(c);
                 default -> { }
             }
@@ -255,13 +256,20 @@ public final class SchematronValidator {
         if (!fires) return;
         String role = a.hasAttribute(SchematronVocabulary.ATTR_ROLE) ? a.getAttribute(SchematronVocabulary.ATTR_ROLE)
                 : a.getAttribute(SchematronVocabulary.ATTR_FLAG);
-        add(new Problem(severity(role), LocatedDocument.line(node), LocatedDocument.column(node), message(a, node), location(node), id, ruleId, patternId, test));
+        StringBuilder message = new StringBuilder(message(a, node));
+        // the diagnostics the assertion names, rendered on the same node, follow the message
+        for (String d : a.getAttribute(SchematronVocabulary.ATTR_DIAGNOSTICS).trim().split(WHITESPACE)) {
+            Element diagnostic = d.isEmpty() ? null : byId(a.getOwnerDocument().getDocumentElement(), SchematronVocabulary.DIAGNOSTIC, d);
+            if (diagnostic != null) message.append(DIAGNOSTIC_SEPARATOR).append(message(diagnostic, node));
+        }
+        add(new Problem(severity(role), LocatedDocument.line(node), LocatedDocument.column(node), message.toString(), location(node), id, ruleId, patternId, test));
     }
 
-    /** An expression that could not be evaluated: reported once, at no line, with the engine's message. */
+    /** An expression that could not be evaluated (or a piece of the schema that could not be read): reported once, at no line, with the reason. */
     private void unsupported(String why, String assertionId, String ruleId, String patternId, String expression) {
-        if (problems.stream().anyMatch(p -> Severity.UNSUPPORTED.equals(p.severity()) && p.test().equals(expression) && p.rule().equals(ruleId))) return;
-        add(new Problem(Severity.UNSUPPORTED, 0, 0, why == null ? "" : why, "", assertionId, ruleId, patternId, expression));
+        String reason = why == null ? "" : why;
+        if (problems.stream().anyMatch(p -> Severity.UNSUPPORTED.equals(p.severity()) && p.test().equals(expression) && Objects.equals(p.rule(), ruleId) && p.message().equals(reason))) return;
+        add(new Problem(Severity.UNSUPPORTED, 0, 0, reason, "", assertionId, ruleId, patternId, expression));
     }
 
     private void add(Problem p) {
@@ -279,13 +287,13 @@ public final class SchematronValidator {
     /** The {@code let}s that are direct children of {@code e}, evaluated on {@code context} into the current scope. */
     private void lets(Element e, Node context) throws XPathExpressionException {
         scope = scope.child();
-        for (Element let : children(e, LET)) let(let, context);
+        for (Element let : children(e, SchematronVocabulary.LET)) let(let, context);
     }
 
     private void let(Element let, Node context) throws XPathExpressionException {
         String name = let.getAttribute(XsdVocabulary.ATTR_NAME);
-        if (!let.hasAttribute(ATTR_VALUE)) { scope.variables().put(name, let.getTextContent()); return; }
-        XPathExpression expr = compile(substitute(let.getAttribute(ATTR_VALUE)));
+        if (!let.hasAttribute(SchematronVocabulary.ATTR_VALUE)) { scope.variables().put(name, let.getTextContent()); return; }
+        XPathExpression expr = compile(substitute(let.getAttribute(SchematronVocabulary.ATTR_VALUE)));
         XPathEvaluationResult<?> r = expr.evaluateExpression(context);
         Object value = switch (r.type()) {
             case NODESET -> expr.evaluate(context, XPathConstants.NODESET);   // as a NodeList, which the engine takes back as a variable
@@ -368,7 +376,7 @@ public final class SchematronValidator {
                         }
                         sb.append(named == null ? "" : named.getNodeName());
                     }
-                    case EMPH, SPAN, DIR -> sb.append(message(c, node));
+                    case SchematronVocabulary.EMPH, SchematronVocabulary.SPAN, SchematronVocabulary.DIR -> sb.append(message(c, node));
                     default -> { }
                 }
             }

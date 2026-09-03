@@ -56,7 +56,7 @@ final class SchematronParser {
     private static final char DUPLICATE_MARK = '#';
     /** The name of a pattern that has neither id, name nor title: "pattern 3". */
     private static final String UNNAMED_PATTERN = "pattern ";
-    /** Around the expression a {@code value-of} or {@code name} stands for in a message: "{@code {@count}}". */
+    /** Around the expression a {@code value-of} or {@code name} stands for in a message: {@code {count(item)}}. */
     private static final char PLACEHOLDER_OPEN = '{', PLACEHOLDER_CLOSE = '}';
     private static final String NAME_FUNCTION = "name(";
     private static final String NAME_FUNCTION_END = ")";
@@ -247,7 +247,7 @@ final class SchematronParser {
 
     /** The child elements of {@code e} in a Schematron namespace. */
     private static List<Element> children(Element e) {
-        return XsdParser.children(e).stream().filter(c -> SchematronVocabulary.NAMESPACES.contains(c.getNamespaceURI())).toList();
+        return XsdParser.children(e).stream().filter(c -> c.getNamespaceURI() != null && SchematronVocabulary.NAMESPACES.contains(c.getNamespaceURI())).toList();
     }
 
     private static List<Element> children(Element e, String localName) {

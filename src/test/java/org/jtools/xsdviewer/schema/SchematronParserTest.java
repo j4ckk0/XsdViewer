@@ -166,6 +166,16 @@ class SchematronParserTest {
     }
 
     @Test
+    void foreignElementsAreIgnored() throws Exception {
+        SchemaGraph m = SchemaParser.parse("""
+                <schema xmlns="http://purl.oclc.org/dsdl/schematron" xmlns:h="http://www.w3.org/1999/xhtml">
+                  <h:p>documentation in another namespace</h:p>
+                  <pattern id="p"><note xmlns=""/><rule context="x"><assert test="y">m</assert></rule></pattern>
+                </schema>""");
+        assertEquals(Set.of("pattern:p", "rule:p/x", "assert:p/x/y"), m.nodes.keySet());
+    }
+
+    @Test
     void schematron15AndFragments() throws Exception {
         SchemaGraph old = SchemaParser.parse("""
                 <sch:schema xmlns:sch="http://www.ascc.net/xml/schematron">

@@ -68,7 +68,7 @@ class SchematronValidatorTest {
         assertEquals(Severity.WARNING, expensive.severity());
         assertEquals("report:hasComment/po:USPrice > 1000 and not(po:comment)", expensive.assertion());
         assertEquals("rule:structure/po:item", expensive.rule(), "reported against the rule that fired");
-        assertEquals("An expensive item deserves a comment.", expensive.message());
+        assertEquals("An expensive item deserves a comment. — The item Lawnmower costs 1480.00.", expensive.message(), "the diagnostic it names follows");
         SchematronValidator.Problem quantity = r.problems().get(1);
         assertEquals(Severity.ERROR, quantity.severity());
         assertEquals("At most 99 of Lawnmower per line.", quantity.message(), "the value-of is filled in");
@@ -172,6 +172,19 @@ class SchematronValidatorTest {
         assertEquals(1, messages.stream().filter("huge"::equals).count(), "item n=0 fired the first rule of the pattern, not the second");
         assertEquals(2, of(r, Severity.UNSUPPORTED).size(), "a missing abstract rule, a missing include: " + r.problems());
         assertEquals("pattern:shared", r.problems().get(2).pattern());
+    }
+
+    @Test
+    void everyMissingIncludeAndEmptyContextIsReported(@TempDir Path dir) throws Exception {
+        Path sch = dir.resolve("odd.sch");
+        Files.writeString(sch, """
+                <schema xmlns="http://purl.oclc.org/dsdl/schematron">
+                  <include href="nope1.sch"/><include href="nope2.sch"/>
+                  <pattern id="p"><rule context=""><assert test="x">m</assert></rule><rule context=""><assert test="x">m</assert></rule></pattern>
+                </schema>""");
+        SchematronValidator.Result r = SchematronValidator.validate(sch, "<r/>", null);
+        assertEquals(3, of(r, Severity.UNSUPPORTED).size(), "two includes, one empty context (the same twice): " + r.problems());
+        assertTrue(r.valid());
     }
 
     @Test

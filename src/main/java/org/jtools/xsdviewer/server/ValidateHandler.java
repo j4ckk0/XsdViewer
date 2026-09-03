@@ -33,7 +33,6 @@ import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.schema.SchematronValidator;
 import org.jtools.xsdviewer.schema.Severity;
-import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 /**
@@ -86,12 +85,9 @@ final class ValidateHandler implements HttpHandler {
                             Severity.ERROR, e.getLineNumber(), e.getColumnNumber(), e.getMessage(), "", "", "", "", "")), false, List.of(), "", 0);
                 }
             }
-        } catch (SAXException | IllegalArgumentException e) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.SCHEMA_NOT_COMPILED, e.getMessage()));
-            return;
         } catch (IOException e) {
             throw e;
-        } catch (Exception e) {   // the Schematron is not XML, an XPath engine failure...
+        } catch (Exception e) {   // the XSD cannot be compiled, the Schematron is not one or not XML, the phase is unknown, an XPath engine failure...
             HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.SCHEMA_NOT_COMPILED, e.getMessage() == null ? e.toString() : e.getMessage()));
             return;
         }

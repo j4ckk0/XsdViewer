@@ -55,9 +55,11 @@ against the shown schema and opens the outcome in a tab named `order.xml ⇢ pur
 - against a **Schematron** with the server's own evaluator over the JDK's XPath 1.0 engine: phases
   (the schema's `defaultPhase`, or the one picked in the tab's *phase* list), abstract patterns
   and their parameters, abstract rules (`extends`), `let` variables, `include`s next to the file,
-  the messages with their `value-of` and `name` filled in. Each node fires the first rule of a
-  pattern whose context matches it, as ISO Schematron says. A test the engine cannot compile —
-  XPath 2 and later, such as `xs:date()` — is listed once as *not evaluated* rather than passed silently;
+  the messages with their `value-of` and `name` filled in and the `diagnostics` they name appended.
+  Each node fires the first rule of a pattern whose context matches it, as ISO Schematron says. A
+  test the engine cannot compile — XPath 2 and later, such as `xs:date()` — is listed once as *not
+  evaluated* rather than passed silently (which is why the sample's date rule compares the dates
+  as numbers, their dashes removed, instead of calling `xs:date()`);
 - against **both** when the workspace holds the other one too (a located `.sch` next to the XSD, or
   the reverse). The tab's header holds one list per kind, *XSD* and *SCH*, with every file of that
   kind the workspace knows with a location on disk (and *none*, as long as the other kind stays):

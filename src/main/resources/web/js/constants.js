@@ -36,7 +36,7 @@ export const KINDS = [
 export const WSDL_KINDS = new Set([NODE_KIND.SERVICE, NODE_KIND.PORT_TYPE, NODE_KIND.OPERATION, NODE_KIND.BINDING, NODE_KIND.MESSAGE]);
 /** The kinds declared by a Schematron file: a model holding one is a Schematron, whose legend shows them (and no XSD kind). */
 export const SCHEMATRON_KINDS = new Set([NODE_KIND.PHASE, NODE_KIND.PATTERN, NODE_KIND.RULE, NODE_KIND.ASSERT, NODE_KIND.REPORT, NODE_KIND.DIAGNOSTIC]);
-/** True when the model is a WSDL's or a Schematron's: a file the server cannot validate an XML document against. */
+/** What kind of file a model describes (an XSD otherwise): a WSDL cannot validate a document, a Schematron has its own validator. */
 export const isWsdl = (model) => model.nodes.some(n => WSDL_KINDS.has(n.kind));
 export const isSchematron = (model) => model.nodes.some(n => SCHEMATRON_KINDS.has(n.kind));
 /** Kind in the id of an external type reference ("type:X"): the server could not tell complexType from simpleType. */

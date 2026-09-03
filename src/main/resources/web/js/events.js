@@ -1,6 +1,5 @@
 /** Wiring of the page's controls to the actions: menu, tabs, keyboard, drag and drop, clicks in the views. */
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
-import * as validation from './validate.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
@@ -20,6 +19,7 @@ import { MSG } from './message-keys.js';
 import { session } from './state.js';
 import { clearFind, findStep, focusFind, refreshFind } from './text-find.js';
 import { toggleTheme } from './theme.js';
+import * as validation from './validate.js';
 import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderNavigation, tabToShow } from './tabs.js';
 import { toggleAutoStop } from './settings.js';

@@ -1,6 +1,7 @@
 /** The File menu on files: opening schemas (dialog, drop, start-up file), closing, quitting. Workspaces and folders: workspace-actions.js. */
 import { chooseFiles, fetchInitialFile, quitServer } from './api.js';
 import { busy } from './busy.js';
+import { XML_FILE_PATTERN } from './constants.js';
 import { $, CLS, ID, esc } from './dom.js';
 import { t } from './i18n.js';
 import { openLinkedSchemas } from './linked-schemas.js';
@@ -14,7 +15,6 @@ import { activateTab, closeAllTabs, newTab, resetTab } from './tabs.js';
 import { toast, toastServerError } from './toast.js';
 import { canValidate, replaceDocument, validateText } from './validate.js';
 import { applyWorkspace } from './workspace-actions.js';
-import { XML_FILE_PATTERN } from './constants.js';
 
 /** File ▸ Open…: the server's native dialog when it has a display (files then come with their location), else the browser's. */
 export async function openSchemas() {

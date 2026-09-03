@@ -7,7 +7,7 @@
  */
 import { chooseFiles, openLocation, validateXml } from './api.js';
 import { busy } from './busy.js';
-import { ALL_PHASES, PROBLEM_SEVERITY, PROBLEM_SOURCE, SCHEMATRON_FILE_PATTERN, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, XSD_ONLY_FILE_PATTERN, isSchematron, isWsdl } from './constants.js';
+import { ALL_PHASES, ID_SEPARATOR, NODE_KIND, PROBLEM_SEVERITY, PROBLEM_SOURCE, SCHEMATRON_FILE_PATTERN, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, XSD_ONLY_FILE_PATTERN, isSchematron, isWsdl, kindOfId } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { plural, t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
@@ -18,11 +18,11 @@ import { toast, toastServerError } from './toast.js';
 import { highlightXml } from './xml-highlighter.js';
 
 const SEVERITY_ORDER = [PROBLEM_SEVERITY.ERROR, PROBLEM_SEVERITY.WARNING, PROBLEM_SEVERITY.INFO, PROBLEM_SEVERITY.UNSUPPORTED];
+const LINK_SEPARATOR = ' · ';
 
 /** What redraws the page when a validation starts or ends: set by the wiring (page.js draws this view and depends on this module). */
 let redraw = () => {};
 export function onChange(fn) { redraw = fn; }
-const LINK_SEPARATOR = ' · ';
 
 /** True when the active tab shows a schema the server can validate against: an XSD or a Schematron (not a WSDL) with a location on disk. */
 export function canValidate() {
@@ -130,9 +130,9 @@ export async function setSchema(source, path) {
   if (!v) return;
   const entry = path ? tab.workspace.files.find(f => f.path === path) : null;
   const ref = entry ? { name: entry.name, path: entry.path } : null;
-  if (source === PROBLEM_SOURCE.XSD) v.xsd = ref; else v.sch = ref;
+  if (source === PROBLEM_SOURCE.XSD) v.xsd = ref;
+  else { v.sch = ref; v.phase = null; }   // another Schematron has its own phases
   if (!v.xsd && !v.sch) return;   // the lists never offer that: one schema at least
-  v.phase = null;
   v.selected = -1;
   await run(tab);
 }
@@ -213,12 +213,12 @@ function problemsHtml(tab) {
   const entry = schematronEntryOf(tab);
   const nodeName = (id) => {
     const n = entry && entry.model ? entry.model.nodes.find(x => x.id === id) : null;
-    return n ? n.name : id.slice(id.indexOf(':') + 1);
+    return n ? n.name : id.slice(id.indexOf(ID_SEPARATOR) + 1);
   };
   // an assertion named by its id gets its test after the link; one named by its test already shows it
   const testOf = (p) => (p.test && nodeName(p.assertion) !== p.test ? ' <code>' + esc(p.test) + '</code>' : '');
   const link = (id) => '<a class="' + CLS.VALIDATE_LINK + '"' + dataAttr(DATA.ID, id) + ' title="' + esc(t(MSG.VALIDATE_IN_SCHEMA)) + '">'
-    + '<span class="' + CLS.DOT + ' ' + esc(id.slice(0, id.indexOf(':'))) + '"></span>' + esc(nodeName(id)) + '</a>';
+    + '<span class="' + CLS.DOT + ' ' + esc(kindOfId(id)) + '"></span>' + esc(nodeName(id)) + '</a>';
   const rows = [];
   r.problems.forEach((p, i) => {
     if (!visible(p)) return;
@@ -229,8 +229,8 @@ function problemsHtml(tab) {
     if (p.source === PROBLEM_SOURCE.SCHEMATRON) {
       const parts = [];
       if (p.assertion) parts.push(link(p.assertion) + (unsupported ? '' : testOf(p)));
-      if (p.rule) parts.push('<span class="' + CLS.META + '">' + esc(kindLabel('rule')) + '</span> ' + link(p.rule));
-      if (p.pattern) parts.push('<span class="' + CLS.META + '">' + esc(kindLabel('pattern')) + '</span> ' + link(p.pattern));
+      if (p.rule) parts.push('<span class="' + CLS.META + '">' + esc(kindLabel(NODE_KIND.RULE)) + '</span> ' + link(p.rule));
+      if (p.pattern) parts.push('<span class="' + CLS.META + '">' + esc(kindLabel(NODE_KIND.PATTERN)) + '</span> ' + link(p.pattern));
       if (parts.length) links = '<div class="' + CLS.VALIDATE_LINKS + '">' + parts.join(LINK_SEPARATOR) + '</div>';
     }
     rows.push('<div class="' + CLS.VALIDATE_PROBLEM + ' ' + esc(p.severity) + (i === v.selected ? ' ' + CLS.SELECTED : '') + '"' + dataAttr(DATA.PROBLEM_INDEX, i)
