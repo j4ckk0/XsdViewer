@@ -106,6 +106,7 @@ export const MSG = {
   DETAILS_VALUES: 'details.values',
   DETAILS_XPATH: 'details.xpath',
   DETAILS_NONE: 'details.none',
+  PANEL_RESIZE: 'panel.resize',
   DETAILS_COLLAPSE: 'details.collapse',
   DETAILS_EXPAND: 'details.expand',
   TEXT_SELECT: 'text.select',

@@ -134,8 +134,13 @@ export const LIBRARY_KEY_PREFIX = 'lib:';
 export const PATH_SEPARATOR = '/';
 
 // ---- browser ----
+/** The side panels: how narrow they may get, the share of the window they may take, what an arrow key moves. */
+export const PANEL = { MIN_WIDTH: 150, MAX_SHARE: 0.5, KEY_STEP: 16 };
+
 export const STORAGE_KEY = {
   TWO_LEVELS: 'xsdviewer.twoLevels',
+  SIDEBAR_WIDTH: 'xsdviewer.sidebarWidth',
+  DETAILS_WIDTH: 'xsdviewer.detailsWidth',
   DETAILS_COLLAPSED: 'xsdviewer.detailsCollapsed',
   SCHEMA_INFO_COLLAPSED: 'xsdviewer.schemaInfoCollapsed',
   FILES_COLLAPSED: 'xsdviewer.filesCollapsed',

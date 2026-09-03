@@ -42,6 +42,8 @@ export const ID = {
   VALIDATE_PROBLEMS: 'validateProblems',
   VALIDATE_DOC: 'validateDoc',
   VALIDATE_CLOSE: 'validateClose',
+  SIDEBAR_SPLITTER: 'sidebarSplitter',
+  DETAILS_SPLITTER: 'detailsSplitter',
   ABOUT_DIALOG: 'aboutDialog',
   ABOUT_VERSION: 'aboutVersion',
   ABOUT_JAVA: 'aboutJava',
@@ -153,6 +155,8 @@ export const CLS = {
   VALIDATE_LINE: 'vline',
   VALIDATE_NONE: 'vnone',
   PENDING: 'pending',
+  /** On a splitter being dragged. */
+  DRAGGING: 'dragging',
   LEGEND_ENTRY: 'lg',
   DIFF_SIDES: 'csides',
   DIFF_SIDE: 'cside',

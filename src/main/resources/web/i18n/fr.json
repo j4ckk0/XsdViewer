@@ -190,6 +190,7 @@
   "details.values": "Valeurs ({0})",
   "details.xpath": "L'expression : le contexte d'une règle, le test d'une assertion",
   "details.none": "aucun",
+  "panel.resize": "Glisser pour redimensionner le panneau (double-clic : la largeur par défaut, flèches quand il a le focus)",
   "details.collapse": "Replier le panneau de détails",
   "details.expand": "Déplier le panneau de détails",
   "text.find.placeholder": "Chercher dans le texte… (Ctrl+F ici)",

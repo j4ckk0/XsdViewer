@@ -3,6 +3,7 @@ import { cardinalityText, isOptional } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { placeAttributes, usersInWorkspace } from './declarations.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
+import { updateSplitters } from './panels.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
@@ -49,6 +50,7 @@ export function setDetailsCollapsed(collapsed) {
   const toggle = $(ID.DETAILS_TOGGLE);
   toggle.textContent = collapsed ? EXPAND_GLYPH : COLLAPSE_GLYPH;
   toggle.title = t(collapsed ? MSG.DETAILS_EXPAND : MSG.DETAILS_COLLAPSE);
+  updateSplitters();
   try { localStorage.setItem(STORAGE_KEY.DETAILS_COLLAPSED, collapsed ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
 }
 

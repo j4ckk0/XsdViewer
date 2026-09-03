@@ -190,6 +190,7 @@
   "details.values": "Values ({0})",
   "details.xpath": "The expression: a rule's context, an assertion's test",
   "details.none": "none",
+  "panel.resize": "Drag to resize the panel (double-click: the default width, arrow keys when focused)",
   "details.collapse": "Collapse the details panel",
   "details.expand": "Expand the details panel",
   "text.find.placeholder": "Find in the text… (Ctrl+F here)",

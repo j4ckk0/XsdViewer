@@ -108,6 +108,19 @@ SCENES = [
                  'valid': "document.getElementById('validateTitle').className",
                  'rows': "document.querySelectorAll('#validateProblems .vprob.error').length"},
          expect={'tab': 'purchaseOrder.xml ⇢ ext.xsd', 'valid': 'invalid', 'rows': 1}),   # ext.xsd declares no element: the document's root is unknown to it
+    dict(name='panels-resized', file='samples/purchaseOrder.xsd', theme='light',
+         action="const p = await import('/js/panels.js');"
+                "const drag = (id, dx) => { const el = document.getElementById(id), r = el.getBoundingClientRect();"
+                "  el.setPointerCapture = () => {}; const at = (x) => ({pointerId: 1, clientX: x, preventDefault(){}});"
+                "  el.dispatchEvent(new PointerEvent('pointerdown', at(r.left)));"
+                "  el.dispatchEvent(new PointerEvent('pointermove', at(r.left + dx)));"
+                "  el.dispatchEvent(new PointerEvent('pointerup', at(r.left + dx))); };"
+                "drag('sidebarSplitter', 120); drag('detailsSplitter', -110);",
+         checks={'sidebar': "Math.round(document.getElementById('sidebar').getBoundingClientRect().width)",
+                 'details': "Math.round(document.getElementById('details').getBoundingClientRect().width)",
+                 'kept': "localStorage.getItem('xsdviewer.sidebarWidth') + '|' + localStorage.getItem('xsdviewer.detailsWidth')",
+                 'splitters': "[...document.querySelectorAll('.splitter')].filter(s => !s.classList.contains('hidden')).length"},
+         expect={'sidebar': 390, 'details': 390, 'kept': '390|390', 'splitters': 2}),
     dict(name='search-member', file='samples/purchaseOrder.xsd', theme='light',
 
          action="const s = document.getElementById('search'); s.value = 'shipTo'; s.dispatchEvent(new Event('input', {bubbles: true}));",

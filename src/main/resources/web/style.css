@@ -428,6 +428,16 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   background: var(--panel);
 }
 
+/* the splitters: a thin grip between a side panel and the main area (js/panels.js) */
+.splitter {
+  flex: none;
+  width: 5px;
+  cursor: col-resize;
+  background: var(--bg);   /* the panels draw the border: at rest the grip is only a gap of the main area */
+  outline: none;
+}
+.splitter:hover, .splitter.dragging, .splitter:focus-visible { background: var(--accent); }
+
 #main {
   flex: 1;
   min-width: 0;
@@ -446,7 +456,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   background: var(--panel);
   position: relative;
 }
-#details.collapsed { width: 26px; padding: 6px 0; overflow: hidden; }
+#details.collapsed { width: 26px !important; padding: 6px 0; overflow: hidden; }
 #details.collapsed #detailsContent, #details.collapsed #schemaInfo { display: none; }
 #detailsToggle { position: absolute; top: 6px; right: 6px; }
 #details.collapsed #detailsToggle { right: 3px; }

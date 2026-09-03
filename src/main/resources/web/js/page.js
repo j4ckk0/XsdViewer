@@ -8,6 +8,7 @@ import { $, CLS, DATA, ID, selector } from './dom.js';
 import { renderGraph } from './graph.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
+import { updateSplitters } from './panels.js';
 import { renderNodeList, renderSchemaInfo } from './sidebar.js';
 import { session } from './state.js';
 import { compareTitle, renderNavigation, validationTitle } from './tabs.js';
@@ -62,6 +63,7 @@ export function showView(view) {
   $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || comparing);   // the schema header, then the selected object
   $(ID.EXPORT_BUTTON).disabled = !loaded || comparing;
   $(ID.EXPORT_SVG_BUTTON).disabled = !loaded || comparing || view !== VIEW.GRAPH;
+  updateSplitters();
   $(ID.MENU_VALIDATE).disabled = !canValidate();
   $(ID.MENU_OPEN_ALL).disabled = comparing || !listedOnly().length;
   if (loaded && !comparing && view === VIEW.TEXT) highlightTextLine(true);

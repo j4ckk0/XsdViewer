@@ -41,7 +41,9 @@ filters the Files panel and the object list below it — every schema of the wor
 not, is searched, by the objects' names but also by the names of the elements and attributes inside
 a declaration (a message's parts) and by the documentation, the reason being shown in grey after a
 listed object; **File ▸ Validate an XML file…** checks a
-document against the shown schema, in a tab of its own (see *Validation* below). **⤓ PNG** in the top bar saves the current view (graph or
+document against the shown schema, in a tab of its own (see *Validation* below). The **left panel and the details panel are resizable**: drag the thin grip along their inner edge (a
+double-click restores the default width, the arrow keys move it when it has the focus); the widths
+are remembered by the browser. **⤓ PNG** in the top bar saves the current view (graph or
 text) as a PNG image, **⤓ SVG** the graph as a vector image (for documents). In the Text view, a
 **find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter. **File ▸ Quit** stops the server and closes the page.
 
