@@ -4,7 +4,7 @@
  * a derivation from a base type), what uses it on the
  * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
-import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, familyOf, isDerivation, isSchematron, isWsdl, labelFamily, linkFamily } from './constants.js';
+import { COMPOSITOR, ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, familyOf, isDerivation, isSchematron, isWsdl, labelFamily, linkFamily } from './constants.js';
 import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declarations.js';
 import { isLinkShown, renderLinkMenu } from './link-filter.js';
 import { cardinalityText, isOptional } from './cardinality.js';
@@ -22,6 +22,12 @@ const LABEL_MAX_CHARS = 40, LABEL_CHAR_W = 6.2, LABEL_PAD = 8, LABEL_H = 14, LAB
 const NAME_MAX_CHARS_CENTER = 24, NAME_MAX_CHARS = 26, KIND_MAX_CHARS = 30, CAPTION_MAX_CHARS = 28;
 /** Corner radius of a node of a family (a WSDL's service objects, a Schematron's rules): the schema's own objects keep square corners. */
 const FAMILY_NODE_RADIUS = 9;
+/** The mark of the compositor a nested element sits in, before its name in the caption (a sequence, the common case, has none). */
+const COMPOSITOR_MARK = { [COMPOSITOR.CHOICE]: '◇', [COMPOSITOR.ALL]: '○' };
+/** Before the count of values a declaration enumerates, at the bottom of its node. */
+const ENUM_MARK = '≡ ';
+/** How many enumerated values the node's tooltip lists. */
+const ENUM_VALUES_SHOWN = 12;
 /** Distance between the caption's baseline and the top of the node. */
 const CAPTION_LIFT = 6;
 const ELLIPSIS = '…';
@@ -122,7 +128,12 @@ export function renderGraph() {
     + '<path class="' + CLS.ARROW_HEAD + '" d="M0,0 L10,5 L0,10 z"/></marker>'
     // a derivation: a hollow triangle, larger, as a UML generalisation
     + '<marker id="' + SVG_ID.DERIVATION_ARROW + '" viewBox="0 0 10 10" refX="0.5" refY="5" markerWidth="12" markerHeight="12" orient="auto">'
-    + '<path class="' + CLS.ARROW_HEAD + ' ' + CLS.DERIVATION + '" d="M0.5,0.5 L9.5,5 L0.5,9.5 z"/></marker></defs>';
+    + '<path class="' + CLS.ARROW_HEAD + ' ' + CLS.DERIVATION + '" d="M0.5,0.5 L9.5,5 L0.5,9.5 z"/></marker>'
+    // a list of a type, a union of types: a diamond instead of the arrowhead, filled for the list, hollow for the union
+    + '<marker id="' + SVG_ID.LIST_ARROW + '" viewBox="0 0 12 10" refX="12" refY="5" markerWidth="10" markerHeight="9" orient="auto">'
+    + '<path class="' + CLS.ARROW_HEAD + ' ' + CLS.LIST + '" d="M0,5 L6,0.5 L12,5 L6,9.5 z"/></marker>'
+    + '<marker id="' + SVG_ID.UNION_ARROW + '" viewBox="0 0 12 10" refX="12" refY="5" markerWidth="10" markerHeight="9" orient="auto">'
+    + '<path class="' + CLS.ARROW_HEAD + ' ' + CLS.UNION + '" d="M0.5,5 L6,1 L11.5,5 L6,9 z"/></marker></defs>';
 
   const edges = [], labels = [], nodes = [];
 
@@ -182,7 +193,10 @@ function curve(x1, y1, x2, y2, edge, family) {
   if (derivation) x2 -= DERIVATION_ARROW_LENGTH;   // the hollow head, anchored at its base, fills the gap up to the node
   const cls = CLS.EDGE + (isOptional(edge) ? ' ' + CLS.OPTIONAL : '') + (derivation ? ' ' + CLS.DERIVATION : '')
     + (family ? ' ' + CLS.CHAIN + ' ' + family : '');
-  return '<path class="' + cls + '" marker-end="url(#' + (derivation ? SVG_ID.DERIVATION_ARROW : SVG_ID.ARROW) + ')" d="M' + x1 + ',' + y1
+  const head = derivation ? SVG_ID.DERIVATION_ARROW
+    : edge.label === LINK_LABEL.LIST_OF ? SVG_ID.LIST_ARROW
+      : edge.label === LINK_LABEL.UNION_OF ? SVG_ID.UNION_ARROW : SVG_ID.ARROW;
+  return '<path class="' + cls + '" marker-end="url(#' + head + ')" d="M' + x1 + ',' + y1
     + ' C' + (x1 + dx) + ',' + y1 + ' ' + (x2 - dx) + ',' + y2 + ' ' + x2 + ',' + y2 + '"/>';
 }
 
@@ -204,18 +218,22 @@ function captionSvg(edge) {
   const card = cardinalityText(edge);
   const cardSvg = card ? ' <tspan class="' + CLS.CARDINALITY + '">' + esc(card) + '</tspan>' : '';
   const optional = isOptional(edge) ? ' ' + CLS.OPTIONAL : '';
-  const word = (w, cls) => '<text class="' + CLS.LINK_NAME + ' ' + cls + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(w) + cardSvg + '</text>';
+  // a nested element of a choice (or of an all) is marked: an unmarked one sits in a sequence
+  const mark = COMPOSITOR_MARK[edge.compositor];
+  const markSvg = mark ? '<tspan class="' + CLS.COMPOSITOR + '">' + mark + ' </tspan>' : '';
+  const word = (w, cls) => '<text class="' + CLS.LINK_NAME + ' ' + cls + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + markSvg + esc(w) + cardSvg + '</text>';
   const structural = (w) => word(w, CLS.STRUCTURAL);
   const family = labelFamily(label);
   if (family) return word(label, CLS.CHAIN + ' ' + family);
   if (label === LINK_LABEL.ATTRIBUTE_REF) return structural(LINK_LABEL.REF);
   if (STRUCTURAL_LINK_LABELS.has(label) || label.startsWith(LINK_LABEL.KEYREF_PREFIX)) return structural(label);
   const name = label.startsWith(LINK_LABEL.ATTRIBUTE_PREFIX) ? label.slice(LINK_LABEL.ATTRIBUTE_PREFIX.length) : label;
-  return '<text class="' + CLS.LINK_NAME + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(shorten(name, CAPTION_MAX_CHARS)) + cardSvg + '</text>';
+  return '<text class="' + CLS.LINK_NAME + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + markSvg + esc(shorten(name, CAPTION_MAX_CHARS)) + cardSvg + '</text>';
 }
 
-/** The link as written in a tooltip: "shipTo 1 → complexType USAddress". */
-const linkTitle = (edge) => edge.label + (cardinalityText(edge) ? ' ' + cardinalityText(edge) : '');
+/** The link as written in a tooltip: "shipTo 1 (choice) → complexType USAddress". */
+const linkTitle = (edge) => edge.label + (cardinalityText(edge) ? ' ' + cardinalityText(edge) : '')
+  + (edge.compositor ? ' (' + edge.compositor + ')' : '');
 
 /** @param opts {id} selected on click, {place} where the node lives when it is another file's (a tab or a listed file), {kindText} replaces the kind, {link} the edge captioned above the node */
 function nodeSvg(n, x, y, isCenter, opts) {
@@ -223,12 +241,16 @@ function nodeSvg(n, x, y, isCenter, opts) {
   const name = shorten(n.name, isCenter ? NAME_MAX_CHARS_CENTER : NAME_MAX_CHARS);
   const kindText = o.kindText || kindLabel(n.kind);
   const caption = o.link ? captionSvg(o.link) : '';
+  const values = n.values || [];   // a declaration that enumerates its values says how many
   return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + '" tabindex="0" role="button" aria-label="' + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + '"' + dataAttr(DATA.ID, o.id || n.id)
     + placeAttributes(o.place, session.active.workspace, dataAttr, DATA) + ' transform="translate(' + x + ',' + y + ')">'
-    + '<title>' + (o.link ? esc(linkTitle(o.link)) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
+    + '<title>' + (o.link ? esc(linkTitle(o.link)) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name))
+    + (values.length ? '\n' + esc(t(MSG.GRAPH_VALUES, values.length, values.slice(0, ENUM_VALUES_SHOWN).map(v => v.value).join(TEXT.LIST_SEPARATOR))) : '')
+    + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
     + caption
     + '<rect width="' + NODE_W + '" height="' + NODE_H + '"' + (familyOf(n.kind) ? ' rx="' + FAMILY_NODE_RADIUS + '"' : '') + '/>'
     + '<text class="' + CLS.NODE_NAME + '" x="10" y="' + (NODE_H / 2 + 1) + '">' + esc(name) + '</text>'
+    + (values.length ? '<text class="' + CLS.ENUM + '" x="10" y="' + (NODE_H - 6) + '">' + ENUM_MARK + values.length + '</text>' : '')
     + '<text class="' + CLS.NODE_KIND + '" x="' + (NODE_W - 8) + '" y="' + (NODE_H - 6) + '" text-anchor="end">' + esc(shorten(kindText, KIND_MAX_CHARS)) + '</text>'
     + '</g>';
 }

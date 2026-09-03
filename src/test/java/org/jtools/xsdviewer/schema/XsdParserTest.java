@@ -246,6 +246,39 @@ class XsdParserTest {
     }
 
     @Test
+    void theCompositorOfANestedElement() throws Exception {
+        SchemaGraph m = SchemaParser.parse("""
+                <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+                  <xs:complexType name="T">
+                    <xs:sequence>
+                      <xs:element name="a" type="xs:string"/>
+                      <xs:choice>
+                        <xs:element name="b" type="xs:string"/>
+                        <xs:group ref="G"/>
+                      </xs:choice>
+                      <xs:element name="c">
+                        <xs:complexType><xs:all><xs:element name="d" type="xs:string"/></xs:all></xs:complexType>
+                      </xs:element>
+                    </xs:sequence>
+                    <xs:attribute name="p" type="xs:string"/>
+                  </xs:complexType>
+                  <xs:element name="e" type="xs:string"/>
+                </xs:schema>""");
+        assertEquals("sequence", compositor(m, "complexType:T", "a"));
+        assertEquals("choice", compositor(m, "complexType:T", "b"));
+        assertEquals("choice", compositor(m, "complexType:T", LinkLabel.GROUP), "a group reference is a branch like an element");
+        assertEquals("all", compositor(m, "complexType:T", "d"), "the content of c's own type sits in its own compositor, not in the sequence holding c");
+        assertEquals("", compositor(m, "complexType:T", LinkLabel.attribute("p")), "an attribute sits in no compositor");
+        assertEquals("", compositor(m, "element:e", LinkLabel.TYPE), "a declaration's own type link has none");
+    }
+
+    /** The compositor of the link of {@code owner} labelled {@code label}. */
+    private static String compositor(SchemaGraph g, String owner, String label) {
+        return g.edges.stream().filter(e -> e.from().equals(owner) && e.label().equals(label))
+                .map(SchemaGraph.Edge::compositor).findFirst().orElseThrow(() -> new AssertionError("no link " + label + " from " + owner));
+    }
+
+    @Test
     void enclosingCompositorsCountToo() throws Exception {
         SchemaGraph m = SchemaParser.parse("""
                 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">

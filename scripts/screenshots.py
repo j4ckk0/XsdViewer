@@ -71,8 +71,22 @@ SCENES = [
          expect={'selected': 'PurchaseOrderType', 'centre': 'complexType PurchaseOrderType', 'openGroups': 1}),   # every group was folded: the one holding the selection opens
     dict(name='enumeration', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"simpleType:Currency\"]').click();",
-         checks={'values': "document.querySelectorAll('#detailsContent .value').length"},
-         expect={'values': 3}),
+         checks={'values': "document.querySelectorAll('#detailsContent .value').length",
+                 'badge': "document.querySelector('#graphCanvas .node.center text.enum').textContent"},
+         expect={'values': 3, 'badge': '≡ 3'}),
+    dict(name='compositors', file='samples/purchaseOrder.xsd', theme='light',
+         action="const fa = await import('/js/file-actions.js');"
+                "await fa.openFiles([new File(['<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"urn:c\"><xs:complexType name=\"Payment\"><xs:choice><xs:element name=\"card\" type=\"xs:string\"/><xs:element name=\"transfer\" type=\"xs:string\"/></xs:choice><xs:attribute name=\"amount\" type=\"xs:decimal\"/></xs:complexType><xs:complexType name=\"Person\"><xs:all><xs:element name=\"first\" type=\"xs:string\"/></xs:all></xs:complexType></xs:schema>'], 'choice.xsd')]);"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:Payment\"]').click();",
+         checks={'captions': "[...document.querySelectorAll('#graphCanvas .link-name')].map(t => t.textContent.trim()).sort().join('|')",
+                 'marks': "[...document.querySelectorAll('#graphCanvas .link-name .compositor')].map(t => t.textContent.trim()).join('|')",
+                 'detail': "document.querySelector('#detailsContent .link .compositor') ? document.querySelector('#detailsContent .link .compositor').textContent : ''"},
+         expect={'captions': 'amount 0..1|\u25c7 card 0..1|\u25c7 transfer 0..1', 'marks': '\u25c7|\u25c7', 'detail': 'choice'}),
+    dict(name='list-union', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"simpleType:Identifier\"]').click();",
+         checks={'unionHead': "document.querySelectorAll('#graphCanvas path[marker-end$=\"unionArrow)\"]').length",
+                 'captions': "[...document.querySelectorAll('#graphCanvas .link-name')].map(t => t.textContent.trim()).sort().join('|')"},
+         expect={'unionHead': 2, 'captions': 'union of|union of'}),   # SKU and xs:positiveInteger, the members of the union
     dict(name='text-dark', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('.tab[data-view=\"text\"]').click();",
          checks={'theme': "document.documentElement.dataset.theme",

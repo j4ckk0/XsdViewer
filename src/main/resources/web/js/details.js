@@ -75,6 +75,8 @@ function linkHtml(edge, target, place = null) {
     + placeAttributes(place, session.active.workspace, dataAttr, DATA) + ' title="' + esc(title) + '">'
     + '<span class="' + CLS.LINK_LABEL + '">' + esc(edge.label) + '</span>'
     + (card ? '<span class="' + CLS.CARDINALITY + '">' + esc(card) + '</span>' : '')
+    // the xs:sequence / xs:choice / xs:all the element sits in, when it sits in one
+    + (edge.compositor ? '<span class="' + CLS.COMPOSITOR + '">' + esc(edge.compositor) + '</span>' : '')
     + '<span class="' + CLS.DOT + ' ' + target.kind + '"></span>'
     + '<span class="' + CLS.LINK_TARGET + '">' + esc(target.name) + (place ? ' <span class="' + CLS.META + '">' + esc(place.fileName) + '</span>' : '') + '</span></div>';
 }

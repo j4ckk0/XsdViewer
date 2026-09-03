@@ -92,10 +92,18 @@ public final class SchemaGraph {
         }
     }
 
-    /** A direct link from one node to another ({@code label}: a {@link LinkLabel}); {@code cardinality} is null for type links. */
-    public record Edge(String from, String to, String label, Cardinality cardinality) {
+/**
+     * A direct link from one node to another ({@code label}: a {@link LinkLabel}); {@code cardinality}
+     * is null for type links; {@code compositor} is the {@code xs:sequence}, {@code xs:choice} or
+     * {@code xs:all} a nested element (or a group reference) sits in, empty for every other link.
+     */
+    public record Edge(String from, String to, String label, Cardinality cardinality, String compositor) {
         public Edge(String from, String to, String label) {
-            this(from, to, label, null);
+            this(from, to, label, null, "");
+        }
+
+        public Edge(String from, String to, String label, Cardinality cardinality) {
+            this(from, to, label, cardinality, "");
         }
     }
 

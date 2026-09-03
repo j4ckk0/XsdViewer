@@ -733,6 +733,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   display: flex;
   align-items: center;
   gap: 12px;
+  white-space: nowrap;   /* the toolbar's words stay on one line; the legend wraps on its own */
   padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   font-size: 12px;
@@ -759,6 +760,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .lg.arrow svg line.optional { stroke-dasharray: 4 3; }
 .lg.arrow svg path { fill: var(--edge); }
 .lg.arrow svg path.derivation { fill: var(--surface); stroke: var(--edge); stroke-width: 1.2; }
+.lg.arrow .compositor, .lg.arrow .enum { font-weight: 700; }
+.lg.arrow .enum { color: var(--c-simpleType); }
 .lg.arrow svg line.chain { stroke-width: 2.2; }
 .lg.arrow svg line.chain.wsdl, .lg.arrow svg path.chain.wsdl { stroke: var(--c-service); fill: var(--c-service); }
 .lg.arrow svg line.chain.schematron, .lg.arrow svg path.chain.schematron { stroke: var(--c-pattern); fill: var(--c-pattern); }
@@ -807,6 +810,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .edge.chain.schematron { stroke: var(--c-pattern); }
 .arrow-head { fill: var(--edge); }
 .arrow-head.derivation { fill: var(--surface); stroke: var(--edge); }
+/* a list of a type: a filled diamond; a union of types: a hollow one */
+.arrow-head.union { fill: var(--surface); stroke: var(--edge); }
 /* the arrowheads are one shared marker: they take the colour of the line they end (ignored where unsupported: the line's own colour then differs) */
 .arrow-head { fill: context-stroke; }
 .arrow-head.derivation { stroke: context-stroke; }
@@ -820,6 +825,9 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .node .link-name.chain.wsdl { fill: var(--c-service); }
 .node .link-name.chain.schematron { fill: var(--c-pattern); }
 .node .link-name .card { font-size: 11px; font-weight: 400; font-style: normal; fill: var(--muted); }
+.node .link-name .compositor { font-size: 11px; font-weight: 400; fill: var(--muted); }
+/* the values a declaration enumerates, at the bottom of its node */
+.node text.enum { font-size: 10px; fill: var(--c-simpleType); font-weight: 700; }
 .edge.optional { stroke-dasharray: 6 4; }
 
 /* ---- text view --------------------------------------------------------------------- */
@@ -890,6 +898,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 /* the enumeration of the selected object: one value per row, its documentation in grey after it */
 #details .xpath { margin: 8px 0; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-size: 12px; overflow-wrap: anywhere; }
 #details .xpath code { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; color: var(--text); white-space: pre-wrap; }
+#details .link .compositor { font-size: 11px; color: var(--muted); font-style: italic; }
 #details .value { display: flex; align-items: baseline; gap: 8px; padding: 2px 4px; font-size: 12px; }
 #details .value code { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; font-size: 12px; color: var(--text); flex: none; }
 #details .value .value-doc { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

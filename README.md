@@ -323,6 +323,13 @@ element it carries, or from a rule to what it checks, is coloured too: at a glan
 service or the rules, grey is the structure of the data. The legend names it (*service chain*,
 *rules chain*) for such a file.
 
+The constructs of a type are told apart at a glance: a link to a **list**'s item type ends in a
+filled diamond and one to each member of a **union** in a hollow one, rather than in an arrowhead; a
+nested element that is a branch of an **`xs:choice`** carries a `◇` before its name (an `xs:all`
+member a `○`, and an unmarked element follows an `xs:sequence`), with the word repeated in the
+details panel; and a declaration that **enumerates** its values shows how many at the bottom of its
+node (`≡ 3`), the values themselves in its tooltip and in the details panel. The legend names them.
+
 XSD built-in types (`xs:string`…) appear as grey-filled nodes with a grey border (toggle with
 the **built-in types** checkbox). Objects referenced but not declared in the file (imported /
 included ones) appear as grey-filled *external* nodes with a red border. Dashed lines are

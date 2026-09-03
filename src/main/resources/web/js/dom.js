@@ -218,6 +218,13 @@ export const CLS = {
   DERIVATION: 'derivation',
   /** The arrowhead of an edge (a marker path), coloured by the stylesheet. */
   ARROW_HEAD: 'arrow-head',
+  /** The head of a list-of link (a filled diamond) and of a union-of link (a hollow one). */
+  LIST: 'list',
+  UNION: 'union',
+  /** In a caption: the mark of the compositor a nested element sits in (a choice, an all). */
+  COMPOSITOR: 'compositor',
+  /** On a node: the values its declaration enumerates. */
+  ENUM: 'enum',
   /** On the legend: the shown file is a WSDL (its kinds are listed) / a Schematron (its kinds are listed, the XSD ones are not). */
   WSDL: 'wsdl',
   SCHEMATRON: 'schematron',
@@ -271,6 +278,12 @@ export const DATA = {
 export const dataAttr = (name, value) => ' data-' + name + '="' + esc(value) + '"';
 
 /** Ids inside the graph SVG. */
-export const SVG_ID = { ARROW: 'arrow', DERIVATION_ARROW: 'arrowDerivation' };
+export const SVG_ID = {
+  /** The heads of a list-of and a union-of link: a diamond, filled and hollow. */
+  LIST_ARROW: 'listArrow',
+  UNION_ARROW: 'unionArrow',
+  ARROW: 'arrow',
+  DERIVATION_ARROW: 'arrowDerivation',
+};
 
 export const selector = (cls) => '.' + cls;

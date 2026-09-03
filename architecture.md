@@ -278,9 +278,15 @@ service, and it parses whatever is posted to it.
                { "id": "rule:orders/po:item", "kind": "rule", "name": "po:item", "ns": "",
                  "line": 12, "doc": "", "xpath": "po:item" } ],
   "edges":   [ { "from": "complexType:PurchaseOrderType", "to": "complexType:USAddress",
-                 "label": "shipTo", "min": 1, "max": 1 } ]
+                 "label": "shipTo", "min": 1, "max": 1, "compositor": "sequence" } ]
 }
 ```
+
+`compositor` is present on the links of a nested element or a group reference: the `sequence`,
+`choice` or `all` it sits in directly (the content of an element's own type sits in that type's
+compositors, not in the one holding the element). The graph marks a choice branch and an all member
+in the caption, and the details panel writes the word; a list's and a union's links end in a
+diamond, filled and hollow, and a declaration with `values` shows their count on its node.
 
 `min` / `max` are present on the links that have a cardinality — nested elements and `group ref`
 (their `minOccurs`/`maxOccurs`, multiplied by those of the enclosing `sequence`/`all`/`choice`

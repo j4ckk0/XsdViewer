@@ -118,7 +118,7 @@ final class XsdParser {
         for (Element c : children(schema)) {
             if (isGlobalDeclaration(c)) {
                 String id = SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME));
-                collect(c, id, true, Cardinality.ONE);
+                collect(c, id, true, Cardinality.ONE, "");
                 Set<String> found = members.get(id);
                 if (found != null) graph.nodes.computeIfPresent(id, (k, n) -> n.withMembers(List.copyOf(found)));
             }
@@ -156,7 +156,7 @@ final class XsdParser {
                             Messages.get(MessageKey.EXTERNAL_DECLARATION_DOC, kind)));
                 }
             }
-            graph.edges.add(new SchemaGraph.Edge(e.from(), to, e.label(), e.cardinality()));
+            graph.edges.add(new SchemaGraph.Edge(e.from(), to, e.label(), e.cardinality(), e.compositor()));
         }
         pending.clear();
     }
@@ -179,11 +179,13 @@ final class XsdParser {
      * @param owner     id of the global declaration the links are attributed to
      * @param self      {@code e} is the global declaration itself (its own type link is labelled differently)
      * @param enclosing occurrences of the enclosing particles since the nearest element: multiplies a nested element's own
+     * @param compositor the xs:sequence / xs:choice / xs:all {@code e} sits in directly, empty when it sits in none
      */
-    private void collect(Element e, String owner, boolean self, Cardinality enclosing) {
+    private void collect(Element e, String owner, boolean self, Cardinality enclosing, String compositor) {
         if (!XsdVocabulary.NAMESPACE.equals(e.getNamespaceURI())) return; // e.g. content of xs:appinfo
         String ln = e.getLocalName();
         Cardinality inner = enclosing;   // what the children of e are enclosed in
+        String innerCompositor = compositor;
         switch (ln) {
             case XsdVocabulary.ANNOTATION -> { return; }
             case XsdVocabulary.ELEMENT -> {
@@ -191,18 +193,19 @@ final class XsdParser {
                 if (!self && e.hasAttribute(XsdVocabulary.ATTR_REF)) member(owner, e.getAttribute(XsdVocabulary.ATTR_REF));
                 if (!self && e.hasAttribute(XsdVocabulary.ATTR_NAME)) member(owner, e.getAttribute(XsdVocabulary.ATTR_NAME));
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.REF, card);
+                    link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.REF, card, compositor);
                     return;
                 }
                 String name = e.getAttribute(XsdVocabulary.ATTR_NAME);
                 if (e.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
                     // a nested element is labelled with just its name: "shipTo", not "child shipTo"
-                    linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e, self ? LinkLabel.TYPE : name, card);
+                    linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e, self ? LinkLabel.TYPE : name, card, compositor);
                 }
                 if (self && e.hasAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP)) {
                     link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP), e, LinkLabel.SUBSTITUTES, null);
                 }
                 inner = Cardinality.ONE;   // an anonymous type's content is counted from this element
+                innerCompositor = "";      // and sits in the compositors of that type, not in this element's
             }
             case XsdVocabulary.ATTRIBUTE -> {
                 Cardinality card = self ? null : attributeUse(e);
@@ -219,7 +222,7 @@ final class XsdParser {
             }
             case XsdVocabulary.GROUP -> {
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.GROUP, particle(e).within(enclosing));
+                    link(owner, NodeKind.GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.GROUP, particle(e).within(enclosing), compositor);
                     return;
                 }
             }
@@ -241,8 +244,11 @@ final class XsdParser {
                     keyRefs.add(new KeyRef(owner, e.getAttribute(XsdVocabulary.ATTR_NAME), e.getAttribute(XsdVocabulary.ATTR_REFER), e));
                 }
             }
-            case XsdVocabulary.SEQUENCE, XsdVocabulary.ALL -> inner = particle(e).within(enclosing);
-            case XsdVocabulary.CHOICE -> inner = particle(e).within(enclosing).withMin(0);   // one branch or another: each is optional
+            case XsdVocabulary.SEQUENCE, XsdVocabulary.ALL -> { inner = particle(e).within(enclosing); innerCompositor = ln; }
+            case XsdVocabulary.CHOICE -> {   // one branch or another: each is optional
+                inner = particle(e).within(enclosing).withMin(0);
+                innerCompositor = ln;
+            }
             case XsdVocabulary.EXTENSION -> {
                 if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.EXTENDS, null);
             }
@@ -261,7 +267,7 @@ final class XsdParser {
             }
             default -> { }
         }
-        for (Element c : children(e)) collect(c, owner, false, inner);
+        for (Element c : children(e)) collect(c, owner, false, inner, innerCompositor);
     }
 
     /** minOccurs..maxOccurs of a particle (element, group reference, compositor); 1..1 when absent. */
@@ -302,8 +308,12 @@ final class XsdParser {
         }
     }
 
-    /** A reference to a named type: built-in XSD types are resolved now, the others at the end. */
     void linkType(String owner, String qname, Element ctx, String label, Cardinality card) {
+        linkType(owner, qname, ctx, label, card, "");
+    }
+
+    /** A reference to a named type: built-in XSD types are resolved now, the others at the end. */
+    void linkType(String owner, String qname, Element ctx, String label, Cardinality card, String compositor) {
         QName q = QName.resolve(qname, ctx);
         // A name in the XSD namespace is a built-in type, unless this file declares it: schemas
         // that use the XSD namespace as their default namespace refer to their own types unprefixed.
@@ -311,16 +321,20 @@ final class XsdParser {
             String id = SchemaGraph.nodeId(NodeKind.BUILTIN, q.local());
             graph.nodes.computeIfAbsent(id, k -> new SchemaGraph.Node(id, NodeKind.BUILTIN, q.local(),
                     XsdVocabulary.NAMESPACE, 0, Messages.get(MessageKey.BUILTIN_TYPE_DOC)));
-            graph.edges.add(new SchemaGraph.Edge(owner, id, label, card));
+            graph.edges.add(new SchemaGraph.Edge(owner, id, label, card, compositor));
         } else {
-            pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local()), label, card), q.ns()));
+            pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local()), label, card, compositor), q.ns()));
         }
     }
 
     /** A reference (ref=, substitutionGroup=, a WSDL message=, element=...) to a named declaration of a given kind. */
     void link(String owner, String kind, String qname, Element ctx, String label, Cardinality card) {
+        link(owner, kind, qname, ctx, label, card, "");
+    }
+
+    void link(String owner, String kind, String qname, Element ctx, String label, Cardinality card, String compositor) {
         QName q = QName.resolve(qname, ctx);
-        pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(kind, q.local()), label, card), q.ns()));
+        pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(kind, q.local()), label, card, compositor), q.ns()));
     }
 
     /**

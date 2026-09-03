@@ -114,6 +114,9 @@ export function linkCategory(edge, fromKind, toKind) {
   return LINK_CATEGORY.CONTENT;
 }
 
+/** The xs:sequence / xs:choice / xs:all a nested element sits in (edge.compositor, absent on the other links). */
+export const COMPOSITOR = { SEQUENCE: 'sequence', CHOICE: 'choice', ALL: 'all' };
+
 /** Cardinality of a link (edge.min / edge.max, absent on type links); how it is written. */
 export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };
 

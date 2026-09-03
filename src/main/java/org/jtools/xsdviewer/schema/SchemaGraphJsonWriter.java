@@ -74,6 +74,7 @@ public final class SchemaGraphJsonWriter {
                     .property(JsonKey.TO, e.to())
                     .property(JsonKey.LABEL, e.label());
             if (e.cardinality() != null) w.property(JsonKey.MIN, e.cardinality().min()).property(JsonKey.MAX, e.cardinality().max());
+            if (!e.compositor().isEmpty()) w.property(JsonKey.COMPOSITOR, e.compositor());
             w.endObject();
         }
         w.endArray();

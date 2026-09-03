@@ -71,6 +71,8 @@ public final class JsonKey {
     /** Cardinality of a link, only when it has one: {@code min}, and {@code max} (-1 = unbounded). */
     public static final String MIN = "min";
     public static final String MAX = "max";
+    /** The xs:sequence / xs:choice / xs:all a nested element sits in, only when it sits in one. */
+    public static final String COMPOSITOR = "compositor";
 
     // schema files (/api/initial, /api/open, /api/locate)
     public static final String PATH = "path";
