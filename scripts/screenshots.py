@@ -65,8 +65,13 @@ SCENES = [
                 "const two = document.getElementById('twoLevels'); if (!two.checked) two.click();",
          checks={'messages': "document.querySelectorAll('#graphCanvas .node.message').length",
                  'tabs': "document.querySelectorAll('#tabs .dtab').length",
-                 'legend': "getComputedStyle(document.querySelector('#graphLegend .lg.service')).display !== 'none'"},
-         expect={'messages': 3, 'tabs': 3, 'legend': True}),   # the WSDL, purchaseOrder.xsd it imports, ext.xsd that one imports
+                 'legend': "getComputedStyle(document.querySelector('#graphLegend .lg.service')).display !== 'none'",
+                 'chainArrow': "getComputedStyle(document.querySelector('#graphLegend .lg.arrow.wsdl')).display !== 'none'",
+                 'chainEdges': "document.querySelectorAll('#graphCanvas .edge.chain.wsdl').length",
+                 'plainEdges': "document.querySelectorAll('#graphCanvas .edge:not(.chain)').length",
+                 'rounded': "[...document.querySelectorAll('#graphCanvas .node')].filter(g => g.querySelector('rect').getAttribute('rx')).map(g => g.className.baseVal.split(' ')[1]).sort().join(',')"},
+         expect={'messages': 3, 'tabs': 3, 'legend': True, 'chainArrow': True, 'chainEdges': 7, 'plainEdges': 0,
+                 'rounded': 'message,message,message,operation,portType'}),   # portType -> operation, its 3 messages, and each message to what it carries: every link has a service end   # the WSDL, purchaseOrder.xsd it imports, ext.xsd that one imports
     dict(name='schematron-rule', file='samples/schematron/purchaseOrder.sch', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"rule:structure/po:item\"]').click();"
                 "const two = document.getElementById('twoLevels'); if (!two.checked) two.click();",

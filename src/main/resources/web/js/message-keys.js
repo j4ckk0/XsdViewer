@@ -106,6 +106,8 @@ export const MSG = {
   DETAILS_VALUES: 'details.values',
   DETAILS_XPATH: 'details.xpath',
   DETAILS_NONE: 'details.none',
+  LEGEND_CHAIN_WSDL: 'legend.chain.wsdl',
+  LEGEND_CHAIN_SCHEMATRON: 'legend.chain.schematron',
   PANEL_RESIZE: 'panel.resize',
   DETAILS_COLLAPSE: 'details.collapse',
   DETAILS_EXPAND: 'details.expand',

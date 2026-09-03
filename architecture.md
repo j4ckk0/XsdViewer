@@ -206,6 +206,13 @@ within canvas size limits). `canvas.toBlob()` is then saved through a download l
 
 #### Graph view
 
+A file's own objects — a WSDL's service, portType, operation, binding and message, a Schematron's
+phase, pattern, rule, assertion and diagnostic — are drawn with rounded corners, and every link with
+one of them at either end (`linkFamily()`) is drawn in the family's colour, heavier, its word in the
+same colour: the service or the rules read apart from the structure of the data, which stays grey
+and square. The arrowheads are one shared marker per shape, filled with `context-stroke` so that
+they take the colour of the line they end.
+
 An *ego graph* of the selected node: the node in the centre, every link it makes as a row on
 the right, every link made to it as a row on the left — one arrow per link, so a type used
 twice (`shipTo` and `billTo`) is drawn twice. The arrows carry no text (an optional link — `min` 0 — is dashed): the name of the link,

@@ -301,6 +301,17 @@ its rules and their assertions. `samples/schematron/purchaseOrder.sch` is an exa
 `samples/purchaseOrder.xsd`; documents are checked against it with **File ▸ Validate an XML file…**
 (see *Validation* above).
 
+A file that describes more than a schema — a WSDL, a Schematron — draws its own objects and links
+apart from the schema's: **its objects have rounded corners** (a service, a portType, an operation,
+a binding, a message; a phase, a pattern, a rule, an assertion, a diagnostic), while the schema
+objects it reaches keep square ones, and **the links of its chain are drawn in colour and heavier**
+— dark blue for a service, teal for a set of rules — with their word (`operation`, `input`,
+`fault`, `assert`…) in that colour rather than the small grey of the XSD words. A link is the
+chain's as soon as one of its ends is one of those objects, so the arrow from a message to the
+element it carries, or from a rule to what it checks, is coloured too: at a glance, colour is the
+service or the rules, grey is the structure of the data. The legend names it (*service chain*,
+*rules chain*) for such a file.
+
 XSD built-in types (`xs:string`…) appear as grey-filled nodes with a grey border (toggle with
 the **built-in types** checkbox). Objects referenced but not declared in the file (imported /
 included ones) appear as grey-filled *external* nodes with a red border. Dashed lines are

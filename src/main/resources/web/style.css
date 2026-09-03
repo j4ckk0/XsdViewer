@@ -752,6 +752,9 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .lg.arrow svg line.optional { stroke-dasharray: 4 3; }
 .lg.arrow svg path { fill: var(--edge); }
 .lg.arrow svg path.derivation { fill: var(--surface); stroke: var(--edge); stroke-width: 1.2; }
+.lg.arrow svg line.chain { stroke-width: 2.2; }
+.lg.arrow svg line.chain.wsdl, .lg.arrow svg path.chain.wsdl { stroke: var(--c-service); fill: var(--c-service); }
+.lg.arrow svg line.chain.schematron, .lg.arrow svg path.chain.schematron { stroke: var(--c-pattern); fill: var(--c-pattern); }
 
 #graphCanvas { flex: 1; overflow: auto; }
 #graphCanvas svg { display: block; }
@@ -791,14 +794,24 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .node.center text.name { font-weight: 700; font-size: 14px; }
 
 .edge { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+/* a link of a WSDL's or a Schematron's own chain: the family's colour, a heavier line */
+.edge.chain { stroke-width: 2.2; }
+.edge.chain.wsdl { stroke: var(--c-service); }
+.edge.chain.schematron { stroke: var(--c-pattern); }
 .arrow-head { fill: var(--edge); }
 .arrow-head.derivation { fill: var(--surface); stroke: var(--edge); }
+/* the arrowheads are one shared marker: they take the colour of the line they end (ignored where unsupported: the line's own colour then differs) */
+.arrow-head { fill: context-stroke; }
+.arrow-head.derivation { stroke: context-stroke; }
 .edge-label { font-size: 11px; fill: var(--text); }
 .edge-label-bg { fill: var(--surface); opacity: .9; }
 
 .node .link-name { font-size: 13px; font-weight: 600; fill: var(--text); }
 .node .link-name.optional { font-weight: 400; }
 .node .link-name.structural, .node .link-name .structural { font-size: 11px; font-weight: 400; font-style: italic; fill: var(--muted); }
+.node .link-name.chain { font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+.node .link-name.chain.wsdl { fill: var(--c-service); }
+.node .link-name.chain.schematron { fill: var(--c-pattern); }
 .node .link-name .card { font-size: 11px; font-weight: 400; font-style: normal; fill: var(--muted); }
 .edge.optional { stroke-dasharray: 6 4; }
 

@@ -4,7 +4,7 @@
  * a derivation from a base type), what uses it on the
  * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
-import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, isDerivation, isSchematron, isWsdl } from './constants.js';
+import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, familyOf, isDerivation, isSchematron, isWsdl, labelFamily, linkFamily } from './constants.js';
 import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declarations.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc, selector } from './dom.js';
@@ -19,6 +19,8 @@ const ROW = 60, MARGIN = 24, MIN_GAP = 90;
 const SELF_LOOP_HEIGHT = 60, SELF_LOOP_ROOM = 40, SELF_LOOP_SPREAD = 30, SELF_LOOP_CONTROL_SPREAD = 50, SELF_LABEL_LIFT = 45;
 const LABEL_MAX_CHARS = 40, LABEL_CHAR_W = 6.2, LABEL_PAD = 8, LABEL_H = 14, LABEL_RADIUS = 3;
 const NAME_MAX_CHARS_CENTER = 24, NAME_MAX_CHARS = 26, KIND_MAX_CHARS = 30, CAPTION_MAX_CHARS = 28;
+/** Corner radius of a node of a family (a WSDL's service objects, a Schematron's rules): the schema's own objects keep square corners. */
+const FAMILY_NODE_RADIUS = 9;
 /** Distance between the caption's baseline and the top of the node. */
 const CAPTION_LIFT = 6;
 const ELLIPSIS = '…';
@@ -125,13 +127,14 @@ export function renderGraph() {
   for (const r of right) {
     const first = yOf(row, rightRows);
     const y = first + ((spanR(r) - 1) * ROW) / 2;   // a parent sits in the middle of its children
-    edges.push(curve(cx + NODE_W / 2, cy, xR1, y, r.edge));
+    const shown = r.resolved ? r.resolved.n : r.n;
+    edges.push(curve(cx + NODE_W / 2, cy, xR1, y, r.edge, linkFamily(center.kind, shown.kind)));
     nodes.push(r.resolved
       ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge }, fileKind(r.resolved.n, r.resolved.place)))
       : nodeSvg(r.n, xR1, y - NODE_H / 2, false, { link: r.edge }));
     r.children.forEach((c, k) => {
       const yc = first + k * ROW;
-      edges.push(curve(xR1 + NODE_W, y, xR2, yc, c.edge));
+      edges.push(curve(xR1 + NODE_W, y, xR2, yc, c.edge, linkFamily(shown.kind, c.n.kind)));
       nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, rowOpt(c)));
     });
     row += spanR(r);
@@ -139,7 +142,7 @@ export function renderGraph() {
   // incoming: level 1 -> centre, one step only
   left.forEach((l, i) => {
     const y = yOf(i, leftRows);
-    edges.push(curve(xLeft + NODE_W, y, cx - NODE_W / 2, cy, l.edge));
+    edges.push(curve(xLeft + NODE_W, y, cx - NODE_W / 2, cy, l.edge, linkFamily(l.n.kind, center.kind)));
     nodes.push(nodeSvg(l.n, xLeft, y - NODE_H / 2, false, rowOpt(l)));
   });
   // self reference (recursive type)
@@ -164,12 +167,17 @@ export function renderGraph() {
   canvas.scrollLeft = Math.max(0, cx - canvas.clientWidth / 2);
 }
 
-/** A bezier arrow for {@code edge}; dashed when the link is optional, a hollow arrowhead when it is a derivation. */
-function curve(x1, y1, x2, y2, edge) {
+/**
+ * A bezier arrow for {@code edge}; dashed when the link is optional, a hollow arrowhead when it is
+ * a derivation, drawn in the family's colour when it is a link of a WSDL's or a Schematron's chain
+ * ({@code family}, null for a link between schema objects).
+ */
+function curve(x1, y1, x2, y2, edge, family) {
   const dx = (x2 - x1) / 2;
   const derivation = isDerivation(edge);
   if (derivation) x2 -= DERIVATION_ARROW_LENGTH;   // the hollow head, anchored at its base, fills the gap up to the node
-  const cls = CLS.EDGE + (isOptional(edge) ? ' ' + CLS.OPTIONAL : '') + (derivation ? ' ' + CLS.DERIVATION : '');
+  const cls = CLS.EDGE + (isOptional(edge) ? ' ' + CLS.OPTIONAL : '') + (derivation ? ' ' + CLS.DERIVATION : '')
+    + (family ? ' ' + CLS.CHAIN + ' ' + family : '');
   return '<path class="' + cls + '" marker-end="url(#' + (derivation ? SVG_ID.DERIVATION_ARROW : SVG_ID.ARROW) + ')" d="M' + x1 + ',' + y1
     + ' C' + (x1 + dx) + ',' + y1 + ' ' + (x2 - dx) + ',' + y2 + ' ' + x2 + ',' + y2 + '"/>';
 }
@@ -182,13 +190,20 @@ function textWithBg(x, y, text) {
     + '<text class="' + CLS.EDGE_LABEL + '" x="' + x + '" y="' + (y + 2) + '" text-anchor="middle"><title>' + esc(text) + '</title>' + esc(shown) + '</text>';
 }
 
-/** The caption above a node: the link's name (an XSD word small and muted, the word "attribute" dropped) and its cardinality. */
+/**
+ * The caption above a node: the link's name and its cardinality. An XSD word is small and muted
+ * (the word "attribute" is dropped, the node's kind says it); a word of a WSDL's or a Schematron's
+ * chain is written in the family's colour, so that the chain reads apart from the schema's structure.
+ */
 function captionSvg(edge) {
   const label = edge.label;
   const card = cardinalityText(edge);
   const cardSvg = card ? ' <tspan class="' + CLS.CARDINALITY + '">' + esc(card) + '</tspan>' : '';
   const optional = isOptional(edge) ? ' ' + CLS.OPTIONAL : '';
-  const structural = (word) => '<text class="' + CLS.LINK_NAME + ' ' + CLS.STRUCTURAL + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(word) + cardSvg + '</text>';
+  const word = (w, cls) => '<text class="' + CLS.LINK_NAME + ' ' + cls + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + esc(w) + cardSvg + '</text>';
+  const structural = (w) => word(w, CLS.STRUCTURAL);
+  const family = labelFamily(label);
+  if (family) return word(label, CLS.CHAIN + ' ' + family);
   if (label === LINK_LABEL.ATTRIBUTE_REF) return structural(LINK_LABEL.REF);
   if (STRUCTURAL_LINK_LABELS.has(label) || label.startsWith(LINK_LABEL.KEYREF_PREFIX)) return structural(label);
   const name = label.startsWith(LINK_LABEL.ATTRIBUTE_PREFIX) ? label.slice(LINK_LABEL.ATTRIBUTE_PREFIX.length) : label;
@@ -208,7 +223,7 @@ function nodeSvg(n, x, y, isCenter, opts) {
     + placeAttributes(o.place, session.active.workspace, dataAttr, DATA) + ' transform="translate(' + x + ',' + y + ')">'
     + '<title>' + (o.link ? esc(linkTitle(o.link)) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
     + caption
-    + '<rect width="' + NODE_W + '" height="' + NODE_H + '"/>'
+    + '<rect width="' + NODE_W + '" height="' + NODE_H + '"' + (familyOf(n.kind) ? ' rx="' + FAMILY_NODE_RADIUS + '"' : '') + '/>'
     + '<text class="' + CLS.NODE_NAME + '" x="10" y="' + (NODE_H / 2 + 1) + '">' + esc(name) + '</text>'
     + '<text class="' + CLS.NODE_KIND + '" x="' + (NODE_W - 8) + '" y="' + (NODE_H - 6) + '" text-anchor="end">' + esc(shorten(kindText, KIND_MAX_CHARS)) + '</text>'
     + '</g>';

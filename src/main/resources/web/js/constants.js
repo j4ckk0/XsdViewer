@@ -39,6 +39,16 @@ export const SCHEMATRON_KINDS = new Set([NODE_KIND.PHASE, NODE_KIND.PATTERN, NOD
 /** What kind of file a model describes (an XSD otherwise): a WSDL cannot validate a document, a Schematron has its own validator. */
 export const isWsdl = (model) => model.nodes.some(n => WSDL_KINDS.has(n.kind));
 export const isSchematron = (model) => model.nodes.some(n => SCHEMATRON_KINDS.has(n.kind));
+/**
+ * The family a kind belongs to: the service description of a WSDL, the rules of a Schematron, or
+ * (null) the XML Schema objects — which a WSDL's inline schemas and a Schematron's targets also are.
+ * The graph draws a family's objects and the links to them apart from the schema's own.
+ */
+export const FAMILY = { WSDL: 'wsdl', SCHEMATRON: 'schematron' };
+export const familyOf = (kind) => (WSDL_KINDS.has(kind) ? FAMILY.WSDL : SCHEMATRON_KINDS.has(kind) ? FAMILY.SCHEMATRON : null);
+/** The family of a link between {@code fromKind} and {@code toKind}: a link is the family's as soon as one of its ends is. */
+export const linkFamily = (fromKind, toKind) => familyOf(fromKind) || familyOf(toKind);
+
 /** Kind in the id of an external type reference ("type:X"): the server could not tell complexType from simpleType. */
 export const TYPE_REFERENCE_KIND = 'type';
 /** Node ids are "kind:name". */
@@ -59,6 +69,15 @@ export const LINK_LABEL = {
   /** "keyref <name>": a keyref's link to the element declaring its key. */
   KEYREF_PREFIX: 'keyref ',
 };
+/** The words that name a link of a family's chain (a port's or a part's name is a name, not one of these). */
+export const FAMILY_LINK_LABELS = {
+  [FAMILY.WSDL]: new Set([LINK_LABEL.OPERATION, LINK_LABEL.INPUT, LINK_LABEL.OUTPUT, LINK_LABEL.FAULT, LINK_LABEL.BINDS]),
+  [FAMILY.SCHEMATRON]: new Set([LINK_LABEL.ACTIVE, LINK_LABEL.RULE, LINK_LABEL.IS_A, LINK_LABEL.ASSERT, LINK_LABEL.REPORT, LINK_LABEL.DIAGNOSTIC]),
+};
+/** The family whose chain uses {@code label} as a word, or null. */
+export const labelFamily = (label) => (FAMILY_LINK_LABELS[FAMILY.WSDL].has(label) ? FAMILY.WSDL
+  : FAMILY_LINK_LABELS[FAMILY.SCHEMATRON].has(label) ? FAMILY.SCHEMATRON : null);
+
 export const STRUCTURAL_LINK_LABELS = new Set([
   LINK_LABEL.TYPE, LINK_LABEL.REF, LINK_LABEL.ATTRIBUTE_REF, LINK_LABEL.SUBSTITUTES, LINK_LABEL.GROUP,
   LINK_LABEL.ATTRIBUTE_GROUP, LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.LIST_OF, LINK_LABEL.UNION_OF,

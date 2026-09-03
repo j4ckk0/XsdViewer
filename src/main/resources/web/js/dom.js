@@ -200,6 +200,8 @@ export const CLS = {
   NODE_KIND: 'kind',
   LINK_NAME: 'link-name',
   STRUCTURAL: 'structural',
+  /** On an edge and its caption: a link of a WSDL's or a Schematron's own chain (the family is a second class). */
+  CHAIN: 'chain',
   CARDINALITY: 'card',
   OPTIONAL: 'optional',
   /** An edge to a base type (extends / restricts). */
