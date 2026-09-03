@@ -1,4 +1,4 @@
-/** The right panel, under the schema header (sidebar.js): the selected object, its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
+/** The right panel, under the schema header (sidebar.js): the selected object, its expression (a Schematron rule's context, an assertion's test), its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
 import { cardinalityText, isOptional } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { placeAttributes, usersInWorkspace } from './declarations.js';
@@ -17,6 +17,7 @@ export function renderDetails() {
   html += '<div class="' + CLS.META + '">'
     + (n.line > 0 ? '<a' + dataAttr(DATA.LINE, n.line) + '>' + esc(t(MSG.DETAILS_SHOW_IN_TEXT, n.line)) + '</a>' : esc(t(MSG.DETAILS_NO_DECLARATION)))
     + '</div>';
+  if (n.xpath) html += '<div class="' + CLS.XPATH + '" title="' + esc(t(MSG.DETAILS_XPATH)) + '"><code>' + esc(n.xpath) + '</code></div>';
   if (n.doc) html += '<div class="' + CLS.DOC + '">' + esc(n.doc) + '</div>';
   if (n.values && n.values.length) {
     html += '<h3>' + esc(t(MSG.DETAILS_VALUES, n.values.length)) + '</h3>'

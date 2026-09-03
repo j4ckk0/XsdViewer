@@ -26,7 +26,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.jtools.xsdviewer.schema.SchemaParser;
 
-/** {@code POST /api/parse}, body = the text of a schema file (XSD or WSDL): answers the JSON graph, or 400 with the parse error. */
+/** {@code POST /api/parse}, body = the text of a schema file (XSD, WSDL or Schematron): answers the JSON graph, or 400 with the parse error. */
 final class ParseSchemaHandler implements HttpHandler {
 
     @Override

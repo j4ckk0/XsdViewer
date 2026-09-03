@@ -48,6 +48,13 @@
   --c-operation: #b45309;
   --c-binding: #a16207;
   --c-message: #881337;
+  /* the kinds of a Schematron */
+  --c-phase: #4338ca;
+  --c-pattern: #0f766e;
+  --c-rule: #c2410c;
+  --c-assert: #b91c1c;
+  --c-report: #a21caf;
+  --c-diagnostic: #64748b;
 }
 
 /* the dark theme (Settings ▸ Theme, or the system's choice): only the palette changes */
@@ -89,6 +96,12 @@
   --c-element: #3b82f6;
   --c-service: #818cf8;
   --c-message: #f43f5e;
+  --c-phase: #a5b4fc;
+  --c-pattern: #2dd4bf;
+  --c-rule: #fb923c;
+  --c-assert: #f87171;
+  --c-report: #e879f9;
+  --c-diagnostic: #94a3b8;
   --c-builtin: #8b95a5;
 }
 
@@ -610,9 +623,16 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .dot.operation, .lg.operation, .badge.operation { background: var(--c-operation); }
 .dot.binding, .lg.binding, .badge.binding { background: var(--c-binding); }
 .dot.message, .lg.message, .badge.message { background: var(--c-message); }
-/* the chips of the WSDL kinds only show for a WSDL file */
-.legend .lg.wsdl { display: none; }
-.legend.wsdl .lg.wsdl { display: inline; }
+.dot.phase, .lg.phase, .badge.phase { background: var(--c-phase); }
+.dot.pattern, .lg.pattern, .badge.pattern { background: var(--c-pattern); }
+.dot.rule, .lg.rule, .badge.rule { background: var(--c-rule); }
+.dot.assert, .lg.assert, .badge.assert { background: var(--c-assert); }
+.dot.report, .lg.report, .badge.report { background: var(--c-report); }
+.dot.diagnostic, .lg.diagnostic, .badge.diagnostic { background: var(--c-diagnostic); }
+/* the chips of the WSDL / Schematron kinds only show for such a file; a Schematron has no XSD kind */
+.legend .lg.wsdl, .legend .lg.schematron { display: none; }
+.legend.wsdl .lg.wsdl, .legend.schematron .lg.schematron { display: inline; }
+.legend.schematron .lg.xsd { display: none; }
 
 /* ---- empty state ------------------------------------------------------------------- */
 
@@ -684,6 +704,12 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .node.operation rect { stroke: var(--c-operation); }
 .node.binding rect { stroke: var(--c-binding); }
 .node.message rect { stroke: var(--c-message); }
+.node.phase rect { stroke: var(--c-phase); }
+.node.pattern rect { stroke: var(--c-pattern); }
+.node.rule rect { stroke: var(--c-rule); }
+.node.assert rect { stroke: var(--c-assert); }
+.node.report rect { stroke: var(--c-report); }
+.node.diagnostic rect { stroke: var(--c-diagnostic); }
 .node.builtin text.name, .node.external text.name { font-style: italic; }
 .node:hover rect { fill: var(--node-hover); }
 .node.center rect { stroke-width: 3; fill: var(--node-center); }
@@ -769,6 +795,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 }
 #details .meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 /* the enumeration of the selected object: one value per row, its documentation in grey after it */
+#details .xpath { margin: 8px 0; padding: 6px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-size: 12px; overflow-wrap: anywhere; }
+#details .xpath code { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; color: var(--text); white-space: pre-wrap; }
 #details .value { display: flex; align-items: baseline; gap: 8px; padding: 2px 4px; font-size: 12px; }
 #details .value code { font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; font-size: 12px; color: var(--text); flex: none; }
 #details .value .value-doc { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -51,13 +51,14 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 | `UserSettings` | The settings changed from the page's Settings menu, kept in the user's `java.util.prefs.Preferences` (`org/jtools/xsdviewer`): `autoStop`. The command line wins for a run. |
 | `Messages`, `MessageKey` | The texts the server prints or sends to the page (console, API errors, generated documentation of placeholder nodes), read from `messages.properties` (English) / `messages_fr.properties` for the JVM locale; `MessageKey` holds the keys. |
 | `server.XmlValidator`, `server.ValidateHandler` | `POST /api/validate?schema=<path>`: the JDK validator compiles the schema from its file (a file the server served, never an arbitrary path; imports resolve next to it, files only), validates the posted document and answers every problem with its line and column (up to 200). |
-| `schema.SchemaParser` | Entry point for a file's text: an `xs:schema` root goes to `XsdParser`, a `wsdl:definitions` root to `WsdlParser`, anything else is refused. |
+| `schema.SchemaParser` | Entry point for a file's text: an `xs:schema` root goes to `XsdParser`, a `wsdl:definitions` root to `WsdlParser`, a root in a Schematron namespace (`sch:schema`, or a fragment: a `pattern`, a `rule`…) to `SchematronParser`, anything else is refused. |
 | `schema.XsdParser` | The only class that knows XSD. Turns an `xs:schema` element into `SchemaGraph` nodes and edges in three passes (see below) with the JDK DOM parser; the passes take any `xs:schema` element so that the schemas inline in a WSDL are parsed into the WSDL's graph. |
 | `schema.WsdlParser` | The only class that knows WSDL 1.1 (`WsdlVocabulary`): services, portTypes, operations (named within their portType: `operation:P.op`), bindings and messages become nodes; the inline schemas go through `XsdParser`; the links follow service → portType (labelled with the port) → operation → message (`input` / `output` / `fault`) → element or type (labelled with the part), plus binding → portType (`binds`). References are resolved by `XsdParser`'s third pass, so an element of an imported schema is an `external` placeholder in its namespace, resolved by the page in the other tabs like any schema reference. |
-| `schema.DeclarationLineIndex` | SAX pass locating the start tag of each declaration (line numbers); the parser says which tag paths declare a node (`DeclarationId`): for a WSDL, the operations at depth 3 and the inline schemas' declarations at depth 4 too. |
+| `schema.SchematronParser` | The only class that knows Schematron (`SchematronVocabulary`: the ISO namespace and the 1.5 one). Phases, patterns, rules, assertions (`assert` / `report`) and diagnostics become nodes; the links follow phase → pattern (`active`) → rule (`rule`) → assertion (`assert` / `report`) → diagnostic (`diagnostic`), plus pattern → abstract pattern (`is a`) and rule → abstract rule (`extends`). Nothing there is a QName: a reference is an id, resolved in the file or made an `external` placeholder with an empty namespace. Naming: an `id` when there is one, else the expression (a rule's context, an assertion's test — kept whole in the node's `xpath`), a pattern's `name` / `title` / rank; an unnamed rule or assertion is scoped by its parent (`rule:pattern/context`, `assert:pattern/context/test`) and a duplicate gets `#2`. `include`s are `Import`s. |
+| `schema.DeclarationLineIndex` | SAX pass locating the start tag of each declaration (line numbers); the parser says which tag paths declare a node (`DeclarationId`): for a WSDL, the operations at depth 3 and the inline schemas' declarations at depth 4 too. `elementLines()` is the other way in: the line of every element in document order, for a vocabulary whose declarations carry no name — `SchematronParser` numbers the DOM elements in the same order. |
 | `schema.SecureXmlFactories` | DOM / SAX factories with external entities and DTD loading disabled. |
 | `schema.SchemaGraph` | Plain data: `Node`, `Edge`, `Import` records, the `targetNamespace`, `nodeId(kind, name)`. `nodes` is a `LinkedHashMap` (declaration order is kept), `edges` a `LinkedHashSet` (parallel identical edges collapse). |
-| `schema.NodeKind`, `schema.LinkLabel`, `schema.XsdVocabulary` | The constants of the model: the kinds of node, the edge labels, and the XSD namespace / element / attribute names the parser reads. |
+| `schema.NodeKind`, `schema.LinkLabel`, `schema.XsdVocabulary`, `WsdlVocabulary`, `SchematronVocabulary` | The constants of the model: the kinds of node, the edge labels, and the namespace / element / attribute names each parser reads. |
 | `schema.SchemaGraphJsonWriter` | `SchemaGraph` → JSON (keys in `json.JsonKey`). |
 | `json.JsonWriter`, `json.JsonStrings`, `json.JsonKey` | A minimal streaming JSON writer and the string escaping. The model is flat enough that a JSON library would be the only dependency of the project, so it was left out. `JsonKey` is the API contract, mirrored by the client. |
 | `server.XsdViewerServer` | Starts a `com.sun.net.httpserver.HttpServer` bound to `127.0.0.1:8080` by default and maps each path of `ApiPath` to its handler. Requests are handled on virtual threads (`Executors.newVirtualThreadPerTaskExecutor`). |
@@ -125,7 +126,7 @@ Static files, no build step, no framework: `index.html`, `style.css`, ES modules
 | `js/about.js` | Help ▸ About: a `<dialog>` with the version and Java runtime reported by the server, the licence and the project page. |
 | `js/compare.js`, `js/schema-diff.js`, `js/diff.js`, `js/business-lines.js` | Workspace comparison: the selection (Ctrl+click on chips, `session.compareSelection`), the view (a tab whose `compare` holds the two workspaces; files paired by name, statuses, expandable rows; `compare.file` names the one pair shown when a row's *⧉ In a tab* button or a double-click opened it in a tab of its own, its differences shown at once), the model diff (declared nodes and edges — cardinality included — on one side only), the LCS line diff (common start / end trimmed, capped at 9 M cells) with moved blocks recognised afterwards (longest common contiguous runs between deleted and inserted lines, greedily) and the "business lines" filter (comments, `xs:annotation`, the XML declaration, the `xs:schema` / `xs:import` / `xs:include` tags, blank lines and indentation removed, original line numbers kept). |
 | `js/file-actions.js`, `js/workspace-actions.js`, `js/capabilities.js`, `js/events.js` | The File menu on files (open through the server's dialog or the browser's, close, quit, the start-up file); on workspaces (new / open / save / close, a folder opened as a workspace named after it — an opened workspace is its own group of tabs, saving writes the active workspace); what the server can do (dialogs, language, versions) and the menu entries depending on it; wiring of every control, key and drop to the actions. |
-| `js/file-list.js`, `js/sidebar.js`, `js/graph.js`, `js/details.js`, `js/text-view.js`, `js/xml-highlighter.js`, `js/png-export.js` | One module per view: the Files panel (the active workspace's files as a tree by folder, each unfoldable to its objects, narrowed to the matching objects of the matching files while the search box holds a text, redrawn with the tab bar), object list and schema header (foldable, at the top of the details panel), SVG ego-graph, details panel (collapsible to a strip), source text, its tokenizer, the PNG export. Folded states are remembered in `localStorage`. |
+| `js/file-list.js`, `js/sidebar.js`, `js/graph.js`, `js/details.js`, `js/text-view.js`, `js/xml-highlighter.js`, `js/png-export.js` | One module per view: the Files panel (the active workspace's files as a tree by folder, each unfoldable to its objects, narrowed to the matching objects of the matching files while the search box holds a text, redrawn with the tab bar), object list and schema header (foldable, at the top of the details panel), SVG ego-graph (its legend shows the WSDL / Schematron kinds for such a file, and no XSD kind for a Schematron), details panel (collapsible to a strip; a node's `xpath` — a Schematron rule's context, an assertion's test — in a code box above the documentation), source text, its tokenizer, the PNG export. Folded states are remembered in `localStorage`. |
 
 `session.active` always points at the active tab's object (`session.tabs` holds them all), so
 every render function reads "the current document" without knowing about tabs;
@@ -236,7 +237,7 @@ node. The selected node's line is highlighted and scrolled into view.
 | Method & path | Request | Response |
 |---|---|---|
 | `GET /`, `/style.css`, `/js/*.js`, `/i18n/*.json` | – | the static asset (classpath `web/`, `Cache-Control: no-cache`). Paths are restricted to `(/[A-Za-z0-9._-]+)+` without `..`. |
-| `POST /api/parse` | body: the XSD text (UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema`, …). |
+| `POST /api/parse` | body: the text of the file (XSD, WSDL or Schematron; UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema` / `wsdl:definitions` / Schematron, …). |
 | `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
 | `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit). |
 | `GET /api/alive?id=…` | query: the page's random id | `200` `text/event-stream`, kept open: `: ping` every 5 s until the page goes away. The page is counted as open meanwhile (`PageWatch`). `400` without an id. |
@@ -244,7 +245,7 @@ node. The selected node's line is highlighted and scrolled into view.
 | `GET /api/settings`, `POST /api/settings` | `POST` body: `{"autoStop": bool}` | `200` + `{"autoStop": bool}`, the current settings; a `POST` applies them first (the automatic stop is armed or disarmed at once) and keeps them for the next runs. `400` for another body. |
 | `GET /api/capabilities` | – | `{"dialogs": bool, "language": "fr", "version": "3.5.0", "javaVersion": "21.0.12"}`: whether the server can show native file dialogs (not headless) — the page disables the workspace commands and falls back to the browser's file dialog otherwise — the language of the machine's locale (the page's default language), and the versions shown by Help ▸ About (`BuildInfo`: the jar manifest's `Implementation-Version`, "dev" without one). |
 | `POST /api/choose` | – | shows the native "open files" dialog; `200` + `{"files": [{"name", "path", "text"}…]}` (empty when cancelled), `409` without a display. |
-| `POST /api/choose-folder` | – | shows a folder chooser (Swing `JFileChooser`: the native dialog cannot pick folders); `200` + `{"folder", "files": [{"name", "path", "text"}…], "truncated"}` — the `.xsd` files of the folder and its whole sub-tree (symbolic links followed, depth ≤ 64, at most 2000, hidden and unreadable directories skipped, sorted), or `{"cancelled": true}`; `409` without a display. |
+| `POST /api/choose-folder` | – | shows a folder chooser (Swing `JFileChooser`: the native dialog cannot pick folders); `200` + `{"folder", "files": [{"name", "path", "text"}…], "truncated"}` — the `.xsd` / `.wsdl` / `.sch` files of the folder and its whole sub-tree (symbolic links followed, depth ≤ 64, at most 2000, hidden and unreadable directories skipped, sorted), or `{"cancelled": true}`; `409` without a display. |
 | `POST /api/workspace/save` | body: `{"files": [paths…], "active": n, "path": …}` (`path`, optional: the workspace file to propose) | shows the native "save as" dialog, writes the workspace there (`.xsdviewer.json` appended if missing); `200` + `{"path"}` or `{"cancelled": true}`, `400` for a bad body, `409` without a display. |
 | `POST /api/workspace/open` | – | shows the native "open" dialog; `200` + `{"workspace", "active", "files": [{"name", "path", "text"}…], "missing": [paths…]}`, or `{"cancelled": true}`; `400` when the file is not a workspace, `409` without a display. `GET /api/initial` answers the same shape when the command-line file is a workspace. |
 | `GET /api/open?base=…&location=…[&strict=true]` | query: `base` = server path of the referencing file (may be empty), `location` = its `schemaLocation` | `200` + `{"name", "path", "text"}` of `location` resolved against `base`'s directory (if `base` is a file the server already served), else — unless `strict` — against the directories of all served files, else against the working directory; `400` for a remote location (`://`), `404` if not found. |
@@ -260,7 +261,9 @@ service, and it parses whatever is posted to it.
   "targetNamespace": "http://example.com/po",
   "imports": [ { "tag": "import", "namespace": "…", "schemaLocation": "…" } ],
   "nodes":   [ { "id": "complexType:USAddress", "kind": "complexType", "name": "USAddress",
-                 "ns": "http://example.com/po", "line": 36, "doc": "…" } ],
+                 "ns": "http://example.com/po", "line": 36, "doc": "…" },
+               { "id": "rule:orders/po:item", "kind": "rule", "name": "po:item", "ns": "",
+                 "line": 12, "doc": "", "xpath": "po:item" } ],
   "edges":   [ { "from": "complexType:PurchaseOrderType", "to": "complexType:USAddress",
                  "label": "shipTo", "min": 1, "max": 1 } ]
 }
@@ -274,10 +277,13 @@ links (`type`, `extends`, `restricts`, `list of`, `union of`, `substitutes`, `at
 have none. The client draws links with `min` 0 as optional (dashed).
 
 `kind` is one of `element`, `complexType`, `simpleType`, `group`, `attributeGroup`,
-`attribute`, `builtin`, `external`. `ns` is the target namespace for a declaration, the
-referenced namespace for an `external` placeholder (used to find the file declaring it), the
-XSD namespace for a `builtin`. `line` is 1-based, `0` when the node has no declaration in the
-file.
+`attribute`, `builtin`, `external`; for a WSDL `service`, `portType`, `operation`, `binding`,
+`message`; for a Schematron `phase`, `pattern`, `rule`, `assert`, `report`, `diagnostic`. `ns` is
+the target namespace for a declaration, the referenced namespace for an `external` placeholder
+(used to find the file declaring it), the XSD namespace for a `builtin`, empty for a Schematron's
+nodes. `line` is 1-based, `0` when the node has no declaration in the file. `values` (an
+enumeration), `members` (the names inside a declaration) and `xpath` (the expression a
+Schematron rule or assertion is made of) are present only when there is something to say.
 
 ## Libraries and tooling
 
@@ -302,7 +308,7 @@ Build and test:
 | maven-compiler-plugin | 3.13.0 | `--release 21` |
 | maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` (no shading needed: no dependencies) |
 | maven-surefire-plugin | 3.2.5 | runs the tests |
-| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, `WsdlParserTest` and `SchemaGraphJsonWriterTest` (against the samples), `PageContractTest` (the vocabulary shared with `js/constants.js`: node kinds, link labels, API paths), `JavaScriptTestsTest` (runs `src/test/js/*.test.mjs` — the page's pure modules: diff, business lines, cardinalities, schema diff… — under Node when it is installed, skipped otherwise; the CI installs it), and `scripts/screenshots.py` (a visual smoke test with headless Firefox: the samples opened in the built jar, a few facts checked on the page, one screenshot per scene), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `CommandLineOptionsTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` (the HTTP interface on an ephemeral port) |
+| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, `WsdlParserTest`, `SchematronParserTest` and `SchemaGraphJsonWriterTest` (against the samples), `PageContractTest` (the vocabulary shared with `js/constants.js`: node kinds, link labels, API paths), `JavaScriptTestsTest` (runs `src/test/js/*.test.mjs` — the page's pure modules: diff, business lines, cardinalities, schema diff… — under Node when it is installed, skipped otherwise; the CI installs it), and `scripts/screenshots.py` (a visual smoke test with headless Firefox: the samples opened in the built jar, a few facts checked on the page, one screenshot per scene), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `CommandLineOptionsTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` (the HTTP interface on an ephemeral port) |
 | `scripts/run.sh` / `scripts\run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
 | `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; on Windows the `.bat` starts `javaw.exe` from a command line (`--console` to keep one) |
 | launch4j-maven-plugin | 2.7.0 | `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
@@ -333,14 +339,15 @@ XsdViewer/
 ├── jre/                          JRE archives bundled by the dist profile (git-ignored, downloaded by hand)
 ├── releases/                     output of the dist profile: zip, tar.gz, jar (git-ignored, README only)
 ├── screenshots/                  the three pictures of the README (graph, text, compare)
-├── samples/purchaseOrder.xsd     small schema exercising every kind of link
+├── samples/purchaseOrder.xsd     small schema exercising every kind of link (ext.xsd: the schema it imports; purchaseOrder.xml: a valid document)
 ├── samples/import/               order.xsd + the files it imports / includes (link following)
+├── samples/wsdl/, samples/schematron/  a WSDL service and a Schematron over purchaseOrder.xsd
 └── src/
     ├── assembly/                        windows.xml, linux.xml (dist profile)
     ├── dist/                            xsdviewer.bat, xsdviewer.sh launchers
     ├── main/java/org/jtools/xsdviewer/   XsdViewerApplication, CommandLineOptions, BrowserLauncher, Messages, MessageKey
-    │   ├── schema/                      XsdParser, DeclarationLineIndex, SecureXmlFactories, SchemaGraph,
-    │   │                                SchemaGraphJsonWriter, NodeKind, LinkLabel, XsdVocabulary
+    │   ├── schema/                      SchemaParser, XsdParser, WsdlParser, SchematronParser, DeclarationLineIndex,
+    │   │                                SecureXmlFactories, SchemaGraph, SchemaGraphJsonWriter, NodeKind, LinkLabel, *Vocabulary
     │   ├── server/                      XsdViewerServer, ApiPath, *Handler, ServedSchemaFiles, SchemaFileFinder, FileDialogs, ...
     │   ├── workspace/                   Workspace
     │   └── json/                        JsonWriter, JsonReader, JsonStrings, JsonKey
@@ -359,8 +366,10 @@ XsdViewer/
   Temurin JDK archives of `jre/`, links a trimmed runtime per platform with `jlink` and packs the
   archives; `.github/workflows/release.yml` runs it on a pushed tag and publishes the release.
 - **More link kinds** are a new `case` in `XsdParser.collect()` plus a `LinkLabel`; the
-  client needs nothing (labels are free text). **More node kinds** (as the WSDL ones) need
-  their `NodeKind`, a colour, a legend chip and the `kind.` / `group.` texts on the page.
+  client needs nothing (labels are free text). **More node kinds** (as the WSDL or Schematron ones) need
+  their `NodeKind`, a colour (light and dark), a legend chip and the `kind.` / `group.` texts on the page.
+  **Another vocabulary** is a `*Vocabulary` + `*Parser` pair dispatched from `SchemaParser`; the
+  `.ext` goes to `ChooseFilesHandler`, `SchemaFolder`, the page's file patterns and the file input.
 - **Other graph layouts** only touch `js/graph.js`; the rest of the client depends on
   `select()` and the tab state, not on how the SVG is built.
 - **Node details** (e.g. facets, cardinalities) would extend `SchemaGraph.Node`,

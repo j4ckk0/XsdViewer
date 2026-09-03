@@ -125,7 +125,7 @@ class XsdParserTest {
     @Test
     void schemaHeader() {
         assertEquals("http://example.com/po", model.targetNamespace);
-        assertTrue(model.imports.isEmpty());
+        assertEquals(List.of(new SchemaGraph.Import(XsdVocabulary.IMPORT, "http://example.com/ext", "ext.xsd")), model.imports);
     }
 
     @Test
@@ -192,10 +192,10 @@ class XsdParserTest {
 
     @Test
     void lineNumbersPointAtTheStartTag() {
-        assertEquals(15, model.nodes.get("element:purchaseOrder").line());
-        assertEquals(25, model.nodes.get("complexType:PurchaseOrderType").line());
+        assertEquals(18, model.nodes.get("element:purchaseOrder").line());
+        assertEquals(28, model.nodes.get("complexType:PurchaseOrderType").line());
         // start tag spread over two lines: the line of '<', not of the name attribute
-        assertEquals(99, model.nodes.get("simpleType:LimitedText").line());
+        assertEquals(102, model.nodes.get("simpleType:LimitedText").line());
         assertEquals(0, model.nodes.get("builtin:string").line());
     }
 

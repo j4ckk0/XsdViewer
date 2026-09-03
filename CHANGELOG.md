@@ -2,6 +2,11 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **Schematron files.** A `.sch` file (ISO Schematron `sch:schema`, the older Schematron 1.5 namespace too, or a fragment meant for `sch:include` — a `pattern`, a `rule`) opens like a schema, wherever an XSD does: File ▸ Open…, a dropped file, a folder, a workspace, the command line. Its phases, patterns, rules, asserts, reports and diagnostics are the objects (six new kinds, their own colours, listed in the legend for such a file), the links follow phase → pattern (`active`) → rule (`rule`) → assertion (`assert` / `report`) → diagnostic (`diagnostic`), plus `is a` from a pattern to the abstract pattern it instantiates and `extends` from a rule to the abstract rule it extends (both drawn as derivations). A rule is named by its context, an assertion by its id else its test, a pattern by its id, name or title; the expression itself (a rule's context, an assertion's test) is shown whole in a box of the details panel and searched by the search box. An assertion's message is its documentation, `[role]` first, a `value-of` shown as `{select}`. `samples/schematron/purchaseOrder.sch` is an example over the purchase order schema.
+- **Samples that validate.** `samples/purchaseOrder.xml` is a document valid against `samples/purchaseOrder.xsd` and passing every rule of the Schematron; the schema now imports `samples/ext.xsd` for the `ext:Label` type it referred to without declaring the prefix, so File ▸ Validate works on it (the imported schema opens in its own tab, as any linked schema).
+
 ## 3.5.0 — 2026-09-03
 
 - **A file's differences in a tab of their own.** In a comparison, the *⧉ In a tab* button next to the status of a *different* or *moved lines only* row (or a double-click on the row) opens that file pair's differences — the declarations and links on one side only, the two sources side by side — in a tab named `file.xsd (v1 ⇄ v2)`, next to the comparison, with the full height of the page; the same two options apply, and opening the same pair again brings its tab to front.

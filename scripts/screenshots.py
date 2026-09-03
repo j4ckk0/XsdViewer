@@ -66,8 +66,19 @@ SCENES = [
          checks={'messages': "document.querySelectorAll('#graphCanvas .node.message').length",
                  'tabs': "document.querySelectorAll('#tabs .dtab').length",
                  'legend': "getComputedStyle(document.querySelector('#graphLegend .lg.service')).display !== 'none'"},
-         expect={'messages': 3, 'tabs': 2, 'legend': True}),
+         expect={'messages': 3, 'tabs': 3, 'legend': True}),   # the WSDL, purchaseOrder.xsd it imports, ext.xsd that one imports
+    dict(name='schematron-rule', file='samples/schematron/purchaseOrder.sch', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"rule:structure/po:item\"]').click();"
+                "const two = document.getElementById('twoLevels'); if (!two.checked) two.click();",
+         checks={'title': "document.getElementById('graphTitle').textContent",
+                 'assertions': "document.querySelectorAll('#graphCanvas .node.assert, #graphCanvas .node.report').length",
+                 'xpath': "document.querySelector('#detailsContent .xpath code').textContent",
+                 'legend': "getComputedStyle(document.querySelector('#graphLegend .lg.rule')).display !== 'none' && getComputedStyle(document.querySelector('#graphLegend .lg.element')).display === 'none'",
+                 'groups': "[...document.querySelectorAll('#nodeList .group-h > span:first-child')].map(g => g.textContent).join('|')"},
+         expect={'title': 'rule po:item', 'assertions': 2, 'xpath': 'po:item', 'legend': True,
+                 'groups': 'Phases|Patterns|Rules|Asserts|Reports|Diagnostics'}),   # its own assert, the report of the abstract rule it extends (level 2)
     dict(name='search-member', file='samples/purchaseOrder.xsd', theme='light',
+
          action="const s = document.getElementById('search'); s.value = 'shipTo'; s.dispatchEvent(new Event('input', {bubbles: true}));",
          checks={'listed': "[...document.querySelectorAll('#nodeList .item')].map(i => i.textContent).join('|')"},
          expect={'listed': 'PurchaseOrderTypeshipTo'}),

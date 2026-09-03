@@ -43,19 +43,24 @@ public final class SchemaGraph {
      * {@code ns}: the namespace the name lives in (for a placeholder, where the client looks for the
      * declaring file); {@code line}: 1-based, 0 when unknown; {@code values}: the enumeration the
      * declaration restricts its type to, empty when it is not an enumeration; {@code members}: the
-     * names of the elements and attributes inside the declaration (a message's parts), for the search.
+     * names of the elements and attributes inside the declaration (a message's parts), for the search;
+     * {@code xpath}: the expression a Schematron rule or assertion is made of (its context, its test), empty otherwise.
      */
-    public record Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values, List<String> members) {
+    public record Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values, List<String> members, String xpath) {
         public Node(String id, String kind, String name, String ns, int line, String doc) {
-            this(id, kind, name, ns, line, doc, List.of(), List.of());
+            this(id, kind, name, ns, line, doc, List.of(), List.of(), "");
         }
 
         public Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values) {
-            this(id, kind, name, ns, line, doc, values, List.of());
+            this(id, kind, name, ns, line, doc, values, List.of(), "");
         }
 
         public Node withMembers(List<String> members) {
-            return new Node(id, kind, name, ns, line, doc, values, members);
+            return new Node(id, kind, name, ns, line, doc, values, members, xpath);
+        }
+
+        public Node withXpath(String xpath) {
+            return new Node(id, kind, name, ns, line, doc, values, members, xpath);
         }
     }
 
@@ -94,7 +99,7 @@ public final class SchemaGraph {
         }
     }
 
-    /** An xs:import / xs:include / xs:redefine found at the top of the schema. */
+    /** An xs:import / xs:include / xs:redefine found at the top of the schema, a wsdl:import, a Schematron include. */
     public record Import(String tag, String namespace, String schemaLocation) {}
 
     public String targetNamespace = "";

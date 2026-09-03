@@ -24,7 +24,7 @@ import java.util.Set;
 
 /**
  * The kinds of node of a {@link SchemaGraph}. A global declaration has the kind of the XSD
- * (or WSDL) element that declares it; two more kinds stand for what the file does not declare.
+ * (WSDL, Schematron) element that declares it; two more kinds stand for what the file does not declare.
  */
 public final class NodeKind {
 
@@ -47,6 +47,14 @@ public final class NodeKind {
     public static final String OPERATION = WsdlVocabulary.OPERATION;
     public static final String BINDING = WsdlVocabulary.BINDING;
     public static final String MESSAGE = WsdlVocabulary.MESSAGE;
+
+    // the declarations of a Schematron (a rule is declared inside its pattern, an assertion inside its rule)
+    public static final String PHASE = SchematronVocabulary.PHASE;
+    public static final String PATTERN = SchematronVocabulary.PATTERN;
+    public static final String RULE = SchematronVocabulary.RULE;
+    public static final String ASSERT = SchematronVocabulary.ASSERT;
+    public static final String REPORT = SchematronVocabulary.REPORT;
+    public static final String DIAGNOSTIC = SchematronVocabulary.DIAGNOSTIC;
 
     /** Kind of a type reference ({@code type:X}) not yet known to be a complexType or a simpleType; kept for an external type. */
     public static final String TYPE_REFERENCE = "type";

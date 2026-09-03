@@ -39,12 +39,13 @@ class SchemaFolderTest {
         Files.writeString(dir.resolve("A.XSD"), "");
         Files.writeString(dir.resolve("notes.txt"), "");
         Files.writeString(dir.resolve("service.wsdl"), "");
+        Files.writeString(dir.resolve("rules.sch"), "");
         Files.createDirectories(dir.resolve("sub/deeper"));
         Files.writeString(dir.resolve("sub/deeper/c.xsd"), "");
         Files.createDirectories(dir.resolve(".git"));
         Files.writeString(dir.resolve(".git/hidden.xsd"), "");
         SchemaFolder.Listing l = SchemaFolder.list(dir);
-        assertEquals(List.of(dir.resolve("A.XSD"), dir.resolve("b.xsd"), dir.resolve("service.wsdl"), dir.resolve("sub/deeper/c.xsd")), l.files());
+        assertEquals(List.of(dir.resolve("A.XSD"), dir.resolve("b.xsd"), dir.resolve("rules.sch"), dir.resolve("service.wsdl"), dir.resolve("sub/deeper/c.xsd")), l.files());
         assertFalse(l.truncated());
     }
 

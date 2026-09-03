@@ -2,8 +2,11 @@
 <!-- Sample schema, adapted from the purchase-order example of "XML Schema Part 0: Primer" (https://www.w3.org/TR/xmlschema-0/), Copyright W3C, reused under the W3C Document License. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:po="http://example.com/po"
+           xmlns:ext="http://example.com/ext"
            targetNamespace="http://example.com/po"
            elementFormDefault="qualified">
+
+  <xs:import namespace="http://example.com/ext" schemaLocation="ext.xsd"/>
 
   <xs:annotation>
     <xs:documentation>
@@ -141,7 +144,7 @@
     </xs:complexContent>
   </xs:complexType>
 
-  <!-- A recursive type: a category may contain sub-categories -->
+  <!-- A recursive type: a category may contain sub-categories; its label's type comes from ext.xsd -->
   <xs:complexType name="Category">
     <xs:sequence>
       <xs:element name="subCategory" type="po:Category" minOccurs="0" maxOccurs="unbounded"/>

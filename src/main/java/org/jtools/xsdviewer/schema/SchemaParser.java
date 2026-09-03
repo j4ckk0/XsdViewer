@@ -30,7 +30,8 @@ import org.xml.sax.InputSource;
 
 /**
  * Turns the text of a schema file into a {@link SchemaGraph}: an XML Schema ({@code xs:schema}) goes
- * to {@link XsdParser}, a WSDL 1.1 ({@code wsdl:definitions}) to {@link WsdlParser}; anything else is refused.
+ * to {@link XsdParser}, a WSDL 1.1 ({@code wsdl:definitions}) to {@link WsdlParser}, a Schematron ({@code sch:schema},
+ * or a fragment of one) to {@link SchematronParser}; anything else is refused.
  */
 public final class SchemaParser {
 
@@ -44,6 +45,9 @@ public final class SchemaParser {
         }
         if (WsdlVocabulary.NAMESPACE.equals(root.getNamespaceURI()) && WsdlVocabulary.DEFINITIONS.equals(root.getLocalName())) {
             return WsdlParser.parse(root, text);
+        }
+        if (root.getNamespaceURI() != null && SchematronVocabulary.NAMESPACES.contains(root.getNamespaceURI())) {
+            return SchematronParser.parse(root, text);
         }
         throw new IllegalArgumentException(Messages.get(MessageKey.NOT_A_SCHEMA, root.getTagName()));
     }

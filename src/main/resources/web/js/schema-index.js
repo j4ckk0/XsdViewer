@@ -17,11 +17,11 @@ export function indexSchema(st, json) {
   st.selected = initialSelection(st);
 }
 
-/** The first service (a WSDL), else the first global element that nothing references (a likely document root), else the first element, else the first node. */
+/** The first service (a WSDL), the first phase else pattern (a Schematron), else the first global element that nothing references (a likely document root), else the first element, else the first node. */
 function initialSelection(st) {
   const nodes = st.model.nodes;
-  const service = nodes.find(n => n.kind === NODE_KIND.SERVICE);
-  if (service) return service.id;
+  const entry = nodes.find(n => n.kind === NODE_KIND.SERVICE) || nodes.find(n => n.kind === NODE_KIND.PHASE) || nodes.find(n => n.kind === NODE_KIND.PATTERN);
+  if (entry) return entry.id;
   const roots = nodes.filter(n => n.kind === NODE_KIND.ELEMENT && !(st.inEdges.get(n.id) || []).some(e => e.from !== n.id));
   const first = roots[0] || nodes.find(n => n.kind === NODE_KIND.ELEMENT) || nodes[0];
   return first ? first.id : null;

@@ -34,7 +34,7 @@ class SchemaGraphJsonWriterTest {
     @Test
     void sampleSchemaIsWellFormed() throws Exception {
         String json = SchemaParser.parse(Files.readString(Path.of("samples/purchaseOrder.xsd"))).toJson();
-        assertTrue(json.startsWith("{\"targetNamespace\":\"http://example.com/po\",\"imports\":[],\"nodes\":[{\"id\":\"element:purchaseOrder\""));
+        assertTrue(json.startsWith("{\"targetNamespace\":\"http://example.com/po\",\"imports\":[{\"tag\":\"import\",\"namespace\":\"http://example.com/ext\",\"schemaLocation\":\"ext.xsd\"}],\"nodes\":[{\"id\":\"element:purchaseOrder\""));
         assertTrue(json.contains("\"from\":\"element:urgentComment\",\"to\":\"element:comment\",\"label\":\"substitutes\""));
         assertTrue(json.endsWith("}]}"));
         assertFalse(json.contains("\n"));

@@ -43,6 +43,8 @@ public final class JsonKey {
     public static final String VALUE = "value";
     /** The names inside a declaration (nested elements and attributes, a message's parts), only when there are some. */
     public static final String MEMBERS = "members";
+    /** The expression of a Schematron rule (its context) or assertion (its test), only when there is one. */
+    public static final String XPATH = "xpath";
 
     // POST /api/validate
     public static final String VALID = "valid";

@@ -4,13 +4,19 @@ export const APP_NAME = 'XsdViewer';
 export const PROJECT_URL = 'https://github.com/j4ckk0/XsdViewer';
 export const LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
 
-/** Kinds of node of the schema graph (see NodeKind on the server); the first five are those of a WSDL. */
+/** Kinds of node of the schema graph (see NodeKind on the server): those of a WSDL, of a Schematron, of an XML Schema. */
 export const NODE_KIND = {
   SERVICE: 'service',
   PORT_TYPE: 'portType',
   OPERATION: 'operation',
   BINDING: 'binding',
   MESSAGE: 'message',
+  PHASE: 'phase',
+  PATTERN: 'pattern',
+  RULE: 'rule',
+  ASSERT: 'assert',
+  REPORT: 'report',
+  DIAGNOSTIC: 'diagnostic',
   ELEMENT: 'element',
   COMPLEX_TYPE: 'complexType',
   SIMPLE_TYPE: 'simpleType',
@@ -22,11 +28,17 @@ export const NODE_KIND = {
 };
 export const KINDS = [
   NODE_KIND.SERVICE, NODE_KIND.PORT_TYPE, NODE_KIND.OPERATION, NODE_KIND.BINDING, NODE_KIND.MESSAGE,
+  NODE_KIND.PHASE, NODE_KIND.PATTERN, NODE_KIND.RULE, NODE_KIND.ASSERT, NODE_KIND.REPORT, NODE_KIND.DIAGNOSTIC,
   NODE_KIND.ELEMENT, NODE_KIND.COMPLEX_TYPE, NODE_KIND.SIMPLE_TYPE, NODE_KIND.GROUP,
   NODE_KIND.ATTRIBUTE_GROUP, NODE_KIND.ATTRIBUTE, NODE_KIND.BUILTIN, NODE_KIND.EXTERNAL,
 ];
 /** The kinds declared by a WSDL file: a model holding one is a WSDL, whose legend shows them. */
 export const WSDL_KINDS = new Set([NODE_KIND.SERVICE, NODE_KIND.PORT_TYPE, NODE_KIND.OPERATION, NODE_KIND.BINDING, NODE_KIND.MESSAGE]);
+/** The kinds declared by a Schematron file: a model holding one is a Schematron, whose legend shows them (and no XSD kind). */
+export const SCHEMATRON_KINDS = new Set([NODE_KIND.PHASE, NODE_KIND.PATTERN, NODE_KIND.RULE, NODE_KIND.ASSERT, NODE_KIND.REPORT, NODE_KIND.DIAGNOSTIC]);
+/** True when the model is a WSDL's or a Schematron's: a file the server cannot validate an XML document against. */
+export const isWsdl = (model) => model.nodes.some(n => WSDL_KINDS.has(n.kind));
+export const isSchematron = (model) => model.nodes.some(n => SCHEMATRON_KINDS.has(n.kind));
 /** Kind in the id of an external type reference ("type:X"): the server could not tell complexType from simpleType. */
 export const TYPE_REFERENCE_KIND = 'type';
 /** Node ids are "kind:name". */
@@ -40,6 +52,8 @@ export const LINK_LABEL = {
   ATTRIBUTE_GROUP: 'attributeGroup', EXTENDS: 'extends', RESTRICTS: 'restricts', LIST_OF: 'list of', UNION_OF: 'union of',
   // WSDL: a portType to its operations, an operation to its messages, a binding to its portType
   OPERATION: 'operation', INPUT: 'input', OUTPUT: 'output', FAULT: 'fault', BINDS: 'binds',
+  // Schematron: a phase to its active patterns, a pattern to its rules and to the abstract pattern it instantiates, a rule to its assertions, an assertion to its diagnostics
+  ACTIVE: 'active', RULE: 'rule', IS_A: 'is a', ASSERT: 'assert', REPORT: 'report', DIAGNOSTIC: 'diagnostic',
   /** "attribute <name>": a nested attribute's type link. */
   ATTRIBUTE_PREFIX: 'attribute ',
   /** "keyref <name>": a keyref's link to the element declaring its key. */
@@ -49,9 +63,10 @@ export const STRUCTURAL_LINK_LABELS = new Set([
   LINK_LABEL.TYPE, LINK_LABEL.REF, LINK_LABEL.ATTRIBUTE_REF, LINK_LABEL.SUBSTITUTES, LINK_LABEL.GROUP,
   LINK_LABEL.ATTRIBUTE_GROUP, LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.LIST_OF, LINK_LABEL.UNION_OF,
   LINK_LABEL.OPERATION, LINK_LABEL.INPUT, LINK_LABEL.OUTPUT, LINK_LABEL.FAULT, LINK_LABEL.BINDS,
+  LINK_LABEL.ACTIVE, LINK_LABEL.RULE, LINK_LABEL.IS_A, LINK_LABEL.ASSERT, LINK_LABEL.REPORT, LINK_LABEL.DIAGNOSTIC,
 ]);
-/** Edge labels of a type derivation (a type to its base type): drawn with a hollow arrowhead, as a UML generalisation. */
-export const DERIVATION_LINK_LABELS = new Set([LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS]);
+/** Edge labels of a derivation (a type to its base type, a Schematron pattern or rule to the abstract one it builds on): drawn with a hollow arrowhead, as a UML generalisation. */
+export const DERIVATION_LINK_LABELS = new Set([LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.IS_A]);
 export const isDerivation = (edge) => DERIVATION_LINK_LABELS.has(edge.label);
 
 /** Cardinality of a link (edge.min / edge.max, absent on type links); how it is written. */
@@ -94,9 +109,9 @@ export const HTTP = {
 /** A schemaLocation with a scheme (http://...) is never fetched. */
 export const REMOTE_LOCATION_MARK = '://';
 /** Files of an opened folder worth keeping at hand for following links. */
-export const SCHEMA_FILE_PATTERN = /\.(xsd|wsdl|xml)$/i;
+export const SCHEMA_FILE_PATTERN = /\.(xsd|wsdl|sch|xml)$/i;
 /** Files of an opened folder that are opened as tabs. */
-export const XSD_FILE_PATTERN = /\.(xsd|wsdl)$/i;
+export const XSD_FILE_PATTERN = /\.(xsd|wsdl|sch)$/i;
 /** At most this many schemas of a folder opened in the browser are listed. */
 export const MAX_FOLDER_FILES = 2000;
 /** A folder, a workspace or a set of linked schemas larger than this is only listed in the Files panel: one tab opens. */

@@ -70,20 +70,47 @@ final class DeclarationLineIndex {
                 path.add(new Tag(uri, localName, attrs.getValue(XsdVocabulary.ATTR_NAME)));
                 String id = idOf.of(path);
                 if (id == null || locator == null) return;
-                int line = locator.getLineNumber();
-                int col = locator.getColumnNumber();
-                if (line > 0 && line <= lineStarts.length) {
-                    int offset = Math.min(text.length(), lineStarts[line - 1] + Math.max(0, col - 1));
-                    int lt = text.lastIndexOf('<', Math.max(0, offset - 1));
-                    if (lt >= 0) line = lineOf(lineStarts, lt);
-                }
-                result.putIfAbsent(id, line);
+                result.putIfAbsent(id, startTagLine(text, lineStarts, locator));
             }
 
             @Override
             public void endElement(String uri, String localName, String qName) { path.remove(path.size() - 1); }
         });
         return result;
+    }
+
+    /**
+     * The line where every element's start tag opens, in document order (the root first): for a
+     * vocabulary whose declarations carry no name, the parser finds a node's line by the rank of its
+     * element, the same in its DOM walk as here.
+     */
+    static int[] elementLines(String text) throws Exception {
+        int[] lineStarts = lineStarts(text);
+        List<Integer> result = new ArrayList<>();
+        SecureXmlFactories.newSaxParser().parse(new InputSource(new StringReader(text)), new DefaultHandler() {
+            private Locator locator;
+
+            @Override
+            public void setDocumentLocator(Locator l) { locator = l; }
+
+            @Override
+            public void startElement(String uri, String localName, String qName, Attributes attrs) {
+                result.add(locator == null ? 0 : startTagLine(text, lineStarts, locator));
+            }
+        });
+        return result.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    /** The line of the '<' of the start tag the locator points after (a tag spread over several lines gets its first). */
+    private static int startTagLine(String text, int[] lineStarts, Locator locator) {
+        int line = locator.getLineNumber();
+        int col = locator.getColumnNumber();
+        if (line > 0 && line <= lineStarts.length) {
+            int offset = Math.min(text.length(), lineStarts[line - 1] + Math.max(0, col - 1));
+            int lt = text.lastIndexOf('<', Math.max(0, offset - 1));
+            if (lt >= 0) line = lineOf(lineStarts, lt);
+        }
+        return line;
     }
 
     /** Offset of the first character of each line. */

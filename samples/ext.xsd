@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A schema of its own namespace, imported by purchaseOrder.xsd: what its Category refers to as ext:Label. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/ext"
+           elementFormDefault="qualified">
+
+  <xs:simpleType name="Label">
+    <xs:annotation>
+      <xs:documentation>A short label, as shown in a catalogue.</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="40"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

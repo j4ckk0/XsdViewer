@@ -180,12 +180,17 @@ export const CLS = {
   DERIVATION: 'derivation',
   /** The arrowhead of an edge (a marker path), coloured by the stylesheet. */
   ARROW_HEAD: 'arrow-head',
-  /** On the legend: the shown file is a WSDL (its kinds are listed). */
+  /** On the legend: the shown file is a WSDL (its kinds are listed) / a Schematron (its kinds are listed, the XSD ones are not). */
   WSDL: 'wsdl',
+  SCHEMATRON: 'schematron',
+  /** On the legend chips of the XSD kinds. */
+  XSD: 'xsd',
   // details
   BADGE: 'badge',
   META: 'meta',
   DOC: 'doc',
+  /** The expression of a Schematron rule or assertion in the details panel. */
+  XPATH: 'xpath',
   /** A row of the enumeration of the selected object in the details panel. */
   VALUE: 'value',
   VALUE_DOC: 'value-doc',

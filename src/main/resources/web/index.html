@@ -105,13 +105,19 @@
           <span class="lg operation wsdl" data-i18n="kind.operation">operation</span>
           <span class="lg binding wsdl" data-i18n="kind.binding">binding</span>
           <span class="lg message wsdl" data-i18n="kind.message">message</span>
-          <span class="lg element" data-i18n="kind.element">element</span>
-          <span class="lg complexType" data-i18n="kind.complexType">complexType</span>
-          <span class="lg simpleType" data-i18n="kind.simpleType">simpleType</span>
-          <span class="lg group" data-i18n="kind.group">group</span>
-          <span class="lg attributeGroup" data-i18n="kind.attributeGroup">attributeGroup</span>
-          <span class="lg attribute" data-i18n="kind.attribute">attribute</span>
-          <span class="lg builtin" data-i18n="kind.builtin">built-in</span>
+          <span class="lg phase schematron" data-i18n="kind.phase">phase</span>
+          <span class="lg pattern schematron" data-i18n="kind.pattern">pattern</span>
+          <span class="lg rule schematron" data-i18n="kind.rule">rule</span>
+          <span class="lg assert schematron" data-i18n="kind.assert">assert</span>
+          <span class="lg report schematron" data-i18n="kind.report">report</span>
+          <span class="lg diagnostic schematron" data-i18n="kind.diagnostic">diagnostic</span>
+          <span class="lg element xsd" data-i18n="kind.element">element</span>
+          <span class="lg complexType xsd" data-i18n="kind.complexType">complexType</span>
+          <span class="lg simpleType xsd" data-i18n="kind.simpleType">simpleType</span>
+          <span class="lg group xsd" data-i18n="kind.group">group</span>
+          <span class="lg attributeGroup xsd" data-i18n="kind.attributeGroup">attributeGroup</span>
+          <span class="lg attribute xsd" data-i18n="kind.attribute">attribute</span>
+          <span class="lg builtin xsd" data-i18n="kind.builtin">built-in</span>
           <span class="lg external" data-i18n="kind.external">external</span>
           <span class="lg arrow" data-i18n-title="legend.mandatory.title"><svg width="30" height="10" viewBox="0 0 30 10" aria-hidden="true"><line x1="1" y1="5" x2="22" y2="5"/><path d="M21,1 L29,5 L21,9 z"/></svg><span data-i18n="legend.mandatory">mandatory</span></span>
           <span class="lg arrow" data-i18n-title="legend.optional.title"><svg width="30" height="10" viewBox="0 0 30 10" aria-hidden="true"><line class="optional" x1="1" y1="5" x2="22" y2="5"/><path d="M21,1 L29,5 L21,9 z"/></svg><span data-i18n="legend.optional">optional</span></span>
@@ -168,7 +174,7 @@
 
 <div id="dropOverlay" class="hidden"><div data-i18n="drop.hint">Drop the XSD file to open it</div></div>
 <div id="toast" class="hidden" role="status" aria-live="polite"></div>
-<input type="file" id="fileInput" accept=".xsd,.wsdl,.xml,text/xml,application/xml" multiple hidden>
+<input type="file" id="fileInput" accept=".xsd,.wsdl,.sch,.xml,text/xml,application/xml" multiple hidden>
 <input type="file" id="folderInput" webkitdirectory hidden>
 <input type="file" id="validateInput" accept=".xml,text/xml,application/xml" hidden>
 

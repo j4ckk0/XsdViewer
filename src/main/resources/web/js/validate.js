@@ -4,17 +4,17 @@
  */
 import { chooseFiles, validateXml } from './api.js';
 import { busy } from './busy.js';
-import { WSDL_KINDS } from './constants.js';
+import { isSchematron, isWsdl } from './constants.js';
 import { $, CLS, ID, esc } from './dom.js';
 import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
 import { toast, toastServerError } from './toast.js';
 
-/** True when the active tab shows a schema the server can validate against: an XSD (not a WSDL) with a location on disk. */
+/** True when the active tab shows a schema the server can validate against: an XSD (not a WSDL, not a Schematron) with a location on disk. */
 export function canValidate() {
   const st = session.active;
-  return !!(st.model && st.path && !st.compare && !st.model.nodes.some(n => WSDL_KINDS.has(n.kind)));
+  return !!(st.model && st.path && !st.compare && !isWsdl(st.model) && !isSchematron(st.model));
 }
 
 /** Asks for the XML file — the server's dialog when it has a display, else the browser's — and validates it. */

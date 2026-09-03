@@ -24,6 +24,7 @@ package org.jtools.xsdviewer.schema;
  * Labels of the edges of a {@link SchemaGraph}: the nature of a reference. Model vocabulary handed
  * to the page, not user-interface text (a nested element's type link is labelled with the element's name,
  * a WSDL service's link to a portType with the port's name, a message's link to an element with the part's name).
+ * The Schematron labels say what the target is (a rule, an assertion): the nodes themselves are named by expressions.
  */
 public final class LinkLabel {
 
@@ -61,6 +62,18 @@ public final class LinkLabel {
     public static final String FAULT = "fault";
     /** A WSDL binding to the portType it binds. */
     public static final String BINDS = "binds";
+
+    /** A Schematron phase to a pattern it activates. */
+    public static final String ACTIVE = "active";
+    /** A Schematron pattern to one of its rules. */
+    public static final String RULE = "rule";
+    /** A Schematron pattern to the abstract pattern it instantiates; a rule extends an abstract rule with {@link #EXTENDS}. */
+    public static final String IS_A = "is a";
+    /** A Schematron rule to one of its assertions: the assertion's own element name. */
+    public static final String ASSERT = SchematronVocabulary.ASSERT;
+    public static final String REPORT = SchematronVocabulary.REPORT;
+    /** A Schematron assertion to a diagnostic it names. */
+    public static final String DIAGNOSTIC = "diagnostic";
 
     private static final String ATTRIBUTE_PREFIX = "attribute ";
 

@@ -37,6 +37,7 @@ final class ChooseFilesHandler implements HttpHandler {
 
     private static final String SCHEMA_EXTENSION = ".xsd";
     private static final String WSDL_EXTENSION = ".wsdl";
+    private static final String SCHEMATRON_EXTENSION = ".sch";
     private static final String XML_EXTENSION = ".xml";
 
     private final ServedSchemaFiles files;
@@ -47,13 +48,13 @@ final class ChooseFilesHandler implements HttpHandler {
 
     static boolean isSchemaName(String name) {
         String n = name.toLowerCase(Locale.ROOT);
-        return n.endsWith(SCHEMA_EXTENSION) || n.endsWith(WSDL_EXTENSION) || n.endsWith(XML_EXTENSION);
+        return n.endsWith(SCHEMA_EXTENSION) || n.endsWith(WSDL_EXTENSION) || n.endsWith(SCHEMATRON_EXTENSION) || n.endsWith(XML_EXTENSION);
     }
 
-    /** What the "open" dialog lets pick: schema files, WSDL files, any XML. */
+    /** What the "open" dialog lets pick: schema files, WSDL files, Schematron files, any XML. */
     static FileDialogs.Filter schemaFilter() {
         return new FileDialogs.Filter(Messages.get(MessageKey.DIALOG_FILTER_SCHEMAS),
-                List.of("*" + SCHEMA_EXTENSION, "*" + WSDL_EXTENSION, "*" + XML_EXTENSION));
+                List.of("*" + SCHEMA_EXTENSION, "*" + WSDL_EXTENSION, "*" + SCHEMATRON_EXTENSION, "*" + XML_EXTENSION));
     }
 
     @Override

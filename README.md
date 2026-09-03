@@ -3,7 +3,7 @@
 [![build](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml/badge.svg)](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml)
 
 A small tool to explore an XML Schema (`.xsd`) file in the browser — and the WSDL 1.1
-(`.wsdl`) services built on such schemas.
+(`.wsdl`) services built on such schemas, and the Schematron (`.sch`) rules written over them.
 
 A Java server parses the schema and serves a web page offering two views:
 
@@ -43,7 +43,8 @@ a declaration (a message's parts) and by the documentation, the reason being sho
 listed object; **File ▸ Validate an XML file…** checks a
 document against the shown schema with the JDK's validator, from the schema's file on disk (imports
 included, so the schema needs a location: a file opened through the server's dialog or a folder); the
-problems are listed with their line and column. **⤓ PNG** in the top bar saves the current view (graph or
+problems are listed with their line and column (`samples/purchaseOrder.xml` is a document valid against
+`samples/purchaseOrder.xsd`, and passing every rule of `samples/schematron/purchaseOrder.sch`). **⤓ PNG** in the top bar saves the current view (graph or
 text) as a PNG image, **⤓ SVG** the graph as a vector image (for documents). In the Text view, a
 **find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter. **File ▸ Quit** stops the server and closes the page.
 
@@ -244,10 +245,35 @@ to the schema objects, so that **2 levels** from an operation reaches the elemen
 An operation is named within its portType (`operation:Orders.submit` as an id); a WSDL opens on
 its first service. `samples/wsdl/purchaseOrderService.wsdl` is a small example over `samples/purchaseOrder.xsd`.
 
+A **Schematron** file (`sch:schema` in the ISO namespace, or in the older Schematron 1.5 one; a
+fragment meant for `sch:include` — a `pattern`, a `rule` — is read as if it were the only child of a
+schema) has six kinds of object of its own — *phase*, *pattern*, *rule*, *assert*, *report*,
+*diagnostic* —, the only ones in the legend then. Schematron names little: a rule is known by its
+`context`, an assertion by its `test`. So a node is named by its `id` when it has one and by its
+expression otherwise (a pattern by its `id`, its `name` or its `title`, else its rank), and the
+expression is shown whole in a box at the top of the details panel, which the search box also
+searches; the message of an assertion or diagnostic is its documentation, its `role` or `flag`
+first in brackets, a `value-of` shown as `{select}`, a `name` as `{name()}`. The links:
+
+| Schematron construct | Link label |
+|---|---|
+| `phase/active pattern="P"` | `active` |
+| `pattern/rule` | `rule` |
+| `pattern is-a="A"` | `is a`, to the abstract pattern (a derivation: hollow arrowhead) |
+| `rule/extends rule="R"` | `extends`, to the abstract rule (a derivation) |
+| `rule/assert`, `rule/report` | `assert` / `report` |
+| `assert diagnostics="D1 D2"` | `diagnostic`, one link per diagnostic |
+| `include href="…"` | listed with the imports; a pattern, rule or diagnostic named but not declared in the file is an *external* node |
+
+A Schematron opens on its first phase, else its first pattern; **2 levels** from a pattern shows
+its rules and their assertions. `samples/schematron/purchaseOrder.sch` is an example over
+`samples/purchaseOrder.xsd`. (**File ▸ Validate an XML file…** validates against XML Schemas only:
+the JDK has no Schematron validator.)
+
 XSD built-in types (`xs:string`…) appear as grey-filled nodes with a grey border (toggle with
 the **built-in types** checkbox). Objects referenced but not declared in the file (imported /
 included ones) appear as grey-filled *external* nodes with a red border. Dashed lines are
-reserved for optional links, hollow arrowheads for derivations (`extends`, `restricts`).
+reserved for optional links, hollow arrowheads for derivations (`extends`, `restricts`, `is a`).
 
 **Help ▸ About XsdViewer…** shows the version (from the jar's manifest), the Java runtime, the
 log file, the licence and the project page.
@@ -357,7 +383,7 @@ can be found:
    each file found is opened in a new tab and the declaration selected there. A
    location is looked up
    - in the folders opened with **File ▸ Open folder…** or dropped on the window through
-     the browser (their `.xsd` / `.xml` files are kept at hand), then
+     the browser (their `.xsd` / `.wsdl` / `.sch` / `.xml` files are kept at hand), then
    - on disk by the server, relative to the current file when it knows where it is: the
      file given on the command line, every file reached from it, and files opened from
      the browser that the server managed to locate (a browser hides the folder of a
