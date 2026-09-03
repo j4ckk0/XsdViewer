@@ -51,6 +51,17 @@ SCENES = [
                  'nodes': "document.querySelectorAll('#graphCanvas .node').length",
                  'details': "document.querySelector('#detailsContent h2').textContent"},
          expect={'title': 'complexType PurchaseOrderType', 'nodes': 8, 'details': 'PurchaseOrderType'}),   # the centre, 6 links out, 1 user
+    dict(name='types-filtered', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+                "document.getElementById('typeMenuBtn').click();"
+                "document.querySelector('#typeMenu [data-kind=\"builtin\"]').click();"
+                "document.querySelector('#typeMenu [data-kind=\"attributeGroup\"]').click();",
+         checks={'nodes': "document.querySelectorAll('#graphCanvas .node').length",
+                 'marked': "document.getElementById('typeMenuBtn').classList.contains('filtered')",
+                 'kept': "localStorage.getItem('xsdviewer.hiddenKinds')",
+                 'offered': "[...document.querySelectorAll('#typeMenu [data-kind]')].filter(b => getComputedStyle(b).display !== 'none').length",
+                 'checks': "[...document.querySelectorAll('#typeMenu [data-kind].checked')].length"},
+         expect={'nodes': 6, 'marked': True, 'kept': 'builtin,attributeGroup', 'offered': 8, 'checks': 17}),   # 8 nodes without the filter: the built-in date and the attribute group go; 2 of the 19 entries are off
     dict(name='links-filtered', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
                 "document.getElementById('linkMenuBtn').click();"

@@ -173,6 +173,7 @@ export function renderNavigation() {
   $(ID.TABS).innerHTML = tabs;
   const selected = session.compareSelection.length;
   $(ID.COMPARE_BUTTON).disabled = selected !== 2;
+  $(ID.CLEAR_SELECTION_BUTTON).disabled = selected === 0;
   $(ID.COMPARE_HINT).classList.toggle(CLS.HIDDEN, selected === 2 || session.workspaces.length < 2);   // shown once there is something to compare
   renderFileList();
 }

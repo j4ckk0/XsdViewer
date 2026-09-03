@@ -82,6 +82,11 @@ export function toggleSelection(ws) {
 
 export const canCompare = () => session.compareSelection.length === COMPARED_WORKSPACES;
 
+/** Clear: no workspace is selected for a comparison any more; the caller redraws the bars. */
+export function clearSelection() {
+  session.compareSelection = [];
+}
+
 /** Opens (or brings to front) the comparison tab of the two selected workspaces; the caller redraws the page. Returns false when two are not selected. */
 export function startCompare() {
   if (!canCompare()) return false;

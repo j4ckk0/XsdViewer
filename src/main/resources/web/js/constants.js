@@ -196,6 +196,7 @@ export const STORAGE_KEY = {
   COMPARE_DIFF_ONLY: 'xsdviewer.compareDiffOnly',
   VALIDATE_ERRORS_ONLY: 'xsdviewer.validateErrorsOnly',
   HIDDEN_LINKS: 'xsdviewer.hiddenLinks',
+  HIDDEN_KINDS: 'xsdviewer.hiddenKinds',
   LANGUAGE: 'xsdviewer.language',
   /** Read by js/theme-boot.js too, before the modules load. */
   THEME: 'xsdviewer.theme',

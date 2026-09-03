@@ -6,6 +6,7 @@
  */
 import { COMPOSITOR, ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, familyOf, isDerivation, isSchematron, isWsdl, labelFamily, linkFamily } from './constants.js';
 import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declarations.js';
+import { isKindShown, renderKindMenu } from './kind-filter.js';
 import { isLinkShown, renderLinkMenu } from './link-filter.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc, selector } from './dom.js';
@@ -41,13 +42,13 @@ export function renderGraph() {
   const canvas = $(ID.GRAPH_CANVAS);
   if (!st.selected) { canvas.innerHTML = ''; return; }
   const center = st.nodes.get(st.selected);
-  const showBuiltins = $(ID.SHOW_BUILTINS).checked;
   const depth = $(ID.TWO_LEVELS).checked ? 2 : 1;
   $(ID.GRAPH_TITLE).textContent = t(MSG.GRAPH_NODE_TITLE, kindLabel(center.kind), center.name);
   $(ID.GRAPH_LEGEND).classList.toggle(CLS.WSDL, isWsdl(st.model));
   $(ID.GRAPH_LEGEND).classList.toggle(CLS.SCHEMATRON, isSchematron(st.model));
   renderLinkMenu();
-  const visible = (n) => n && (showBuiltins || n.kind !== NODE_KIND.BUILTIN);
+  renderKindMenu();
+  const visible = (n) => !!n && isKindShown(n.kind);
   /** A row is drawn when its node is and its link is of a category the Links menu keeps. */
   const shownLink = (n, e, fromKind, toKind) => visible(n) && isLinkShown(e, fromKind, toKind);
   const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name) || a.edge.label.localeCompare(b.edge.label);

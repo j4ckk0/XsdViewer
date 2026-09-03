@@ -2,13 +2,14 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
+import { clearSelection, initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
 import { fileListClick, initFiles, isFilesCollapsed, renderFileList, setAllUnfolded, setFilesCollapsed, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
+import { isShowAllKindsClick, kindOfClick, showAllKinds, toggleKind } from './kind-filter.js';
 import { categoryOfClick, isShowAllClick, showAllLinks, toggleCategory } from './link-filter.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
@@ -41,7 +42,7 @@ export function wireEvents() {
 
 /** The drop-down menus of the top bar: one open at a time, closed by a click elsewhere or Escape. */
 const MENUS = [[ID.FILE_MENU_BUTTON, ID.FILE_MENU], [ID.SETTINGS_MENU_BUTTON, ID.SETTINGS_MENU], [ID.HELP_MENU_BUTTON, ID.HELP_MENU],
-  [ID.LINK_MENU_BUTTON, ID.LINK_MENU]];
+  [ID.LINK_MENU_BUTTON, ID.LINK_MENU], [ID.TYPE_MENU_BUTTON, ID.TYPE_MENU]];
 const closeMenus = () => MENUS.forEach(([, menu]) => $(menu).classList.add(CLS.HIDDEN));
 
 function wireMenus() {
@@ -127,6 +128,7 @@ function wireDocumentTabs() {
     if (ws && e.button === MIDDLE_BUTTON) { e.preventDefault(); closeGroup(ws); }
   });
   $(ID.COMPARE_BUTTON).addEventListener('click', () => { if (startCompare()) renderPage(); else toast(t(MSG.COMPARE_NEED_TWO)); });
+  $(ID.CLEAR_SELECTION_BUTTON).addEventListener('click', () => { clearSelection(); renderNavigation(); });
   $(ID.COMPARE_CLOSE).addEventListener('click', () => { if (session.active.compare) closeTab(session.active); renderPage(); });
   initOptions();
   for (const id of [ID.COMPARE_BUSINESS_ONLY, ID.COMPARE_DIFF_ONLY]) {
@@ -226,13 +228,22 @@ function wireDragAndDrop() {
 
 function wireViews() {
   document.querySelectorAll(selector(CLS.VIEW_TAB)).forEach(b => b.addEventListener('click', () => showView(b.dataset[DATA.VIEW])));
-  $(ID.SHOW_BUILTINS).addEventListener('change', renderGraph);
-  // the Links menu: an entry switches its category of link, the last one draws them all again
+  // the Links and Types menus: an entry switches its category of link (its kind of object), the last one draws them all
+  // again; the menu stays open meanwhile (several switches in a row), a click elsewhere or Escape closes it
   $(ID.LINK_MENU).addEventListener('click', (e) => {
     const category = categoryOfClick(e.target);
     if (category) toggleCategory(category);
     else if (isShowAllClick(e.target)) showAllLinks();
     else return;
+    e.stopPropagation();
+    renderGraph();
+  });
+  $(ID.TYPE_MENU).addEventListener('click', (e) => {
+    const kind = kindOfClick(e.target);
+    if (kind) toggleKind(kind);
+    else if (isShowAllKindsClick(e.target)) showAllKinds();
+    else return;
+    e.stopPropagation();
     renderGraph();
   });
   try { $(ID.TWO_LEVELS).checked = localStorage.getItem(STORAGE_KEY.TWO_LEVELS) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }

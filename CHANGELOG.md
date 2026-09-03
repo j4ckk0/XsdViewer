@@ -8,6 +8,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 - **A search finds the objects of every file of the workspace, and says what it cannot see.** The Files panel — where the files other than the shown one answer — opens by itself when a search starts, instead of leaving the results hidden when it had been folded, and its head counts the files that answer (`3 of 120`). A file that could not be parsed at all (an XML file that is not a schema, a fragment) used to disappear from every search without a word; it is now counted in a last row, naming the files in its tooltip, next to the row counting the files still being parsed.
 
+- **Types ▾ in the graph toolbar** switches kinds of object on and off — the built-in types, which had their own checkbox, among them — and the menus stay open while you switch several entries. **Clear**, next to *⇄ Compare*, drops the Ctrl+click selection of workspaces.
 - **Links ▾ in the graph toolbar** switches categories of link on and off — content, attributes, types, base types, references, and the file's own chain for a WSDL or a Schematron — to clear a crowded graph. The button is marked while a category is hidden, *Show them all* brings them back, and the choice is remembered; the menu offers only what the shown file can have.
 - **Selecting an object in a view shows it in the left panel**: its group in the object list opens when it was folded, instead of the selection staying hidden.
 

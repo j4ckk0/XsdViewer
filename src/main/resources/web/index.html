@@ -58,6 +58,7 @@
 <div id="workspaceBar">
   <div id="workspaces"></div>
   <span id="compareHint" class="hint" data-i18n="compare.hint">Ctrl+click two workspaces to compare them</span>
+  <button id="clearSelectionBtn" type="button" data-i18n="compare.clearSelection" data-i18n-title="compare.clearSelection.title" disabled>Clear</button>
   <button id="compareBtn" type="button" data-i18n="compare.button" data-i18n-title="compare.button.title" disabled>⇄ Compare</button>
 </div>
 
@@ -98,9 +99,32 @@
         <label class="opt" data-i18n-title="graph.twoLevels.title">
           <input type="checkbox" id="twoLevels"> <span data-i18n="graph.twoLevels">2 levels</span>
         </label>
-        <label class="opt" data-i18n-title="option.builtins.title">
-          <input type="checkbox" id="showBuiltins" checked> <span data-i18n="option.builtins">built-in types</span>
-        </label>
+        <span class="menu">
+          <button id="typeMenuBtn" class="menubtn" type="button" data-i18n="graph.types" data-i18n-title="graph.types.title">Types ▾</button>
+          <div id="typeMenu" class="dropdown hidden">
+            <button type="button" class="xsd" data-kind="element"><span class="check">✓</span><span class="dot element"></span><span data-i18n="kind.element">element</span></button>
+            <button type="button" class="xsd" data-kind="complexType"><span class="check">✓</span><span class="dot complexType"></span><span data-i18n="kind.complexType">complexType</span></button>
+            <button type="button" class="xsd" data-kind="simpleType"><span class="check">✓</span><span class="dot simpleType"></span><span data-i18n="kind.simpleType">simpleType</span></button>
+            <button type="button" class="xsd" data-kind="group"><span class="check">✓</span><span class="dot group"></span><span data-i18n="kind.group">group</span></button>
+            <button type="button" class="xsd" data-kind="attributeGroup"><span class="check">✓</span><span class="dot attributeGroup"></span><span data-i18n="kind.attributeGroup">attributeGroup</span></button>
+            <button type="button" class="xsd" data-kind="attribute"><span class="check">✓</span><span class="dot attribute"></span><span data-i18n="kind.attribute">attribute</span></button>
+            <button type="button" class="xsd" data-kind="builtin"><span class="check">✓</span><span class="dot builtin"></span><span data-i18n="kind.builtin">builtin</span></button>
+            <button type="button" class="wsdl" data-kind="service"><span class="check">✓</span><span class="dot service"></span><span data-i18n="kind.service">service</span></button>
+            <button type="button" class="wsdl" data-kind="portType"><span class="check">✓</span><span class="dot portType"></span><span data-i18n="kind.portType">portType</span></button>
+            <button type="button" class="wsdl" data-kind="operation"><span class="check">✓</span><span class="dot operation"></span><span data-i18n="kind.operation">operation</span></button>
+            <button type="button" class="wsdl" data-kind="binding"><span class="check">✓</span><span class="dot binding"></span><span data-i18n="kind.binding">binding</span></button>
+            <button type="button" class="wsdl" data-kind="message"><span class="check">✓</span><span class="dot message"></span><span data-i18n="kind.message">message</span></button>
+            <button type="button" class="schematron" data-kind="phase"><span class="check">✓</span><span class="dot phase"></span><span data-i18n="kind.phase">phase</span></button>
+            <button type="button" class="schematron" data-kind="pattern"><span class="check">✓</span><span class="dot pattern"></span><span data-i18n="kind.pattern">pattern</span></button>
+            <button type="button" class="schematron" data-kind="rule"><span class="check">✓</span><span class="dot rule"></span><span data-i18n="kind.rule">rule</span></button>
+            <button type="button" class="schematron" data-kind="assert"><span class="check">✓</span><span class="dot assert"></span><span data-i18n="kind.assert">assert</span></button>
+            <button type="button" class="schematron" data-kind="report"><span class="check">✓</span><span class="dot report"></span><span data-i18n="kind.report">report</span></button>
+            <button type="button" class="schematron" data-kind="diagnostic"><span class="check">✓</span><span class="dot diagnostic"></span><span data-i18n="kind.diagnostic">diagnostic</span></button>
+            <button type="button" class="" data-kind="external"><span class="check">✓</span><span class="dot external"></span><span data-i18n="kind.external">external</span></button>
+            <div class="sep"></div>
+            <button type="button" class="show-all" data-i18n="type.all">Show them all</button>
+          </div>
+        </span>
         <span class="menu">
           <button id="linkMenuBtn" class="menubtn" type="button" data-i18n="graph.links" data-i18n-title="graph.links.title">Links ▾</button>
           <div id="linkMenu" class="dropdown hidden">
@@ -112,7 +136,7 @@
             <button type="button" class="wsdl" data-category="chain"><span class="check">✓</span><span data-i18n="legend.chain.wsdl">service chain</span></button>
             <button type="button" class="schematron" data-category="chain"><span class="check">✓</span><span data-i18n="legend.chain.schematron">rules chain</span></button>
             <div class="sep"></div>
-            <button type="button" class="links-all" data-i18n="link.all">Show them all</button>
+            <button type="button" class="show-all" data-i18n="link.all">Show them all</button>
           </div>
         </span>
         <span id="graphLegend" class="legend">
