@@ -634,6 +634,12 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .dot.assert, .lg.assert, .badge.assert { background: var(--c-assert); }
 .dot.report, .lg.report, .badge.report { background: var(--c-report); }
 .dot.diagnostic, .lg.diagnostic, .badge.diagnostic { background: var(--c-diagnostic); }
+/* the Links menu offers the categories the shown file can have, as the legend shows its kinds */
+#linkMenu .wsdl, #linkMenu .schematron { display: none; }
+#linkMenu.wsdl .wsdl, #linkMenu.schematron .schematron { display: flex; }
+#linkMenu.schematron .xsd { display: none; }
+#linkMenuBtn.filtered { color: var(--accent); border-color: var(--accent); }
+
 /* the chips of the WSDL / Schematron kinds only show for such a file; a Schematron has no XSD kind */
 .legend .lg.wsdl, .legend .lg.schematron { display: none; }
 .legend.wsdl .lg.wsdl, .legend.schematron .lg.schematron { display: inline; }

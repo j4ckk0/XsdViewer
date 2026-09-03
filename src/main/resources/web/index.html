@@ -101,6 +101,20 @@
         <label class="opt" data-i18n-title="option.builtins.title">
           <input type="checkbox" id="showBuiltins" checked> <span data-i18n="option.builtins">built-in types</span>
         </label>
+        <span class="menu">
+          <button id="linkMenuBtn" class="menubtn" type="button" data-i18n="graph.links" data-i18n-title="graph.links.title">Links ▾</button>
+          <div id="linkMenu" class="dropdown hidden">
+            <button type="button" class="xsd" data-category="content"><span class="check">✓</span><span data-i18n="link.content">content (elements)</span></button>
+            <button type="button" class="xsd" data-category="attribute"><span class="check">✓</span><span data-i18n="link.attribute">attributes</span></button>
+            <button type="button" class="xsd" data-category="type"><span class="check">✓</span><span data-i18n="link.type">types</span></button>
+            <button type="button" class="xsd" data-category="derivation"><span class="check">✓</span><span data-i18n="link.derivation">base types</span></button>
+            <button type="button" class="xsd" data-category="reference"><span class="check">✓</span><span data-i18n="link.reference">references</span></button>
+            <button type="button" class="wsdl" data-category="chain"><span class="check">✓</span><span data-i18n="legend.chain.wsdl">service chain</span></button>
+            <button type="button" class="schematron" data-category="chain"><span class="check">✓</span><span data-i18n="legend.chain.schematron">rules chain</span></button>
+            <div class="sep"></div>
+            <button type="button" class="links-all" data-i18n="link.all">Show them all</button>
+          </div>
+        </span>
         <span id="graphLegend" class="legend">
           <span class="lg service wsdl" data-i18n="kind.service">service</span>
           <span class="lg portType wsdl" data-i18n="kind.portType">portType</span>

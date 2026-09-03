@@ -6,6 +6,7 @@
  */
 import { ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, familyOf, isDerivation, isSchematron, isWsdl, labelFamily, linkFamily } from './constants.js';
 import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declarations.js';
+import { isLinkShown, renderLinkMenu } from './link-filter.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc, selector } from './dom.js';
 import { t } from './i18n.js';
@@ -39,7 +40,10 @@ export function renderGraph() {
   $(ID.GRAPH_TITLE).textContent = t(MSG.GRAPH_NODE_TITLE, kindLabel(center.kind), center.name);
   $(ID.GRAPH_LEGEND).classList.toggle(CLS.WSDL, isWsdl(st.model));
   $(ID.GRAPH_LEGEND).classList.toggle(CLS.SCHEMATRON, isSchematron(st.model));
+  renderLinkMenu();
   const visible = (n) => n && (showBuiltins || n.kind !== NODE_KIND.BUILTIN);
+  /** A row is drawn when its node is and its link is of a category the Links menu keeps. */
+  const shownLink = (n, e, fromKind, toKind) => visible(n) && isLinkShown(e, fromKind, toKind);
   const byName = (a, b) => a.n.kind.localeCompare(b.n.kind) || a.n.name.localeCompare(b.n.name) || a.edge.label.localeCompare(b.edge.label);
   const fileKind = (n, place) => ({ kindText: t(MSG.GRAPH_KIND_IN_FILE, kindLabel(n.kind), place.fileName) });
   /** One row per link: {n, edge, place} (place: the other file the node belongs to — a tab or a listed file —, or null); children: its level-2 targets. */
@@ -51,16 +55,16 @@ export function renderGraph() {
   for (const e of st.outEdges.get(center.id) || []) {
     if (e.to === center.id) { selfLabels.push(linkTitle(e)); continue; }
     const n = st.nodes.get(e.to);
-    if (visible(n)) right.push(link(n, e, null));
+    if (shownLink(n, e, center.kind, n && n.kind)) right.push(link(n, e, null));
   }
   for (const e of st.inEdges.get(center.id) || []) {
     if (e.from === center.id) continue;
     const n = st.nodes.get(e.from);
-    if (visible(n)) left.push(link(n, e, null));
+    if (shownLink(n, e, n && n.kind, center.kind)) left.push(link(n, e, null));
   }
   // Users of the centre in the other files of the workspace (open or only listed), where it appears as an external placeholder.
   for (const u of usersInWorkspace(center, st)) {
-    if (visible(u.n)) for (const e of u.edges) left.push(link(u.n, e, u.place));
+    for (const e of u.edges) if (shownLink(u.n, e, u.n.kind, center.kind)) left.push(link(u.n, e, u.place));
   }
   right.sort(byName); left.sort(byName);
   // An external target declared elsewhere in the workspace shows as what it is there (its kind, its file).
@@ -90,7 +94,7 @@ export function renderGraph() {
           const found = findInWorkspace(n.name, kindsOf(n), n.ns || '', st);
           if (found) { n = found.place.nodes.get(found.id); place = found.place; }
         }
-        if (visible(n)) r.children.push(link(n, e, place));
+        if (shownLink(n, e, (r.resolved ? r.resolved.n : r.n).kind, n && n.kind)) r.children.push(link(n, e, place));
       }
       r.children.sort(byName);
     }

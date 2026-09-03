@@ -42,6 +42,8 @@ export const ID = {
   VALIDATE_PROBLEMS: 'validateProblems',
   VALIDATE_DOC: 'validateDoc',
   VALIDATE_CLOSE: 'validateClose',
+  LINK_MENU_BUTTON: 'linkMenuBtn',
+  LINK_MENU: 'linkMenu',
   SIDEBAR_SPLITTER: 'sidebarSplitter',
   DETAILS_SPLITTER: 'detailsSplitter',
   ABOUT_DIALOG: 'aboutDialog',
@@ -157,6 +159,12 @@ export const CLS = {
   PENDING: 'pending',
   /** On a splitter being dragged. */
   DRAGGING: 'dragging',
+  /** On the Links button: some categories of link are not drawn. */
+  FILTERED: 'filtered',
+  /** On a switch entry of a menu that is on. */
+  CHECKED: 'checked',
+  /** The entry of the Links menu that draws every category again. */
+  LINKS_ALL: 'links-all',
   LEGEND_ENTRY: 'lg',
   DIFF_SIDES: 'csides',
   DIFF_SIDE: 'cside',
@@ -252,6 +260,8 @@ export const DATA = {
   FILE: 'file',
   ROW_INDEX: 'row',
   PROBLEM_INDEX: 'problem',
+  /** On an entry of the Links menu: the category of link it switches. */
+  CATEGORY: 'category',
   /** On a schema list of the validation tab: xsd / schematron. */
   SOURCE: 'source',
   VIEW: 'view',

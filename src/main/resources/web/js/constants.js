@@ -84,9 +84,35 @@ export const STRUCTURAL_LINK_LABELS = new Set([
   LINK_LABEL.OPERATION, LINK_LABEL.INPUT, LINK_LABEL.OUTPUT, LINK_LABEL.FAULT, LINK_LABEL.BINDS,
   LINK_LABEL.ACTIVE, LINK_LABEL.RULE, LINK_LABEL.IS_A, LINK_LABEL.ASSERT, LINK_LABEL.REPORT, LINK_LABEL.DIAGNOSTIC,
 ]);
+/**
+ * The categories a link falls into, what the graph's *Links* menu switches on and off: what a
+ * declaration contains, its attributes, the type it is, the type it derives from, what it names,
+ * and the chain of a WSDL or a Schematron.
+ */
+export const LINK_CATEGORY = {
+  CONTENT: 'content', ATTRIBUTE: 'attribute', TYPE: 'type', DERIVATION: 'derivation', REFERENCE: 'reference', CHAIN: 'chain',
+};
+export const LINK_CATEGORIES = Object.values(LINK_CATEGORY);
+
 /** Edge labels of a derivation (a type to its base type, a Schematron pattern or rule to the abstract one it builds on): drawn with a hollow arrowhead, as a UML generalisation. */
 export const DERIVATION_LINK_LABELS = new Set([LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.IS_A]);
 export const isDerivation = (edge) => DERIVATION_LINK_LABELS.has(edge.label);
+
+/**
+ * The category of the link {@code edge} between a node of kind {@code fromKind} and one of kind
+ * {@code toKind}: the family's chain first (one end of it is enough), then what the label says;
+ * a label that is neither an XSD word nor a chain word is the name of a nested element — content.
+ */
+export function linkCategory(edge, fromKind, toKind) {
+  const label = edge.label;
+  if (linkFamily(fromKind, toKind)) return LINK_CATEGORY.CHAIN;
+  if (DERIVATION_LINK_LABELS.has(label)) return LINK_CATEGORY.DERIVATION;
+  if (label === LINK_LABEL.ATTRIBUTE_REF || label.startsWith(LINK_LABEL.ATTRIBUTE_PREFIX)) return LINK_CATEGORY.ATTRIBUTE;
+  if (label === LINK_LABEL.TYPE || label === LINK_LABEL.LIST_OF || label === LINK_LABEL.UNION_OF) return LINK_CATEGORY.TYPE;
+  if (label === LINK_LABEL.REF || label === LINK_LABEL.SUBSTITUTES || label === LINK_LABEL.GROUP
+      || label === LINK_LABEL.ATTRIBUTE_GROUP || label.startsWith(LINK_LABEL.KEYREF_PREFIX)) return LINK_CATEGORY.REFERENCE;
+  return LINK_CATEGORY.CONTENT;
+}
 
 /** Cardinality of a link (edge.min / edge.max, absent on type links); how it is written. */
 export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };
@@ -166,6 +192,7 @@ export const STORAGE_KEY = {
   COMPARE_BUSINESS_ONLY: 'xsdviewer.compareBusinessOnly',
   COMPARE_DIFF_ONLY: 'xsdviewer.compareDiffOnly',
   VALIDATE_ERRORS_ONLY: 'xsdviewer.validateErrorsOnly',
+  HIDDEN_LINKS: 'xsdviewer.hiddenLinks',
   LANGUAGE: 'xsdviewer.language',
   /** Read by js/theme-boot.js too, before the modules load. */
   THEME: 'xsdviewer.theme',
@@ -178,5 +205,5 @@ export const SVG_NS = 'http://www.w3.org/2000/svg';
 export const DATA_TRANSFER_FILES = 'Files';
 export const DROP_EFFECT_COPY = 'copy';
 export const KEY = { ESCAPE: 'Escape', ENTER: 'Enter', SPACE: ' ', ARROW_LEFT: 'ArrowLeft', ARROW_RIGHT: 'ArrowRight', ARROW_UP: 'ArrowUp', ARROW_DOWN: 'ArrowDown', HOME: 'Home', OPEN: 'o', FIND: 'f', SAVE: 's' };
-export const TEXT = { LIST_SEPARATOR: ', ', TOAST_SEPARATOR: ' — ' };
+export const TEXT = { LIST_SEPARATOR: ', ', TOAST_SEPARATOR: ' — ', STORED_SEPARATOR: ',' };
 export const MIDDLE_BUTTON = 1;

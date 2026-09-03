@@ -9,6 +9,7 @@ import { initDetails, toggleDetails } from './details.js';
 import { fileListClick, initFiles, renderFileList, setAllUnfolded, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
+import { categoryOfClick, isShowAllClick, showAllLinks, toggleCategory } from './link-filter.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
 import { renderPage, showView } from './page.js';
@@ -39,7 +40,8 @@ export function wireEvents() {
 }
 
 /** The drop-down menus of the top bar: one open at a time, closed by a click elsewhere or Escape. */
-const MENUS = [[ID.FILE_MENU_BUTTON, ID.FILE_MENU], [ID.SETTINGS_MENU_BUTTON, ID.SETTINGS_MENU], [ID.HELP_MENU_BUTTON, ID.HELP_MENU]];
+const MENUS = [[ID.FILE_MENU_BUTTON, ID.FILE_MENU], [ID.SETTINGS_MENU_BUTTON, ID.SETTINGS_MENU], [ID.HELP_MENU_BUTTON, ID.HELP_MENU],
+  [ID.LINK_MENU_BUTTON, ID.LINK_MENU]];
 const closeMenus = () => MENUS.forEach(([, menu]) => $(menu).classList.add(CLS.HIDDEN));
 
 function wireMenus() {
@@ -225,6 +227,14 @@ function wireDragAndDrop() {
 function wireViews() {
   document.querySelectorAll(selector(CLS.VIEW_TAB)).forEach(b => b.addEventListener('click', () => showView(b.dataset[DATA.VIEW])));
   $(ID.SHOW_BUILTINS).addEventListener('change', renderGraph);
+  // the Links menu: an entry switches its category of link, the last one draws them all again
+  $(ID.LINK_MENU).addEventListener('click', (e) => {
+    const category = categoryOfClick(e.target);
+    if (category) toggleCategory(category);
+    else if (isShowAllClick(e.target)) showAllLinks();
+    else return;
+    renderGraph();
+  });
   try { $(ID.TWO_LEVELS).checked = localStorage.getItem(STORAGE_KEY.TWO_LEVELS) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
   $(ID.TWO_LEVELS).addEventListener('change', (e) => {
     try { localStorage.setItem(STORAGE_KEY.TWO_LEVELS, e.target.checked ? STORAGE_TRUE : STORAGE_FALSE); } catch (e2) { /* ignore */ }

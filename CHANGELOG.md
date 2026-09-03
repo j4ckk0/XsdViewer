@@ -4,6 +4,9 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
+- **Links ▾ in the graph toolbar** switches categories of link on and off — content, attributes, types, base types, references, and the file's own chain for a WSDL or a Schematron — to clear a crowded graph. The button is marked while a category is hidden, *Show them all* brings them back, and the choice is remembered; the menu offers only what the shown file can have.
+- **Selecting an object in a view shows it in the left panel**: its group in the object list opens when it was folded, instead of the selection staying hidden.
+
 - **A WSDL's service, and a Schematron's rules, read apart from the schema.** Their objects are drawn with rounded corners where the schema's own keep square ones, and every link with one of them at either end is drawn in the family's colour and heavier — dark blue for a service, teal for a set of rules — its word (`operation`, `input`, `fault`, `assert`…) in that colour instead of the small grey of the XSD words. So an operation, and what leads from it to the elements its messages carry, no longer looks like a type reference; the legend names the chain for such a file.
 
 - **The side panels are resizable.** A grip along the inner edge of the left panel and of the details panel: drag it to set the width, double-click it for the default, or focus it and use the arrow keys. The widths are remembered by the browser, and the graph is redrawn to the room it has once the drag ends.

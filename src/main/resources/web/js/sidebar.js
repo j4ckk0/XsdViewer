@@ -81,7 +81,12 @@ export function setAllGroupsExpanded(expanded) {
 
 /** Moves the highlight to the selected node without rebuilding the list. */
 export function renderNodeListSelection() {
-  const selected = session.active.selected;
+  const st = session.active;
+  const selected = st.selected;
+  const n = selected ? st.nodes.get(selected) : null;
+  // the object selected in a view is shown in the list: its group opens when it was folded
+  const group = n ? (KINDS.includes(n.kind) ? n.kind : NODE_KIND.EXTERNAL) : null;
+  if (group && st.collapsed.delete(group)) renderNodeList();
   $(ID.NODE_LIST).querySelectorAll(selector(CLS.ITEM)).forEach(el => {
     const on = el.dataset[DATA.ID] === selected;
     el.classList.toggle(CLS.SELECTED, on);

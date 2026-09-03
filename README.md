@@ -36,7 +36,9 @@ A Java server parses the schema and serves a web page offering two views:
 Files are opened with **File ▸ Open…** (Ctrl+O) or by dropping them anywhere in the window.
 Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸ New tab
 opens an empty one, × or a middle click closes one); every tab keeps its own view,
-selection, history and search filter. The **search box** at the top of the left panel (Ctrl+F)
+selection, history and search filter. Selecting an object anywhere — the graph, the details panel,
+a line of the source — shows it in the object list of the left panel, opening its group when it was
+folded. The **search box** at the top of the left panel (Ctrl+F)
 filters the Files panel and the object list below it — every schema of the workspace, open in a tab or
 not, is searched, by the objects' names but also by the names of the elements and attributes inside
 a declaration (a message's parts) and by the documentation, the reason being shown in grey after a
@@ -300,6 +302,12 @@ A Schematron opens on its first phase, else its first pattern; **2 levels** from
 its rules and their assertions. `samples/schematron/purchaseOrder.sch` is an example over
 `samples/purchaseOrder.xsd`; documents are checked against it with **File ▸ Validate an XML file…**
 (see *Validation* above).
+
+**Links ▾** in the graph toolbar says which links are drawn: *content*, *attributes*, *types*,
+*base types*, *references*, and the file's own chain for a WSDL or a Schematron. Switching a
+category off clears a crowded view (the button is marked while one is off, *Show them all* brings
+them back); the choice is remembered by the browser and the menu offers only the categories the
+shown file can have.
 
 A file that describes more than a schema — a WSDL, a Schematron — draws its own objects and links
 apart from the schema's: **its objects have rounded corners** (a service, a portType, an operation,

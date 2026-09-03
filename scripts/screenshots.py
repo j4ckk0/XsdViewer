@@ -51,6 +51,24 @@ SCENES = [
                  'nodes': "document.querySelectorAll('#graphCanvas .node').length",
                  'details': "document.querySelector('#detailsContent h2').textContent"},
          expect={'title': 'complexType PurchaseOrderType', 'nodes': 8, 'details': 'PurchaseOrderType'}),   # the centre, 6 links out, 1 user
+    dict(name='links-filtered', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+                "document.getElementById('linkMenuBtn').click();"
+                "document.querySelector('#linkMenu [data-category=\"attribute\"]').click();"
+                "document.querySelector('#linkMenu [data-category=\"type\"]').click();"
+                "document.getElementById('linkMenuBtn').click();",
+         checks={'nodes': "document.querySelectorAll('#graphCanvas .node').length",
+                 'marked': "document.getElementById('linkMenuBtn').classList.contains('filtered')",
+                 'kept': "localStorage.getItem('xsdviewer.hiddenLinks')",
+                 'offered': "[...document.querySelectorAll('#linkMenu [data-category]')].filter(b => getComputedStyle(b).display !== 'none').length"},
+         expect={'nodes': 6, 'marked': True, 'kept': 'attribute,type', 'offered': 5}),   # 8 without the filter: the attribute link and the type link that uses the centre go
+    dict(name='select-from-graph', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.getElementById('objectsCollapseAll').click();"
+                "document.querySelector('#graphCanvas .node:not(.center)').dispatchEvent(new MouseEvent('click', {bubbles: true}));",
+         checks={'selected': "document.querySelector('#nodeList .item.selected span:nth-child(2)').textContent",
+                 'centre': "document.getElementById('graphTitle').textContent",
+                 'openGroups': "document.querySelectorAll('#nodeList .group-h:not(.collapsed)').length"},
+         expect={'selected': 'PurchaseOrderType', 'centre': 'complexType PurchaseOrderType', 'openGroups': 1}),   # every group was folded: the one holding the selection opens
     dict(name='enumeration', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"simpleType:Currency\"]').click();",
          checks={'values': "document.querySelectorAll('#detailsContent .value').length"},
