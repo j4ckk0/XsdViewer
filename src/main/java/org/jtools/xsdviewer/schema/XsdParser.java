@@ -114,13 +114,24 @@ final class XsdParser {
             }
         }
 
-        // Pass 2: the links, and the members met on the way.
+        // Pass 2: the links, the members met on the way, and the content model (the ids being those of the links).
+        ContentModelBuilder.Ids ids = new ContentModelBuilder.Ids() {
+            @Override
+            public String type(String qname, Element ctx) { return typeId(qname, ctx); }
+
+            @Override
+            public String named(String kind, String qname, Element ctx) { return SchemaGraph.nodeId(kind, QName.resolve(qname, ctx).local()); }
+        };
         for (Element c : children(schema)) {
             if (isGlobalDeclaration(c)) {
                 String id = SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME));
                 collect(c, id, true, Cardinality.ONE, "");
                 Set<String> found = members.get(id);
                 if (found != null) graph.nodes.computeIfPresent(id, (k, n) -> n.withMembers(List.copyOf(found)));
+                ContentModelBuilder.Content content = ContentModelBuilder.of(c, ids);
+                if (!content.particles().isEmpty() || !content.attributes().isEmpty()) {
+                    graph.nodes.computeIfPresent(id, (k, n) -> n.withContent(content.particles(), content.attributes()));
+                }
             }
         }
         // A keyref links to the element declaring the key it refers to (a key of this schema; else the keyref's owner, being what is known).
@@ -271,7 +282,7 @@ final class XsdParser {
     }
 
     /** minOccurs..maxOccurs of a particle (element, group reference, compositor); 1..1 when absent. */
-    private static Cardinality particle(Element e) {
+    static Cardinality particle(Element e) {
         int min = intAttribute(e, XsdVocabulary.ATTR_MIN_OCCURS, 1);
         String max = e.getAttribute(XsdVocabulary.ATTR_MAX_OCCURS);
         if (XsdVocabulary.MAX_OCCURS_UNBOUNDED.equals(max)) return new Cardinality(min, Cardinality.UNBOUNDED);
@@ -279,7 +290,7 @@ final class XsdParser {
     }
 
     /** The cardinality of an attribute from its {@code use}: optional unless said otherwise. */
-    private static Cardinality attributeUse(Element e) {
+    static Cardinality attributeUse(Element e) {
         return switch (e.getAttribute(XsdVocabulary.ATTR_USE)) {
             case XsdVocabulary.USE_REQUIRED -> Cardinality.ONE;
             case XsdVocabulary.USE_PROHIBITED -> Cardinality.NONE;
@@ -310,6 +321,18 @@ final class XsdParser {
 
     void linkType(String owner, String qname, Element ctx, String label, Cardinality card) {
         linkType(owner, qname, ctx, label, card, "");
+    }
+
+    /**
+     * The node id a type name stands for: a built-in type ({@code builtin:X}, unless this file declares
+     * {@code X}), a type declared here so far ({@code complexType:X} / {@code simpleType:X}), else the
+     * reference the third pass resolves or makes a placeholder of ({@code type:X}).
+     */
+    private String typeId(String qname, Element ctx) {
+        QName q = QName.resolve(qname, ctx);
+        if (XsdVocabulary.NAMESPACE.equals(q.ns()) && declaredType(q.local()) == null) return SchemaGraph.nodeId(NodeKind.BUILTIN, q.local());
+        String declared = declaredType(q.local());
+        return declared != null ? declared : SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local());
     }
 
     /** A reference to a named type: built-in XSD types are resolved now, the others at the end. */
@@ -366,7 +389,7 @@ final class XsdParser {
     }
 
     /** The first child element of {@code e} in the XSD namespace named {@code localName}, or null. */
-    private static Element child(Element e, String localName) {
+    static Element child(Element e, String localName) {
         for (Element c : children(e)) {
             if (XsdVocabulary.NAMESPACE.equals(c.getNamespaceURI()) && localName.equals(c.getLocalName())) return c;
         }

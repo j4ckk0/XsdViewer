@@ -1,7 +1,7 @@
 import { VIEW } from './constants.js';
 
 /** Scroll positions of a tab's views, restored when the tab is shown again. */
-export const newScroll = () => ({ text: 0, graphTop: 0, graphLeft: 0 });
+export const newScroll = () => ({ text: 0, graphTop: 0, graphLeft: 0, modelTop: 0, modelLeft: 0 });
 
 /** One document tab: the file, its graph and the UI state of that tab (view, selection, history...). */
 export function newTabState() {
@@ -25,6 +25,7 @@ export function newTabState() {
     view: VIEW.GRAPH,
     filter: '',
     collapsed: new Set(),
+    modelExpanded: new Set(),   // the boxes of the Model view opened on demand (their paths in the tree)
     scroll: newScroll(),
   };
 }

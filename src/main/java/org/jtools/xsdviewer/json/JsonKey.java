@@ -45,6 +45,14 @@ public final class JsonKey {
     public static final String MEMBERS = "members";
     /** The expression of a Schematron rule (its context) or assertion (its test), only when there is one. */
     public static final String XPATH = "xpath";
+    /** The content model of a declaration (the Model view), only when it has one: its particles and its attributes. */
+    public static final String CONTENT = "content";
+    public static final String ATTRIBUTES = "attributes";
+    /** Of a particle: its kind, the node it refers to, its type, its wildcard's namespace, its children; of an attribute: its use as min / max. */
+    public static final String REF = "ref";
+    public static final String TYPE = "type";
+    public static final String CHILDREN = "children";
+    public static final String USE = "use";
 
     // POST /api/validate
     public static final String VALID = "valid";

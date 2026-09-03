@@ -728,6 +728,47 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 #validateDoc .line.vline.warning .code { background: var(--hl); }
 #validateDoc .line.hl { box-shadow: inset 3px 0 0 var(--accent); }
 
+/* ---- the Model view: the content model as a tree of boxes, left to right ----------- */
+
+#model { display: flex; flex-direction: column; }
+#modelToolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  white-space: nowrap;
+}
+#modelTitle { font-weight: 600; }
+#modelToolbar .muted { color: var(--muted); }
+#modelCanvas { flex: 1; overflow: auto; }
+#modelCanvas svg { display: block; }
+.mlink { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+.mlink.optional { stroke-dasharray: 4 3; }
+.mbox rect { fill: var(--surface); stroke: var(--c-element); stroke-width: 1.5; }
+.mbox.optional > rect { stroke-dasharray: 4 3; }
+.mbox.center > rect { stroke-width: 3; fill: var(--node-center); }
+.mbox.clickable { cursor: pointer; }
+.mbox.clickable:hover > rect { fill: var(--node-hover); }
+.mbox.sequence rect, .mbox.choice rect, .mbox.all rect { stroke: var(--muted); fill: var(--surface-2); }
+.mbox.element rect { stroke: var(--c-element); }
+.mbox.complexType rect { stroke: var(--c-complexType); }
+.mbox.group rect { stroke: var(--c-group); }
+.mbox.attribute rect { stroke: var(--c-attribute); }
+.mbox.external rect { stroke: var(--c-external); fill: var(--surface-2); }
+.mbox text { font-size: 13px; fill: var(--text); pointer-events: none; }
+.mbox .mglyph { font-size: 14px; font-weight: 700; fill: var(--muted); }
+.mbox .mtype { font-size: 10px; fill: var(--muted); }
+.mbox .mword { font-size: 10px; fill: var(--muted); font-style: italic; }
+.mbox.attribute .mname { font-size: 12px; }
+.mbox .card { font-size: 11px; fill: var(--muted); }
+.mbox .mrec { font-size: 12px; fill: var(--muted); }
+.mhandle { cursor: pointer; }
+.mhandle rect { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1; }
+.mhandle:hover rect { fill: var(--hover); }
+.mhandle text { font-size: 12px; font-weight: 700; fill: var(--muted); pointer-events: none; }
+
 /* ---- empty state ------------------------------------------------------------------- */
 
 #empty {

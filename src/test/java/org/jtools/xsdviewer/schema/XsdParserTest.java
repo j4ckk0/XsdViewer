@@ -21,6 +21,7 @@ package org.jtools.xsdviewer.schema;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -243,6 +244,49 @@ class XsdParserTest {
         assertNull(cardinality(model, "element:purchaseOrder", "complexType:PurchaseOrderType", "type"));
         assertNull(cardinality(model, "complexType:InternationalAddress", "complexType:USAddress", "extends"));
         assertNull(cardinality(model, "simpleType:SKUList", "simpleType:SKU", "list of"));
+    }
+
+    @Test
+    void theContentModelOfADeclaration() {
+        // Items: a sequence holding item (0..*), whose anonymous type holds a sequence of elements, a reference, a group reference, and an attribute
+        SchemaGraph.Node items = model.nodes.get("complexType:Items");
+        assertEquals(1, items.content().size());
+        SchemaGraph.Particle seq = items.content().get(0);
+        assertEquals(ParticleKind.SEQUENCE, seq.kind());
+        assertEquals(SchemaGraph.Cardinality.ONE, seq.cardinality());
+        SchemaGraph.Particle item = seq.children().get(0);
+        assertEquals(ParticleKind.ELEMENT, item.kind());
+        assertEquals("item", item.name());
+        assertEquals(new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED), item.cardinality());
+        assertEquals("", item.type(), "an anonymous type: walked in place");
+        SchemaGraph.Particle inner = item.children().get(0);
+        assertEquals(List.of("productName", "quantity", "USPrice", "comment", "shipDate", "ItemExtras"), inner.children().stream().map(SchemaGraph.Particle::name).toList());
+        assertEquals("builtin:string", inner.children().get(0).type());
+        assertEquals("", inner.children().get(1).type(), "quantity has an anonymous simple type");
+        assertEquals("element:comment", inner.children().get(3).ref());
+        SchemaGraph.Particle extras = inner.children().get(5);
+        assertEquals(ParticleKind.GROUP, extras.kind());
+        assertEquals("group:ItemExtras", extras.ref());
+        assertEquals(1, item.attributes().size());
+        assertEquals("partNum", item.attributes().get(0).name());
+        assertEquals("simpleType:SKU", item.attributes().get(0).type());
+        assertEquals(SchemaGraph.Cardinality.ONE, item.attributes().get(0).use());
+        // a derived type: the base first, then its own particles
+        SchemaGraph.Node international = model.nodes.get("complexType:InternationalAddress");
+        assertEquals(ParticleKind.EXTENDS, international.content().get(0).kind());
+        assertEquals("complexType:USAddress", international.content().get(0).type());
+        assertEquals(ParticleKind.SEQUENCE, international.content().get(1).kind());
+        // a global element of a named type has no content of its own; a simple type neither; a group has its compositor; an attributeGroup its attributes
+        assertTrue(model.nodes.get("element:purchaseOrder").content().isEmpty());
+        assertTrue(model.nodes.get("simpleType:SKU").content().isEmpty());
+        assertEquals(ParticleKind.SEQUENCE, model.nodes.get("group:ItemExtras").content().get(0).kind());
+        assertEquals(List.of("createdBy", "version"), model.nodes.get("attributeGroup:AuditAttributes").attributes().stream().map(SchemaGraph.Attribute::name).toList());
+        assertEquals("attribute:version", model.nodes.get("attributeGroup:AuditAttributes").attributes().get(1).ref());
+        // the JSON: content and attributes only where there are some
+        String json = model.toJson();
+        assertTrue(json.contains("\"name\":\"item\",\"min\":0,\"max\":-1,\"children\":[{\"kind\":\"sequence\""), json);
+        assertTrue(json.contains("\"attributes\":[{\"name\":\"partNum\",\"type\":\"simpleType:SKU\",\"min\":1,\"max\":1}]"), json);
+        assertFalse(json.contains("\"id\":\"simpleType:SKU\",\"kind\":\"simpleType\",\"name\":\"SKU\",\"ns\":\"http://example.com/po\",\"line\":89,\"doc\":\"Stock Keeping Unit, e.g. 123-AB.\",\"content\""));
     }
 
     @Test

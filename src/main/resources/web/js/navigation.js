@@ -14,6 +14,7 @@ import { renderNodeListSelection } from './sidebar.js';
 import { session } from './state.js';
 import { activateTab, tabsOf } from './tabs.js';
 import { highlightTextLine } from './text-view.js';
+import { renderModel } from './model-view.js';
 import { toast } from './toast.js';
 
 
@@ -26,6 +27,7 @@ export function select(id, pushHistory = true) {
   $(ID.BACK_BUTTON).disabled = st.history.length === 0;
   renderNodeListSelection();
   renderGraph();
+  renderModel();
   renderDetails();
   highlightTextLine(true);
   const n = st.nodes.get(id);

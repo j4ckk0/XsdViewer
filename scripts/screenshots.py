@@ -80,6 +80,25 @@ SCENES = [
                  'centre': "document.getElementById('graphTitle').textContent",
                  'openGroups': "document.querySelectorAll('#nodeList .group-h:not(.collapsed)').length"},
          expect={'selected': 'PurchaseOrderType', 'centre': 'complexType PurchaseOrderType', 'openGroups': 1}),   # every group was folded: the one holding the selection opens
+    dict(name='model-view', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:Items\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();",
+         checks={'boxes': "document.querySelectorAll('#modelCanvas .mbox').length",
+                 'compositors': "[...document.querySelectorAll('#modelCanvas .mbox.sequence .mglyph')].length",
+                 'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
+                 'handles': "document.querySelectorAll('#modelCanvas .mhandle').length",
+                 'cards': "[...document.querySelectorAll('#modelCanvas .mbox .card')].map(t => t.textContent).join('|')",
+                 'svgButton': "document.getElementById('exportSvgBtn').disabled"},
+         expect={'boxes': 11, 'compositors': 2, 'names': 'Items|item|@partNum : SKU|productName|quantity|USPrice|comment|shipDate|ItemExtras',
+                 'handles': 1, 'cards': '0..*|0..1|0..1|0..1', 'svgButton': False}),   # ItemExtras (a group) opens on demand; comment refers to a global element of a built-in type: nothing inside
+    dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();"
+                "document.getElementById('modelExpandAll').click();",
+         checks={'base': "document.querySelector('#modelCanvas .mbox.complexType:not(.center) .mword').textContent",
+                 'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
+                 'folded': "document.querySelectorAll('#modelCanvas .mhandle text').length + ':' + [...document.querySelectorAll('#modelCanvas .mhandle text')].map(t => t.textContent).join('')"},
+         expect={'base': 'extends', 'names': 'InternationalAddress|USAddress|@country : NMTOKEN ?|name|street|city|state|zip|countryName', 'folded': '1:−'}),   # the base type opened: its attribute and its sequence, then the extension's own element
     dict(name='enumeration', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"simpleType:Currency\"]').click();",
          checks={'values': "document.querySelectorAll('#detailsContent .value').length",

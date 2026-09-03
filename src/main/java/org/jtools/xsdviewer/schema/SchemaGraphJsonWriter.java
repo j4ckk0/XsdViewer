@@ -20,6 +20,8 @@ package org.jtools.xsdviewer.schema;
  * #L%
  */
 
+import java.util.List;
+
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
@@ -64,6 +66,7 @@ public final class SchemaGraphJsonWriter {
                 }
                 w.endArray();
             }
+            content(w, n.content(), n.attributes());
             w.endObject();
         }
         w.endArray();
@@ -79,5 +82,45 @@ public final class SchemaGraphJsonWriter {
         }
         w.endArray();
         return w.endObject().toString();
+    }
+
+    /** The content model of a node or of a particle's anonymous type: {@code content} and {@code attributes}, each only when there is something. */
+    private static void content(JsonWriter w, List<SchemaGraph.Particle> particles, List<SchemaGraph.Attribute> attributes) {
+        if (!particles.isEmpty()) {
+            w.name(JsonKey.CONTENT).beginArray();
+            for (SchemaGraph.Particle p : particles) particle(w, p);
+            w.endArray();
+        }
+        if (!attributes.isEmpty()) {
+            w.name(JsonKey.ATTRIBUTES).beginArray();
+            for (SchemaGraph.Attribute a : attributes) {
+                w.beginObject().property(JsonKey.NAME, a.name());
+                optional(w, JsonKey.REF, a.ref());
+                optional(w, JsonKey.TYPE, a.type());
+                if (a.use() != null) w.property(JsonKey.MIN, a.use().min()).property(JsonKey.MAX, a.use().max());
+                w.endObject();
+            }
+            w.endArray();
+        }
+    }
+
+    private static void particle(JsonWriter w, SchemaGraph.Particle p) {
+        w.beginObject().property(JsonKey.KIND, p.kind());
+        optional(w, JsonKey.NAME, p.name());
+        optional(w, JsonKey.REF, p.ref());
+        optional(w, JsonKey.TYPE, p.type());
+        optional(w, JsonKey.NAMESPACE, p.namespace());
+        if (p.cardinality() != null) w.property(JsonKey.MIN, p.cardinality().min()).property(JsonKey.MAX, p.cardinality().max());
+        if (!p.children().isEmpty()) {
+            w.name(JsonKey.CHILDREN).beginArray();
+            for (SchemaGraph.Particle c : p.children()) particle(w, c);
+            w.endArray();
+        }
+        content(w, List.of(), p.attributes());
+        w.endObject();
+    }
+
+    private static void optional(JsonWriter w, String key, String value) {
+        if (!value.isEmpty()) w.property(key, value);
     }
 }

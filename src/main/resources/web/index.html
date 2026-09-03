@@ -48,6 +48,7 @@
   <span id="busy" class="busy hidden" role="status" aria-live="polite"><span class="wheel" aria-hidden="true"></span><span id="busyLabel"></span></span>
   <nav class="tabs">
     <button class="tab active" data-view="graph" type="button" data-i18n="view.graph">Graph</button>
+    <button class="tab" data-view="model" type="button" data-i18n="view.model" data-i18n-title="view.model.title">Model</button>
     <button class="tab" data-view="text" type="button" data-i18n="view.text">Text</button>
   </nav>
   <button id="exportBtn" class="menubtn" type="button" data-i18n="export.button" data-i18n-title="export.title" disabled>⤓ PNG</button>
@@ -170,6 +171,14 @@
         </span>
       </div>
       <div id="graphCanvas"></div>
+    </div>
+    <div id="model" class="view hidden">
+      <div id="modelToolbar">
+        <span id="modelTitle"></span>
+        <span class="panel-tools"><button id="modelExpandAll" class="panel-toggle" type="button" data-i18n-title="model.expandAll">⊞</button><button id="modelCollapseAll" class="panel-toggle" type="button" data-i18n-title="model.collapseAll">⊟</button></span>
+        <span id="modelEmpty" class="muted hidden" data-i18n="model.empty">No content model: a simple type, an attribute, or a declaration of another vocabulary.</span>
+      </div>
+      <div id="modelCanvas"></div>
     </div>
     <div id="text" class="view hidden"></div>
     <div id="textFind" class="hidden">

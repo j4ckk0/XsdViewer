@@ -37,6 +37,7 @@ export function fillTab(st, name, text, path, rel, model) {
   indexSchema(st, model);
   st.history = [];
   st.filter = '';
+  st.modelExpanded = new Set();
   st.scroll = newScroll();
 }
 

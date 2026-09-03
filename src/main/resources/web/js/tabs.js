@@ -147,7 +147,8 @@ function emptyTabOf(ws, view) {
 }
 
 function currentScroll() {
-  return { text: $(ID.TEXT).scrollTop, graphTop: $(ID.GRAPH_CANVAS).scrollTop, graphLeft: $(ID.GRAPH_CANVAS).scrollLeft };
+  return { text: $(ID.TEXT).scrollTop, graphTop: $(ID.GRAPH_CANVAS).scrollTop, graphLeft: $(ID.GRAPH_CANVAS).scrollLeft,
+    modelTop: $(ID.MODEL_CANVAS).scrollTop, modelLeft: $(ID.MODEL_CANVAS).scrollLeft };
 }
 
 /** Draws everything that lists what is open: the workspace bar, the tab bar (the active workspace's tabs) and the Files panel. */

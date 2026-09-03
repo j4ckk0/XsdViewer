@@ -43,6 +43,7 @@ public final class XsdVocabulary {
     public static final String EXTENSION = "extension";
     public static final String RESTRICTION = "restriction";
     public static final String SIMPLE_CONTENT = "simpleContent";
+    public static final String COMPLEX_CONTENT = "complexContent";
     public static final String ENUMERATION = "enumeration";
     public static final String LIST = "list";
     public static final String UNION = "union";

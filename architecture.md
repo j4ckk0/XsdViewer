@@ -62,6 +62,7 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 | `schema.SchemaGraph` | Plain data: `Node`, `Edge`, `Import` records, the `targetNamespace`, `nodeId(kind, name)`. `nodes` is a `LinkedHashMap` (declaration order is kept), `edges` a `LinkedHashSet` (parallel identical edges collapse). |
 | `schema.NodeKind`, `schema.LinkLabel`, `schema.XsdVocabulary`, `WsdlVocabulary`, `SchematronVocabulary` | The constants of the model: the kinds of node, the edge labels, and the namespace / element / attribute names each parser reads. |
 | `schema.SchemaGraphJsonWriter` | `SchemaGraph` → JSON (keys in `json.JsonKey`). |
+| `schema.ContentModelBuilder`, `schema.ParticleKind` | The content model of a global declaration for the Model view: the tree of its particles and its attributes, walked from the DOM by `XsdParser`'s second pass with the parser's own resolution of names to node ids, so that the tree names what the links name. |
 | `json.JsonWriter`, `json.JsonStrings`, `json.JsonKey` | A minimal streaming JSON writer and the string escaping. The model is flat enough that a JSON library would be the only dependency of the project, so it was left out. `JsonKey` is the API contract, mirrored by the client. |
 | `server.XsdViewerServer` | Starts a `com.sun.net.httpserver.HttpServer` bound to `127.0.0.1:8080` by default and maps each path of `ApiPath` to its handler. Requests are handled on virtual threads (`Executors.newVirtualThreadPerTaskExecutor`). |
 | `server.ParseSchemaHandler`, `InitialFileHandler`, `OpenSchemaLocationHandler`, `LocateSchemaFileHandler`, `QuitHandler`, `StaticResourceHandler` | One handler per path of the HTTP interface below. |
@@ -131,6 +132,7 @@ Static files, no build step, no framework: `index.html`, `style.css`, ES modules
 | `js/about.js` | Help ▸ About: a `<dialog>` with the version and Java runtime reported by the server, the licence and the project page. |
 | `js/compare.js`, `js/schema-diff.js`, `js/diff.js`, `js/business-lines.js` | Workspace comparison: the selection (Ctrl+click on chips, `session.compareSelection`), the view (a tab whose `compare` holds the two workspaces; files paired by name, statuses, expandable rows; `compare.file` names the one pair shown when a row's *⧉ In a tab* button or a double-click opened it in a tab of its own, its differences shown at once), the model diff (declared nodes and edges — cardinality included — on one side only), the LCS line diff (common start / end trimmed, capped at 9 M cells) with moved blocks recognised afterwards (longest common contiguous runs between deleted and inserted lines, greedily) and the "business lines" filter (comments, `xs:annotation`, the XML declaration, the `xs:schema` / `xs:import` / `xs:include` tags, blank lines and indentation removed, original line numbers kept). |
 | `js/file-actions.js`, `js/workspace-actions.js`, `js/capabilities.js`, `js/events.js` | The File menu on files (open through the server's dialog or the browser's, close, quit, the start-up file); on workspaces (new / open / save / close, a folder opened as a workspace named after it — an opened workspace is its own group of tabs, saving writes the active workspace); what the server can do (dialogs, language, versions) and the menu entries depending on it; wiring of every control, key and drop to the actions. |
+| `js/model-view.js` | The Model view: the content model of the selected declaration (`node.content` / `node.attributes`, see the JSON model) as a left-to-right tree in SVG. `buildTree()` turns the particles into boxes (a compositor, an element, a group reference, a wildcard, a base type, an attribute) walking anonymous types in place and opening a named type, a global element, a group or a base type on demand — the box's path in the tree is kept in `tab.modelExpanded` — from that node's own content (`nodeOf()`: this tab, else the workspace through `findInWorkspace()`), a node already open above being drawn as recursive; `layout()` gives each leaf a row and centres a parent on its children; `renderModel()` draws the elbow connectors and the boxes (`boxSvg()`), the export taking the SVG as the graph's. |
 | `js/file-list.js`, `js/sidebar.js`, `js/graph.js`, `js/details.js`, `js/text-view.js`, `js/xml-highlighter.js`, `js/png-export.js` | One module per view: the Files panel (the active workspace's files as a tree by folder, each unfoldable to its objects, narrowed to the matching objects of the matching files while the search box holds a text, redrawn with the tab bar; the head counts the files that answer, and two last rows count what the search cannot see — the files still being parsed and those that could not be parsed at all), object list and schema header (foldable, at the top of the details panel), SVG ego-graph (its legend shows the WSDL / Schematron kinds for such a file, and no XSD kind for a Schematron), details panel (collapsible to a strip; a node's `xpath` — a Schematron rule's context, an assertion's test — in a code box above the documentation), source text, its tokenizer, the PNG export. Folded states are remembered in `localStorage`. |
 
 `session.active` always points at the active tab's object (`session.tabs` holds them all), so
@@ -281,6 +283,17 @@ service, and it parses whatever is posted to it.
                  "label": "shipTo", "min": 1, "max": 1, "compositor": "sequence" } ]
 }
 ```
+
+`content` and `attributes` are present on the nodes that have a content model — an element's
+anonymous type, a complexType, a group, an attributeGroup — for the Model view. `content` is a
+tree of particles, each `{"kind": …}`: a compositor (`sequence`, `choice`, `all`; `min` / `max`;
+`children`), an `element` (`name`; `ref` when it refers to a global element, else `type` when it
+has a named type, else its anonymous type's `children` and `attributes`; `min` / `max`), a `group`
+reference (`ref`), an `any` wildcard (`namespace`), or the base type of a derivation (`extends` /
+`restricts`; `type`), first. An attribute is `{"name", "ref"?, "type"?, "min", "max"}`, an
+attributeGroup reference or an anyAttribute one without a use. `ref` and `type` are node ids, the
+same as the links' targets, so the view opens them from the graph's nodes. `ContentModelBuilder`
+walks the declaration for them, `ParticleKind` names the kinds.
 
 `compositor` is present on the links of a nested element or a group reference: the `sequence`,
 `choice` or `all` it sits in directly (the content of an element's own type sits in that type's

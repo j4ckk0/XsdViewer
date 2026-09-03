@@ -84,6 +84,12 @@ export const ID = {
   FILES_COLLAPSE_ALL: 'filesCollapseAll',
   OBJECTS_EXPAND_ALL: 'objectsExpandAll',
   GRAPH_LEGEND: 'graphLegend',
+  MODEL: 'model',
+  MODEL_CANVAS: 'modelCanvas',
+  MODEL_TITLE: 'modelTitle',
+  MODEL_EMPTY: 'modelEmpty',
+  MODEL_EXPAND_ALL: 'modelExpandAll',
+  MODEL_COLLAPSE_ALL: 'modelCollapseAll',
   EXPORT_SVG_BUTTON: 'exportSvgBtn',
   OBJECTS_COLLAPSE_ALL: 'objectsCollapseAll',
   COMPARE_TOOLS: 'compareTools',
@@ -223,6 +229,16 @@ export const CLS = {
   /** The head of a list-of link (a filled diamond) and of a union-of link (a hollow one). */
   LIST: 'list',
   UNION: 'union',
+  // the Model view
+  MODEL_BOX: 'mbox',
+  MODEL_LINK: 'mlink',
+  MODEL_GLYPH: 'mglyph',
+  MODEL_NAME: 'mname',
+  MODEL_TYPE: 'mtype',
+  MODEL_WORD: 'mword',
+  MODEL_HANDLE: 'mhandle',
+  MODEL_RECURSION: 'mrec',
+  CLICKABLE: 'clickable',
   /** In a caption: the mark of the compositor a nested element sits in (a choice, an all). */
   COMPOSITOR: 'compositor',
   /** On a node: the values its declaration enumerates. */
@@ -271,6 +287,8 @@ export const DATA = {
   FILE: 'file',
   ROW_INDEX: 'row',
   PROBLEM_INDEX: 'problem',
+  /** On a box of the Model view: its path in the tree (what the expanded set holds). */
+  PATH: 'path',
   /** On an entry of the Links menu: the category of link it switches. */
   CATEGORY: 'category',
   /** On a schema list of the validation tab: xsd / schematron. */

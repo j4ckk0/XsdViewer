@@ -5,7 +5,7 @@
 A small tool to explore an XML Schema (`.xsd`) file in the browser — and the WSDL 1.1
 (`.wsdl`) services built on such schemas, and the Schematron (`.sch`) rules written over them.
 
-A Java server parses the schema and serves a web page offering two views:
+A Java server parses the schema and serves a web page offering three views:
 
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
@@ -29,6 +29,14 @@ A Java server parses the schema and serves a web page offering two views:
   graph works from the keyboard too: Tab into it, the arrow keys walk the nodes, Home is the
   centre, Enter or Space acts as a click. **File ▸ Open all listed files** opens in tabs the files
   a large folder left listed only.
+- **Model** – the content model of the selected declaration as XSD editors draw it: a tree, left
+  to right, of its sequences, choices and alls (a box each, with their occurrences), the elements
+  they hold (their occurrences below, dashed when optional, their type in the corner) and the
+  attributes (`@name : type`, `?` when optional). An anonymous type is drawn in place; a named
+  type, a global element, a group or a base type has a **+** handle that opens its content, taken
+  from its own declaration in this file or in another file of the workspace (⊞ opens them all, six
+  levels deep; a recursive type stops with ↺). A click on a box selects the declaration it refers
+  to. **⤓ PNG** and **⤓ SVG** export it like the graph.
 - **Text** – the schema source with line numbers and syntax colouring. The selected
   object's declaration is highlighted; click a highlighted line number to select that
   object.

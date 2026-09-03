@@ -13,6 +13,7 @@ import { renderNodeList, renderSchemaInfo } from './sidebar.js';
 import { session } from './state.js';
 import { compareTitle, renderNavigation, validationTitle } from './tabs.js';
 import { highlightTextLine, renderText } from './text-view.js';
+import { renderModel } from './model-view.js';
 
 /** Redraws everything from the active tab's state. */
 export function renderPage() {
@@ -29,6 +30,7 @@ export function renderPage() {
     renderNodeList();
     renderText();
     renderGraph();
+    renderModel();
     renderDetails();
     highlightTextLine(false);
   } else {
@@ -36,6 +38,7 @@ export function renderPage() {
     $(ID.NODE_LIST).innerHTML = '';
     $(ID.TEXT).innerHTML = '';
     $(ID.GRAPH_CANVAS).innerHTML = '';
+    $(ID.MODEL_CANVAS).innerHTML = '';
     $(ID.DETAILS).classList.add(CLS.HIDDEN);
   }
   renderNavigation();
@@ -45,9 +48,11 @@ export function renderPage() {
   $(ID.TEXT).scrollTop = st.scroll.text;
   $(ID.GRAPH_CANVAS).scrollTop = st.scroll.graphTop;
   $(ID.GRAPH_CANVAS).scrollLeft = st.scroll.graphLeft;
+  $(ID.MODEL_CANVAS).scrollTop = st.scroll.modelTop;
+  $(ID.MODEL_CANVAS).scrollLeft = st.scroll.modelLeft;
 }
 
-/** Shows the graph or the text view of the active tab (VIEW.GRAPH / VIEW.TEXT) — or the workspace comparison / the validation, which takes the whole page while it is on. */
+/** Shows the graph, the model or the text view of the active tab (VIEW.GRAPH / VIEW.MODEL / VIEW.TEXT) — or the workspace comparison / the validation, which takes the whole page while it is on. */
 export function showView(view) {
   const st = session.active;
   st.view = view;
@@ -58,11 +63,12 @@ export function showView(view) {
   $(ID.SIDEBAR).classList.toggle(CLS.HIDDEN, comparing);
   $(ID.EMPTY).classList.toggle(CLS.HIDDEN, loaded || comparing);
   $(ID.GRAPH).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.GRAPH);
+  $(ID.MODEL).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.MODEL);
   $(ID.TEXT).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.TEXT);
   $(ID.TEXT_FIND).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.TEXT);
   $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || comparing);   // the schema header, then the selected object
   $(ID.EXPORT_BUTTON).disabled = !loaded || comparing;
-  $(ID.EXPORT_SVG_BUTTON).disabled = !loaded || comparing || view !== VIEW.GRAPH;
+  $(ID.EXPORT_SVG_BUTTON).disabled = !loaded || comparing || view === VIEW.TEXT;   // the graph and the model are SVGs
   updateSplitters();
   $(ID.MENU_VALIDATE).disabled = !canValidate();
   $(ID.MENU_OPEN_ALL).disabled = comparing || !listedOnly().length;

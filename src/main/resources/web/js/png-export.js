@@ -1,4 +1,4 @@
-/** ⤓ PNG: the graph (rendered from its SVG) or the text view (drawn line by line) as a PNG file; ⤓ SVG: the graph as it is. */
+/** ⤓ PNG: the graph or the model (rendered from their SVG) or the text view (drawn line by line) as a PNG file; ⤓ SVG: the graph or the model as it is. */
 import { MIME, SVG_NS, VIEW } from './constants.js';
 import { $, CLS, ID, selector } from './dom.js';
 import { t } from './i18n.js';
@@ -15,7 +15,7 @@ const background = () => getComputedStyle(document.documentElement).getPropertyV
 const FILE_EXTENSION = '.png';
 const SVG_EXTENSION = '.svg';
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n';
-const TEXT_SUFFIX = '-text';
+const TEXT_SUFFIX = '-text', MODEL_SUFFIX = '-model';
 const DEFAULT_BASENAME = 'schema';
 const UNSAFE_FILE_CHARS = /[^\w.-]+/g;
 const EXTENSION = /\.[^.]+$/;
@@ -29,10 +29,10 @@ export function exportPng() {
   const st = session.active;
   if (!st.model) return;
   const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');
-  if (st.view === VIEW.GRAPH) {
+  if (st.view === VIEW.GRAPH || st.view === VIEW.MODEL) {
     if (!st.selected) { toast(t(MSG.EXPORT_SELECT_FIRST)); return; }
     const name = st.nodes.get(st.selected).name.replace(UNSAFE_FILE_CHARS, '_');
-    exportGraphPng(base + '-' + name + FILE_EXTENSION);
+    exportGraphPng(base + '-' + name + (st.view === VIEW.MODEL ? MODEL_SUFFIX : '') + FILE_EXTENSION);
   } else {
     exportTextPng(base + TEXT_SUFFIX + FILE_EXTENSION);
   }
@@ -50,18 +50,18 @@ function pageCss() {
 /** ⤓ SVG: the graph as a vector image (its SVG, cropped, with the page's styles embedded). */
 export function exportSvg() {
   const st = session.active;
-  if (!st.model || st.view !== VIEW.GRAPH) return;
+  if (!st.model || st.view === VIEW.TEXT) return;
   if (!st.selected) { toast(t(MSG.EXPORT_SELECT_FIRST)); return; }
   const g = graphSvg();
   if (!g) return;
   const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');
   const name = st.nodes.get(st.selected).name.replace(UNSAFE_FILE_CHARS, '_');
-  saveBlob(new Blob([XML_DECLARATION + new XMLSerializer().serializeToString(g.svg)], { type: MIME.SVG }), base + '-' + name + SVG_EXTENSION);
+  saveBlob(new Blob([XML_DECLARATION + new XMLSerializer().serializeToString(g.svg)], { type: MIME.SVG }), base + '-' + name + (st.view === VIEW.MODEL ? MODEL_SUFFIX : '') + SVG_EXTENSION);
 }
 
-/** The graph's SVG cropped to what is drawn (it fills the whole panel) plus a margin, the page's CSS and background embedded so that it renders alone: {svg, w, h}, or null. */
+/** The shown view's SVG (the graph's, or the model's) cropped to what is drawn plus a margin, the page's CSS and background embedded so that it renders alone: {svg, w, h}, or null. */
 function graphSvg() {
-  const src = $(ID.GRAPH_CANVAS).querySelector('svg');
+  const src = $(session.active.view === VIEW.MODEL ? ID.MODEL_CANVAS : ID.GRAPH_CANVAS).querySelector('svg');
   if (!src) return null;
   const M = GRAPH_MARGIN, bb = src.getBBox();
   const x = Math.floor(bb.x - M), y = Math.floor(bb.y - M);

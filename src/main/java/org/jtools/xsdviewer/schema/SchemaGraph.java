@@ -35,6 +35,20 @@ public final class SchemaGraph {
     /** Separator between kind and name in a node id: {@code element:purchaseOrder}. */
     public static final char ID_SEPARATOR = ':';
 
+    /**
+     * A particle of a content model (the Model view): a compositor ({@code sequence}, {@code choice},
+     * {@code all}) with its children, an element (its {@code name}; {@code ref}: the node id of the
+     * global element it refers to, else {@code type}: the node id of its type, else its anonymous
+     * type's {@code children} and {@code attributes}), a group reference ({@code ref}), a wildcard
+     * ({@code namespace}: its constraint), or the base type of a derivation ({@code extends} /
+     * {@code restricts}, {@code type}). {@code cardinality}: the particle's own occurrences, null for a base type.
+     */
+    public record Particle(String kind, String name, String ref, String type, Cardinality cardinality, String namespace,
+                           List<Particle> children, List<Attribute> attributes) {}
+
+    /** An attribute of a content model: its {@code name}; {@code ref}: the global attribute or attributeGroup it refers to; {@code type}; {@code use} (null for a group or a wildcard). */
+    public record Attribute(String name, String ref, String type, Cardinality use) {}
+
     /** One {@code xs:enumeration} of a declaration: its value and the documentation of that value (may be empty). */
     public record Value(String value, String doc) {}
 
@@ -44,23 +58,29 @@ public final class SchemaGraph {
      * declaring file); {@code line}: 1-based, 0 when unknown; {@code values}: the enumeration the
      * declaration restricts its type to, empty when it is not an enumeration; {@code members}: the
      * names of the elements and attributes inside the declaration (a message's parts), for the search;
-     * {@code xpath}: the expression a Schematron rule or assertion is made of (its context, its test), empty otherwise.
+     * {@code xpath}: the expression a Schematron rule or assertion is made of (its context, its test), empty otherwise;
+     * {@code content} and {@code attributes}: the content model of an element's anonymous type, a complexType, a group, an attributeGroup.
      */
-    public record Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values, List<String> members, String xpath) {
+    public record Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values, List<String> members, String xpath,
+                       List<Particle> content, List<Attribute> attributes) {
         public Node(String id, String kind, String name, String ns, int line, String doc) {
-            this(id, kind, name, ns, line, doc, List.of(), List.of(), "");
+            this(id, kind, name, ns, line, doc, List.of(), List.of(), "", List.of(), List.of());
         }
 
         public Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values) {
-            this(id, kind, name, ns, line, doc, values, List.of(), "");
+            this(id, kind, name, ns, line, doc, values, List.of(), "", List.of(), List.of());
         }
 
         public Node withMembers(List<String> members) {
-            return new Node(id, kind, name, ns, line, doc, values, members, xpath);
+            return new Node(id, kind, name, ns, line, doc, values, members, xpath, content, attributes);
         }
 
         public Node withXpath(String xpath) {
-            return new Node(id, kind, name, ns, line, doc, values, members, xpath);
+            return new Node(id, kind, name, ns, line, doc, values, members, xpath, content, attributes);
+        }
+
+        public Node withContent(List<Particle> content, List<Attribute> attributes) {
+            return new Node(id, kind, name, ns, line, doc, values, members, xpath, content, attributes);
         }
     }
 
