@@ -162,6 +162,25 @@ SCENES = [
                  'external': "document.querySelectorAll('#graphCanvas .node.external').length",
                  'fromFiles': "[...document.querySelectorAll('#graphCanvas .node .kind')].filter(k => k.textContent.includes('.xsd')).length"},
          expect={'resolved': 5, 'external': 0, 'fromFiles': 4}),   # the centre and its four targets, resolved from the listed files
+    dict(name='search-folder', file='samples/purchaseOrder.xsd', theme='light',
+         action="const names = ['order.xsd','address.xsd','items.xsd','types.xsd'];"
+                "const files = await Promise.all(names.map(async n => new File([await (await fetch('/__sample/samples/import/' + n)).text()], n)));"
+                "const filler = (i) => '<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"urn:f:' + i + '\"><xs:element name=\"f' + i + '\" type=\"xs:string\"/></xs:schema>';"
+                "for (let i = 0; i < 8; i++) files.push(new File([filler(i)], 'filler' + i + '.xsd'));"
+                "files.push(new File(['<notASchema/>'], 'broken.xsd'));"
+                "const fl = await import('/js/file-list.js'); fl.setFilesCollapsed(true);"   # folded: a search must still reach the other files
+                "const wa = await import('/js/workspace-actions.js');"
+                "await wa.openBrowserFolder(files, f => 'listed/' + f.name, 'listed');"
+                "const st = await import('/js/state.js');"   # the listed files are parsed in the background: wait for the queue to drain
+                "const ws = st.session.workspaces[st.session.workspaces.length - 1];"
+                "for (let i = 0; i < 40 && ws.files.some(f => !f.model && !f.failed); i++) await new Promise(r => setTimeout(r, 100));"
+                "const s = document.getElementById('search'); s.value = 'f5'; s.dispatchEvent(new Event('input', {bubbles: true}));"
+                "await new Promise(r => setTimeout(r, 300));",
+         checks={'objects': "[...document.querySelectorAll('#filesContent .item.obj')].map(i => i.textContent.trim()).join('|')",
+                 'count': "document.getElementById('filesCount').textContent",
+                 'unfolded': "!document.getElementById('files').classList.contains('collapsed')",
+                 'failed': "document.querySelector('#filesContent .item.failed') ? document.querySelector('#filesContent .item.failed').textContent : ''"},
+         expect={'objects': 'f5', 'count': '1 of 13', 'unfolded': True, 'failed': '1 file the search cannot see'}),   # the object of a listed file is found; the file that is not a schema is counted, not silently missing
     dict(name='imports', file='samples/import/order.xsd', theme='light', action="",
          checks={'tabs': "document.querySelectorAll('#tabs .dtab').length",
                  'files': "document.getElementById('filesCount').textContent"},

@@ -163,6 +163,8 @@ export const CLS = {
   FILTERED: 'filtered',
   /** On a switch entry of a menu that is on. */
   CHECKED: 'checked',
+  /** On the row counting the files a search cannot see: they could not be parsed. */
+  FAILED: 'failed',
   /** The entry of the Links menu that draws every category again. */
   LINKS_ALL: 'links-all',
   LEGEND_ENTRY: 'lg',

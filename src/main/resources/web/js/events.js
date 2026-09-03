@@ -6,7 +6,7 @@ import { initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, toggleDetails } from './details.js';
-import { fileListClick, initFiles, renderFileList, setAllUnfolded, toggleFiles } from './file-list.js';
+import { fileListClick, initFiles, isFilesCollapsed, renderFileList, setAllUnfolded, setFilesCollapsed, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { categoryOfClick, isShowAllClick, showAllLinks, toggleCategory } from './link-filter.js';
@@ -270,7 +270,14 @@ function wireViews() {
 
 function wireSearch() {
   const search = $(ID.SEARCH);
-  const apply = (value) => { session.active.filter = value.trim(); if (session.active.model) renderNodeList(); renderFileList(); };
+  const apply = (value) => {
+    const had = !!session.active.filter;
+    session.active.filter = value.trim();
+    // a search reaches every file of the workspace: the Files panel opens for it, since that is where the other files answer
+    if (!had && session.active.filter && isFilesCollapsed()) setFilesCollapsed(false);
+    if (session.active.model) renderNodeList();
+    renderFileList();
+  };
   search.addEventListener('input', (e) => apply(e.target.value));
   search.addEventListener('keydown', (e) => {
     if (e.key === KEY.ESCAPE) { e.target.value = ''; apply(''); e.target.blur(); }

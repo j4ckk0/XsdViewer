@@ -489,6 +489,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .tree .group-h .wsopen:hover { background: var(--hover); color: var(--text); }
 .tree .group-h.collapsed::before { content: "▸"; }
 .tree .group-items { padding-left: 12px; }
+.tree .item.failed { color: var(--c-external); }
 .tree .item.file { gap: 4px; color: var(--muted); }
 .tree .item.file.open { color: var(--text); font-weight: 600; }
 .tree .item.file .expander { display: inline-block; width: 12px; color: var(--muted); font-weight: 400; }

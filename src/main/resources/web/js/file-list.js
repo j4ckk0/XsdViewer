@@ -4,7 +4,7 @@
  * holds a text, only the objects whose name contains it are listed, in the files holding one (unfolded),
  * and a last row counts the files still being parsed, whose objects are not searchable yet.
  */
-import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
+import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
@@ -65,6 +65,9 @@ function tree(list) {
   return root;
 }
 
+/** The file rows the last drawing wrote: while a search runs, how many files answer it. */
+let shownFiles = 0;
+
 const byKindThenName = (a, b) => (KIND_ORDER.get(a.kind) - KIND_ORDER.get(b.kind)) || a.name.localeCompare(b.name);
 
 /** The objects of a file to list: its declared ones — only those whose name contains {@code filter} when there is one —, by kind then name. */
@@ -98,6 +101,7 @@ function nodeHtml(node, dirPath, filter) {
     const unfolded = f.entry && (!!filter || showsObjects(f.entry, active));
     const objects = unfolded ? objectsHtml(f.entry, filter) : '';
     if (filter && !objects) continue;   // no matching object (or not parsed yet: the panel is redrawn once it is)
+    shownFiles++;
     html += '<div class="' + CLS.ITEM + ' ' + CLS.FILE + (active ? ' ' + CLS.SELECTED : '') + (f.tab ? ' ' + CLS.OPEN : '') + '"'
       + (f.entry ? dataAttr(DATA.FILE, session.active.workspace.files.indexOf(f.entry)) : dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(f.tab)))
       + ' title="' + esc(f.path) + '">'
@@ -111,15 +115,23 @@ function nodeHtml(node, dirPath, filter) {
 export function renderFileList() {
   dirEntries.clear();
   const list = rows();
-  $(ID.FILES_COUNT).textContent = list.length;
   const filter = session.active.filter.toLowerCase();
+  shownFiles = 0;
   let html = nodeHtml(tree(list), '', filter);
+  // while a search runs, the head says how many files answer it: the panel may be folded
+  $(ID.FILES_COUNT).textContent = filter ? t(MSG.FILES_MATCHING, shownFiles, list.length) : String(list.length);
   if (!html && filter) html = '<div class="' + CLS.ITEM + ' ' + CLS.NO_MATCH + '">' + esc(t(MSG.LIST_NO_MATCH)) + '</div>';
-  // files not parsed yet cannot answer the search: say so rather than let them silently miss
-  const parsing = filter ? session.active.workspace.files.filter(entry => !entry.model && !entry.failed).length : 0;
+  // files not parsed yet, or that could not be parsed at all, cannot answer the search: say so rather than let them silently miss
+  const files = session.active.workspace.files;
+  const parsing = filter ? files.filter(entry => !entry.model && !entry.failed).length : 0;
   if (parsing) {
     html += '<div class="' + CLS.ITEM + ' ' + CLS.EMPTY + ' ' + CLS.PARSING + '" title="' + esc(t(MSG.FILES_PARSING_TITLE)) + '">'
       + esc(plural(parsing, MSG.FILES_PARSING_ONE, MSG.FILES_PARSING_OTHER)) + '</div>';
+  }
+  const failed = filter ? files.filter(entry => entry.failed) : [];
+  if (failed.length) {
+    html += '<div class="' + CLS.ITEM + ' ' + CLS.EMPTY + ' ' + CLS.FAILED + '" title="' + esc(t(MSG.FILES_FAILED_TITLE, failed.map(f => f.name).join(TEXT.LIST_SEPARATOR))) + '">'
+      + esc(plural(failed.length, MSG.FILES_FAILED_ONE, MSG.FILES_FAILED_OTHER)) + '</div>';
   }
   $(ID.FILES_CONTENT).innerHTML = html;
 }

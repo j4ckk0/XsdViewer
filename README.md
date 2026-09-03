@@ -42,7 +42,10 @@ folded. The **search box** at the top of the left panel (Ctrl+F)
 filters the Files panel and the object list below it — every schema of the workspace, open in a tab or
 not, is searched, by the objects' names but also by the names of the elements and attributes inside
 a declaration (a message's parts) and by the documentation, the reason being shown in grey after a
-listed object; **File ▸ Validate an XML file…** checks a
+listed object. The search reaches every file of the workspace, so the Files panel opens when a
+search starts and its head counts the files that answer (`3 of 120`); a file still being parsed, or
+one that could not be parsed at all — an XML file that is not a schema, a fragment — is counted in a
+last row rather than left silently out of the results; **File ▸ Validate an XML file…** checks a
 document against the shown schema, in a tab of its own (see *Validation* below). The **left panel and the details panel are resizable**: drag the thin grip along their inner edge (a
 double-click restores the default width, the arrow keys move it when it has the focus); the widths
 are remembered by the browser. **⤓ PNG** in the top bar saves the current view (graph or
