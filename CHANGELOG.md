@@ -2,9 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 3.6.1 — 2026-09-03
 
-- **Fixes after a review of 3.6.0.** A Schematron holding an element of no namespace (or of a foreign one) under a pattern or a rule was refused with an internal error; every missing `include` is reported, not only the first; a rule with an empty `context` no longer risks a crash; switching the *XSD* list of a validation tab keeps the Schematron phase. A firing assertion's message is followed by the `diagnostics` it names, rendered on the same node.
+- **Fixes after a review of 3.6.0.** A Schematron holding an element of no namespace (or of a foreign one) under a pattern or a rule was refused with an internal error; every missing `include` is reported, not only the first; a rule with an empty `context` no longer risks a crash; switching the *XSD* list of a validation tab keeps the Schematron phase. A firing assertion's message is followed by the `diagnostics` it names, rendered on the same node; a nested `include` resolves relative to the file that includes it.
+- **The Schematron evaluator tidied for maintenance**: split into the evaluator proper, the DOM walking, the message rendering and the include resolution shared with the parser; the evaluation state made explicit; a test pinning that what a problem names is a node of the graph.
 
 ## 3.6.0 — 2026-09-03
 
