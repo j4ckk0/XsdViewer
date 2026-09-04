@@ -10,8 +10,6 @@ import { fileListClick, initFiles, isFilesCollapsed, renderFileList, setAllUnfol
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { collapseAll as collapseModel, expandAll as expandModel, modelClick, toggleExpanded } from './model-view.js';
-import { isShowAllKindsClick, kindOfClick, showAllKinds, toggleKind } from './kind-filter.js';
-import { categoryOfClick, isShowAllClick, showAllLinks, toggleCategory } from './link-filter.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
 import { renderMainView, renderPage, showView } from './page.js';
@@ -229,24 +227,6 @@ function wireDragAndDrop() {
 
 function wireViews() {
   document.querySelectorAll(selector(CLS.VIEW_TAB)).forEach(b => b.addEventListener('click', () => showView(b.dataset[DATA.VIEW])));
-  // the Links and Types menus: an entry switches its category of link (its kind of object), the last one draws them all
-  // again; the menu stays open meanwhile (several switches in a row), a click elsewhere or Escape closes it
-  $(ID.LINK_MENU).addEventListener('click', (e) => {
-    const category = categoryOfClick(e.target);
-    if (category) toggleCategory(category);
-    else if (isShowAllClick(e.target)) showAllLinks();
-    else return;
-    e.stopPropagation();
-    renderGraph();
-  });
-  $(ID.TYPE_MENU).addEventListener('click', (e) => {
-    const kind = kindOfClick(e.target);
-    if (kind) toggleKind(kind);
-    else if (isShowAllKindsClick(e.target)) showAllKinds();
-    else return;
-    e.stopPropagation();
-    renderGraph();
-  });
   try { $(ID.TWO_LEVELS).checked = localStorage.getItem(STORAGE_KEY.TWO_LEVELS) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
   $(ID.TWO_LEVELS).addEventListener('change', (e) => {
     try { localStorage.setItem(STORAGE_KEY.TWO_LEVELS, e.target.checked ? STORAGE_TRUE : STORAGE_FALSE); } catch (e2) { /* ignore */ }

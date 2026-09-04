@@ -4,10 +4,10 @@
  * a derivation from a base type), what uses it on the
  * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
-import { COMPOSITOR, ID_SEPARATOR, LINK_LABEL, NODE_KIND, STRUCTURAL_LINK_LABELS, SVG_NS, TEXT, familyOf, isDerivation, isSchematron, isWsdl, labelFamily, linkFamily } from './constants.js';
+import { COMPOSITOR, ID_SEPARATOR, LINK_LABEL, NODE_KIND, SVG_NS, TEXT, isSchematron, isWsdl } from './constants.js';
+import { FAMILY, STRUCTURAL_LINK_LABELS, familyOf, isDerivation, labelFamily, linkFamily } from './link-categories.js';
 import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declarations.js';
-import { isKindShown, renderKindMenu } from './kind-filter.js';
-import { isLinkShown, renderLinkMenu } from './link-filter.js';
+import { isKindShown, isLinkShown, renderGraphFilters } from './graph-filters.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc, selector } from './dom.js';
 import { t } from './i18n.js';
@@ -44,10 +44,11 @@ export function renderGraph() {
   const center = st.nodes.get(st.selected);
   const depth = $(ID.TWO_LEVELS).checked ? 2 : 1;
   $(ID.GRAPH_TITLE).textContent = t(MSG.GRAPH_NODE_TITLE, kindLabel(center.kind), center.name);
-  $(ID.GRAPH_LEGEND).classList.toggle(CLS.WSDL, isWsdl(st.model));
-  $(ID.GRAPH_LEGEND).classList.toggle(CLS.SCHEMATRON, isSchematron(st.model));
-  renderLinkMenu();
-  renderKindMenu();
+  // the family the shown file belongs to: a WSDL's service objects, a Schematron's rules, or (null) a schema's own
+  const family = isWsdl(st.model) ? FAMILY.WSDL : isSchematron(st.model) ? FAMILY.SCHEMATRON : null;
+  $(ID.GRAPH_LEGEND).classList.toggle(CLS.WSDL, family === FAMILY.WSDL);
+  $(ID.GRAPH_LEGEND).classList.toggle(CLS.SCHEMATRON, family === FAMILY.SCHEMATRON);
+  renderGraphFilters(family);
   const visible = (n) => !!n && isKindShown(n.kind);
   /** A row is drawn when its node is and its link is of a category the Links menu keeps. */
   const shownLink = (n, e, fromKind, toKind) => visible(n) && isLinkShown(e, fromKind, toKind);
