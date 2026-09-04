@@ -22,7 +22,7 @@ export function newTabState() {
     lineToNode: new Map(),
     selected: null,
     history: [],
-    view: VIEW.GRAPH,
+    view: VIEW.MODEL,   // what a tab opens on: what a document of the declaration holds
     filter: '',
     collapsed: new Set(),
     modelExpanded: new Set(),   // the boxes of the Model view opened on demand (their paths in the tree)

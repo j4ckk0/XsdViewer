@@ -5,7 +5,32 @@
 A small tool to explore an XML Schema (`.xsd`) file in the browser — and the WSDL 1.1
 (`.wsdl`) services built on such schemas, and the Schematron (`.sch`) rules written over them.
 
-A Java server parses the schema and serves a web page offering three views:
+A Java server parses the schema and serves a web page offering three views of the file, each
+answering a different question. **Model** says what a document of the selected declaration holds:
+its shape, as an XSD editor draws it — this is the view a tab opens on. **Text** is the source
+itself, where that declaration is written. **Graph** says how the declarations of the file refer to
+one another around the selected one: not what a document holds, but the map of the file, one step
+in each direction. So the model walks *through* the types, opening each named type in place, where
+the graph shows the types themselves as neighbours of the declaration that names them.
+
+- **Model** – the content model of the selected declaration as XSD editors draw it: a tree, left
+  to right, of its sequences, choices and alls (a box each, with their occurrences), the elements
+  they hold (their occurrences below, dashed when optional, their type in the corner) and the
+  attributes (`@name : type`, `?` when optional). An anonymous type is drawn in place; a named
+  type, a global element, a group or a base type has a **+** handle that opens its content, taken
+  from its own declaration in this file or in another file of the workspace (⊞ opens them all, six
+  levels deep; a recursive type stops with ↺). A click on a box selects the declaration it refers
+  to. A WSDL or a Schematron declares no particle, but has a chain of its own, and that chain is
+  the model such a file has: a service holds its ports, a portType its operations, an operation its
+  messages, a message the elements of its parts — where the schema's own content model takes over;
+  a phase holds its patterns, they their rules, they their assertions. Such a box carries the
+  link's word above the name of what it leads to, and opens the same way. A legend in the toolbar
+  reads on three lines: the kinds of box, the marks of the drawing (the compositors, the dashed
+  optional), then what a box tells of itself (its occurrences, its **+** handle, the ↺ of a
+  recursion). Each entry is explained in its tooltip. **⤓ PNG** and **⤓ SVG** export it like the graph.
+- **Text** – the schema source with line numbers and syntax colouring. The selected
+  object's declaration is highlighted; click a highlighted line number to select that
+  object.
 
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
@@ -29,24 +54,6 @@ A Java server parses the schema and serves a web page offering three views:
   graph works from the keyboard too: Tab into it, the arrow keys walk the nodes, Home is the
   centre, Enter or Space acts as a click. **File ▸ Open all listed files** opens in tabs the files
   a large folder left listed only.
-- **Model** – the content model of the selected declaration as XSD editors draw it: a tree, left
-  to right, of its sequences, choices and alls (a box each, with their occurrences), the elements
-  they hold (their occurrences below, dashed when optional, their type in the corner) and the
-  attributes (`@name : type`, `?` when optional). An anonymous type is drawn in place; a named
-  type, a global element, a group or a base type has a **+** handle that opens its content, taken
-  from its own declaration in this file or in another file of the workspace (⊞ opens them all, six
-  levels deep; a recursive type stops with ↺). A click on a box selects the declaration it refers
-  to. A WSDL or a Schematron declares no particle, but has a chain of its own, and that chain is
-  the model such a file has: a service holds its ports, a portType its operations, an operation its
-  messages, a message the elements of its parts — where the schema's own content model takes over;
-  a phase holds its patterns, they their rules, they their assertions. Such a box carries the
-  link's word above the name of what it leads to, and opens the same way. A legend in the toolbar
-  reads on three lines: the kinds of box, the marks of the drawing (the compositors, the dashed
-  optional), then what a box tells of itself (its occurrences, its **+** handle, the ↺ of a
-  recursion). Each entry is explained in its tooltip. **⤓ PNG** and **⤓ SVG** export it like the graph.
-- **Text** – the schema source with line numbers and syntax colouring. The selected
-  object's declaration is highlighted; click a highlighted line number to select that
-  object.
 
 Files are opened with **File ▸ Open…** (Ctrl+O) or by dropping them anywhere in the window.
 Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸ New tab

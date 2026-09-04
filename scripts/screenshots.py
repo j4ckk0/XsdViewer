@@ -46,13 +46,13 @@ OPEN_V2 = ("const names = ['common.xsd', 'catalog.xsd', 'product.xsd', 'shipping
 # name, file, theme, the script run on the page (may use the page's DOM and await), the checks (an expression per check name)
 SCENES = [
     dict(name='graph-light', file='samples/purchaseOrder.xsd', theme='light',
-         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();",
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();",
          checks={'title': "document.getElementById('graphTitle').textContent",
                  'nodes': "document.querySelectorAll('#graphCanvas .node').length",
                  'details': "document.querySelector('#detailsContent h2').textContent"},
          expect={'title': 'complexType PurchaseOrderType', 'nodes': 8, 'details': 'PurchaseOrderType'}),   # the centre, 6 links out, 1 user
     dict(name='types-filtered', file='samples/purchaseOrder.xsd', theme='light',
-         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
                 "document.getElementById('typeMenuBtn').click();"
                 "document.querySelector('#typeMenu [data-kind=\"builtin\"]').click();"
                 "document.querySelector('#typeMenu [data-kind=\"attributeGroup\"]').click();",
@@ -63,7 +63,7 @@ SCENES = [
                  'checks': "[...document.querySelectorAll('#typeMenu [data-kind].checked')].length"},
          expect={'nodes': 6, 'marked': True, 'kept': 'builtin,attributeGroup', 'offered': 8, 'checks': 17}),   # 8 nodes without the filter: the built-in date and the attribute group go; 2 of the 19 entries are off
     dict(name='links-filtered', file='samples/purchaseOrder.xsd', theme='light',
-         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
                 "document.getElementById('linkMenuBtn').click();"
                 "document.querySelector('#linkMenu [data-category=\"attribute\"]').click();"
                 "document.querySelector('#linkMenu [data-category=\"type\"]').click();"
@@ -74,7 +74,7 @@ SCENES = [
                  'offered': "[...document.querySelectorAll('#linkMenu [data-category]')].filter(b => getComputedStyle(b).display !== 'none').length"},
          expect={'nodes': 6, 'marked': True, 'kept': 'attribute,type', 'offered': 5}),   # 8 without the filter: the attribute link and the type link that uses the centre go
     dict(name='select-from-graph', file='samples/purchaseOrder.xsd', theme='light',
-         action="document.getElementById('objectsCollapseAll').click();"
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.getElementById('objectsCollapseAll').click();"
                 "document.querySelector('#graphCanvas .node:not(.center)').dispatchEvent(new MouseEvent('click', {bubbles: true}));",
          checks={'selected': "document.querySelector('#nodeList .item.selected span:nth-child(2)').textContent",
                  'centre': "document.getElementById('graphTitle').textContent",
@@ -101,12 +101,12 @@ SCENES = [
                  'folded': "document.querySelectorAll('#modelCanvas .mhandle text').length + ':' + [...document.querySelectorAll('#modelCanvas .mhandle text')].map(t => t.textContent).join('')"},
          expect={'base': 'extends', 'names': 'InternationalAddress|USAddress|@country : NMTOKEN ?|name|street|city|state|zip|countryName', 'folded': '1:−'}),   # the base type opened: its attribute and its sequence, then the extension's own element
     dict(name='enumeration', file='samples/purchaseOrder.xsd', theme='light',
-         action="document.querySelector('#nodeList .item[data-id=\"simpleType:Currency\"]').click();",
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"simpleType:Currency\"]').click();",
          checks={'values': "document.querySelectorAll('#detailsContent .value').length",
                  'badge': "document.querySelector('#graphCanvas .node.center text.enum').textContent"},
          expect={'values': 3, 'badge': '≡ 3'}),
     dict(name='compositors', file='samples/purchaseOrder.xsd', theme='light',
-         action="const fa = await import('/js/file-actions.js');"
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();const fa = await import('/js/file-actions.js');"
                 "await fa.openFiles([new File(['<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"urn:c\"><xs:complexType name=\"Payment\"><xs:choice><xs:element name=\"card\" type=\"xs:string\"/><xs:element name=\"transfer\" type=\"xs:string\"/></xs:choice><xs:attribute name=\"amount\" type=\"xs:decimal\"/></xs:complexType><xs:complexType name=\"Person\"><xs:all><xs:element name=\"first\" type=\"xs:string\"/></xs:all></xs:complexType></xs:schema>'], 'choice.xsd')]);"
                 "document.querySelector('#nodeList .item[data-id=\"complexType:Payment\"]').click();",
          checks={'captions': "[...document.querySelectorAll('#graphCanvas .link-name')].map(t => t.textContent.trim()).sort().join('|')",
@@ -114,7 +114,7 @@ SCENES = [
                  'detail': "document.querySelector('#detailsContent .link .compositor') ? document.querySelector('#detailsContent .link .compositor').textContent : ''"},
          expect={'captions': 'amount 0..1|\u25c7 card 0..1|\u25c7 transfer 0..1', 'marks': '\u25c7|\u25c7', 'detail': 'choice'}),
     dict(name='list-union', file='samples/purchaseOrder.xsd', theme='light',
-         action="document.querySelector('#nodeList .item[data-id=\"simpleType:Identifier\"]').click();",
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"simpleType:Identifier\"]').click();",
          checks={'unionHead': "document.querySelectorAll('#graphCanvas path[marker-end$=\"unionArrow)\"]').length",
                  'captions': "[...document.querySelectorAll('#graphCanvas .link-name')].map(t => t.textContent.trim()).sort().join('|')"},
          expect={'unionHead': 2, 'captions': 'union of|union of'}),   # SKU and xs:positiveInteger, the members of the union
@@ -124,7 +124,7 @@ SCENES = [
                  'highlighted': "document.querySelectorAll('#text .line.hl').length"},
          expect={'theme': 'dark', 'highlighted': 1}),
     dict(name='wsdl-operation', file='samples/wsdl/purchaseOrderService.wsdl', theme='light',
-         action="document.querySelector('#nodeList .item[data-id=\"operation:PurchaseOrderPortType.submitPurchaseOrder\"]').click();"
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"operation:PurchaseOrderPortType.submitPurchaseOrder\"]').click();"
                 "const two = document.getElementById('twoLevels'); if (!two.checked) two.click();",
          checks={'messages': "document.querySelectorAll('#graphCanvas .node.message').length",
                  'tabs': "document.querySelectorAll('#tabs .dtab').length",
@@ -160,7 +160,7 @@ SCENES = [
          expect={'words': 'phase|active|rule|assert|extends|report|diagnostic', 'kinds': 'pattern|rule',
                  'noXsdMarks': True, 'legend': True}),   # a phase, its patterns, their rules and what those assert: a Schematron's chain is its model too
     dict(name='schematron-rule', file='samples/schematron/purchaseOrder.sch', theme='light',
-         action="document.querySelector('#nodeList .item[data-id=\"rule:structure/po:item\"]').click();"
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"rule:structure/po:item\"]').click();"
                 "const two = document.getElementById('twoLevels'); if (!two.checked) two.click();",
          checks={'title': "document.getElementById('graphTitle').textContent",
                  'assertions': "document.querySelectorAll('#graphCanvas .node.assert, #graphCanvas .node.report').length",
@@ -226,7 +226,7 @@ SCENES = [
                  'svgButton': "document.getElementById('exportSvgBtn').disabled"},
          expect={'count': '1/7', 'current': 1, 'svgButton': True}),
     dict(name='listed-files', file='target/screenshots/listed/listed.xsdviewer.json', theme='light', setup='listed',
-         action="document.querySelector('#nodeList .item[data-id=\"complexType:OrderType\"]').click();",
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:OrderType\"]').click();",
          checks={'resolved': "document.querySelectorAll('#graphCanvas .node.complexType, #graphCanvas .node.simpleType').length",
                  'external': "document.querySelectorAll('#graphCanvas .node.external').length",
                  'fromFiles': "[...document.querySelectorAll('#graphCanvas .node .kind')].filter(k => k.textContent.includes('.xsd')).length"},
