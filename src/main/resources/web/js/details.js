@@ -1,7 +1,7 @@
 /** The right panel, under the schema header (sidebar.js): the selected object, its expression (a Schematron rule's context, an assertion's test), its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
 import { cardinalityText, isOptional } from './cardinality.js';
 import { NODE_KIND, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
-import { SIDES, sideOf } from './object-compare.js';
+import { SIDE, SIDES, sideOf } from './object-compare.js';
 import { placeAttributes, usersInWorkspace } from './declarations.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { updateSplitters } from './panels.js';
@@ -19,13 +19,17 @@ export function renderDetails() {
   html += '<div class="' + CLS.META + '">'
     + (n.line > 0 ? '<a' + dataAttr(DATA.LINE, n.line) + '>' + esc(t(MSG.DETAILS_SHOW_IN_TEXT, n.line)) + '</a>' : esc(t(MSG.DETAILS_NO_DECLARATION)))
     + '</div>';
-  // the two sides of the Compare view, which draws whatever each of them holds, wherever it lives
+  // a section of its own, so that the two buttons say what they are for: the sides of the Compare view
   if (n.kind !== NODE_KIND.EXTERNAL) {
     const on = sideOf(st, n.id);
-    html += '<div class="' + CLS.MARK_BUTTONS + '">' + SIDES.map(side =>
-      '<button class="' + CLS.MARK_BUTTON + ' ' + side + (on === side ? ' ' + CLS.MARKED : '') + '" type="button"'
-      + dataAttr(DATA.SIDE, side) + ' title="' + esc(t(on === side ? MSG.OBJECT_MARK_OFF_TITLE : MSG.OBJECT_MARK_TITLE, t(MSG['OBJECT_SIDE_' + side.toUpperCase()]))) + '">'
-      + esc(t(MSG.OBJECT_MARK, t(MSG['OBJECT_SIDE_' + side.toUpperCase()]))) + '</button>').join('') + '</div>';
+    const label = { [SIDE.LEFT]: MSG.OBJECT_MARK_LEFT, [SIDE.RIGHT]: MSG.OBJECT_MARK_RIGHT };
+    const sideName = { [SIDE.LEFT]: MSG.OBJECT_SIDE_LEFT, [SIDE.RIGHT]: MSG.OBJECT_SIDE_RIGHT };
+    html += '<h3>' + esc(t(MSG.DETAILS_COMPARE)) + '</h3>'
+      + '<div class="' + CLS.META + '">' + esc(t(MSG.DETAILS_COMPARE_HINT)) + '</div>'
+      + '<div class="' + CLS.MARK_BUTTONS + '">' + SIDES.map(side =>
+        '<button class="' + CLS.MARK_BUTTON + ' ' + side + (on === side ? ' ' + CLS.MARKED : '') + '" type="button"'
+        + dataAttr(DATA.SIDE, side) + ' title="' + esc(t(on === side ? MSG.OBJECT_MARK_OFF_TITLE : MSG.OBJECT_MARK_TITLE, t(sideName[side]))) + '">'
+        + esc(t(label[side])) + '</button>').join('') + '</div>';
   }
   if (n.xpath) html += '<div class="' + CLS.XPATH + '" title="' + esc(t(MSG.DETAILS_XPATH)) + '"><code>' + esc(n.xpath) + '</code></div>';
   if (n.doc) html += '<div class="' + CLS.DOC + '">' + esc(n.doc) + '</div>';
