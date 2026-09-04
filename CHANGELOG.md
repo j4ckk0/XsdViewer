@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 4.0.1 — 2026-09-04
 
 - **The comparison lists file names, not paths.** The two side columns of the comparison table showed each file's absolute path, which was long, pushed the status out of view and put the reader's home directory on screen. They now show the name, the full path staying in the cell's tooltip.
 
