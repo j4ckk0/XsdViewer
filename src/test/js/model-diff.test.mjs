@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildTree } from '../../main/resources/web/js/model-view.js';
+import { buildTree } from '../../main/resources/web/js/model-tree.js';
 import { DIFF, markDifferences, same } from '../../main/resources/web/js/model-diff.js';
 import { NODE_KIND, PARTICLE } from '../../main/resources/web/js/constants.js';
 
