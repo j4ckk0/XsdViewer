@@ -742,6 +742,15 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 }
 #modelTitle { font-weight: 600; }
 #modelToolbar .muted { color: var(--muted); }
+/* the legend of the Model view: chips outlined as the boxes are (a colour per kind), then the marks */
+#modelLegend .lg.box { background: var(--surface); color: var(--text); border: 1.5px solid var(--muted); border-radius: 3px; padding: 0 6px; }
+#modelLegend .lg.box.element { border-color: var(--c-element); }
+#modelLegend .lg.box.complexType { border-color: var(--c-complexType); }
+#modelLegend .lg.box.group { border-color: var(--c-group); }
+#modelLegend .lg.box.attribute { border-color: var(--c-attribute); }
+#modelLegend .lg.box.external { border-color: var(--c-external); background: var(--surface-2); }
+#modelLegend .lg.arrow .card { font-size: 11px; }
+#modelLegend .lg.arrow .handle { font-weight: 700; font-size: 11px; line-height: 12px; padding: 0 3px; border: 1px solid var(--muted); border-radius: 2px; background: var(--surface-2); }
 #modelCanvas { flex: 1; overflow: auto; }
 #modelCanvas svg { display: block; }
 .mlink { fill: none; stroke: var(--edge); stroke-width: 1.5; }
@@ -798,6 +807,9 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 #graphTitle { font-weight: 600; font-size: 13px; }
 
 .legend { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+/* the legends of the graph and of the model: the chips of the kinds on one line, the arrows and marks on a second */
+#graphLegend, #modelLegend { flex-direction: column; align-items: flex-end; gap: 3px; }
+.legend .row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .lg {
   color: #fff;
   padding: 1px 7px;

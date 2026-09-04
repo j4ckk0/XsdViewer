@@ -88,9 +88,10 @@ SCENES = [
                  'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
                  'handles': "document.querySelectorAll('#modelCanvas .mhandle').length",
                  'cards': "[...document.querySelectorAll('#modelCanvas .mbox .card')].map(t => t.textContent).join('|')",
+                 'legend': "document.querySelectorAll('#modelLegend .row').length + ':' + document.querySelectorAll('#modelLegend .lg').length",
                  'svgButton': "document.getElementById('exportSvgBtn').disabled"},
          expect={'boxes': 11, 'compositors': 2, 'names': 'Items|item|@partNum : SKU|productName|quantity|USPrice|comment|shipDate|ItemExtras',
-                 'handles': 1, 'cards': '0..*|0..1|0..1|0..1', 'svgButton': False}),   # ItemExtras (a group) opens on demand; comment refers to a global element of a built-in type: nothing inside
+                 'handles': 1, 'cards': '0..*|0..1|0..1|0..1', 'legend': '2:12', 'svgButton': False}),   # ItemExtras (a group) opens on demand; comment refers to a global element of a built-in type: nothing inside
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"
