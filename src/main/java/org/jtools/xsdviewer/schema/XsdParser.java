@@ -143,6 +143,23 @@ final class XsdParser {
         keyRefs.clear();
     }
 
+    /** The declared type a {@code type:X} of a content model stands for, once every declaration is known; every other id stands for itself. */
+    private String resolveContentType(String id) {
+        if (id.isEmpty() || !NodeKind.TYPE_REFERENCE.equals(SchemaGraph.kindOf(id))) return id;
+        String declared = declaredType(SchemaGraph.nameOf(id));
+        return declared != null ? declared : id;
+    }
+
+    private List<SchemaGraph.Particle> resolveParticles(List<SchemaGraph.Particle> particles) {
+        return particles.stream()
+                .map(p -> p.resolved(resolveContentType(p.type()), resolveParticles(p.children()), resolveAttributes(p.attributes())))
+                .toList();
+    }
+
+    private List<SchemaGraph.Attribute> resolveAttributes(List<SchemaGraph.Attribute> attributes) {
+        return attributes.stream().map(a -> a.resolved(resolveContentType(a.type()))).toList();
+    }
+
     /** Records a name met inside {@code owner}'s declaration: a nested element or attribute, by name or by the local name of its ref. */
     private void member(String owner, String name) {
         int colon = name.indexOf(XsdVocabulary.QNAME_SEPARATOR);
@@ -170,6 +187,10 @@ final class XsdParser {
             graph.edges.add(new SchemaGraph.Edge(e.from(), to, e.label(), e.cardinality(), e.compositor()));
         }
         pending.clear();
+        // the content models name what the links name: a type declared by another schema of the file
+        // (the schemas inline in a WSDL) is only known now, as it is for the links above
+        graph.nodes.replaceAll((id, n) -> n.content().isEmpty() && n.attributes().isEmpty() ? n
+                : n.withContent(resolveParticles(n.content()), resolveAttributes(n.attributes())));
     }
 
     private static boolean isGlobalDeclaration(Element c) {
@@ -324,29 +345,30 @@ final class XsdParser {
     }
 
     /**
-     * The node id a type name stands for: a built-in type ({@code builtin:X}, unless this file declares
-     * {@code X}), a type declared here so far ({@code complexType:X} / {@code simpleType:X}), else the
-     * reference the third pass resolves or makes a placeholder of ({@code type:X}).
+     * The node id a type name stands for, the one rule the links and the content models both follow: a
+     * built-in type ({@code builtin:X}), a type declared here so far ({@code complexType:X} /
+     * {@code simpleType:X}), else the reference the third pass resolves or makes a placeholder of
+     * ({@code type:X}). A name in the XSD namespace is a built-in type unless this file declares it:
+     * schemas that use the XSD namespace as their default namespace refer to their own types unprefixed.
      */
     private String typeId(String qname, Element ctx) {
         QName q = QName.resolve(qname, ctx);
-        if (XsdVocabulary.NAMESPACE.equals(q.ns()) && declaredType(q.local()) == null) return SchemaGraph.nodeId(NodeKind.BUILTIN, q.local());
         String declared = declaredType(q.local());
-        return declared != null ? declared : SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local());
+        if (declared != null) return declared;
+        return XsdVocabulary.NAMESPACE.equals(q.ns()) ? SchemaGraph.nodeId(NodeKind.BUILTIN, q.local())
+                : SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local());
     }
 
-    /** A reference to a named type: built-in XSD types are resolved now, the others at the end. */
+    /** A reference to a named type: a built-in is a node right away, the others are links the third pass resolves. */
     void linkType(String owner, String qname, Element ctx, String label, Cardinality card, String compositor) {
         QName q = QName.resolve(qname, ctx);
-        // A name in the XSD namespace is a built-in type, unless this file declares it: schemas
-        // that use the XSD namespace as their default namespace refer to their own types unprefixed.
-        if (XsdVocabulary.NAMESPACE.equals(q.ns()) && declaredType(q.local()) == null) {
-            String id = SchemaGraph.nodeId(NodeKind.BUILTIN, q.local());
+        String id = typeId(qname, ctx);
+        if (NodeKind.BUILTIN.equals(SchemaGraph.kindOf(id))) {
             graph.nodes.computeIfAbsent(id, k -> new SchemaGraph.Node(id, NodeKind.BUILTIN, q.local(),
                     XsdVocabulary.NAMESPACE, 0, Messages.get(MessageKey.BUILTIN_TYPE_DOC)));
             graph.edges.add(new SchemaGraph.Edge(owner, id, label, card, compositor));
         } else {
-            pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local()), label, card, compositor), q.ns()));
+            pending.add(new Pending(new SchemaGraph.Edge(owner, id, label, card, compositor), q.ns()));
         }
     }
 

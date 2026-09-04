@@ -81,8 +81,7 @@ final class ContentModelBuilder {
                             : XsdVocabulary.RESTRICTION.equals(d.getLocalName()) ? ParticleKind.RESTRICTS : null;
                     if (kind == null) continue;
                     if (d.hasAttribute(XsdVocabulary.ATTR_BASE)) {
-                        String base = ids.type(d.getAttribute(XsdVocabulary.ATTR_BASE), d);
-                        particles.add(new Particle(kind, SchemaGraph.nameOf(base), "", base, null, "", List.of(), List.of()));
+                        particles.add(Particle.baseType(kind, ids.type(d.getAttribute(XsdVocabulary.ATTR_BASE), d)));
                     }
                     Content own = model(d);
                     particles.addAll(own.particles());
@@ -109,11 +108,10 @@ final class ContentModelBuilder {
                 case XsdVocabulary.ATTRIBUTE -> attributes.add(attribute(c));
                 case XsdVocabulary.ATTRIBUTE_GROUP -> {
                     if (c.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                        String ref = ids.named(NodeKind.ATTRIBUTE_GROUP, c.getAttribute(XsdVocabulary.ATTR_REF), c);
-                        attributes.add(new Attribute(SchemaGraph.nameOf(ref), ref, "", null));
+                        attributes.add(Attribute.reference(ids.named(NodeKind.ATTRIBUTE_GROUP, c.getAttribute(XsdVocabulary.ATTR_REF), c), null));
                     }
                 }
-                case XsdVocabulary.ANY_ATTRIBUTE -> attributes.add(new Attribute(namespaceConstraint(c), "", "", null));
+                case XsdVocabulary.ANY_ATTRIBUTE -> attributes.add(Attribute.wildcard(namespaceConstraint(c)));
                 default -> { }
             }
         }
@@ -131,41 +129,38 @@ final class ContentModelBuilder {
                 default -> { }
             }
         }
-        return new Particle(c.getLocalName(), "", "", "", XsdParser.particle(c), "", children, List.of());
+        return Particle.compositor(c.getLocalName(), XsdParser.particle(c), children);
     }
 
     /** A nested element: a reference to a global one, or its own (its name, its type, or its anonymous type walked). */
     private Particle element(Element e) {
         Cardinality card = XsdParser.particle(e);
         if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-            String ref = ids.named(NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e);
-            return new Particle(ParticleKind.ELEMENT, SchemaGraph.nameOf(ref), ref, "", card, "", List.of(), List.of());
+            return Particle.reference(ParticleKind.ELEMENT, ids.named(NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e), card);
         }
         String name = e.getAttribute(XsdVocabulary.ATTR_NAME);
         String type = e.hasAttribute(XsdVocabulary.ATTR_TYPE) ? ids.type(e.getAttribute(XsdVocabulary.ATTR_TYPE), e) : "";
         Element anonymous = XsdParser.child(e, XsdVocabulary.COMPLEX_TYPE);
         Content own = anonymous == null ? Content.NONE : complexType(anonymous);
-        return new Particle(ParticleKind.ELEMENT, name, "", type, card, "", own.particles(), own.attributes());
+        return Particle.element(name, type, card, own.particles(), own.attributes());
     }
 
     private Particle groupRef(Element g) {
         if (!g.hasAttribute(XsdVocabulary.ATTR_REF)) return compositor(g);   // a group declared inline (not valid XSD, but harmless)
-        String ref = ids.named(NodeKind.GROUP, g.getAttribute(XsdVocabulary.ATTR_REF), g);
-        return new Particle(ParticleKind.GROUP, SchemaGraph.nameOf(ref), ref, "", XsdParser.particle(g), "", List.of(), List.of());
+        return Particle.reference(ParticleKind.GROUP, ids.named(NodeKind.GROUP, g.getAttribute(XsdVocabulary.ATTR_REF), g), XsdParser.particle(g));
     }
 
     private static Particle any(Element a) {
-        return new Particle(ParticleKind.ANY, namespaceConstraint(a), "", "", XsdParser.particle(a), namespaceConstraint(a), List.of(), List.of());
+        return Particle.wildcard(namespaceConstraint(a), XsdParser.particle(a));
     }
 
     private Attribute attribute(Element a) {
         Cardinality use = XsdParser.attributeUse(a);
         if (a.hasAttribute(XsdVocabulary.ATTR_REF)) {
-            String ref = ids.named(NodeKind.ATTRIBUTE, a.getAttribute(XsdVocabulary.ATTR_REF), a);
-            return new Attribute(SchemaGraph.nameOf(ref), ref, "", use);
+            return Attribute.reference(ids.named(NodeKind.ATTRIBUTE, a.getAttribute(XsdVocabulary.ATTR_REF), a), use);
         }
         String type = a.hasAttribute(XsdVocabulary.ATTR_TYPE) ? ids.type(a.getAttribute(XsdVocabulary.ATTR_TYPE), a) : "";
-        return new Attribute(a.getAttribute(XsdVocabulary.ATTR_NAME), "", type, use);
+        return Attribute.declared(a.getAttribute(XsdVocabulary.ATTR_NAME), type, use);
     }
 
     private static String namespaceConstraint(Element wildcard) {

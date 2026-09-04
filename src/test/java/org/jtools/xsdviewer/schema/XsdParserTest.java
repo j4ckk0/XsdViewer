@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -352,5 +353,67 @@ class XsdParserTest {
                 </xs:schema>""");
         assertEquals(new SchemaGraph.Cardinality(0, 2), cardinality(m2, "complexType:T", "builtin:string", "b"));
         assertEquals(new SchemaGraph.Cardinality(0, 6), cardinality(m2, "complexType:T", "builtin:string", "c"));
+    }
+
+    @Test
+    void contentModelsNameWhatTheLinksName() {
+        assertContentNamesLinkedNodes(model);
+    }
+
+    @Test
+    void theContentModelNamesATypeOfAnotherInlineSchemaAsTheLinksDo() throws Exception {
+        // the schemas inline in a WSDL share one graph, parsed one after the other: what the first
+        // says of a type the second declares is only known once every schema has been read
+        SchemaGraph m = SchemaParser.parse("""
+                <wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:b="urn:b">
+                  <wsdl:types>
+                    <xs:schema targetNamespace="urn:a">
+                      <xs:complexType name="Holder">
+                        <xs:sequence><xs:element name="held" type="b:Held"/></xs:sequence>
+                        <xs:attribute name="of" type="b:Kind"/>
+                      </xs:complexType>
+                    </xs:schema>
+                    <xs:schema targetNamespace="urn:b">
+                      <xs:complexType name="Held"><xs:sequence><xs:element name="v" type="xs:string"/></xs:sequence></xs:complexType>
+                      <xs:simpleType name="Kind"><xs:restriction base="xs:string"/></xs:simpleType>
+                    </xs:schema>
+                  </wsdl:types>
+                </wsdl:definitions>""");
+        SchemaGraph.Node holder = m.nodes.get("complexType:Holder");
+        assertEquals("complexType:Held", holder.content().get(0).children().get(0).type());
+        assertEquals("simpleType:Kind", holder.attributes().get(0).type());
+        assertTrue(hasEdge(m, "complexType:Holder", "complexType:Held", "held"));
+        assertContentNamesLinkedNodes(m);
+    }
+
+    /**
+     * Every node a content model names — the type of a particle or of an attribute, what a reference
+     * refers to — is a node of the graph and the target of a link of that same declaration: the two
+     * walks over the XSD (the links, the content model) name the same things, which is what lets the
+     * Model view open a box from the graph's nodes.
+     */
+    private static void assertContentNamesLinkedNodes(SchemaGraph g) {
+        for (SchemaGraph.Node n : g.nodes.values()) {
+            Set<String> targets = g.edges.stream().filter(e -> e.from().equals(n.id())).map(SchemaGraph.Edge::to).collect(Collectors.toSet());
+            for (String named : namedNodes(n.content(), n.attributes())) {
+                assertTrue(g.declares(named), named + ", named by the content model of " + n.id() + ", is not a node of the graph");
+                assertTrue(targets.contains(named), named + ", named by the content model of " + n.id() + ", is the target of no link of that declaration");
+            }
+        }
+    }
+
+    /** The nodes a content model names, down the tree: the type of each particle and of each attribute, and what each reference refers to. */
+    private static List<String> namedNodes(List<SchemaGraph.Particle> particles, List<SchemaGraph.Attribute> attributes) {
+        List<String> named = new ArrayList<>();
+        for (SchemaGraph.Particle p : particles) {
+            if (!p.type().isEmpty()) named.add(p.type());
+            if (!p.ref().isEmpty()) named.add(p.ref());
+            named.addAll(namedNodes(p.children(), p.attributes()));
+        }
+        for (SchemaGraph.Attribute a : attributes) {
+            if (!a.type().isEmpty()) named.add(a.type());
+            if (!a.ref().isEmpty()) named.add(a.ref());
+        }
+        return named;
     }
 }

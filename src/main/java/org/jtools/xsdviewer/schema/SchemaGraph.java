@@ -44,10 +44,62 @@ public final class SchemaGraph {
      * {@code restricts}, {@code type}). {@code cardinality}: the particle's own occurrences, null for a base type.
      */
     public record Particle(String kind, String name, String ref, String type, Cardinality cardinality, String namespace,
-                           List<Particle> children, List<Attribute> attributes) {}
+                           List<Particle> children, List<Attribute> attributes) {
+
+        /** An {@code xs:sequence}, {@code xs:choice} or {@code xs:all}: its occurrences and what it holds. */
+        public static Particle compositor(String kind, Cardinality cardinality, List<Particle> children) {
+            return new Particle(kind, "", "", "", cardinality, "", children, List.of());
+        }
+
+        /** An element declared where it is used: its name, the node id of its type (empty when it declares an anonymous one, whose content is here). */
+        public static Particle element(String name, String type, Cardinality cardinality, List<Particle> children, List<Attribute> attributes) {
+            return new Particle(ParticleKind.ELEMENT, name, "", type, cardinality, "", children, attributes);
+        }
+
+        /** A reference to a global element or group: the node id it names, whose content the view opens from that node. */
+        public static Particle reference(String kind, String ref, Cardinality cardinality) {
+            return new Particle(kind, SchemaGraph.nameOf(ref), ref, "", cardinality, "", List.of(), List.of());
+        }
+
+        /** The base type of a derivation ({@code extends} / {@code restricts}): the node id of the type derived from; it has no occurrences of its own. */
+        public static Particle baseType(String kind, String type) {
+            return new Particle(kind, SchemaGraph.nameOf(type), "", type, null, "", List.of(), List.of());
+        }
+
+        /** A wildcard ({@code xs:any}): the namespaces it accepts, which is also what names it. */
+        public static Particle wildcard(String namespace, Cardinality cardinality) {
+            return new Particle(ParticleKind.ANY, namespace, "", "", cardinality, namespace, List.of(), List.of());
+        }
+
+        /** The same particle with its type reference and its content resolved (see {@code XsdParser.resolve()}). */
+        Particle resolved(String type, List<Particle> children, List<Attribute> attributes) {
+            return new Particle(kind, name, ref, type, cardinality, namespace, children, attributes);
+        }
+    }
 
     /** An attribute of a content model: its {@code name}; {@code ref}: the global attribute or attributeGroup it refers to; {@code type}; {@code use} (null for a group or a wildcard). */
-    public record Attribute(String name, String ref, String type, Cardinality use) {}
+    public record Attribute(String name, String ref, String type, Cardinality use) {
+
+        /** An attribute declared where it is used: its name and the node id of its type (empty when it declares an anonymous one). */
+        public static Attribute declared(String name, String type, Cardinality use) {
+            return new Attribute(name, "", type, use);
+        }
+
+        /** A reference to a global attribute or attributeGroup: the node id it names. */
+        public static Attribute reference(String ref, Cardinality use) {
+            return new Attribute(SchemaGraph.nameOf(ref), ref, "", use);
+        }
+
+        /** An {@code xs:anyAttribute}: the namespaces it accepts, which is also what names it. */
+        public static Attribute wildcard(String namespace) {
+            return new Attribute(namespace, "", "", null);
+        }
+
+        /** The same attribute with its type reference resolved (see {@code XsdParser.resolve()}). */
+        Attribute resolved(String type) {
+            return new Attribute(name, ref, type, use);
+        }
+    }
 
     /** One {@code xs:enumeration} of a declaration: its value and the documentation of that value (may be empty). */
     public record Value(String value, String doc) {}

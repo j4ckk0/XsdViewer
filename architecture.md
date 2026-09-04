@@ -62,7 +62,7 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 | `schema.SchemaGraph` | Plain data: `Node`, `Edge`, `Import` records, the `targetNamespace`, `nodeId(kind, name)`. `nodes` is a `LinkedHashMap` (declaration order is kept), `edges` a `LinkedHashSet` (parallel identical edges collapse). |
 | `schema.NodeKind`, `schema.LinkLabel`, `schema.XsdVocabulary`, `WsdlVocabulary`, `SchematronVocabulary` | The constants of the model: the kinds of node, the edge labels, and the namespace / element / attribute names each parser reads. |
 | `schema.SchemaGraphJsonWriter` | `SchemaGraph` → JSON (keys in `json.JsonKey`). |
-| `schema.ContentModelBuilder`, `schema.ParticleKind` | The content model of a global declaration for the Model view: the tree of its particles and its attributes, walked from the DOM by `XsdParser`'s second pass with the parser's own resolution of names to node ids, so that the tree names what the links name. |
+| `schema.ContentModelBuilder`, `schema.ParticleKind` | The content model of a global declaration for the Model view: the tree of its particles and its attributes, walked from the DOM by `XsdParser`'s second pass with the parser's own resolution of names to node ids (`typeId()`), so that the tree names what the links name. A particle and an attribute are built by named factories (`Particle.compositor / element / reference / baseType / wildcard`), the records having more fields than a call site can read positionally. |
 | `json.JsonWriter`, `json.JsonStrings`, `json.JsonKey` | A minimal streaming JSON writer and the string escaping. The model is flat enough that a JSON library would be the only dependency of the project, so it was left out. `JsonKey` is the API contract, mirrored by the client. |
 | `server.XsdViewerServer` | Starts a `com.sun.net.httpserver.HttpServer` bound to `127.0.0.1:8080` by default and maps each path of `ApiPath` to its handler. Requests are handled on virtual threads (`Executors.newVirtualThreadPerTaskExecutor`). |
 | `server.ParseSchemaHandler`, `InitialFileHandler`, `OpenSchemaLocationHandler`, `LocateSchemaFileHandler`, `QuitHandler`, `StaticResourceHandler` | One handler per path of the HTTP interface below. |
@@ -89,10 +89,15 @@ Each class does one thing and is named for it; the packages follow the tiers of 
    is (`type`, `items` for a nested element, `attribute partNum`, `extends`, `restricts`, `list of`…).
    Names in the XML Schema namespace are resolved immediately to `builtin:X` nodes (unless
    the file itself declares `X`, which happens in schemas using the XSD namespace as default);
-   all other targets are kept as `type:X` / `element:X` / … for the next pass.
+   all other targets are kept as `type:X` / `element:X` / … for the next pass. `typeId()` is the
+   one rule for what a type name stands for: the links and the content models both ask it.
+   The content model of each declaration is built in this pass too (`ContentModelBuilder`).
 3. **Resolution.** `type:X` becomes `complexType:X` or `simpleType:X` when declared; any
    target still unknown gets an `external` placeholder node so the graph never has dangling
-   edges.
+   edges. The content models are resolved the same way, since a type declared by another
+   schema of the same file (the schemas inline in a WSDL) is only known once every schema has
+   been read; `XsdParserTest.contentModelsNameWhatTheLinksName` pins that the two walks over
+   the XSD name the same nodes.
 
 Line numbers come from a separate SAX pass: the SAX `Locator` gives the position of the *end*
 of a start tag, so the parser walks back in the text to the `<` to report the line where the
