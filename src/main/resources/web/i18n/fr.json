@@ -300,7 +300,7 @@
   "comparison.files.title": "Deux espaces de travail fichier par fichier : ce qui est identique, ce qui diffère, ce que l'un seul contient",
   "comparison.files": "Fichiers",
   "comparison.objects.title": "Deux déclarations côte à côte, où qu'elles soient : leurs modèles de contenu, ce qui diffère marqué",
-  "comparison.objects": "Déclarations",
+  "comparison.objects": "Objets",
   "compare.selectTwo": "Ctrl+clic sur deux chips d'espace de travail pour comparer leurs fichiers : chaque fichier de l'un ou l'autre, apparié par son nom, et ce qui diffère dans chaque paire.",
   "compare.summary": "{0} fichiers : {1} identiques, {2} différents, {3} lignes déplacées seulement, {4} seulement dans {5}, {6} seulement dans {7}",
   "compare.file": "Fichier",

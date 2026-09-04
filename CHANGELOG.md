@@ -2,6 +2,12 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 4.9.0 — 2026-09-05
+
+- **Fix: the language selector left the right end of the top bar in the comparison.** The controls of that end are pushed right as a group, and what carried the push was the Model / Text / Graph tabs — hidden in the comparison, which is a place of its own and has no views. The whole group, tabs, exports and language, now holds the right edge whichever of them is hidden.
+- **The comparison opens on the section the selection is ready for**: **Files** when two workspace chips are selected, the objects otherwise.
+- **The Declarations section is named Objects** (*Objets*), the word the rest of the page uses for what a schema declares.
+
 ## 4.8.0 — 2026-09-04
 
 - **Comparing is a place of its own, not a view of a file.** **⇄ Compare** puts a chip beside the workspace chips, and that chip holds both comparisons as two sections: **Declarations**, two declarations side by side, and **Files**, two workspaces file by file. It is no workspace and no file — no tabs, no Model / Text / Graph, none of a workspace's doings — and its **×** closes it and forgets what it was comparing. A workspace shows its files and nothing else, so the fourth view tab goes, and so does the comparison tab that used to sit inside a workspace. Opening one file pair in a tab of its own goes with it: a row still expands to its differences where it sits.

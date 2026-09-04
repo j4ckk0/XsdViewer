@@ -188,7 +188,10 @@ html, body {
   max-width: 30vw;
 }
 
-.tabs { display: flex; gap: 2px; margin-left: auto; }
+/* the right end of the bar: the views, the exports and the language, kept together against the edge */
+#topbarRight { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+
+.tabs { display: flex; gap: 2px; }
 .tab.active { background: var(--bg); border-color: var(--border); }
 
 .opt { color: var(--muted); white-space: nowrap; user-select: none; }

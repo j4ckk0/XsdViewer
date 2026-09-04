@@ -2,17 +2,17 @@
  * Comparing two declarations, wherever each of them lives: two versions of the same type in two
  * workspaces, two types of different names, two files that have nothing else in common.
  *
- * A declaration is *marked* from its details panel; two marks at a time, the oldest giving way to a
- * third. The **Compare** view then draws the content model of each side by side, every box marked by
+ * A declaration is put on the left or on the right from its details panel, each side chosen. Once
+ * both are filled, the comparison draws their content models side by side, every box marked by
  * {@link markDifferences} — red for what only the left one has, green for what only the right one
- * has, blue for a box whose occurrences or type changed. With one mark it compares that one with the
- * declaration selected in the active tab, so a reference can be held while the rest is browsed.
+ * has, blue for a box whose occurrences or type changed.
  *
  * Neither file need be open in a tab: a workspace's listed file is indexed on demand
  * ({@link placeOfEntry}), which is also what lets a named type be opened from another file of that
  * same workspace, so the models are compared as deep as they can be read.
  */
 import { COMPARE_SECTION, TEXT, kindOfId, nameOfId } from './constants.js';
+import { canCompare } from './compare.js';
 import { placeOfEntry } from './declarations.js';
 import { $, CLS, ID, esc, legendHtml } from './dom.js';
 import { ensureModel } from './file-tabs.js';
@@ -50,10 +50,15 @@ export function markSide(side, tab, id) {
 
 export const clearMarks = () => { session.compared = { left: null, right: null }; folded().clear(); };
 
-/** ⇄ Compare: the comparison's chip appears on the workspace bar if it is not there, and is the place shown. */
+/**
+ * ⇄ Compare: the comparison's chip appears on the workspace bar if it is not there, and is the place
+ * shown. It opens on the section the selection is ready for: two workspaces picked on the bar are a
+ * file-by-file comparison, anything else the objects, which the details panel fills side by side.
+ */
 export function openComparison() {
   session.comparison.open = true;
   session.comparison.shown = true;
+  session.comparison.section = canCompare() ? COMPARE_SECTION.FILES : COMPARE_SECTION.OBJECTS;
 }
 
 /** Its × : the place goes and takes what it was comparing with it, so it opens on nothing next time. */

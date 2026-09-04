@@ -280,9 +280,24 @@ SCENES = [
                  'section': "document.querySelector('#comparisonSections .csection-tab.active').textContent",
                  'chip': "document.querySelectorAll('#workspaces .cmpchip.active').length",
                  'tabbar': "document.getElementById('tabbar').classList.contains('hidden')",
-                 'viewTabs': "document.getElementById('viewTabs').classList.contains('hidden')"},
+                 'viewTabs': "document.getElementById('viewTabs').classList.contains('hidden')",
+                 # the right end of the bar stays against the edge although the views it holds are hidden here
+                 'languageAtRight': "Math.round(document.getElementById('topbar').getBoundingClientRect().right"
+                                    " - document.getElementById('language').getBoundingClientRect().right)"},
          expect={'rows': 5, 'summary': '5 files: 2 identical, 1 differ', 'section': 'Files', 'chip': 1,
-                 'tabbar': True, 'viewTabs': True}),   # a place of its own: no file tabs, no views
+                 'tabbar': True, 'viewTabs': True, 'languageAtRight': 12}),   # a place of its own: no file tabs, no views
+    dict(name='compare-opens-on', file='samples/compare/v1.xsdviewer.json', theme='light',
+         # the button opens the section the selection is ready for: two workspaces the files, else the objects
+         action=OPEN_V2 + OPEN_COMPARISON
+                + "const section = () => document.querySelector('#comparisonSections .csection-tab.active').textContent;"
+                "window.__selected = section();"
+                # its × takes the selection with it, so the next opening has none
+                "document.querySelector('#workspaces .cmpchip .wsclose').click();"
+                + OPEN_COMPARISON
+                + "window.__none = section();",
+         checks={'names': "[...document.querySelectorAll('#comparisonSections .csection-tab')].map(b => b.textContent).join('|')",
+                 'twoSelected': "window.__selected", 'noneSelected': "window.__none"},
+         expect={'names': 'Objects|Files', 'twoSelected': 'Files', 'noneSelected': 'Objects'}),
     dict(name='selection-in-panels', file='samples/purchaseOrder.xsd', theme='light',
          # a click in the Model view marks the object in the Files panel and in the object list
          action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"

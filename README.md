@@ -459,9 +459,11 @@ Opening and saving need the server's dialogs, i.e. a display.
 **⇄ Compare** on the workspace bar opens the comparison: a chip of its own beside the workspace
 chips, and a place rather than a view of a file — it has no tabs and no Model / Text / Graph, since
 what it draws belongs to no single file. Clicking a workspace chip returns to that workspace, the
-chip's **×** closes the comparison and forgets what it was comparing. It holds two sections.
+chip's **×** closes the comparison and forgets what it was comparing. It holds two sections, and it
+opens on the one the selection is ready for: **Files** when two workspace chips are selected on the
+bar, **Objects** otherwise.
 
-**Declarations** — two declarations side by side, wherever each of them lives: two versions of the
+**Objects** — two declarations side by side, wherever each of them lives: two versions of the
 same type in two workspaces, or two types that merely resemble one another. The details panel of a
 declaration fills one side from its **Compare view** section: **◈ Left side** or **◈ Right side**,
 chosen, so which side a declaration lands on is never a matter of the order things were picked in;
