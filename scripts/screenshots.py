@@ -322,18 +322,34 @@ SCENES = [
                 "document.querySelector('#detailsContent .cobj-mark').click();"
                 "document.querySelector('.tab[data-view=\"compare\"]').click();"
                 "await new Promise(r => setTimeout(r, 400));"
-                "document.getElementById('toast').classList.add('hidden');",
+                "document.getElementById('toast').classList.add('hidden');"
+                "const boxes = () => document.querySelectorAll('#objectCompareBody .mbox').length;"
+                "const fold = (sel) => document.querySelector(sel).dispatchEvent(new MouseEvent('click', { bubbles: true }));"
+                "window.__open = boxes();"
+                "window.__marks = ['removed','added','changed'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/');"
+                # the sequence of the left model: folding it folds the one matching it on the right too
+                "fold('#objectCompareLeft .mbox.sequence .mhandle');"
+                "window.__folded = boxes();"
+                "document.getElementById('objectCompareCollapseAll').click();"
+                "window.__all = boxes();"
+                "document.getElementById('objectCompareExpandAll').click();",
          checks={'title': "document.getElementById('objectCompareTitle').textContent",
                  'summary': "document.getElementById('objectCompareSummary').textContent",
                  'heads': "[...document.querySelectorAll('#objectCompareBody .cobj-head')].map(h => h.textContent).join('|')",
-                 'marks': "['removed','added','changed'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/')",
+                 'marks': "window.__marks",
+                 # a handle folds its box and the one matching it on the other side; ⊟ folds them all, ⊞ opens them
+                 'boxesOpen': "window.__open",
+                 'boxesFolded': "window.__folded",
+                 'boxesAllFolded': "window.__all",
+                 'reopened': "document.querySelectorAll('#objectCompareBody .mbox').length",
                  'marked': "document.querySelectorAll('#detailsContent .cobj-mark.marked').length",
                  'guidance': "window.__empty",
                  'details': "document.getElementById('details').classList.contains('hidden')"},
          expect={'title': 'complexType ProductType compared with complexType ProductType',
                  'summary': '1 only on the left, 3 only on the right, 3 changed',
                  'heads': 'complexType ProductType — product.xsd, v1|complexType ProductType — product.xsd, v2',
-                 'marks': '1/3/6', 'marked': 1, 'guidance': 'Mark a declaration for c', 'details': True}),   # legacyCode gone; weight added with its own type; category, description and tag changed
+                 'marks': '1/3/6', 'marked': 1, 'guidance': 'Mark a declaration for c', 'details': True,
+                 'boxesOpen': 22, 'boxesFolded': 8, 'boxesAllFolded': 2, 'reopened': 22}),   # one sequence folded on both sides, then everything, then everything open again   # legacyCode gone; weight added with its own type; category, description and tag changed
     dict(name='compare-two-objects', file='samples/compare/v1.xsdviewer.json', theme='light',
          # two declarations that have nothing to do with one another: different names, different files, one workspace
          action="document.querySelector('#nodeList .item[data-id=\"complexType:CatalogType\"]').click();"

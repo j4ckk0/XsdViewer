@@ -3,7 +3,7 @@ import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, P
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { clearSelection, initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
-import { MARKED_OBJECTS, clearMarks, toggleMark } from './object-compare.js';
+import { MARKED_OBJECTS, clearMarks, foldAll, toggleFolded, toggleMark } from './object-compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, renderDetails, toggleDetails } from './details.js';
@@ -264,6 +264,15 @@ function wireViews() {
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
   $(ID.OBJECT_COMPARE_CLEAR).addEventListener('click', () => { clearMarks(); renderDetails(); renderComparedObjects(); });
+  $(ID.OBJECT_COMPARE_EXPAND_ALL).addEventListener('click', () => foldAll(false));
+  $(ID.OBJECT_COMPARE_COLLAPSE_ALL).addEventListener('click', () => foldAll(true));
+  // a handle in either model folds its box, and the box matching it on the other side
+  for (const id of [ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_RIGHT]) {
+    $(id).addEventListener('click', (e) => {
+      const handle = e.target.closest(selector(CLS.MODEL_HANDLE));
+      if (handle) toggleFolded(handle.dataset[DATA.PATH]);
+    });
+  }
   window.addEventListener('resize', renderMainView);
 }
 

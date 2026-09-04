@@ -24,9 +24,14 @@ const differs = (l, r) => cardinalityText(l.card || {}) !== cardinalityText(r.ca
 
 const rowsOf = (b) => [...b.attributes, ...b.children];
 
+/** A box matched with the other side is keyed by its pair, a box of one side alone by where it sits. */
+const PAIR_PREFIX = 'pair', SIDE_PREFIX = 'side';
+let pairs = 0;
+
 /** {@code box} and everything under it are on one side only. */
 function markAll(box, mark, counts) {
   box.diff = mark;
+  box.foldKey = SIDE_PREFIX + mark + box.path;
   counts[mark]++;
   for (const row of rowsOf(box)) markAll(row, mark, counts);
 }
@@ -35,6 +40,7 @@ function markAll(box, mark, counts) {
 function markPair(l, r, counts) {
   const mark = differs(l, r) ? DIFF.CHANGED : DIFF.SAME;
   l.diff = r.diff = mark;
+  l.foldKey = r.foldKey = PAIR_PREFIX + (pairs++);   // one key for the pair: folding one side folds the other
   counts[mark]++;
   align(l.attributes, r.attributes, counts);
   align(l.children, r.children, counts);
@@ -63,6 +69,7 @@ function align(ls, rs, counts) {
  */
 export function markDifferences(left, right) {
   const counts = { [DIFF.SAME]: 0, [DIFF.CHANGED]: 0, [DIFF.REMOVED]: 0, [DIFF.ADDED]: 0 };
+  pairs = 0;
   if (left && right) markPair(left, right, counts);
   else if (left) markAll(left, DIFF.REMOVED, counts);
   else if (right) markAll(right, DIFF.ADDED, counts);

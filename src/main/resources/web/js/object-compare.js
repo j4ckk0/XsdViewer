@@ -75,6 +75,25 @@ function treeOf(mark) {
 
 /** Only the drawing of the last call is written: the files may have to be parsed first. */
 let drawing = 0;
+/** The boxes put aside, by the key the comparison gives them: a matched pair folds on both sides at once. */
+const folded = new Set();
+/** The trees last drawn, so that a fold redraws them without comparing again. */
+let drawn = null;
+
+/** Folds a box, or opens it when it was folded, and redraws. */
+export function toggleFolded(key) {
+  if (!folded.delete(key)) folded.add(key);
+  drawPair();
+}
+
+/** Every box holding something folded, or all of them open. */
+export function foldAll(fold) {
+  folded.clear();
+  if (fold) for (const tree of drawn || []) for (const box of boxesOf(tree)) if (box.children.length || box.attributes.length) folded.add(box.foldKey);
+  drawPair();
+}
+
+const boxesOf = (box) => (box ? [box, ...[...box.attributes, ...box.children].flatMap(boxesOf)] : []);
 
 /** Draws the Compare view of the active tab: the two declarations, or what to do when there are not two. */
 export async function renderObjectCompare() {
@@ -97,9 +116,9 @@ export async function renderObjectCompare() {
   if (token !== drawing) return;   // marked or selected something else while the files were parsed
   const trees = pair.map(treeOf);
   const counts = markDifferences(trees[0], trees[1]);
-  draw(ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME, trees[0], left);
-  draw(ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME, trees[1], right);
-  applyZoom();   // both models are drawn now, and take the tab's level
+  folded.clear();   // the boxes put aside belonged to the pair drawn before
+  drawn = trees;
+  drawSides(trees, pair);
   $(ID.OBJECT_COMPARE_SUMMARY).textContent = same(counts)
     ? t(MSG.COMPARE_OBJECT_SAME)
     : t(MSG.COMPARE_OBJECT_SUMMARY, counts[DIFF.REMOVED], counts[DIFF.ADDED], counts[DIFF.CHANGED]);
@@ -112,10 +131,24 @@ const sideName = (m) => m.fileName + TEXT.LIST_SEPARATOR + workspaceName(m.ws);
 const kindOfMark = (m) => kindOfId(m.id);
 const nameOfMark = (m) => nameOfId(m.id);
 
+/** Draws the two models as they stand, the folded boxes shown as leaves. */
+function drawPair() {
+  if (!drawn) return;
+  const pair = comparedPair();
+  if (pair) drawSides(drawn, pair);
+}
+
+function drawSides(trees, pair) {
+  for (const tree of trees) for (const box of boxesOf(tree)) box.folded = folded.has(box.foldKey);
+  draw(ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME, trees[0], pair[0]);
+  draw(ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME, trees[1], pair[1]);
+  applyZoom();   // both models are drawn now, and take the tab's level
+}
+
 function draw(canvasId, headId, tree, mark) {
   const canvas = $(canvasId);
   $(headId).textContent = nameOf(mark) + TEXT.TOAST_SEPARATOR + sideName(mark);
   canvas.innerHTML = tree
-    ? modelSvg(tree, nameOf(mark), canvas.clientHeight)
+    ? modelSvg(tree, nameOf(mark), canvas.clientHeight, { foldable: true })
     : '<div class="' + CLS.EMPTY + '">' + esc(t(MSG.COMPARE_OBJECT_ABSENT)) + '</div>';
 }

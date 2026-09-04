@@ -42,8 +42,10 @@ the graph shows the types themselves as neighbours of the declaration that names
   is rather than by where it sits, so an element inserted on one side does not mark everything
   below it as different; named types are opened on both sides, so a change deep inside one is seen.
   With a single mark it compares that one with whatever you select, so a reference can be held
-  while the rest is browsed. Neither file need be open in a tab. **Clear the marks** empties it,
-  and **⤓ PNG** / **⤓ SVG** save the two models as one picture.
+  while the rest is browsed. Neither file need be open in a tab. Any box holding something carries
+  a handle that puts it aside, and folding one folds the box matching it on the other side, so the
+  two models stay read together; **⊞** / **⊟** open and fold them all. **Clear the marks** empties
+  the view, and **⤓ PNG** / **⤓ SVG** save the two models as one picture.
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
   sits in the middle, what it links to is on the right, what uses it is on the left.

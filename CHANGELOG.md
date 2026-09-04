@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **The Compare view folds.** Every box holding something now carries a handle that puts it aside, and folding one folds the box matching it on the other side, so the two models stay read together; **⊞** and **⊟** open and fold them all. What is folded changes nothing to the comparison: the models are compared whole, and the marks and the summary stay as they were.
+
 ## 4.3.0 — 2026-09-04
 
 - **Fix: ⤓ PNG and ⤓ SVG did nothing in the Compare view.** Both buttons were disabled there, since neither model alone is the picture. They now export the two models as one image, side by side, each under the heading naming its declaration, its file and its workspace — the whole of each model, not the part the pane shows.

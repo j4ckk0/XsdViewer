@@ -87,10 +87,15 @@ function toggleExpanded(path) {
   renderModel();
 }
 
+/** What a box shows under it: its attributes then its particles, nothing while it is folded. */
+const rowsOf = (box) => (box.folded ? [] : [...box.attributes, ...box.children]);
+/** True when a box holds something, whether or not it is folded. */
+const hasRows = (box) => !!(box.attributes.length || box.children.length);
+
 /** The layout: rows of {@code ROW} pixels, a box centred on its children (attributes first, then particles), columns per depth. */
 function layout(box, depth, top) {
   box.depth = depth;
-  const rows = [...box.attributes, ...box.children];
+  const rows = rowsOf(box);
   if (!rows.length) { box.y = top; box.height = 1; return 1; }
   let y = top;
   for (const r of rows) y += layout(r, depth + 1, y);
@@ -104,13 +109,15 @@ const widthOf = (box) => (COMPOSITOR_GLYPH[box.kind] ? COMPOSITOR_W : box.kind =
 /**
  * The SVG of a content model: the tree laid out in columns, the elbow connectors and the boxes.
  * {@code label} names the picture for a reader who cannot see it, {@code minHeight} is the room it
- * is drawn in. The comparison of two models draws each side with it.
+ * is drawn in. {@code foldable}: every box holding something carries a handle that folds it, which
+ * is how the comparison of two models lets a reader put a whole subtree aside; the Model view opens
+ * a box on demand instead, so only what stands for another declaration carries one.
  */
-export function modelSvg(tree, label, minHeight = 0) {
+export function modelSvg(tree, label, minHeight = 0, { foldable = false } = {}) {
   const rows = layout(tree, 0, 0);
   let maxDepth = 0;
   const all = [];
-  const collect = (b) => { all.push(b); maxDepth = Math.max(maxDepth, b.depth); [...b.attributes, ...b.children].forEach(collect); };
+  const collect = (b) => { all.push(b); maxDepth = Math.max(maxDepth, b.depth); rowsOf(b).forEach(collect); };
   collect(tree);
   const colX = (depth) => MARGIN + depth * (BOX_W + GAP);
   const W = colX(maxDepth) + BOX_W + MARGIN, H = Math.max(minHeight, rows * ROW + 2 * MARGIN);
@@ -118,13 +125,13 @@ export function modelSvg(tree, label, minHeight = 0) {
   let links = '', boxes = '';
   for (const b of all) {
     const x = colX(b.depth), y = cy(b), w = widthOf(b);
-    for (const c of [...b.attributes, ...b.children]) {
+    for (const c of rowsOf(b)) {
       // an elbow: out of the parent, along a bus halfway to the next column, into the child
       const busX = colX(b.depth + 1) - GAP / 2;
       links += '<path class="' + CLS.MODEL_LINK + (isOptional(c.card || {}) ? ' ' + CLS.OPTIONAL : '') + '" d="M' + (x + w) + ',' + y
         + ' H' + busX + ' V' + cy(c) + ' H' + colX(c.depth) + '"/>';
     }
-    boxes += boxSvg(b, x, y - BOX_H / 2, w);
+    boxes += boxSvg(b, x, y - BOX_H / 2, w, foldable);
   }
   return '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H
     + '" role="img" aria-label="' + esc(label) + '">' + links + boxes + '</svg>';
@@ -149,7 +156,7 @@ export function renderModel() {
 }
 
 /** One box: a compositor (its glyph), an attribute (@name : type), an element / group / base / wildcard / chain object (name, type or kind, handle). */
-function boxSvg(b, x, y, w) {
+function boxSvg(b, x, y, w, foldable) {
   const compositor = COMPOSITOR_GLYPH[b.kind];
   const card = b.card ? cardinalityText(b.card) : '';
   const optional = b.card && isOptional(b.card);
@@ -161,8 +168,11 @@ function boxSvg(b, x, y, w) {
   const radius = familyOf(b.kind) ? FAMILY_RADIUS : b.root ? 0 : 3;   // a family object is rounded, as the graph draws it
   let g = '<g class="' + cls + '"' + dataAttr(DATA.PATH, b.path) + (target ? dataAttr(DATA.ID, target) : '') + ' transform="translate(' + x + ',' + y + ')">';
   g += '<title>' + esc(titleOf(b)) + '</title>';
+  const foldHandle = foldable && (hasRows(b) || b.folded);
   if (compositor) {
-    g += '<rect width="' + w + '" height="' + BOX_H + '" rx="4"/><text class="' + CLS.MODEL_GLYPH + '" x="' + (w / 2) + '" y="' + (BOX_H / 2 + 5) + '" text-anchor="middle">' + compositor + '</text>';
+    // the glyph gives way to the handle when there is one, the box being no wider than its mark
+    g += '<rect width="' + w + '" height="' + BOX_H + '" rx="4"/><text class="' + CLS.MODEL_GLYPH + '" x="' + (foldHandle ? (w - HANDLE) / 2 : w / 2) + '" y="' + (BOX_H / 2 + 5) + '" text-anchor="middle">' + compositor + '</text>'
+      + (foldHandle ? handleSvg(w, b.foldKey, !b.folded) : '');
   } else if (b.kind === NODE_KIND.ATTRIBUTE) {
     const label = ATTRIBUTE_PREFIX + b.name + (b.typeName ? TYPE_SEPARATOR + shorten(b.typeName, TYPE_MAX_CHARS) : '') + (optional ? ' ' + OPTIONAL_MARK : '');
     g += '<rect width="' + w + '" height="' + BOX_H + '" rx="2"/><text class="' + CLS.MODEL_NAME + '" x="8" y="' + (BOX_H / 2 + 4) + '">' + esc(shorten(label, NAME_MAX_CHARS + TYPE_MAX_CHARS)) + '</text>';
@@ -176,7 +186,7 @@ function boxSvg(b, x, y, w) {
     const chainKind = b.word && kindLabel(b.kind) !== b.word ? kindLabel(b.kind) : '';
     const corner = shorten(b.word ? chainKind : (word ? '' : b.typeName), TYPE_MAX_CHARS);
     const withWord = !!b.word;
-    const handleRoom = b.expandable || b.recursive ? HANDLE + 4 : 0;
+    const handleRoom = b.expandable || b.recursive || (foldable && hasRows(b)) ? HANDLE + 4 : 0;
     const room = w - 2 * PAD - handleRoom;   // what a line has for its texts
     const cornerRoom = corner ? corner.length * WORD_CHAR_W + TEXT_GAP : 0;
     const wordMax = Math.floor((room - (withWord ? cornerRoom : 0)) / WORD_CHAR_W);
@@ -185,9 +195,8 @@ function boxSvg(b, x, y, w) {
       + (word ? '<text class="' + CLS.MODEL_WORD + '" x="' + PAD + '" y="12">' + esc(shorten(word, wordMax)) + '</text>' : '')
       + '<text class="' + CLS.MODEL_NAME + '" x="' + PAD + '" y="' + (word ? BOX_H - 8 : BOX_H / 2 + 5) + '">' + esc(shorten(name, nameMax)) + '</text>'
       + (corner ? '<text class="' + CLS.MODEL_TYPE + '" x="' + (w - PAD - handleRoom) + '" y="' + (withWord ? 12 : BOX_H - 6) + '" text-anchor="end">' + esc(corner) + '</text>' : '');
-    if (b.expandable) {
-      g += '<g class="' + CLS.MODEL_HANDLE + '"' + dataAttr(DATA.PATH, b.path) + '><rect x="' + (w - HANDLE - 3) + '" y="' + ((BOX_H - HANDLE) / 2) + '" width="' + HANDLE + '" height="' + HANDLE + '" rx="2"/>'
-        + '<text x="' + (w - HANDLE / 2 - 3) + '" y="' + (BOX_H / 2 + 4) + '" text-anchor="middle">' + (b.expanded ? COLLAPSE_GLYPH : EXPAND_GLYPH) + '</text></g>';
+    if (foldable ? foldHandle : b.expandable) {
+      g += handleSvg(w, foldable ? b.foldKey : b.path, foldable ? !b.folded : b.expanded);
     } else if (b.recursive) {
       g += '<text class="' + CLS.MODEL_RECURSION + '" x="' + (w - 6) + '" y="' + (BOX_H / 2 + 4) + '" text-anchor="end">' + RECURSION_GLYPH + '</text>';
     }
@@ -196,6 +205,11 @@ function boxSvg(b, x, y, w) {
   if (card && card !== '1' && card !== '1..1' && b.kind !== NODE_KIND.ATTRIBUTE) g += '<text class="' + CLS.CARDINALITY + '" x="' + (compositor ? w / 2 : 8) + '" y="' + (BOX_H + 12) + '"' + (compositor ? ' text-anchor="middle"' : '') + '>' + esc(card) + '</text>';
   return g + '</g>';
 }
+
+/** The handle at the right edge of a box: − while what it holds is shown, + while it is put aside. */
+const handleSvg = (w, key, open) => '<g class="' + CLS.MODEL_HANDLE + '"' + dataAttr(DATA.PATH, key) + '>'
+  + '<rect x="' + (w - HANDLE - 3) + '" y="' + ((BOX_H - HANDLE) / 2) + '" width="' + HANDLE + '" height="' + HANDLE + '" rx="2"/>'
+  + '<text x="' + (w - HANDLE / 2 - 3) + '" y="' + (BOX_H / 2 + 4) + '" text-anchor="middle">' + (open ? COLLAPSE_GLYPH : EXPAND_GLYPH) + '</text></g>';
 
 /** The tooltip of a box: what it is, its occurrences, its type; how to open it. */
 function titleOf(b) {

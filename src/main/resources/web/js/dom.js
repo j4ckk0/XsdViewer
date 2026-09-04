@@ -80,6 +80,8 @@ export const ID = {
   OBJECT_COMPARE_TITLE: 'objectCompareTitle',
   OBJECT_COMPARE_SUMMARY: 'objectCompareSummary',
   OBJECT_COMPARE_LEGEND: 'objectCompareLegend',
+  OBJECT_COMPARE_EXPAND_ALL: 'objectCompareExpandAll',
+  OBJECT_COMPARE_COLLAPSE_ALL: 'objectCompareCollapseAll',
   OBJECT_COMPARE_CLEAR: 'objectCompareClear',
   OBJECT_COMPARE_EMPTY: 'objectCompareEmpty',
   OBJECT_COMPARE_BODY: 'objectCompareBody',
