@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **One declaration compared across two workspaces.** With two workspaces selected, the details panel of a declaration offers **⇄ Compare**, which opens a tab showing its content model in each workspace, side by side, every box marked: red for what only the left one has, green for what only the right one has, blue for a box whose occurrences or type changed, with a summary counting them. The boxes are matched by what each one is rather than by where it sits, so an element inserted on one side does not mark everything below it as different; named types are opened on both sides, so a change deep inside one is seen; and neither file need be open in a tab.
+
 ## 4.0.1 — 2026-09-04
 
 - **The comparison lists file names, not paths.** The two side columns of the comparison table showed each file's absolute path, which was long, pushed the status out of view and put the reader's home directory on screen. They now show the name, the full path staying in the cell's tooltip.

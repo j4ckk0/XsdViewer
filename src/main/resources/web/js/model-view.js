@@ -93,8 +93,10 @@ function openingOf(n, ids, place, st) {
  * card, children, attributes, path, expandable, expanded, recursive}. {@code path}: the indexes from
  * the root, what {@code st.modelExpanded} holds. {@code onPath}: the node ids being expanded (recursion guard).
  * A function of the declaration and the tab alone, which is what the tests exercise.
+ * {@code openAll}: every box open down to {@code EXPAND_ALL_DEPTH}, whatever the tab has open — what
+ * the comparison of two models needs, since it compares the whole shape, not what the reader unfolded.
  */
-export function buildTree(root, st) {
+export function buildTree(root, st, { openAll = false } = {}) {
   const expanded = st.modelExpanded;
   const onPath = [root.id];
   const tree = { kind: root.kind, name: root.name, id: root.id, path: '', children: [], attributes: [], root: true };
@@ -127,7 +129,7 @@ export function buildTree(root, st) {
     if (!opening) return box;
     if (ids.includes(opening.id)) { box.recursive = true; return box; }
     box.expandable = true;
-    box.expanded = expanded.has(path);
+    box.expanded = openAll ? ids.length <= EXPAND_ALL_DEPTH : expanded.has(path);
     if (box.expanded) fill(box, opening, ids.concat(opening.id));
     return box;
   }
@@ -214,20 +216,19 @@ function layout(box, depth, top) {
 
 const widthOf = (box) => (COMPOSITOR_GLYPH[box.kind] ? COMPOSITOR_W : box.kind === NODE_KIND.ATTRIBUTE ? ATTRIBUTE_W : BOX_W);
 
-/** Draws the model of the selected node into the canvas. */
-export function renderModel() {
-  const st = session.active;
-  const canvas = $(ID.MODEL_CANVAS);
-  if (!st.model || !st.selected) { canvas.innerHTML = ''; return; }
-  const root = st.nodes.get(st.selected);
-  const tree = buildTree(root, st);
+/**
+ * The SVG of a content model: the tree laid out in columns, the elbow connectors and the boxes.
+ * {@code label} names the picture for a reader who cannot see it, {@code minHeight} is the room it
+ * is drawn in. The comparison of two models draws each side with it.
+ */
+export function modelSvg(tree, label, minHeight = 0) {
   const rows = layout(tree, 0, 0);
   let maxDepth = 0;
   const all = [];
   const collect = (b) => { all.push(b); maxDepth = Math.max(maxDepth, b.depth); [...b.attributes, ...b.children].forEach(collect); };
   collect(tree);
   const colX = (depth) => MARGIN + depth * (BOX_W + GAP);
-  const W = colX(maxDepth) + BOX_W + MARGIN, H = Math.max(canvas.clientHeight, rows * ROW + 2 * MARGIN);
+  const W = colX(maxDepth) + BOX_W + MARGIN, H = Math.max(minHeight, rows * ROW + 2 * MARGIN);
   const cy = (b) => MARGIN + b.y * ROW + ROW / 2;
   let links = '', boxes = '';
   for (const b of all) {
@@ -240,9 +241,20 @@ export function renderModel() {
     }
     boxes += boxSvg(b, x, y - BOX_H / 2, w);
   }
-  canvas.innerHTML = '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="'
-    + esc(t(MSG.MODEL_TITLE, kindLabel(root.kind), root.name)) + '">' + links + boxes + '</svg>';
-  $(ID.MODEL_TITLE).textContent = t(MSG.MODEL_TITLE, kindLabel(root.kind), root.name);
+  return '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H
+    + '" role="img" aria-label="' + esc(label) + '">' + links + boxes + '</svg>';
+}
+
+/** Draws the model of the selected node into the canvas. */
+export function renderModel() {
+  const st = session.active;
+  const canvas = $(ID.MODEL_CANVAS);
+  if (!st.model || !st.selected) { canvas.innerHTML = ''; return; }
+  const root = st.nodes.get(st.selected);
+  const tree = buildTree(root, st);
+  const label = t(MSG.MODEL_TITLE, kindLabel(root.kind), root.name);
+  canvas.innerHTML = modelSvg(tree, label, canvas.clientHeight);
+  $(ID.MODEL_TITLE).textContent = label;
   // the legend names the kinds of box the shown file can have: its family's, and the schema's own
   const family = isWsdl(st.model) ? FAMILY.WSDL : isSchematron(st.model) ? FAMILY.SCHEMATRON : null;
   $(ID.MODEL_LEGEND).classList.toggle(CLS.WSDL, family === FAMILY.WSDL);
@@ -256,7 +268,9 @@ function boxSvg(b, x, y, w) {
   const card = b.card ? cardinalityText(b.card) : '';
   const optional = b.card && isOptional(b.card);
   const kindClass = b.kind === PARTICLE.EXTENDS || b.kind === PARTICLE.RESTRICTS ? NODE_KIND.COMPLEX_TYPE : b.kind === PARTICLE.ANY ? NODE_KIND.EXTERNAL : b.kind;
-  const cls = CLS.MODEL_BOX + ' ' + kindClass + (b.root ? ' ' + CLS.CENTER : '') + (optional ? ' ' + CLS.OPTIONAL : '') + (b.expandable || b.ref || b.typeId ? ' ' + CLS.CLICKABLE : '');
+  const cls = CLS.MODEL_BOX + ' ' + kindClass + (b.root ? ' ' + CLS.CENTER : '') + (optional ? ' ' + CLS.OPTIONAL : '')
+    + (b.expandable || b.ref || b.typeId ? ' ' + CLS.CLICKABLE : '')
+    + (b.diff ? ' ' + b.diff : '');   // how it differs from the other side, when two models are compared
   const target = b.root ? '' : b.ref || (b.kind === PARTICLE.EXTENDS || b.kind === PARTICLE.RESTRICTS ? b.typeId : '') || b.typeId;
   const radius = familyOf(b.kind) ? FAMILY_RADIUS : b.root ? 0 : 3;   // a family object is rounded, as the graph draws it
   let g = '<g class="' + cls + '"' + dataAttr(DATA.PATH, b.path) + (target ? dataAttr(DATA.ID, target) : '') + ' transform="translate(' + x + ',' + y + ')">';

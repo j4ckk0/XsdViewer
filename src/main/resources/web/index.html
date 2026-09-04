@@ -236,7 +236,13 @@
         <span id="compareTools" class="panel-tools"><button id="compareExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="compareCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span>
         <button id="compareClose" type="button" class="menubtn" data-i18n="compare.close">Close</button>
       </div>
-      <div id="compareBody"><table id="compareTable"></table></div>
+      <div id="compareBody">
+        <table id="compareTable"></table>
+        <div id="compareObject" class="hidden">
+          <div class="cobj"><div class="cobj-head" id="compareObjectLeftName"></div><div class="cobj-canvas" id="compareObjectLeft"></div></div>
+          <div class="cobj"><div class="cobj-head" id="compareObjectRightName"></div><div class="cobj-canvas" id="compareObjectRight"></div></div>
+        </div>
+      </div>
     </div>
     <div id="validation" class="view hidden">
       <div id="validationHeader">

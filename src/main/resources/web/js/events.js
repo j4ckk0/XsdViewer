@@ -2,10 +2,10 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { clearSelection, initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
+import { clearSelection, initOptions, openObjectCompare, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
-import { initDetails, toggleDetails } from './details.js';
+import { initDetails, renderDetails, toggleDetails } from './details.js';
 import { fileListClick, initFiles, isFilesCollapsed, renderFileList, setAllUnfolded, setFilesCollapsed, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
@@ -118,7 +118,8 @@ function wireDocumentTabs() {
     const ws = workspaceOf(e);
     if (!ws) return;
     if (e.target.closest(selector(CLS.WORKSPACE_CLOSE))) closeGroup(ws);
-    else if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderNavigation(); }   // select for comparison
+    // select for comparison: the details panel then offers to compare the selected declaration
+    else if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderNavigation(); if (session.active.model) renderDetails(); }
     else if (activateTab(tabToShow(ws))) renderPage();
   });
   $(ID.WORKSPACES).addEventListener('auxclick', (e) => {
@@ -327,6 +328,11 @@ function wireSelectionSources() {
   }
   $(ID.DETAILS).addEventListener('click', (e) => {
     if (e.target.closest('a[data-' + DATA.LINE + ']')) { showView(VIEW.TEXT); return; }
+    if (e.target.closest(selector(CLS.COMPARE_OBJECT_BUTTON))) {
+      const st = session.active;
+      if (openObjectCompare(st.selected, st.fileName)) renderPage();
+      return;
+    }
     const link = e.target.closest(selector(CLS.LINK));
     if (!link) return;
     if (link.dataset[DATA.TAB] != null || link.dataset[DATA.FILE] != null) jumpToPlace(link.dataset, link.dataset[DATA.ID]);

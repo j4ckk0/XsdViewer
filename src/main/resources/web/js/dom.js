@@ -75,6 +75,11 @@ export const ID = {
   COMPARE_BUSINESS_ONLY: 'businessOnly',
   COMPARE_DIFF_ONLY: 'diffOnly',
   COMPARE_TABLE: 'compareTable',
+  COMPARE_OBJECT: 'compareObject',
+  COMPARE_OBJECT_LEFT: 'compareObjectLeft',
+  COMPARE_OBJECT_RIGHT: 'compareObjectRight',
+  COMPARE_OBJECT_LEFT_NAME: 'compareObjectLeftName',
+  COMPARE_OBJECT_RIGHT_NAME: 'compareObjectRightName',
   SIDEBAR: 'sidebar',
   FILES: 'files',
   FILES_CONTENT: 'filesContent',
@@ -166,6 +171,10 @@ export const CLS = {
   VALIDATE_LINE: 'vline',
   VALIDATE_NONE: 'vnone',
   PENDING: 'pending',
+  /** In the details panel: opens the comparison of the selected declaration with the other selected workspace. */
+  COMPARE_OBJECT_BUTTON: 'cobj-open',
+  /** A checkbox option of the comparison header. */
+  OPTION: 'opt',
   /** On a splitter being dragged. */
   DRAGGING: 'dragging',
   /** On the Links button: some categories of link are not drawn. */

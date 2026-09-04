@@ -452,7 +452,16 @@ comparison (long identical stretches folded). A block of lines moved elsewhere i
 (two lines or more, or one telling line): it is shown in blue on both sides with "moved
 to / from line N" instead of red and green, and a file whose text differences are all moves
 gets the status *moved lines only*, counted apart; a legend of the three colours sits in the
-header of the comparison. **Business lines only** (on by default,
+header of the comparison.
+
+**One declaration compared.** With two workspaces selected, the details panel of a selected
+declaration offers **⇄ Compare**: a tab of its own showing that declaration's content model in each
+workspace, side by side, with every box marked — red for what only the left one has, green for what
+only the right one has, blue for a box whose occurrences or type changed — and a summary counting
+them. The boxes are matched by what each one is rather than by where it sits, so an element inserted
+on one side does not mark everything below it as different, and named types are opened on both sides,
+so a change deep inside one is seen. Neither file need be open in a tab.
+ **Business lines only** (on by default,
 remembered) ignores what does not define the schema — XML comments, `xs:annotation` blocks,
 the XML declaration, the `xs:schema`, `xs:import` and `xs:include` tags, blank lines and
 indentation — both for the status and in the line comparison, which keeps the original line

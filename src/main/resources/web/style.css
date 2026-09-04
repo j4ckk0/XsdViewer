@@ -796,6 +796,24 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .mbox.attribute .mname { font-size: 12px; }
 .mbox .card { font-size: 11px; fill: var(--muted); }
 .mbox .mrec { font-size: 12px; fill: var(--muted); }
+/* two models compared: a box only on one side, or one whose occurrences or type changed */
+.mbox.removed > rect { fill: var(--diff-del-bg); stroke: var(--diff-del-fg); }
+.mbox.added > rect { fill: var(--diff-ins-bg); stroke: var(--diff-ins-fg); }
+.mbox.changed > rect { fill: var(--diff-mov-bg); stroke: var(--diff-mov-fg); }
+.mbox.removed text, .mbox.added text, .mbox.changed text { fill: var(--text); }
+.mbox.removed .mtype, .mbox.added .mtype, .mbox.removed .mword, .mbox.added .mword,
+.mbox.changed .mtype, .mbox.changed .mword { fill: var(--text); opacity: .75; }
+
+/* the details panel's button opening the comparison of the selected declaration */
+.cobj-open { margin: 6px 0 2px; padding: 3px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); cursor: pointer; }
+.cobj-open:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
+
+/* the object comparison: one model per workspace, side by side, each scrolling on its own */
+#compareObject { display: flex; gap: 12px; align-items: stretch; height: 100%; }
+#compareObject .cobj { flex: 1; min-width: 0; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+#compareObject .cobj-head { padding: 6px 10px; font-weight: 600; font-size: 12px; background: var(--panel); border-bottom: 1px solid var(--border); }
+#compareObject .cobj-canvas { flex: 1; overflow: auto; }
+#compareObject .cobj-canvas svg { display: block; }
 .mhandle { cursor: pointer; }
 .mhandle rect { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1; }
 .mhandle:hover rect { fill: var(--hover); }

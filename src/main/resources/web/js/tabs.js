@@ -1,5 +1,5 @@
 /** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. A tab shows a file, a comparison (compare.js) or a validation (validate.js). */
-import { WORKSPACE_FILE_SUFFIX } from './constants.js';
+import { nameOfId, WORKSPACE_FILE_SUFFIX } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { renderFileList } from './file-list.js';
 import { t } from './i18n.js';
@@ -21,10 +21,11 @@ export function validationStatus(tab) {
   return v.result.valid ? CLS.VALID : CLS.INVALID;
 }
 
-/** The name of a comparison tab: "v1 ⇄ v2", or "x.xsd (v1 ⇄ v2)" for the differences of one file. */
+/** The name of a comparison tab: "v1 ⇄ v2", "x.xsd (v1 ⇄ v2)" for one file, "Type (v1 ⇄ v2)" for one declaration. */
 export function compareTitle(tab) {
-  const { left, right, file } = tab.compare;
-  return t(file ? MSG.COMPARE_FILE_TAB : MSG.COMPARE_TAB, ...(file ? [file] : []), workspaceName(left), workspaceName(right));
+  const { left, right, file, object } = tab.compare;
+  const one = object ? nameOfId(object) : file;
+  return t(one ? MSG.COMPARE_FILE_TAB : MSG.COMPARE_TAB, ...(one ? [one] : []), workspaceName(left), workspaceName(right));
 }
 
 /**

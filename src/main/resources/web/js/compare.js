@@ -6,12 +6,14 @@
 import { businessLines } from './business-lines.js';
 import { cardinalityText } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
+import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { OP, diffLines, onlyMoves, splitLines } from './diff.js';
 import { plural, t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
 import { diffModels } from './schema-diff.js';
+import { objectSummary, renderObjectCompare } from './object-compare.js';
+import { kindOfId, nameOfId } from './constants.js';
 import { session } from './state.js';
 import { ensureModel } from './file-tabs.js';
 import { activateTab, newTab, workspaceName } from './tabs.js';
@@ -82,6 +84,30 @@ export function toggleSelection(ws) {
 
 export const canCompare = () => session.compareSelection.length === COMPARED_WORKSPACES;
 
+/**
+ * The two files holding {@code fileName} in the two selected workspaces, when one declaration of it
+ * can be compared across them; null when fewer than two are selected, or one of them lacks the file.
+ */
+export function comparablePair(fileName) {
+  if (!canCompare() || !fileName) return null;
+  const [left, right] = session.compareSelection;
+  const l = filesOf(left).get(fileName), r = filesOf(right).get(fileName);
+  return l && r ? { name: fileName, left: l, right: r } : null;
+}
+
+/** Opens (or brings to front) the tab comparing the declaration {@code id} of {@code fileName} across the two selected workspaces. */
+export function openObjectCompare(id, fileName) {
+  if (!comparablePair(fileName)) return false;
+  const [left, right] = session.compareSelection;
+  let tab = session.tabs.find(x => sameSides(x, left, right) && x.compare.file === fileName && x.compare.object === id);
+  if (!tab) {
+    tab = newTab();
+    tab.compare = { left, right, file: fileName, object: id };
+  }
+  activateTab(tab);
+  return true;
+}
+
 /** Clear: no workspace is selected for a comparison any more; the caller redraws the bars. */
 export function clearSelection() {
   session.compareSelection = [];
@@ -146,8 +172,13 @@ function pairFiles(left, right) {
 
 /** Draws the active comparison tab: every pair of the two workspaces, or the one file pair of a tab opened from a row (its differences shown at once). */
 export function renderCompare() {
-  const { left, right, file } = session.active.compare;
+  const { left, right, file, object } = session.active.compare;
   const ln = workspaceName(left), rn = workspaceName(right);
+  $(ID.COMPARE_OBJECT).classList.toggle(CLS.HIDDEN, !object);
+  $(ID.COMPARE_TABLE).classList.toggle(CLS.HIDDEN, !!object);
+  // the two options are the file comparison's: what a model holds is neither a line nor a business line
+  for (const opt of $(ID.COMPARE).querySelectorAll(selector(CLS.OPTION))) opt.classList.toggle(CLS.HIDDEN, !!object);
+  if (object) { renderObject(object, file, left, right, ln, rn); return; }
   pairs = pairFiles(left, right);
   if (file) pairs = pairs.filter(p => p.name === file);
   const count = (s) => pairs.filter(p => p.status === s).length;
@@ -175,6 +206,25 @@ export function renderCompare() {
   $(ID.COMPARE_TABLE).innerHTML = html + '</tbody>';
   if (one && isExpandable(one)) toggleDetail($(ID.COMPARE_TABLE).querySelector('.' + CLS.EXPANDABLE));
 }
+
+/**
+ * One declaration compared across the two workspaces: the two content models side by side. The files
+ * are parsed first when they were only listed, so the drawing follows rather than blocks.
+ */
+async function renderObject(id, fileName, left, right, ln, rn) {
+  $(ID.COMPARE_TITLE).textContent = t(MSG.COMPARE_OBJECT_TITLE, kindLabel(kindOfId(id)), nameOfId(id), fileName, ln, rn);
+  $(ID.COMPARE_TOOLS).classList.add(CLS.HIDDEN);
+  $(ID.COMPARE_LEGEND).innerHTML = [[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, ln)], [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, rn)], [CLS.MOVED, t(MSG.COMPARE_OBJECT_CHANGED)]]
+    .map(([cls, text]) => '<span class="' + CLS.LEGEND_ENTRY + ' ' + cls + '">' + esc(text) + '</span>').join('');
+  const pair = comparablePairIn(left, right, fileName);
+  for (const entry of [pair.left, pair.right]) if (entry) await ensureModel(entry, false);
+  const tab = session.active;
+  if (!tab.compare || tab.compare.object !== id) return;   // the tab changed while the files were being parsed
+  $(ID.COMPARE_SUMMARY).textContent = objectSummary(renderObjectCompare(pair, id, left, right));
+}
+
+/** The two files named {@code fileName} in two given workspaces (the selection may have moved on since the tab was opened). */
+const comparablePairIn = (left, right, fileName) => ({ name: fileName, left: filesOf(left).get(fileName) || null, right: filesOf(right).get(fileName) || null });
 
 /** Click on a row: shows / hides the differences of that pair under it (the files are parsed first when they were only listed). */
 export async function toggleDetail(row) {

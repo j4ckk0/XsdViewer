@@ -45,6 +45,15 @@ function indexOf(entry) {
   return entry.index;
 }
 
+/**
+ * The place a listed file is, shaped like a tab so that what draws a tab's model can draw it: its
+ * indexed model, the workspace it belongs to, and no box opened. Used to compare one declaration
+ * across two workspaces, where neither file need be open in a tab.
+ */
+export function placeOfEntry(entry, ws) {
+  return Object.assign({ entry, fileName: entry.name, workspace: ws, modelExpanded: new Set() }, indexOf(entry));
+}
+
 /** The place of a tab. */
 const tabPlace = (tab) => ({ tab, model: tab.model, nodes: tab.nodes, outEdges: tab.outEdges, inEdges: tab.inEdges, fileName: tab.fileName });
 
