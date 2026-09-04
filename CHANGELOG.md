@@ -6,6 +6,12 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 - **Fix: ⤓ PNG and ⤓ SVG did nothing in the Compare view.** Both buttons were disabled there, since neither model alone is the picture. They now export the two models as one image, side by side, each under the heading naming its declaration, its file and its workspace — the whole of each model, not the part the pane shows.
 
+- **A zoom in the panel**, at the bottom right of the graph, the model and the comparison: **−**, the level, **+**, a click on the level returning to the drawing's own size. It scales the picture and lets the panel scroll it, so the browser's own zoom — which shrinks the panels with it — is no longer the way to read a large graph. The level belongs to the tab.
+
+- **A ← Back button in the Model view**, walking the selection's history as the graph's does: a click on a box moves the selection, and Back returns.
+
+- **Fix: following a link could switch the view.** A link into another file showed that file's tab in whatever view it had been left in, so a click in the Model view could land on the Graph. A jump now carries the view being read.
+
 ## 4.2.0 — 2026-09-04
 
 - **A Compare view, next to Model, Text and Graph: two declarations side by side, wherever each of them lives.** Mark one from its details panel (**◈ Mark**), then mark a second — in another file, another workspace, under another name — and the view draws the content model of each, every box marked: red for what only the left one has, green for what only the right one has, blue for a box whose occurrences or type changed, with a summary counting them. With a single mark it compares that one with whatever you select, so a reference can be held while the rest is browsed. This replaces the comparison of one declaration across two selected workspaces, which 4.1.0 opened in a tab of its own: it needed the same declaration in files of the same name in two selected workspaces, where marking needs nothing.

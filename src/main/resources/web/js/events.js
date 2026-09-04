@@ -13,6 +13,7 @@ import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
 import { renderComparedObjects, renderMainView, renderPage, showView } from './page.js';
+import { zoomIn, zoomOut, zoomReset } from './zoom.js';
 import { exportPng, exportSvg } from './png-export.js';
 import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, toggleSchemaInfo } from './sidebar.js';
 import { t } from './i18n.js';
@@ -235,6 +236,9 @@ function wireViews() {
   });
   $(ID.BACK_BUTTON).addEventListener('click', goBack);
   $(ID.MODEL_BACK_BUTTON).addEventListener('click', goBack);
+  $(ID.ZOOM_IN).addEventListener('click', zoomIn);
+  $(ID.ZOOM_OUT).addEventListener('click', zoomOut);
+  $(ID.ZOOM_LEVEL).addEventListener('click', zoomReset);
   initDetails();
   $(ID.DETAILS_TOGGLE).addEventListener('click', toggleDetails);
   initSchemaInfo();

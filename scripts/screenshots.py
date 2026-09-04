@@ -272,6 +272,26 @@ SCENES = [
                  'detail': "document.querySelectorAll('#compareTable .cdetail').length",
                  'tools': "document.getElementById('compareTools').classList.contains('hidden')"},
          expect={'tab': 'product.xsd (v1 ⇄ v2)', 'title': 'product.xsd: v1 compared with v2', 'rows': 1, 'detail': 1, 'tools': True}),   # catalog.xsd differs in its documentation only: identical business lines
+    dict(name='zoom', file='samples/purchaseOrder.xsd', theme='light',
+         # the drawn views scale in their panel: the SVG grows, its viewBox does not, the panel scrolls
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+                "const svg = () => document.querySelector('#modelCanvas svg');"
+                "const size = () => svg().getAttribute('width') + 'x' + svg().getAttribute('height');"
+                "window.__own = size(); const box = svg().getAttribute('viewBox');"
+                "document.getElementById('zoomIn').click(); document.getElementById('zoomIn').click();"
+                "window.__zoomed = size(); window.__boxKept = box === svg().getAttribute('viewBox');"
+                "document.querySelector('.tab[data-view=\"text\"]').click();"
+                "window.__hiddenInText = document.getElementById('zoomControls').classList.contains('hidden');"
+                "document.querySelector('.tab[data-view=\"model\"]').click();"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'own': "window.__own",
+                 'zoomed': "window.__zoomed",
+                 'boxKept': "window.__boxKept",
+                 'level': "document.getElementById('zoomLevel').textContent",
+                 'shown': "!document.getElementById('zoomControls').classList.contains('hidden')",
+                 'hiddenInText': "window.__hiddenInText"},
+         expect={'own': '710x621', 'zoomed': '1065x932', 'boxKept': True, 'level': '150%',
+                 'shown': True, 'hiddenInText': True}),   # 1.5 times the drawing's own size, the level kept across the views
     dict(name='model-back', file='samples/purchaseOrder.xsd', theme='light',
          # a click on a box selects what it refers to; ← Back returns, and neither leaves the Model view
          action="window.__atStart = document.getElementById('modelBackBtn').disabled;"

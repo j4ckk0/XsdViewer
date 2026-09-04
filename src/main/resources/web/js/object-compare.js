@@ -23,6 +23,7 @@ import { DIFF, markDifferences, same } from './model-diff.js';
 import { buildTree, modelSvg } from './model-view.js';
 import { session } from './state.js';
 import { workspaceName } from './tabs.js';
+import { applyZoom } from './zoom.js';
 
 /** How many declarations are marked at once. */
 export const MARKED_OBJECTS = 2;
@@ -103,6 +104,7 @@ export async function renderObjectCompare() {
   const counts = markDifferences(trees[0], trees[1]);
   draw(ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME, trees[0], left);
   draw(ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME, trees[1], right);
+  applyZoom();   // both models are drawn now, and take the tab's level
   $(ID.OBJECT_COMPARE_SUMMARY).textContent = same(counts)
     ? t(MSG.COMPARE_OBJECT_SAME)
     : t(MSG.COMPARE_OBJECT_SUMMARY, counts[DIFF.REMOVED], counts[DIFF.ADDED], counts[DIFF.CHANGED]);

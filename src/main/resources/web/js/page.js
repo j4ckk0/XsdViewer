@@ -1,5 +1,5 @@
 /** Drawing the whole page from the active tab, and switching between its views. */
-import { VIEW } from './constants.js';
+import { VIEW, ZOOMABLE_VIEWS } from './constants.js';
 import { renderCompare } from './compare.js';
 import { renderDetails } from './details.js';
 import { canValidate, renderValidation } from './validate.js';
@@ -15,6 +15,7 @@ import { compareTitle, renderNavigation, validationTitle } from './tabs.js';
 import { highlightTextLine, renderText } from './text-view.js';
 import { renderModel } from './model-view.js';
 import { comparedPair, renderObjectCompare } from './object-compare.js';
+import { applyZoom } from './zoom.js';
 
 /** Redraws everything from the active tab's state. */
 export function renderPage() {
@@ -72,6 +73,7 @@ export function showView(view) {
   const nothingToExport = comparing || (view === VIEW.COMPARE ? !comparedPair() : !loaded);
   $(ID.EXPORT_BUTTON).disabled = nothingToExport;
   $(ID.EXPORT_SVG_BUTTON).disabled = nothingToExport || view === VIEW.TEXT;   // the graph, the model and the comparison are SVGs
+  $(ID.ZOOM_CONTROLS).classList.toggle(CLS.HIDDEN, comparing || !ZOOMABLE_VIEWS.has(view) || (!loaded && view !== VIEW.COMPARE));
   updateSplitters();
   $(ID.MENU_VALIDATE).disabled = !canValidate();
   $(ID.MENU_OPEN_ALL).disabled = comparing || !listedOnly().length;
@@ -92,6 +94,7 @@ export function renderMainView() {
   if (!st.model) return;
   if (st.view === VIEW.GRAPH) renderGraph();
   else if (st.view === VIEW.MODEL) renderModel();
+  applyZoom();   // drawing writes a new SVG, which takes the tab's level
 }
 
 /** The Compare view stands on the marked declarations, not on the active tab's file: it is drawn whatever the tab holds. */

@@ -1,4 +1,4 @@
-import { VIEW } from './constants.js';
+import { VIEW, ZOOM } from './constants.js';
 
 /** Scroll positions of a tab's views, restored when the tab is shown again. */
 export const newScroll = () => ({ text: 0, graphTop: 0, graphLeft: 0, modelTop: 0, modelLeft: 0 });
@@ -23,6 +23,7 @@ export function newTabState() {
     selected: null,
     history: [],
     view: VIEW.MODEL,   // what a tab opens on: what a document of the declaration holds
+    zoom: ZOOM.DEFAULT,
     filter: '',
     collapsed: new Set(),
     modelExpanded: new Set(),   // the boxes of the Model view opened on demand (their paths in the tree)

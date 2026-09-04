@@ -460,6 +460,15 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 
 .view { position: absolute; inset: 0; }
 
+/* zooming the drawn views: a control floating over the panel, so the browser's own zoom is left alone */
+#zoomControls { position: absolute; right: 16px; bottom: 16px; display: flex; gap: 2px; z-index: 5;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 2px; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+#zoomControls button { min-width: 30px; padding: 2px 6px; font-size: 12px; border: 0; border-radius: 4px;
+  background: transparent; color: var(--text); cursor: pointer; }
+#zoomControls button:hover:not(:disabled) { background: var(--hover); }
+#zoomControls button:disabled { opacity: .4; cursor: default; }
+#zoomLevel { font-variant-numeric: tabular-nums; }
+
 #details {
   width: 280px;
   flex: none;

@@ -20,7 +20,8 @@ the graph shows the types themselves as neighbours of the declaration that names
   type, a global element, a group or a base type has a **+** handle that opens its content, taken
   from its own declaration in this file or in another file of the workspace (⊞ opens them all, six
   levels deep; a recursive type stops with ↺). A click on a box selects the declaration it refers
-  to. A WSDL or a Schematron declares no particle, but has a chain of its own, and that chain is
+  to. **← Back** (or Alt+←) returns to the declaration selected before, as in the graph. A WSDL or
+  a Schematron declares no particle, but has a chain of its own, and that chain is
   the model such a file has: a service holds its ports, a portType its operations, an operation its
   messages, a message the elements of its parts — where the schema's own content model takes over;
   a phase holds its patterns, they their rules, they their assertions. Such a box carries the
@@ -85,7 +86,11 @@ are remembered by the browser. **⤓ PNG** in the top bar saves the current view
 **⤓ SVG** it as a vector image (for documents) unless it is the text. Both take what the view
 draws whole, not the part on screen: in the *Compare* view that is one picture holding the two
 models side by side, each under the heading naming its declaration, its file and its workspace. In the Text view, a
-**find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter. **File ▸ Quit** stops the server and closes the page.
+**find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter.
+The drawn views — graph, model, comparison — carry a **zoom** at the bottom right of the panel
+(**−**, the level, **+**; a click on the level returns to the drawing's own size): it scales the
+picture and lets the panel scroll it, so the browser's own zoom, which would shrink the panels
+too, is left alone. The level belongs to the tab, so two files can be read at different sizes. **File ▸ Quit** stops the server and closes the page.
 
 ### Validation
 

@@ -11,7 +11,7 @@
 import { cardinalityText } from './cardinality.js';
 import { OP, diffLines } from './diff.js';
 
-/** The mark a box carries once compared (CLS.DIFF_MARK draws it). */
+/** The mark a box carries once compared: a class on its box, which the stylesheet colours. */
 export const DIFF = { SAME: 'same', CHANGED: 'changed', REMOVED: 'removed', ADDED: 'added' };
 
 /** What a box is, for matching it with the other side; a compositor has only its kind. */
