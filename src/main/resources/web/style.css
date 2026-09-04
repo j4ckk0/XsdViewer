@@ -139,7 +139,7 @@ html, body {
 .busy .wheel { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.menubtn, .dropdown button, .tab, #backBtn {
+.menubtn, .dropdown button, .tab, #backBtn, #modelBackBtn {
   font: inherit;
   color: inherit;
   background: none;
@@ -148,7 +148,7 @@ html, body {
   padding: 5px 10px;
   cursor: pointer;
 }
-.menubtn:hover, .tab:hover, #backBtn:hover { background: var(--hover); }
+.menubtn:hover, .tab:hover, #backBtn:hover, #modelBackBtn:hover { background: var(--hover); }
 #exportBtn { border-color: var(--border); }
 #exportBtn:disabled { opacity: .4; cursor: default; background: none; }
 
@@ -848,8 +848,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   border-bottom: 1px solid var(--border);
   font-size: 12px;
 }
-#backBtn { border-color: var(--border); }
-#backBtn:disabled { opacity: .4; cursor: default; }
+#backBtn, #modelBackBtn { border-color: var(--border); }
+#backBtn:disabled, #modelBackBtn:disabled { opacity: .4; cursor: default; }
 #graphTitle { font-weight: 600; font-size: 13px; }
 
 .legend { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }

@@ -272,6 +272,20 @@ SCENES = [
                  'detail': "document.querySelectorAll('#compareTable .cdetail').length",
                  'tools': "document.getElementById('compareTools').classList.contains('hidden')"},
          expect={'tab': 'product.xsd (v1 ⇄ v2)', 'title': 'product.xsd: v1 compared with v2', 'rows': 1, 'detail': 1, 'tools': True}),   # catalog.xsd differs in its documentation only: identical business lines
+    dict(name='model-back', file='samples/purchaseOrder.xsd', theme='light',
+         # a click on a box selects what it refers to; ← Back returns, and neither leaves the Model view
+         action="window.__atStart = document.getElementById('modelBackBtn').disabled;"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+                "const box = [...document.querySelectorAll('#modelCanvas .mbox.clickable')].find(b => b.dataset.id === 'complexType:USAddress');"
+                "box.dispatchEvent(new MouseEvent('click', { bubbles: true }));"
+                "window.__after = document.getElementById('modelTitle').textContent + ' | ' + document.querySelector('.tab.active').dataset.view;"
+                "document.getElementById('modelBackBtn').click();",
+         checks={'atStart': "window.__atStart",
+                 'after': "window.__after",
+                 'back': "document.getElementById('modelTitle').textContent + ' | ' + document.querySelector('.tab.active').dataset.view",
+                 'disabled': "document.getElementById('modelBackBtn').disabled"},
+         expect={'atStart': True, 'after': 'complexType USAddress | model', 'back': 'complexType PurchaseOrderType | model',
+                 'disabled': False}),   # nothing to go back to at first; one step is left after this one, the file's own first selection
     dict(name='compare-object', file='samples/compare/v1.xsdviewer.json', theme='light',
          action=OPEN_V2 + "document.getElementById('compareClose').click();"
                 # the view explains itself while nothing is marked

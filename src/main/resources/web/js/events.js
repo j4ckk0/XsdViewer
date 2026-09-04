@@ -234,6 +234,7 @@ function wireViews() {
     renderGraph();
   });
   $(ID.BACK_BUTTON).addEventListener('click', goBack);
+  $(ID.MODEL_BACK_BUTTON).addEventListener('click', goBack);
   initDetails();
   $(ID.DETAILS_TOGGLE).addEventListener('click', toggleDetails);
   initSchemaInfo();

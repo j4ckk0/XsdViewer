@@ -248,6 +248,7 @@ export function modelSvg(tree, label, minHeight = 0) {
 /** Draws the model of the selected node into the canvas. */
 export function renderModel() {
   const st = session.active;
+  $(ID.MODEL_BACK_BUTTON).disabled = st.history.length === 0;   // the selection's history, as the graph's Back walks it
   const canvas = $(ID.MODEL_CANVAS);
   if (!st.model || !st.selected) { canvas.innerHTML = ''; return; }
   const root = st.nodes.get(st.selected);

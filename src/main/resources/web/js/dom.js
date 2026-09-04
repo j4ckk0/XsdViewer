@@ -100,6 +100,7 @@ export const ID = {
   MODEL_CANVAS: 'modelCanvas',
   MODEL_LEGEND: 'modelLegend',
   MODEL_TITLE: 'modelTitle',
+  MODEL_BACK_BUTTON: 'modelBackBtn',
   MODEL_EMPTY: 'modelEmpty',
   MODEL_EXPAND_ALL: 'modelExpandAll',
   MODEL_COLLAPSE_ALL: 'modelCollapseAll',

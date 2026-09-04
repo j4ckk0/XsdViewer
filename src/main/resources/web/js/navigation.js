@@ -36,8 +36,12 @@ export function goBack() {
   if (prev) select(prev, false);
 }
 
-/** Shows tab {@code tab} with node {@code id} selected. */
+/**
+ * Shows tab {@code tab} with node {@code id} selected, in the view being read: a click on an object
+ * moves the selection, never the view, even when it lands in another file whose tab was left elsewhere.
+ */
 export function jumpTo(tab, id) {
+  tab.view = session.active.view;
   if (activateTab(tab)) renderPage();
   select(id);
 }
