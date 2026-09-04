@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 4.5.0 — 2026-09-04
 
 - **The Compare view has two sides you choose.** The details panel of a declaration offers **◈ Left** and **◈ Right**, and the button of the side holding it is coloured; clicking that side again takes it off, **⇄ Swap** puts each side where the other was, and **Clear the marks** empties both. Which side a declaration lands on no longer depends on the order things were picked in.
 
