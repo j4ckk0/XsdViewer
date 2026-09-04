@@ -224,11 +224,21 @@ SCENES = [
          expect={'listed': 'PurchaseOrderTypeshipTo'}),
     dict(name='text-find', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('.tab[data-view=\"text\"]').click();"
-                "const f = document.getElementById('textFindInput'); f.value = 'xs:attribute '; f.dispatchEvent(new Event('input', {bubbles: true}));",
+                "const f = document.getElementById('textFindInput'); f.value = 'xs:attribute '; f.dispatchEvent(new Event('input', {bubbles: true}));"
+                # ⤓ PNG of the source: painted line by line onto a canvas, caught before it reaches the disk
+                "const exports = await import('/js/png-export.js');"
+                "let saved = null; const makeUrl = URL.createObjectURL, click = HTMLAnchorElement.prototype.click;"
+                "URL.createObjectURL = (b) => { saved = b; return makeUrl(b); };"
+                "HTMLAnchorElement.prototype.click = function () {};"
+                "exports.exportPng();"
+                "await new Promise(r => setTimeout(r, 400));"
+                "HTMLAnchorElement.prototype.click = click; URL.createObjectURL = makeUrl;"
+                "window.__png = saved ? saved.type + '/' + (saved.size > 10000) : 'nothing';",
          checks={'count': "document.getElementById('textFindCount').textContent",
                  'current': "document.querySelectorAll('#text .line.found.current').length",
-                 'svgButton': "document.getElementById('exportSvgBtn').disabled"},
-         expect={'count': '1/7', 'current': 1, 'svgButton': True}),
+                 'svgButton': "document.getElementById('exportSvgBtn').disabled",
+                 'png': "window.__png"},
+         expect={'count': '1/7', 'current': 1, 'svgButton': True, 'png': 'image/png/true'}),
     dict(name='listed-files', file='target/screenshots/listed/listed.xsdviewer.json', theme='light', setup='listed',
          action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:OrderType\"]').click();",
          checks={'resolved': "document.querySelectorAll('#graphCanvas .node.complexType, #graphCanvas .node.simpleType').length",

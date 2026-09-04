@@ -1,10 +1,14 @@
 /**
- * ⤓ PNG: the graph, the model, or the two models of the Compare view (rendered from their SVG), or
- * the text view (drawn line by line), as a PNG file; ⤓ SVG: the same, as vectors.
+ * ⤓ PNG and ⤓ SVG of the views that are drawings: the graph, the model, and the two models of the
+ * Compare view side by side. Each is cropped to what it holds and carries the page's styles and
+ * background, so the file renders on its own; the PNG is that SVG rasterised.
+ * The Text view is not a drawing: {@link text-export.js} paints it.
  */
 import { MIME, SVG_NS, VIEW, nameOfId } from './constants.js';
-import { $, CLS, ID, selector } from './dom.js';
+import { $, ID } from './dom.js';
 import { comparedPair } from './object-compare.js';
+import { saveBlob } from './file-download.js';
+import { exportTextPng } from './text-export.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
@@ -29,10 +33,6 @@ const SVG_TEXT_TAG = 'text', SVG_GROUP_TAG = 'g', SVG_TAG = 'svg';
 const DEFAULT_BASENAME = 'schema';
 const UNSAFE_FILE_CHARS = /[^\w.-]+/g;
 const EXTENSION = /\.[^.]+$/;
-const REVOKE_DELAY_MS = 10000;
-/** Text export: width of the line-number gutter, its right padding, padding after the longest line. */
-const LN_W = 60, LN_PAD = 12, CODE_PAD = 20;
-const DEFAULT_LINE_HEIGHT = 19;
 const SVG_STYLE_TAG = 'style', SVG_RECT_TAG = 'rect';
 
 export function exportPng() {
@@ -161,87 +161,3 @@ function exportImage(picture, fileName) {
   img.src = url;
 }
 
-function exportTextPng(fileName) {
-  const container = $(ID.TEXT);
-  const lines = [...container.querySelectorAll(selector(CLS.LINE))];
-  if (!lines.length) return;
-  const cs = getComputedStyle(container);
-  const font = cs.font;
-  const lineH = lines[0].getBoundingClientRect().height || DEFAULT_LINE_HEIGHT;
-  const padTop = parseFloat(cs.paddingTop) || 0;
-  const colorOf = (el) => getComputedStyle(el).color;
-  const bgOf = (el) => getComputedStyle(el).backgroundColor;
-
-  // Text lines: measure first.
-  const meas = document.createElement('canvas').getContext('2d');
-  meas.font = font;
-  let maxCode = 0;
-  for (const l of lines) maxCode = Math.max(maxCode, meas.measureText(l.querySelector(selector(CLS.CODE)).textContent).width);
-  const w = Math.ceil(LN_W + maxCode + CODE_PAD);
-
-  // Height cap: fall back to the lines from the current scroll position.
-  const maxLines = Math.floor((EXPORT_MAX_DIM / EXPORT_SCALE - 2 * padTop) / lineH);
-  let first = 0, count = lines.length;
-  if (count > maxLines) {
-    first = Math.min(Math.floor(container.scrollTop / lineH), count - maxLines);
-    count = maxLines;
-    toast(t(MSG.EXPORT_TEXT_TRUNCATED, first + 1, first + count));
-  }
-  const h = Math.ceil(count * lineH + 2 * padTop);
-  const scale = Math.min(EXPORT_SCALE, EXPORT_MAX_DIM / Math.max(w, h));
-
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
-  const ctx = canvas.getContext('2d');
-  ctx.scale(scale, scale);
-  ctx.fillStyle = background();
-  ctx.fillRect(0, 0, w, h);
-  ctx.font = font;
-  ctx.textBaseline = 'middle';
-
-  const colorCache = new Map();
-  const spanColor = (el) => {
-    const k = el.className || '';
-    if (!colorCache.has(k)) colorCache.set(k, colorOf(el));
-    return colorCache.get(k);
-  };
-  for (let i = 0; i < count; i++) {
-    const l = lines[first + i];
-    const y = padTop + i * lineH, ym = y + lineH / 2;
-    if (l.classList.contains(CLS.LINE_HIGHLIGHT)) { ctx.fillStyle = bgOf(l); ctx.fillRect(0, y, w, lineH); }
-    const ln = l.querySelector(selector(CLS.LINE_NUMBER));
-    ctx.textAlign = 'right';
-    ctx.fillStyle = colorOf(ln);
-    ctx.fillText(ln.textContent, LN_W - LN_PAD, ym);
-    ctx.textAlign = 'left';
-    let x = LN_W;
-    const code = l.querySelector(selector(CLS.CODE));
-    const codeColor = colorOf(code);
-    for (const node of code.childNodes) {
-      const s = node.textContent;
-      if (!s) continue;
-      ctx.fillStyle = node.nodeType === Node.ELEMENT_NODE ? spanColor(node) : codeColor;
-      ctx.fillText(s, x, ym);
-      x += ctx.measureText(s).width;
-    }
-  }
-  saveCanvas(canvas, fileName);
-}
-
-function saveCanvas(canvas, fileName) {
-  canvas.toBlob((blob) => {
-    if (!blob) { toast(t(MSG.EXPORT_PNG_FAILED)); return; }
-    saveBlob(blob, fileName);
-  }, MIME.PNG);
-}
-
-/** Hands a file to the browser to save. */
-function saveBlob(blob, fileName) {
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), REVOKE_DELAY_MS);
-}
