@@ -3,10 +3,9 @@ import { NODE_KIND, TEXT } from './constants.js';
 import { findIn, findInWorkspace, kindsOf, locationsFor } from './declarations.js';
 import { renderDetails } from './details.js';
 import { $, ID } from './dom.js';
-import { renderGraph } from './graph.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
-import { renderPage } from './page.js';
+import { renderMainView, renderPage } from './page.js';
 import { ensureTab } from './file-tabs.js';
 import { resolveLocation } from './schema-loader.js';
 import { fileKeys, hasKey, registerFile } from './workspace-files.js';
@@ -14,7 +13,6 @@ import { renderNodeListSelection } from './sidebar.js';
 import { session } from './state.js';
 import { activateTab, tabsOf } from './tabs.js';
 import { highlightTextLine } from './text-view.js';
-import { renderModel } from './model-view.js';
 import { toast } from './toast.js';
 
 
@@ -26,8 +24,7 @@ export function select(id, pushHistory = true) {
   st.selected = id;
   $(ID.BACK_BUTTON).disabled = st.history.length === 0;
   renderNodeListSelection();
-  renderGraph();
-  renderModel();
+  renderMainView();
   renderDetails();
   highlightTextLine(true);
   const n = st.nodes.get(id);

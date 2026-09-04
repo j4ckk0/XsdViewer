@@ -1,4 +1,4 @@
-/** Drawing the whole page from the active tab, and switching between the graph and text views. */
+/** Drawing the whole page from the active tab, and switching between its views. */
 import { VIEW } from './constants.js';
 import { renderCompare } from './compare.js';
 import { renderDetails } from './details.js';
@@ -29,8 +29,6 @@ export function renderPage() {
     renderSchemaInfo();
     renderNodeList();
     renderText();
-    renderGraph();
-    renderModel();
     renderDetails();
     highlightTextLine(false);
   } else {
@@ -72,5 +70,19 @@ export function showView(view) {
   updateSplitters();
   $(ID.MENU_VALIDATE).disabled = !canValidate();
   $(ID.MENU_OPEN_ALL).disabled = comparing || !listedOnly().length;
+  renderMainView();   // drawn now that it is shown, so that it is laid out for the room it has
   if (loaded && !comparing && view === VIEW.TEXT) highlightTextLine(true);
+}
+
+/**
+ * Draws the main view of the active tab: the graph, or the model. They are laid out for the room
+ * they have, so they are drawn when they are shown and again whenever that room, or what they draw,
+ * changes — the selection, a panel resized, the window resized. Nothing to draw for the text view
+ * (it is written once with the file), for a comparison or a validation (they take the whole page).
+ */
+export function renderMainView() {
+  const st = session.active;
+  if (!st.model || st.compare || st.validation) return;
+  if (st.view === VIEW.GRAPH) renderGraph();
+  else if (st.view === VIEW.MODEL) renderModel();
 }

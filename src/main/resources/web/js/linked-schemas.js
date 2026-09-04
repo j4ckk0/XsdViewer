@@ -6,9 +6,9 @@ import { parseSchema } from './api.js';
 import { busy } from './busy.js';
 import { MAX_AUTO_OPEN, TEXT } from './constants.js';
 import { ensureTab } from './file-tabs.js';
-import { renderGraph } from './graph.js';
 import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
+import { renderMainView } from './page.js';
 import { resolveLocation } from './schema-loader.js';
 import { session } from './state.js';
 import { renderNavigation } from './tabs.js';
@@ -55,5 +55,5 @@ async function discover(root) {
   }
   for (const entry of found) await ensureTab(entry);
   toast(plural(found.length, MSG.LINKED_OPENED_ONE, MSG.LINKED_OPENED_OTHER, found.map(f => f.name).join(TEXT.LIST_SEPARATOR)));
-  if (session.active.model) renderGraph();   // the other tabs feed the graph (users, level 2)
+  renderMainView();   // the other tabs feed the graph (users, level 2) and the model (a type opened from another file)
 }

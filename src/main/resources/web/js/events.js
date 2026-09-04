@@ -9,12 +9,12 @@ import { initDetails, toggleDetails } from './details.js';
 import { fileListClick, initFiles, isFilesCollapsed, renderFileList, setAllUnfolded, setFilesCollapsed, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
-import { collapseAll as collapseModel, expandAll as expandModel, modelClick, renderModel, toggleExpanded } from './model-view.js';
+import { collapseAll as collapseModel, expandAll as expandModel, modelClick, toggleExpanded } from './model-view.js';
 import { isShowAllKindsClick, kindOfClick, showAllKinds, toggleKind } from './kind-filter.js';
 import { categoryOfClick, isShowAllClick, showAllLinks, toggleCategory } from './link-filter.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
-import { renderPage, showView } from './page.js';
+import { renderMainView, renderPage, showView } from './page.js';
 import { exportPng, exportSvg } from './png-export.js';
 import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, toggleSchemaInfo } from './sidebar.js';
 import { t } from './i18n.js';
@@ -277,11 +277,7 @@ function wireViews() {
   });
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
-  window.addEventListener('resize', () => {
-    const st = session.active;
-    if (st.model && st.view === VIEW.GRAPH) renderGraph();
-    if (st.model && st.view === VIEW.MODEL) renderModel();
-  });
+  window.addEventListener('resize', renderMainView);
   // the Model view: a handle opens or folds a box, a box that refers to a global declaration selects it
   $(ID.MODEL_EXPAND_ALL).addEventListener('click', expandModel);
   $(ID.MODEL_COLLAPSE_ALL).addEventListener('click', collapseModel);

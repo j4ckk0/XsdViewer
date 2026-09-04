@@ -1,13 +1,11 @@
 /**
  * The widths of the side panels: a splitter between the sidebar and the main area, another between
  * the main area and the details panel. Dragging one (or the arrow keys when it has the focus) sets
- * the panel's width, remembered across sessions; a double-click restores the default. The graph is
- * drawn to the width it has, so it is redrawn once the drag ends.
+ * the panel's width, remembered across sessions; a double-click restores the default. The views are
+ * laid out for the room they have, so {@code initPanels} is given what redraws the shown one.
  */
-import { KEY, PANEL, STORAGE_KEY, VIEW } from './constants.js';
+import { KEY, PANEL, STORAGE_KEY } from './constants.js';
 import { $, CLS, ID } from './dom.js';
-import { renderGraph } from './graph.js';
-import { session } from './state.js';
 
 /** The two splitters: the panel each one sizes, on which side, and where its width is kept. */
 const SPLITTERS = [
@@ -31,14 +29,8 @@ function resetWidth(splitter) {
   try { localStorage.removeItem(splitter.key); } catch (e) { /* storage unavailable */ }
 }
 
-/** Redraws the graph, which is laid out for the width it had. */
-function redrawGraph() {
-  const st = session.active;
-  if (st.model && !st.compare && !st.validation && st.view === VIEW.GRAPH) renderGraph();
-}
-
-/** Applies the remembered widths and wires the splitters (drag, double-click, arrow keys). */
-export function initPanels() {
+/** Applies the remembered widths and wires the splitters (drag, double-click, arrow keys); {@code redraw} is called once a width has changed. */
+export function initPanels(redraw) {
   for (const splitter of SPLITTERS) {
     let stored = null;
     try { stored = localStorage.getItem(splitter.key); } catch (e) { /* storage unavailable */ }
@@ -53,19 +45,19 @@ export function initPanels() {
       const stop = () => {
         el.removeEventListener('pointermove', move);
         el.classList.remove(CLS.DRAGGING);
-        redrawGraph();
+        redraw();
       };
       el.addEventListener('pointermove', move);
       el.addEventListener('pointerup', stop, { once: true });
       el.addEventListener('pointercancel', stop, { once: true });
     });
-    el.addEventListener('dblclick', () => { resetWidth(splitter); redrawGraph(); });
+    el.addEventListener('dblclick', () => { resetWidth(splitter); redraw(); });
     el.addEventListener('keydown', (e) => {
       const step = e.key === KEY.ARROW_LEFT ? -PANEL.KEY_STEP : e.key === KEY.ARROW_RIGHT ? PANEL.KEY_STEP : 0;
       if (!step) return;
       e.preventDefault();
       setWidth(splitter, $(splitter.panel).getBoundingClientRect().width + (splitter.fromLeft ? step : -step));
-      redrawGraph();
+      redraw();
     });
   }
 }
