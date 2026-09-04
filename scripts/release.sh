@@ -61,7 +61,7 @@ jre_version=$(grep -h '^JAVA_VERSION=' target/jre/*/release 2>/dev/null | head -
 [ -n "$jre_version" ] || jre_version=21
 
 body=$(
-  echo "XsdViewer $version — explore an XML Schema (\`.xsd\`) in the browser: a **Graph** view of the schema objects and their links (cardinalities, one or two levels, links followed across files), a **Text** view of the source, workspaces and comparison."
+  echo "XsdViewer $version — explore an XML Schema (\`.xsd\`) in the browser: a **Model** view of what a document of a declaration holds, a **Text** view of the source, a **Graph** view of the schema objects and their links (cardinalities, one or two levels, links followed across files), workspaces and comparison."
   echo
   cat "$notes"
   echo

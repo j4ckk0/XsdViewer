@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 4.0.0 — 2026-09-04
 
 - **The views read Model, Text, Graph, and a tab opens on the Model.** The model is what one usually comes for — what a document of the selected declaration holds — so it comes first and is what a file opens on; the graph, the map of how the declarations refer to one another, follows the source. Each tab now carries a tooltip saying which question its view answers, and the README opens on the same comparison: the model walks through the types, opening each named type in place, where the graph shows the types themselves as neighbours of the declaration that names them.
 
