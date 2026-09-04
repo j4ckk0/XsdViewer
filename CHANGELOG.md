@@ -19,6 +19,10 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 - **The side panels are resizable.** A grip along the inner edge of the left panel and of the details panel: drag it to set the width, double-click it for the default, or focus it and use the arrow keys. The widths are remembered by the browser, and the graph is redrawn to the room it has once the drag ends.
 
+- **Fix: in a WSDL, the Model view could not open a type declared by another of its inline schemas.** The schemas inline in a WSDL share one graph and are read one after the other, so the first one's content model named `type:Held` where its link named `complexType:Held`; the box showed the name and its handle opened nothing. The content models are now resolved when the links are, and a test pins that the two walks over the XSD name the same nodes.
+
+- **The page and the parser tidied for maintenance.** One function draws the graph or the model, whichever the tab shows, instead of both being drawn on every selection while the tab switch drew neither; a view is now drawn when it becomes visible, laid out for the room it then has. What a link is — its family, its category, whether it is a derivation — leaves `constants.js` for `link-categories.js`. The graph's two switch menus wire themselves and share one module, as the Model view and the side panels wire themselves. The parser holds one rule for what a type name stands for, and builds a particle through named factories. `buildTree()` of the Model view takes the tab it draws, so the page's test suite covers what it decides.
+
 ## 3.6.1 — 2026-09-03
 
 - **Fixes after a review of 3.6.0.** A Schematron holding an element of no namespace (or of a foreign one) under a pattern or a rule was refused with an internal error; every missing `include` is reported, not only the first; a rule with an empty `context` no longer risks a crash; switching the *XSD* list of a validation tab keeps the Schematron phase. A firing assertion's message is followed by the `diagnostics` it names, rendered on the same node; a nested `include` resolves relative to the file that includes it.
