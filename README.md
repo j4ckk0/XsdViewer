@@ -41,7 +41,8 @@ the graph shows the types themselves as neighbours of the declaration that names
   is rather than by where it sits, so an element inserted on one side does not mark everything
   below it as different; named types are opened on both sides, so a change deep inside one is seen.
   With a single mark it compares that one with whatever you select, so a reference can be held
-  while the rest is browsed. Neither file need be open in a tab. **Clear the marks** empties it.
+  while the rest is browsed. Neither file need be open in a tab. **Clear the marks** empties it,
+  and **⤓ PNG** / **⤓ SVG** save the two models as one picture.
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
   sits in the middle, what it links to is on the right, what uses it is on the left.
@@ -80,8 +81,10 @@ one that could not be parsed at all — an XML file that is not a schema, a frag
 last row rather than left silently out of the results; **File ▸ Validate an XML file…** checks a
 document against the shown schema, in a tab of its own (see *Validation* below). The **left panel and the details panel are resizable**: drag the thin grip along their inner edge (a
 double-click restores the default width, the arrow keys move it when it has the focus); the widths
-are remembered by the browser. **⤓ PNG** in the top bar saves the current view (graph or
-text) as a PNG image, **⤓ SVG** the graph as a vector image (for documents). In the Text view, a
+are remembered by the browser. **⤓ PNG** in the top bar saves the current view as a PNG image,
+**⤓ SVG** it as a vector image (for documents) unless it is the text. Both take what the view
+draws whole, not the part on screen: in the *Compare* view that is one picture holding the two
+models side by side, each under the heading naming its declaration, its file and its workspace. In the Text view, a
 **find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter. **File ▸ Quit** stops the server and closes the page.
 
 ### Validation

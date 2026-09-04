@@ -1,6 +1,10 @@
-/** ⤓ PNG: the graph or the model (rendered from their SVG) or the text view (drawn line by line) as a PNG file; ⤓ SVG: the graph or the model as it is. */
-import { MIME, SVG_NS, VIEW } from './constants.js';
+/**
+ * ⤓ PNG: the graph, the model, or the two models of the Compare view (rendered from their SVG), or
+ * the text view (drawn line by line), as a PNG file; ⤓ SVG: the same, as vectors.
+ */
+import { MIME, SVG_NS, VIEW, nameOfId } from './constants.js';
 import { $, CLS, ID, selector } from './dom.js';
+import { comparedPair } from './object-compare.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
@@ -15,7 +19,13 @@ const background = () => getComputedStyle(document.documentElement).getPropertyV
 const FILE_EXTENSION = '.png';
 const SVG_EXTENSION = '.svg';
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n';
-const TEXT_SUFFIX = '-text', MODEL_SUFFIX = '-model';
+const TEXT_SUFFIX = '-text', MODEL_SUFFIX = '-model', COMPARE_SUFFIX = '-compared';
+/** The Compare view as one picture: the gap between the two models, and the room the heading of each takes above it. */
+const COMPARE_GAP = 48, COMPARE_HEAD_H = 26, COMPARE_HEAD_BASELINE = 9;
+const FALLBACK_TEXT = '#000000';
+/** The page's text colour, for the heading written above each model. */
+const textColour = () => getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || FALLBACK_TEXT;
+const SVG_TEXT_TAG = 'text', SVG_GROUP_TAG = 'g', SVG_TAG = 'svg';
 const DEFAULT_BASENAME = 'schema';
 const UNSAFE_FILE_CHARS = /[^\w.-]+/g;
 const EXTENSION = /\.[^.]+$/;
@@ -27,12 +37,13 @@ const SVG_STYLE_TAG = 'style', SVG_RECT_TAG = 'rect';
 
 export function exportPng() {
   const st = session.active;
+  if (st.view === VIEW.COMPARE) { exportImage(compareSvg(), comparedName() + COMPARE_SUFFIX + FILE_EXTENSION); return; }
   if (!st.model) return;
   const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');
   if (st.view === VIEW.GRAPH || st.view === VIEW.MODEL) {
     if (!st.selected) { toast(t(MSG.EXPORT_SELECT_FIRST)); return; }
     const name = st.nodes.get(st.selected).name.replace(UNSAFE_FILE_CHARS, '_');
-    exportGraphPng(base + '-' + name + (st.view === VIEW.MODEL ? MODEL_SUFFIX : '') + FILE_EXTENSION);
+    exportImage(graphSvg(), base + '-' + name + (st.view === VIEW.MODEL ? MODEL_SUFFIX : '') + FILE_EXTENSION);
   } else {
     exportTextPng(base + TEXT_SUFFIX + FILE_EXTENSION);
   }
@@ -50,13 +61,62 @@ function pageCss() {
 /** ⤓ SVG: the graph as a vector image (its SVG, cropped, with the page's styles embedded). */
 export function exportSvg() {
   const st = session.active;
+  if (st.view === VIEW.COMPARE) { saveSvg(compareSvg(), comparedName() + COMPARE_SUFFIX + SVG_EXTENSION); return; }
   if (!st.model || st.view === VIEW.TEXT) return;
   if (!st.selected) { toast(t(MSG.EXPORT_SELECT_FIRST)); return; }
-  const g = graphSvg();
-  if (!g) return;
   const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');
   const name = st.nodes.get(st.selected).name.replace(UNSAFE_FILE_CHARS, '_');
-  saveBlob(new Blob([XML_DECLARATION + new XMLSerializer().serializeToString(g.svg)], { type: MIME.SVG }), base + '-' + name + (st.view === VIEW.MODEL ? MODEL_SUFFIX : '') + SVG_EXTENSION);
+  saveSvg(graphSvg(), base + '-' + name + (st.view === VIEW.MODEL ? MODEL_SUFFIX : '') + SVG_EXTENSION);
+}
+
+/** The file the Compare view exports to: the two declarations it draws. */
+function comparedName() {
+  const pair = comparedPair();
+  return pair ? pair.map(m => nameOfId(m.id).replace(UNSAFE_FILE_CHARS, '_')).join('-') : DEFAULT_BASENAME;
+}
+
+/**
+ * The two models of the Compare view as one picture: each cropped to what it draws, side by side,
+ * under the heading its pane carries, so the image says which side is which. Null when either is missing.
+ */
+function compareSvg() {
+  const sides = [[ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME], [ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME]]
+    .map(([canvas, head]) => ({ src: $(canvas).querySelector(SVG_TAG), head: $(head).textContent }));
+  if (sides.some(side => !side.src)) return null;
+  for (const side of sides) {
+    const bb = side.src.getBBox();
+    side.x = Math.floor(bb.x - GRAPH_MARGIN); side.y = Math.floor(bb.y - GRAPH_MARGIN);
+    side.w = Math.ceil(bb.width + 2 * GRAPH_MARGIN); side.h = Math.ceil(bb.height + 2 * GRAPH_MARGIN);
+  }
+  const w = sides[0].w + COMPARE_GAP + sides[1].w, h = Math.max(sides[0].h, sides[1].h) + COMPARE_HEAD_H;
+  const svg = document.createElementNS(SVG_NS, SVG_TAG);
+  svg.setAttribute('xmlns', SVG_NS);
+  svg.setAttribute('width', w); svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+  const style = document.createElementNS(SVG_NS, SVG_STYLE_TAG);
+  style.textContent = pageCss() + '\nsvg { font: ' + getComputedStyle(document.body).font + '; }';
+  const bg = document.createElementNS(SVG_NS, SVG_RECT_TAG);
+  bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', background());
+  svg.append(style, bg);
+  let dx = 0;
+  for (const side of sides) {
+    const g = document.createElementNS(SVG_NS, SVG_GROUP_TAG);
+    g.setAttribute('transform', 'translate(' + (dx - side.x) + ',' + (COMPARE_HEAD_H - side.y) + ')');
+    for (const child of side.src.childNodes) g.append(child.cloneNode(true));
+    const label = document.createElementNS(SVG_NS, SVG_TEXT_TAG);
+    label.setAttribute('x', dx + GRAPH_MARGIN); label.setAttribute('y', COMPARE_HEAD_H - COMPARE_HEAD_BASELINE);
+    label.setAttribute('fill', textColour()); label.setAttribute('font-weight', '600');
+    label.textContent = side.head;
+    svg.append(g, label);
+    dx += side.w + COMPARE_GAP;
+  }
+  return { svg, w, h };
+}
+
+/** Writes an SVG picture to a file. */
+function saveSvg(picture, fileName) {
+  if (!picture) return;
+  saveBlob(new Blob([XML_DECLARATION + new XMLSerializer().serializeToString(picture.svg)], { type: MIME.SVG }), fileName);
 }
 
 /** The shown view's SVG (the graph's, or the model's) cropped to what is drawn plus a margin, the page's CSS and background embedded so that it renders alone: {svg, w, h}, or null. */
@@ -79,10 +139,10 @@ function graphSvg() {
   return { svg, w, h };
 }
 
-function exportGraphPng(fileName) {
-  const g = graphSvg();
-  if (!g) return;
-  const { svg, w, h } = g;
+/** Renders an SVG picture into a PNG file. */
+function exportImage(picture, fileName) {
+  if (!picture) return;
+  const { svg, w, h } = picture;
   const scale = Math.min(EXPORT_SCALE, EXPORT_MAX_DIM / Math.max(w, h));
   const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: MIME.SVG });
   const url = URL.createObjectURL(blob);

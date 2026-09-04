@@ -14,7 +14,7 @@ import { session } from './state.js';
 import { compareTitle, renderNavigation, validationTitle } from './tabs.js';
 import { highlightTextLine, renderText } from './text-view.js';
 import { renderModel } from './model-view.js';
-import { renderObjectCompare } from './object-compare.js';
+import { comparedPair, renderObjectCompare } from './object-compare.js';
 
 /** Redraws everything from the active tab's state. */
 export function renderPage() {
@@ -68,8 +68,10 @@ export function showView(view) {
   $(ID.TEXT_FIND).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.TEXT);
   // the schema header, then the selected object; the comparison of two declarations wants the width instead
   $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || comparing || view === VIEW.COMPARE);
-  $(ID.EXPORT_BUTTON).disabled = !loaded || comparing || view === VIEW.COMPARE;   // the comparison draws two models: neither is the picture
-  $(ID.EXPORT_SVG_BUTTON).disabled = !loaded || comparing || view === VIEW.TEXT || view === VIEW.COMPARE;   // the graph and the model are SVGs
+  // the Compare view exports the two models as one picture, so it needs two to draw rather than a file
+  const nothingToExport = comparing || (view === VIEW.COMPARE ? !comparedPair() : !loaded);
+  $(ID.EXPORT_BUTTON).disabled = nothingToExport;
+  $(ID.EXPORT_SVG_BUTTON).disabled = nothingToExport || view === VIEW.TEXT;   // the graph, the model and the comparison are SVGs
   updateSplitters();
   $(ID.MENU_VALIDATE).disabled = !canValidate();
   $(ID.MENU_OPEN_ALL).disabled = comparing || !listedOnly().length;

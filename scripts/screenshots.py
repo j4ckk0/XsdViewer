@@ -309,19 +309,33 @@ SCENES = [
                 "document.querySelector('#detailsContent .cobj-mark').click();"
                 "document.querySelector('.tab[data-view=\"compare\"]').click();"
                 "await new Promise(r => setTimeout(r, 400));"
-                "document.getElementById('toast').classList.add('hidden');",
+                "document.getElementById('toast').classList.add('hidden');"
+                # ⤓ SVG here writes one file holding both models: caught before it reaches the disk
+                "const exports = await import('/js/png-export.js');"
+                "let saved = null; const makeUrl = URL.createObjectURL, click = HTMLAnchorElement.prototype.click;"
+                "URL.createObjectURL = (b) => { saved = b; return makeUrl(b); };"
+                "HTMLAnchorElement.prototype.click = function () {};"
+                "exports.exportSvg();"
+                "HTMLAnchorElement.prototype.click = click; URL.createObjectURL = makeUrl;"
+                "const svgText = saved ? await saved.text() : '';"
+                "window.__svg = saved ? [saved.type.split(';')[0], svgText.includes('catalog.xsd, v1') && svgText.includes('supplier.xsd, v1'),"
+                "  svgText.split('class=\"mbox').length - 1 > 20].join('|') : 'nothing';",
          checks={'title': "document.getElementById('objectCompareTitle').textContent",
                  'summary': "document.getElementById('objectCompareSummary').textContent",
                  'heads': "[...document.querySelectorAll('#objectCompareBody .cobj-head')].map(h => h.textContent).join('|')",
                  'left': "[...document.querySelectorAll('#objectCompareLeft .mbox .mname')].map(t => t.textContent).join('|')",
                  'right': "[...document.querySelectorAll('#objectCompareRight .mbox .mname')].map(t => t.textContent).join('|')",
-                 'marks': "['removed','added','changed','same'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/')"},
+                 'marks': "['removed','added','changed','same'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/')",
+                 # the SVG export of this view: one picture holding both models, each under its heading
+                 'svgButton': "document.getElementById('exportSvgBtn').disabled",
+                 'svg': "window.__svg"},
          expect={'title': 'complexType CatalogType compared with complexType SupplierType',
                  'summary': '17 only on the left, 9 only on the right, 0 changed',
                  'heads': 'complexType CatalogType — catalog.xsd, v1|complexType SupplierType — supplier.xsd, v1',
                  'left': 'CatalogType|@issued : date|publisher|street|city|postalCode|country|product|@sku : Code|@category : string ?|name|description|price|discount|legacyCode|tag',
                  'right': 'SupplierType|@code : Code|name|address|street|city|postalCode|country|rating',
-                 'marks': '17/9/0/4'}),   # nothing matches but the two roots and their sequences, which are the two subjects and are drawn plain
+                 'marks': '17/9/0/4',   # nothing matches but the two roots and their sequences, which are the two subjects and are drawn plain
+                 'svgButton': False, 'svg': 'image/svg+xml|true|true'}),   # one file, both headings, the boxes of both models
     # the four pictures of the README (screenshots/), on the comparison sample: shot like any other
     # scene, checked like any other, and written as JPEG by --docs
     dict(name='doc-compare-view', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-view.jpg',
