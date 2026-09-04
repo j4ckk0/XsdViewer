@@ -124,6 +124,7 @@ function filesOf(ws) {
   return byName;
 }
 
+/** Where a file is, for the tooltip of its cell: its path, else where it sits in the folder it came from, else its name alone. */
 const shownPath = (f) => f.path || f.rel || f.name;
 
 const canonical = (text) => text.replace(LINE_BREAK, '\n');
@@ -166,9 +167,10 @@ export function renderCompare() {
     if (!file && isDiffOnly() && p.status === STATUS.SAME) return;
     html += '<tr class="' + CLS.COMPARE_ROW + ' ' + p.status + (isExpandable(p) ? ' ' + CLS.EXPANDABLE : '') + '"' + dataAttr(DATA.ROW_INDEX, i) + '>'
       + '<td class="' + CLS.COMPARE_NAME + '">' + esc(p.name) + '</td>'
-      + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.left ? shownPath(p.left) : '') + '">' + esc(p.left ? shownPath(p.left) : '') + '</td>'
+      // the side columns say whether the workspace holds the file, by its name: the path would be long, and is the tooltip
+      + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.left ? shownPath(p.left) : '') + '">' + esc(p.left ? p.left.name : '') + '</td>'
       + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side(p))) + (isExpandable(p) && !file ? openButton : '') + '</td>'
-      + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.right ? shownPath(p.right) : '') + '">' + esc(p.right ? shownPath(p.right) : '') + '</td></tr>';
+      + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.right ? shownPath(p.right) : '') + '">' + esc(p.right ? p.right.name : '') + '</td></tr>';
   });
   $(ID.COMPARE_TABLE).innerHTML = html + '</tbody>';
   if (one && isExpandable(one)) toggleDetail($(ID.COMPARE_TABLE).querySelector('.' + CLS.EXPANDABLE));

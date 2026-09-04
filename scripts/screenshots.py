@@ -5,6 +5,8 @@ a view, the theme), checks a few facts on it and saves a screenshot of each scen
 
     scripts/screenshots.py                 # after mvn package: target/screenshots/*.png, checks on stdout
     scripts/screenshots.py --keep-going    # every scene even after a failed check
+    scripts/screenshots.py --docs          # only the scenes of the README, saved as JPEG in screenshots/
+    scripts/screenshots.py --only a,b      # only these scenes
     FIREFOX=/path/to/firefox scripts/screenshots.py
 
 Needs Firefox (its headless --screenshot) and the jar in target/. The page is reached through a
@@ -29,9 +31,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 JAR = ROOT / 'target' / 'xsdviewer.jar'
 OUT = ROOT / 'target' / 'screenshots'
+DOCS = ROOT / 'screenshots'   # the pictures of the README, written by --docs from the scenes carrying a "doc" name
 FIREFOX = os.environ.get('FIREFOX', 'firefox')
 APP_PORT, PROXY_PORT = 8765, 8766
 SIZE = '1500,800'
+DOC_SIZE = '1920,1048'    # the pictures of the README: a window wide enough for the graph's second level
 HOLD_SECONDS = 6          # the load event is held this long: the scene's script runs at 1.5 s (the comparison scene opens a workspace first)
 ACTION_DELAY_MS = 1500
 
@@ -268,6 +272,39 @@ SCENES = [
                  'detail': "document.querySelectorAll('#compareTable .cdetail').length",
                  'tools': "document.getElementById('compareTools').classList.contains('hidden')"},
          expect={'tab': 'product.xsd (v1 ⇄ v2)', 'title': 'product.xsd: v1 compared with v2', 'rows': 1, 'detail': 1, 'tools': True}),   # catalog.xsd differs in its documentation only: identical business lines
+    # the four pictures of the README (screenshots/), on the comparison sample: shot like any other
+    # scene, checked like any other, and written as JPEG by --docs
+    dict(name='doc-model', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-model-view.jpg',
+         action="document.querySelectorAll('#tabs .dtab')[1].click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
+                 'view': "document.querySelector('.tab.active').dataset.view"},
+         expect={'names': 'ProductType|@sku : Code|@category : string ?|name|description|price|discount|legacyCode|tag',
+                 'view': 'model'}),   # the whole model of a type: its attributes, its sequence, each element with its occurrences and its type
+    dict(name='doc-graph', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-graph-view.jpg',
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:CatalogType\"]').click();"
+                "const two = document.getElementById('twoLevels'); if (!two.checked) two.click();"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'title': "document.getElementById('graphTitle').textContent",
+                 'nodes': "document.querySelectorAll('#graphCanvas .node').length"},
+         expect={'title': 'complexType CatalogType', 'nodes': 10}),
+    dict(name='doc-text', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-xml-view.jpg',
+         action="document.querySelector('.tab[data-view=\"text\"]').click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:CatalogType\"]').click();"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'highlighted': "document.querySelectorAll('#text .line.hl').length",
+                 'view': "document.querySelector('.tab.active').dataset.view"},
+         expect={'highlighted': 1, 'view': 'text'}),
+    dict(name='doc-compare', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-view.jpg',
+         action=OPEN_V2 + "document.querySelector('#compareTable .crow.different').click();"
+                "await new Promise(r => setTimeout(r, 300));"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'sides': "[...document.querySelectorAll('#compareTable .crow .cpath')].map(t => t.textContent).join('|')",
+                 'detail': "document.querySelectorAll('#compareTable .cdetail').length"},
+         expect={'sides': 'catalog.xsd|catalog.xsd|common.xsd|common.xsd|product.xsd|product.xsd||shipping.xsd|supplier.xsd|',
+                 'detail': 1}),   # the file name, never the path (these pictures are published)
 ]
 
 
@@ -371,7 +408,7 @@ def shoot(scene, profile):
             return 'the server did not start'
         Proxy.scene = scene
         png = OUT / (scene['name'] + '.png')
-        r = subprocess.run([FIREFOX, '--headless', '--no-remote', '--profile', str(profile), '--window-size=' + SIZE,
+        r = subprocess.run([FIREFOX, '--headless', '--no-remote', '--profile', str(profile), '--window-size=' + scene.get('size', SIZE),
                             '--screenshot', str(png), 'http://localhost:%d/' % PROXY_PORT],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120)
         if r.returncode != 0 or not png.exists():
@@ -389,8 +426,22 @@ def shoot(scene, profile):
             app.kill()
 
 
+def publish(scene):
+    """The shot of a scene of the README, saved as a JPEG in screenshots/ (what the GitHub page shows)."""
+    from PIL import Image
+    DOCS.mkdir(parents=True, exist_ok=True)
+    with Image.open(OUT / (scene['name'] + '.png')) as im:
+        im.convert('RGB').save(DOCS / scene['doc'], 'JPEG', quality=88, optimize=True, progressive=True)
+    return DOCS / scene['doc']
+
+
 def main():
     keep_going = '--keep-going' in sys.argv
+    docs = '--docs' in sys.argv
+    only = next((a.split('=', 1)[1].split(',') for a in sys.argv if a.startswith('--only=')), None)
+    scenes = [s for s in SCENES if (not docs or s.get('doc')) and (only is None or s['name'] in only)]
+    if not scenes:
+        sys.exit('no scene selected')
     if not JAR.exists():
         sys.exit('%s missing: run mvn package first' % JAR)
     if not shutil.which(FIREFOX):
@@ -400,9 +451,10 @@ def main():
     threading.Thread(target=server.serve_forever, daemon=True).start()
     failed = 0
     with tempfile.TemporaryDirectory(dir=ROOT / 'target') as profile:   # Firefox as a snap cannot write under /tmp
-        for scene in SCENES:
+        for scene in scenes:
             problem = shoot(scene, profile)
-            print('%-16s %s' % (scene['name'], 'ok ' + str(Proxy.results.get(scene['name'])) if problem is None else 'FAILED - ' + problem))
+            saved = '' if problem or not (docs and scene.get('doc')) else ' -> ' + str(publish(scene).relative_to(ROOT))
+            print('%-16s %s' % (scene['name'], ('ok ' + str(Proxy.results.get(scene['name']))) + saved if problem is None else 'FAILED - ' + problem))
             if problem:
                 failed += 1
                 if not keep_going:

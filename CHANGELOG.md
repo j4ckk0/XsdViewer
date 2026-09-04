@@ -2,6 +2,12 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **The comparison lists file names, not paths.** The two side columns of the comparison table showed each file's absolute path, which was long, pushed the status out of view and put the reader's home directory on screen. They now show the name, the full path staying in the cell's tooltip.
+
+- **The pictures of the README are shot by the tool.** `scripts/screenshots.py --docs` replays four scenes on the shipped comparison sample and writes `screenshots/*.jpg`, so the front page is redone with the tool itself instead of by hand, and its pictures are checked like every other scene. A **Model view** picture joins them, first, and the graph's caption now says which question that view answers.
+
 ## 4.0.0 — 2026-09-04
 
 - **The views read Model, Text, Graph, and a tab opens on the Model.** The model is what one usually comes for — what a document of the selected declaration holds — so it comes first and is what a file opens on; the graph, the map of how the declarations refer to one another, follows the source. Each tab now carries a tooltip saying which question its view answers, and the README opens on the same comparison: the model walks through the types, opening each named type in place, where the graph shows the types themselves as neighbours of the declaration that names them.

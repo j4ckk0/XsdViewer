@@ -108,18 +108,30 @@ see the rules fire.
 
 ## Screenshots
 
-**Graph view** — `CatalogType` in the centre, what it links to on the right (two levels:
-`publisher` is an `Address` from `common.xsd`, expanded from its own tab), what uses it on the
-left; cardinalities after each link, optional links dashed. The details panel on the right
-lists the links and the documentation — and, for an enumeration (a simpleType, an element or an
-attribute restricted to `xs:enumeration` values), the values with their own documentation.
+The pictures below are shot from the shipped comparison sample (`samples/compare/`) by
+`scripts/screenshots.py --docs`, so they are redone with the tool itself at each release.
 
-![Graph view](screenshots/XsdViewer-graph-view.jpg)
+**Model view** — `ProductType` of `product.xsd`: what a document of it holds. Its attributes
+first (`@sku : Code`, `@category` optional, marked `?`), then its sequence and the elements it
+holds, each with its type in the corner and its occurrences below, dashed when optional. A named
+type, a global element or a base type carries a **+** handle that opens its own content in place,
+taken from its declaration wherever it lives — so a model can be read across files.
 
-**Text view** — the same schema as source, the selected object's declaration highlighted;
-clicking a line number selects that object.
+![Model view](screenshots/XsdViewer-model-view.jpg)
+
+**Text view** — the source of `catalog.xsd`, the selected object's declaration highlighted;
+clicking a line number selects that object, and Ctrl+F searches the text.
 
 ![Text view](screenshots/XsdViewer-xml-view.jpg)
+
+**Graph view** — the other question: not what a document holds, but how the declarations refer to
+one another. `CatalogType` in the centre, what it links to on the right (two levels: `publisher`
+is an `Address` from `common.xsd`, expanded from its own tab), what uses it on the left;
+cardinalities after each link, optional links dashed. The details panel on the right lists the
+links and the documentation — and, for an enumeration (a simpleType, an element or an attribute
+restricted to `xs:enumeration` values), the values with their own documentation.
+
+![Graph view](screenshots/XsdViewer-graph-view.jpg)
 
 **Comparing two workspaces** — `v1` against `v2` of the same schema set: file by file, the
 declarations and links only on one side, then the two sources side by side.
@@ -265,7 +277,9 @@ linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn
 
 `scripts/screenshots.py` is a visual smoke test: with the jar built and Firefox installed, it opens
 the samples, drives the page (a selection, the text view, two levels, the dark theme), checks a few
-facts on it and saves a screenshot of each scene in `target/screenshots/`.
+facts on it and saves a screenshot of each scene in `target/screenshots/`. `--only=a,b` runs the
+named scenes; `--docs` runs the four whose shot is published, saving them as JPEG in
+`screenshots/` — the pictures of this file.
 
 ## What counts as a link
 
