@@ -324,6 +324,23 @@ SCENES = [
                  'marks': '17/9/0/4'}),   # nothing matches but the two roots and their sequences, which are the two subjects and are drawn plain
     # the four pictures of the README (screenshots/), on the comparison sample: shot like any other
     # scene, checked like any other, and written as JPEG by --docs
+    dict(name='doc-compare-view', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-view.jpg',
+         action=OPEN_V2 + "document.getElementById('compareClose').click();"
+                # the same declaration in two versions of the schema set: marked on each side
+                "[...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes('v1')).click();"
+                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "document.querySelector('#detailsContent .cobj-mark').click();"
+                "[...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes('v2')).click();"
+                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "document.querySelector('#detailsContent .cobj-mark').click();"
+                "document.querySelector('.tab[data-view=\"compare\"]').click();"
+                "await new Promise(r => setTimeout(r, 400));"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'summary': "document.getElementById('objectCompareSummary').textContent",
+                 'marks': "['removed','added','changed'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/')"},
+         expect={'summary': '1 only on the left, 3 only on the right, 3 changed', 'marks': '1/3/6'}),
     dict(name='doc-model', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-model-view.jpg',
          action="document.querySelectorAll('#tabs .dtab')[1].click();"
                 "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
@@ -347,7 +364,7 @@ SCENES = [
          checks={'highlighted': "document.querySelectorAll('#text .line.hl').length",
                  'view': "document.querySelector('.tab.active').dataset.view"},
          expect={'highlighted': 1, 'view': 'text'}),
-    dict(name='doc-compare', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-view.jpg',
+    dict(name='doc-compare-workspaces', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-workspaces.jpg',
          action=OPEN_V2 + "document.querySelector('#compareTable .crow.different').click();"
                 "await new Promise(r => setTimeout(r, 300));"
                 "document.getElementById('toast').classList.add('hidden');",
@@ -492,6 +509,10 @@ def main():
     scenes = [s for s in SCENES if (not docs or s.get('doc')) and (only is None or s['name'] in only)]
     if not scenes:
         sys.exit('no scene selected')
+    names = [s['name'] for s in SCENES]
+    for name in names:
+        if names.count(name) > 1:
+            sys.exit('two scenes are named %s: a name is a file name and a result key' % name)
     if not JAR.exists():
         sys.exit('%s missing: run mvn package first' % JAR)
     if not shutil.which(FIREFOX):
