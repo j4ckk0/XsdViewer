@@ -50,10 +50,8 @@ final class XsdParser {
     private static final String LINE_BREAK_WITH_INDENT = "[ \\t]*\\n[ \\t]*";
 
     private final SchemaGraph graph;
-    /** An edge whose target is not resolved yet ("type:X", "element:X", "group:X"...), with the namespace of X. */
-    private record Pending(SchemaGraph.Edge edge, String ns) {}
-
-    private final List<Pending> pending = new ArrayList<>();
+    /** What a name stands for, and the links waiting for the end of the file: {@link References}. */
+    private final References refs;
     private final Map<String, Integer> lines;
     /** The names of the elements and attributes met inside each declaration, by owner id (for the search). */
     private final Map<String, Set<String>> members = new HashMap<>();
@@ -64,9 +62,15 @@ final class XsdParser {
 
     private final List<KeyRef> keyRefs = new ArrayList<>();
 
+    /** What a name of this file stands for: {@link WsdlParser} records its own references through it, and closes them once. */
+    References references() {
+        return refs;
+    }
+
     /** A parser adding to {@code graph}; {@code lines}: the line of each declaration by node id (see {@link DeclarationLineIndex}). */
     XsdParser(SchemaGraph graph, Map<String, Integer> lines) {
         this.graph = graph;
+        this.refs = new References(graph);
         this.lines = lines;
     }
 
@@ -76,7 +80,7 @@ final class XsdParser {
         graph.targetNamespace = schema.getAttribute(XsdVocabulary.ATTR_TARGET_NAMESPACE);
         XsdParser parser = new XsdParser(graph, DeclarationLineIndex.build(text, XsdParser::declarationId));
         parser.collectSchema(schema);
-        parser.resolve();
+        parser.refs.resolve();
         return graph;
     }
 
@@ -115,20 +119,13 @@ final class XsdParser {
         }
 
         // Pass 2: the links, the members met on the way, and the content model (the ids being those of the links).
-        ContentModelBuilder.Ids ids = new ContentModelBuilder.Ids() {
-            @Override
-            public String type(String qname, Element ctx) { return typeId(qname, ctx); }
-
-            @Override
-            public String named(String kind, String qname, Element ctx) { return SchemaGraph.nodeId(kind, QName.resolve(qname, ctx).local()); }
-        };
         for (Element c : children(schema)) {
             if (isGlobalDeclaration(c)) {
                 String id = SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME));
                 collect(c, id, true, Cardinality.ONE, "");
                 Set<String> found = members.get(id);
                 if (found != null) graph.nodes.computeIfPresent(id, (k, n) -> n.withMembers(List.copyOf(found)));
-                ContentModelBuilder.Content content = ContentModelBuilder.of(c, ids);
+                ContentModelBuilder.Content content = ContentModelBuilder.of(c, refs);
                 if (!content.particles().isEmpty() || !content.attributes().isEmpty()) {
                     graph.nodes.computeIfPresent(id, (k, n) -> n.withContent(content.particles(), content.attributes()));
                 }
@@ -143,23 +140,6 @@ final class XsdParser {
         keyRefs.clear();
     }
 
-    /** The declared type a {@code type:X} of a content model stands for, once every declaration is known; every other id stands for itself. */
-    private String resolveContentType(String id) {
-        if (id.isEmpty() || !NodeKind.TYPE_REFERENCE.equals(SchemaGraph.kindOf(id))) return id;
-        String declared = declaredType(SchemaGraph.nameOf(id));
-        return declared != null ? declared : id;
-    }
-
-    private List<SchemaGraph.Particle> resolveParticles(List<SchemaGraph.Particle> particles) {
-        return particles.stream()
-                .map(p -> p.resolved(resolveContentType(p.type()), resolveParticles(p.children()), resolveAttributes(p.attributes())))
-                .toList();
-    }
-
-    private List<SchemaGraph.Attribute> resolveAttributes(List<SchemaGraph.Attribute> attributes) {
-        return attributes.stream().map(a -> a.resolved(resolveContentType(a.type()))).toList();
-    }
-
     /** Records a name met inside {@code owner}'s declaration: a nested element or attribute, by name or by the local name of its ref. */
     private void member(String owner, String name) {
         int colon = name.indexOf(XsdVocabulary.QNAME_SEPARATOR);
@@ -167,42 +147,8 @@ final class XsdParser {
         members.computeIfAbsent(owner, k -> new LinkedHashSet<>()).add(colon < 0 || wildcard ? name : name.substring(colon + 1));
     }
 
-    /** Pass 3: resolves the targets of the links, creating placeholder nodes for what the file does not declare. */
-    void resolve() {
-        for (Pending p : pending) {
-            SchemaGraph.Edge e = p.edge();
-            String to = e.to();
-            if (!graph.declares(to)) {
-                String kind = SchemaGraph.kindOf(to);
-                String name = SchemaGraph.nameOf(to);
-                if (NodeKind.TYPE_REFERENCE.equals(kind)) {
-                    String declared = declaredType(name);
-                    if (declared != null) to = declared;
-                }
-                if (!graph.declares(to)) {
-                    graph.nodes.put(to, new SchemaGraph.Node(to, NodeKind.EXTERNAL, name, p.ns(), 0,
-                            Messages.get(MessageKey.EXTERNAL_DECLARATION_DOC, kind)));
-                }
-            }
-            graph.edges.add(new SchemaGraph.Edge(e.from(), to, e.label(), e.cardinality(), e.compositor()));
-        }
-        pending.clear();
-        // the content models name what the links name: a type declared by another schema of the file
-        // (the schemas inline in a WSDL) is only known now, as it is for the links above
-        graph.nodes.replaceAll((id, n) -> n.content().isEmpty() && n.attributes().isEmpty() ? n
-                : n.withContent(resolveParticles(n.content()), resolveAttributes(n.attributes())));
-    }
-
     private static boolean isGlobalDeclaration(Element c) {
         return NodeKind.GLOBAL_DECLARATIONS.contains(c.getLocalName()) && c.hasAttribute(XsdVocabulary.ATTR_NAME);
-    }
-
-    /** Id of the complexType or simpleType named {@code name} declared in this file, or null. */
-    private String declaredType(String name) {
-        String complex = SchemaGraph.nodeId(NodeKind.COMPLEX_TYPE, name);
-        if (graph.declares(complex)) return complex;
-        String simple = SchemaGraph.nodeId(NodeKind.SIMPLE_TYPE, name);
-        return graph.declares(simple) ? simple : null;
     }
 
     /**
@@ -225,16 +171,16 @@ final class XsdParser {
                 if (!self && e.hasAttribute(XsdVocabulary.ATTR_REF)) member(owner, e.getAttribute(XsdVocabulary.ATTR_REF));
                 if (!self && e.hasAttribute(XsdVocabulary.ATTR_NAME)) member(owner, e.getAttribute(XsdVocabulary.ATTR_NAME));
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.REF, card, compositor);
+                    refs.link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.REF, card, compositor);
                     return;
                 }
                 String name = e.getAttribute(XsdVocabulary.ATTR_NAME);
                 if (e.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
                     // a nested element is labelled with just its name: "shipTo", not "child shipTo"
-                    linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e, self ? LinkLabel.TYPE : name, card, compositor);
+                    refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e, self ? LinkLabel.TYPE : name, card, compositor);
                 }
                 if (self && e.hasAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP)) {
-                    link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP), e, LinkLabel.SUBSTITUTES, null);
+                    refs.link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP), e, LinkLabel.SUBSTITUTES, null);
                 }
                 inner = Cardinality.ONE;   // an anonymous type's content is counted from this element
                 innerCompositor = "";      // and sits in the compositors of that type, not in this element's
@@ -244,23 +190,23 @@ final class XsdParser {
                 if (!self && e.hasAttribute(XsdVocabulary.ATTR_REF)) member(owner, e.getAttribute(XsdVocabulary.ATTR_REF));
                 if (!self && e.hasAttribute(XsdVocabulary.ATTR_NAME)) member(owner, e.getAttribute(XsdVocabulary.ATTR_NAME));
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.ATTRIBUTE, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_REF, card);
+                    refs.link(owner, NodeKind.ATTRIBUTE, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_REF, card);
                     return;
                 }
                 if (e.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
-                    linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e,
+                    refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e,
                             self ? LinkLabel.TYPE : LinkLabel.attribute(e.getAttribute(XsdVocabulary.ATTR_NAME)), card);
                 }
             }
             case XsdVocabulary.GROUP -> {
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.GROUP, particle(e).within(enclosing), compositor);
+                    refs.link(owner, NodeKind.GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.GROUP, particle(e).within(enclosing), compositor);
                     return;
                 }
             }
             case XsdVocabulary.ATTRIBUTE_GROUP -> {
                 if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    link(owner, NodeKind.ATTRIBUTE_GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_GROUP, null);
+                    refs.link(owner, NodeKind.ATTRIBUTE_GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_GROUP, null);
                     return;
                 }
             }
@@ -282,18 +228,18 @@ final class XsdParser {
                 innerCompositor = ln;
             }
             case XsdVocabulary.EXTENSION -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.EXTENDS, null);
+                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.EXTENDS, null);
             }
             case XsdVocabulary.RESTRICTION -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.RESTRICTS, null);
+                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.RESTRICTS, null);
             }
             case XsdVocabulary.LIST -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_ITEM_TYPE)) linkType(owner, e.getAttribute(XsdVocabulary.ATTR_ITEM_TYPE), e, LinkLabel.LIST_OF, null);
+                if (e.hasAttribute(XsdVocabulary.ATTR_ITEM_TYPE)) refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_ITEM_TYPE), e, LinkLabel.LIST_OF, null);
             }
             case XsdVocabulary.UNION -> {
                 if (e.hasAttribute(XsdVocabulary.ATTR_MEMBER_TYPES)) {
                     for (String t : e.getAttribute(XsdVocabulary.ATTR_MEMBER_TYPES).trim().split(WHITESPACE)) {
-                        if (!t.isEmpty()) linkType(owner, t, e, LinkLabel.UNION_OF, null);
+                        if (!t.isEmpty()) refs.linkType(owner, t, e, LinkLabel.UNION_OF, null);
                     }
                 }
             }
@@ -327,59 +273,6 @@ final class XsdParser {
         } catch (NumberFormatException ex) {
             return fallback;   // a lenient viewer: a malformed value is not worth refusing the file
         }
-    }
-
-    /** A qualified name split into the namespace it resolves to (empty when unbound) and its local part. */
-    private record QName(String ns, String local) {
-        static QName resolve(String qname, Element ctx) {
-            int colon = qname.indexOf(XsdVocabulary.QNAME_SEPARATOR);
-            String prefix = colon < 0 ? null : qname.substring(0, colon);
-            String local = colon < 0 ? qname : qname.substring(colon + 1);
-            String ns = ctx.lookupNamespaceURI(prefix);
-            return new QName(ns == null ? "" : ns, local);
-        }
-    }
-
-    void linkType(String owner, String qname, Element ctx, String label, Cardinality card) {
-        linkType(owner, qname, ctx, label, card, "");
-    }
-
-    /**
-     * The node id a type name stands for, the one rule the links and the content models both follow: a
-     * built-in type ({@code builtin:X}), a type declared here so far ({@code complexType:X} /
-     * {@code simpleType:X}), else the reference the third pass resolves or makes a placeholder of
-     * ({@code type:X}). A name in the XSD namespace is a built-in type unless this file declares it:
-     * schemas that use the XSD namespace as their default namespace refer to their own types unprefixed.
-     */
-    private String typeId(String qname, Element ctx) {
-        QName q = QName.resolve(qname, ctx);
-        String declared = declaredType(q.local());
-        if (declared != null) return declared;
-        return XsdVocabulary.NAMESPACE.equals(q.ns()) ? SchemaGraph.nodeId(NodeKind.BUILTIN, q.local())
-                : SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local());
-    }
-
-    /** A reference to a named type: a built-in is a node right away, the others are links the third pass resolves. */
-    void linkType(String owner, String qname, Element ctx, String label, Cardinality card, String compositor) {
-        QName q = QName.resolve(qname, ctx);
-        String id = typeId(qname, ctx);
-        if (NodeKind.BUILTIN.equals(SchemaGraph.kindOf(id))) {
-            graph.nodes.computeIfAbsent(id, k -> new SchemaGraph.Node(id, NodeKind.BUILTIN, q.local(),
-                    XsdVocabulary.NAMESPACE, 0, Messages.get(MessageKey.BUILTIN_TYPE_DOC)));
-            graph.edges.add(new SchemaGraph.Edge(owner, id, label, card, compositor));
-        } else {
-            pending.add(new Pending(new SchemaGraph.Edge(owner, id, label, card, compositor), q.ns()));
-        }
-    }
-
-    /** A reference (ref=, substitutionGroup=, a WSDL message=, element=...) to a named declaration of a given kind. */
-    void link(String owner, String kind, String qname, Element ctx, String label, Cardinality card) {
-        link(owner, kind, qname, ctx, label, card, "");
-    }
-
-    void link(String owner, String kind, String qname, Element ctx, String label, Cardinality card, String compositor) {
-        QName q = QName.resolve(qname, ctx);
-        pending.add(new Pending(new SchemaGraph.Edge(owner, SchemaGraph.nodeId(kind, q.local()), label, card, compositor), q.ns()));
     }
 
     /**

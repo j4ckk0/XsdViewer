@@ -134,9 +134,9 @@ final class WsdlParser {
                     for (Element part : children(c, WsdlVocabulary.PART)) {
                         String partName = part.getAttribute(XsdVocabulary.ATTR_NAME);
                         if (part.hasAttribute(WsdlVocabulary.ATTR_ELEMENT)) {
-                            xsd.link(id, NodeKind.ELEMENT, part.getAttribute(WsdlVocabulary.ATTR_ELEMENT), part, partName, null);
+                            xsd.references().link(id, NodeKind.ELEMENT, part.getAttribute(WsdlVocabulary.ATTR_ELEMENT), part, partName, null);
                         } else if (part.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
-                            xsd.linkType(id, part.getAttribute(XsdVocabulary.ATTR_TYPE), part, partName, null);
+                            xsd.references().linkType(id, part.getAttribute(XsdVocabulary.ATTR_TYPE), part, partName, null);
                         }
                     }
                 }
@@ -152,14 +152,14 @@ final class WsdlParser {
                                 default -> null;
                             };
                             if (label != null && io.hasAttribute(WsdlVocabulary.ATTR_MESSAGE)) {
-                                xsd.link(opId, NodeKind.MESSAGE, io.getAttribute(WsdlVocabulary.ATTR_MESSAGE), io, label, null);
+                                xsd.references().link(opId, NodeKind.MESSAGE, io.getAttribute(WsdlVocabulary.ATTR_MESSAGE), io, label, null);
                             }
                         }
                     }
                 }
                 case WsdlVocabulary.BINDING -> {
                     if (c.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
-                        xsd.link(id, NodeKind.PORT_TYPE, c.getAttribute(XsdVocabulary.ATTR_TYPE), c, LinkLabel.BINDS, null);
+                        xsd.references().link(id, NodeKind.PORT_TYPE, c.getAttribute(XsdVocabulary.ATTR_TYPE), c, LinkLabel.BINDS, null);
                     }
                 }
                 case WsdlVocabulary.SERVICE -> {
@@ -170,9 +170,9 @@ final class WsdlParser {
                         // through a binding declared here, the port reaches its portType; otherwise the link stops at the binding
                         Element binding = bindings.get(localPart(bindingRef));
                         if (binding != null && binding.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
-                            xsd.link(id, NodeKind.PORT_TYPE, binding.getAttribute(XsdVocabulary.ATTR_TYPE), binding, portName, null);
+                            xsd.references().link(id, NodeKind.PORT_TYPE, binding.getAttribute(XsdVocabulary.ATTR_TYPE), binding, portName, null);
                         } else {
-                            xsd.link(id, NodeKind.BINDING, bindingRef, port, portName, null);
+                            xsd.references().link(id, NodeKind.BINDING, bindingRef, port, portName, null);
                         }
                     }
                 }
@@ -181,7 +181,7 @@ final class WsdlParser {
         }
 
         // Pass 3: the targets, the placeholders for what this file does not declare.
-        xsd.resolve();
+        xsd.references().resolve();
         return graph;
     }
 
