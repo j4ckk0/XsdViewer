@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **A Compare view, next to Model, Text and Graph: two declarations side by side, wherever each of them lives.** Mark one from its details panel (**◈ Mark**), then mark a second — in another file, another workspace, under another name — and the view draws the content model of each, every box marked: red for what only the left one has, green for what only the right one has, blue for a box whose occurrences or type changed, with a summary counting them. With a single mark it compares that one with whatever you select, so a reference can be held while the rest is browsed. This replaces the comparison of one declaration across two selected workspaces, which 4.1.0 opened in a tab of its own: it needed the same declaration in files of the same name in two selected workspaces, where marking needs nothing.
+
 ## 4.1.0 — 2026-09-04
 
 - **One declaration compared across two workspaces.** With two workspaces selected, the details panel of a declaration offers **⇄ Compare**, which opens a tab showing its content model in each workspace, side by side, every box marked: red for what only the left one has, green for what only the right one has, blue for a box whose occurrences or type changed, with a summary counting them. The boxes are matched by what each one is rather than by where it sits, so an element inserted on one side does not mark everything below it as different; named types are opened on both sides, so a change deep inside one is seen; and neither file need be open in a tab.

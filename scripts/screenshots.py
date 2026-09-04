@@ -274,19 +274,32 @@ SCENES = [
          expect={'tab': 'product.xsd (v1 ⇄ v2)', 'title': 'product.xsd: v1 compared with v2', 'rows': 1, 'detail': 1, 'tools': True}),   # catalog.xsd differs in its documentation only: identical business lines
     dict(name='compare-object', file='samples/compare/v1.xsdviewer.json', theme='light',
          action=OPEN_V2 + "document.getElementById('compareClose').click();"
+                # the view explains itself while nothing is marked
+                "document.querySelector('.tab[data-view=\"compare\"]').click();"
+                "window.__empty = document.getElementById('objectCompareEmpty').textContent.slice(0, 24);"
+                # ProductType of v1, marked, then the one of v2: two workspaces, two files of the same name
+                "[...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes('v1')).click();"
                 "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
                 "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "document.querySelector('#detailsContent .cobj-open').click();"
-                "await new Promise(r => setTimeout(r, 400));",
-         checks={'tab': "document.querySelector('#tabs .dtab.active .tname').textContent",
-                 'title': "document.getElementById('compareTitle').textContent",
-                 'summary': "document.getElementById('compareSummary').textContent",
-                 'marks': "['removed','added','changed'].map(c => document.querySelectorAll('#compareObject .mbox.' + c).length).join('/')",
-                 'heads': "[...document.querySelectorAll('#compareObject .cobj-head')].map(h => h.textContent).join('|')",
-                 'table': "document.getElementById('compareTable').classList.contains('hidden')"},
-         expect={'tab': 'ProductType (v1 ⇄ v2)', 'title': 'complexType ProductType of product.xsd: v1 compared with v2',
+                "document.querySelector('#detailsContent .cobj-mark').click();"
+                "[...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes('v2')).click();"
+                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "document.querySelector('#detailsContent .cobj-mark').click();"
+                "document.querySelector('.tab[data-view=\"compare\"]').click();"
+                "await new Promise(r => setTimeout(r, 400));"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'title': "document.getElementById('objectCompareTitle').textContent",
+                 'summary': "document.getElementById('objectCompareSummary').textContent",
+                 'heads': "[...document.querySelectorAll('#objectCompareBody .cobj-head')].map(h => h.textContent).join('|')",
+                 'marks': "['removed','added','changed'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/')",
+                 'marked': "document.querySelectorAll('#detailsContent .cobj-mark.marked').length",
+                 'guidance': "window.__empty",
+                 'details': "document.getElementById('details').classList.contains('hidden')"},
+         expect={'title': 'complexType ProductType compared with complexType ProductType',
                  'summary': '1 only on the left, 3 only on the right, 3 changed',
-                 'marks': '1/3/6', 'heads': 'v1|v2', 'table': True}),   # legacyCode gone; weight added, with the content of its own type; category, description and tag changed (a changed pair marks both sides)
+                 'heads': 'complexType ProductType — product.xsd, v1|complexType ProductType — product.xsd, v2',
+                 'marks': '1/3/6', 'marked': 1, 'guidance': 'Mark a declaration for c', 'details': True}),   # legacyCode gone; weight added with its own type; category, description and tag changed
     # the four pictures of the README (screenshots/), on the comparison sample: shot like any other
     # scene, checked like any other, and written as JPEG by --docs
     dict(name='doc-model', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-model-view.jpg',

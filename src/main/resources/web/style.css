@@ -804,16 +804,21 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .mbox.removed .mtype, .mbox.added .mtype, .mbox.removed .mword, .mbox.added .mword,
 .mbox.changed .mtype, .mbox.changed .mword { fill: var(--text); opacity: .75; }
 
-/* the details panel's button opening the comparison of the selected declaration */
-.cobj-open { margin: 6px 0 2px; padding: 3px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); cursor: pointer; }
-.cobj-open:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
+/* the details panel's button marking the selected declaration for the Compare view */
+.cobj-mark { margin: 6px 0 2px; padding: 3px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); cursor: pointer; }
+.cobj-mark:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
+.cobj-mark.marked { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
-/* the object comparison: one model per workspace, side by side, each scrolling on its own */
-#compareObject { display: flex; gap: 12px; align-items: stretch; height: 100%; }
-#compareObject .cobj { flex: 1; min-width: 0; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-#compareObject .cobj-head { padding: 6px 10px; font-weight: 600; font-size: 12px; background: var(--panel); border-bottom: 1px solid var(--border); }
-#compareObject .cobj-canvas { flex: 1; overflow: auto; }
-#compareObject .cobj-canvas svg { display: block; }
+/* the Compare view: one model per marked declaration, side by side, each scrolling on its own */
+#objectCompare { display: flex; flex-direction: column; min-height: 0; }
+#objectCompareHeader { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--panel); flex-wrap: wrap; }
+#objectCompareTitle { font-weight: 600; }
+#objectCompareEmpty { padding: 16px; max-width: 70ch; line-height: 1.5; }
+#objectCompareBody { display: flex; gap: 12px; align-items: stretch; flex: 1; min-height: 0; padding: 8px 16px; }
+#objectCompareBody .cobj { flex: 1; min-width: 0; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+#objectCompareBody .cobj-head { padding: 6px 10px; font-weight: 600; font-size: 12px; background: var(--panel); border-bottom: 1px solid var(--border); }
+#objectCompareBody .cobj-canvas { flex: 1; overflow: auto; }
+#objectCompareBody .cobj-canvas svg { display: block; }
 .mhandle { cursor: pointer; }
 .mhandle rect { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1; }
 .mhandle:hover rect { fill: var(--hover); }

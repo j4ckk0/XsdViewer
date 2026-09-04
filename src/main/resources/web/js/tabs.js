@@ -1,9 +1,10 @@
 /** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. A tab shows a file, a comparison (compare.js) or a validation (validate.js). */
-import { nameOfId, WORKSPACE_FILE_SUFFIX } from './constants.js';
+import { WORKSPACE_FILE_SUFFIX } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { renderFileList } from './file-list.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
+import { dropMarksOutside } from './object-compare.js';
 import { newTabState, newWorkspaceState, session } from './state.js';
 
 const SCHEMA_SEPARATOR = ' + ';
@@ -21,10 +22,10 @@ export function validationStatus(tab) {
   return v.result.valid ? CLS.VALID : CLS.INVALID;
 }
 
-/** The name of a comparison tab: "v1 ⇄ v2", "x.xsd (v1 ⇄ v2)" for one file, "Type (v1 ⇄ v2)" for one declaration. */
+/** The name of a comparison tab: "v1 ⇄ v2", or "x.xsd (v1 ⇄ v2)" for the differences of one file. */
 export function compareTitle(tab) {
-  const { left, right, file, object } = tab.compare;
-  const one = object ? nameOfId(object) : file;
+  const { left, right, file } = tab.compare;
+  const one = file;
   return t(one ? MSG.COMPARE_FILE_TAB : MSG.COMPARE_TAB, ...(one ? [one] : []), workspaceName(left), workspaceName(right));
 }
 
@@ -47,6 +48,7 @@ function settle(at) {
     if (before === session.tabs.length + session.workspaces.length) break;
   }
   session.compareSelection = session.compareSelection.filter(ws => session.workspaces.includes(ws));
+  dropMarksOutside(session.workspaces);
   if (session.tabs.includes(session.active)) return false;
   session.active = session.tabs[Math.min(at, session.tabs.length - 1)];
   return true;

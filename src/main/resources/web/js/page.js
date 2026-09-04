@@ -14,6 +14,7 @@ import { session } from './state.js';
 import { compareTitle, renderNavigation, validationTitle } from './tabs.js';
 import { highlightTextLine, renderText } from './text-view.js';
 import { renderModel } from './model-view.js';
+import { renderObjectCompare } from './object-compare.js';
 
 /** Redraws everything from the active tab's state. */
 export function renderPage() {
@@ -59,14 +60,16 @@ export function showView(view) {
   $(ID.COMPARE).classList.toggle(CLS.HIDDEN, !st.compare);
   $(ID.VALIDATION).classList.toggle(CLS.HIDDEN, !st.validation);
   $(ID.SIDEBAR).classList.toggle(CLS.HIDDEN, comparing);
-  $(ID.EMPTY).classList.toggle(CLS.HIDDEN, loaded || comparing);
+  $(ID.EMPTY).classList.toggle(CLS.HIDDEN, loaded || comparing || view === VIEW.COMPARE);
   $(ID.GRAPH).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.GRAPH);
   $(ID.MODEL).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.MODEL);
+  $(ID.OBJECT_COMPARE).classList.toggle(CLS.HIDDEN, comparing || view !== VIEW.COMPARE);   // it draws marked declarations, so it stands without a file
   $(ID.TEXT).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.TEXT);
   $(ID.TEXT_FIND).classList.toggle(CLS.HIDDEN, !loaded || comparing || view !== VIEW.TEXT);
-  $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || comparing);   // the schema header, then the selected object
-  $(ID.EXPORT_BUTTON).disabled = !loaded || comparing;
-  $(ID.EXPORT_SVG_BUTTON).disabled = !loaded || comparing || view === VIEW.TEXT;   // the graph and the model are SVGs
+  // the schema header, then the selected object; the comparison of two declarations wants the width instead
+  $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || comparing || view === VIEW.COMPARE);
+  $(ID.EXPORT_BUTTON).disabled = !loaded || comparing || view === VIEW.COMPARE;   // the comparison draws two models: neither is the picture
+  $(ID.EXPORT_SVG_BUTTON).disabled = !loaded || comparing || view === VIEW.TEXT || view === VIEW.COMPARE;   // the graph and the model are SVGs
   updateSplitters();
   $(ID.MENU_VALIDATE).disabled = !canValidate();
   $(ID.MENU_OPEN_ALL).disabled = comparing || !listedOnly().length;
@@ -82,7 +85,14 @@ export function showView(view) {
  */
 export function renderMainView() {
   const st = session.active;
-  if (!st.model || st.compare || st.validation) return;
+  if (st.compare || st.validation) return;
+  if (st.view === VIEW.COMPARE) { renderObjectCompare(); return; }
+  if (!st.model) return;
   if (st.view === VIEW.GRAPH) renderGraph();
   else if (st.view === VIEW.MODEL) renderModel();
+}
+
+/** The Compare view stands on the marked declarations, not on the active tab's file: it is drawn whatever the tab holds. */
+export function renderComparedObjects() {
+  if (session.active.view === VIEW.COMPARE) renderObjectCompare();
 }

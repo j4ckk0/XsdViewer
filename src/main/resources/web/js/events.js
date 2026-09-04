@@ -2,7 +2,8 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { clearSelection, initOptions, openObjectCompare, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
+import { clearSelection, initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
+import { MARKED_OBJECTS, clearMarks, toggleMark } from './object-compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, renderDetails, toggleDetails } from './details.js';
@@ -11,7 +12,7 @@ import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
-import { renderMainView, renderPage, showView } from './page.js';
+import { renderComparedObjects, renderMainView, renderPage, showView } from './page.js';
 import { exportPng, exportSvg } from './png-export.js';
 import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, toggleSchemaInfo } from './sidebar.js';
 import { t } from './i18n.js';
@@ -257,6 +258,7 @@ function wireViews() {
   });
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
+  $(ID.OBJECT_COMPARE_CLEAR).addEventListener('click', () => { clearMarks(); renderDetails(); renderComparedObjects(); });
   window.addEventListener('resize', renderMainView);
 }
 
@@ -328,9 +330,13 @@ function wireSelectionSources() {
   }
   $(ID.DETAILS).addEventListener('click', (e) => {
     if (e.target.closest('a[data-' + DATA.LINE + ']')) { showView(VIEW.TEXT); return; }
-    if (e.target.closest(selector(CLS.COMPARE_OBJECT_BUTTON))) {
+    // marking a declaration: the details panel says so, and the Compare view redraws
+    if (e.target.closest(selector(CLS.MARK_BUTTON))) {
       const st = session.active;
-      if (openObjectCompare(st.selected, st.fileName)) renderPage();
+      const marked = toggleMark(st, st.selected);
+      renderDetails();
+      renderComparedObjects();
+      toast(t(marked === MARKED_OBJECTS ? MSG.OBJECT_MARK_TWO : marked ? MSG.OBJECT_MARK_ONE : MSG.OBJECT_MARK_NONE));
       return;
     }
     const link = e.target.closest(selector(CLS.LINK));

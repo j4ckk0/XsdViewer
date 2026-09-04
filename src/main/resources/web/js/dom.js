@@ -75,11 +75,18 @@ export const ID = {
   COMPARE_BUSINESS_ONLY: 'businessOnly',
   COMPARE_DIFF_ONLY: 'diffOnly',
   COMPARE_TABLE: 'compareTable',
-  COMPARE_OBJECT: 'compareObject',
-  COMPARE_OBJECT_LEFT: 'compareObjectLeft',
-  COMPARE_OBJECT_RIGHT: 'compareObjectRight',
-  COMPARE_OBJECT_LEFT_NAME: 'compareObjectLeftName',
-  COMPARE_OBJECT_RIGHT_NAME: 'compareObjectRightName',
+  OBJECT_COMPARE: 'objectCompare',
+  OBJECT_COMPARE_HEADER: 'objectCompareHeader',
+  OBJECT_COMPARE_TITLE: 'objectCompareTitle',
+  OBJECT_COMPARE_SUMMARY: 'objectCompareSummary',
+  OBJECT_COMPARE_LEGEND: 'objectCompareLegend',
+  OBJECT_COMPARE_CLEAR: 'objectCompareClear',
+  OBJECT_COMPARE_EMPTY: 'objectCompareEmpty',
+  OBJECT_COMPARE_BODY: 'objectCompareBody',
+  OBJECT_COMPARE_LEFT: 'objectCompareLeft',
+  OBJECT_COMPARE_RIGHT: 'objectCompareRight',
+  OBJECT_COMPARE_LEFT_NAME: 'objectCompareLeftName',
+  OBJECT_COMPARE_RIGHT_NAME: 'objectCompareRightName',
   SIDEBAR: 'sidebar',
   FILES: 'files',
   FILES_CONTENT: 'filesContent',
@@ -172,7 +179,10 @@ export const CLS = {
   VALIDATE_NONE: 'vnone',
   PENDING: 'pending',
   /** In the details panel: opens the comparison of the selected declaration with the other selected workspace. */
-  COMPARE_OBJECT_BUTTON: 'cobj-open',
+  /** In the details panel: marks the selected declaration for comparison. */
+  MARK_BUTTON: 'cobj-mark',
+  /** On that button when this declaration is one of the marked ones. */
+  MARKED: 'marked',
   /** A checkbox option of the comparison header. */
   OPTION: 'opt',
   /** On a splitter being dragged. */

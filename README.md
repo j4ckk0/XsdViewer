@@ -32,6 +32,16 @@ the graph shows the types themselves as neighbours of the declaration that names
   object's declaration is highlighted; click a highlighted line number to select that
   object.
 
+- **Compare** – two declarations side by side, wherever each of them lives: two versions of the
+  same type in two workspaces, or two types that merely resemble one another. Mark one from its
+  details panel (**◈ Mark**), then mark a second — in another file, another workspace, under
+  another name — and this view draws the content model of each, with every box marked: red for
+  what only the left one has, green for what only the right one has, blue for a box whose
+  occurrences or type changed, and a summary counting them. The boxes are matched by what each one
+  is rather than by where it sits, so an element inserted on one side does not mark everything
+  below it as different; named types are opened on both sides, so a change deep inside one is seen.
+  With a single mark it compares that one with whatever you select, so a reference can be held
+  while the rest is browsed. Neither file need be open in a tab. **Clear the marks** empties it.
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
   sits in the middle, what it links to is on the right, what uses it is on the left.
@@ -454,13 +464,8 @@ to / from line N" instead of red and green, and a file whose text differences ar
 gets the status *moved lines only*, counted apart; a legend of the three colours sits in the
 header of the comparison.
 
-**One declaration compared.** With two workspaces selected, the details panel of a selected
-declaration offers **⇄ Compare**: a tab of its own showing that declaration's content model in each
-workspace, side by side, with every box marked — red for what only the left one has, green for what
-only the right one has, blue for a box whose occurrences or type changed — and a summary counting
-them. The boxes are matched by what each one is rather than by where it sits, so an element inserted
-on one side does not mark everything below it as different, and named types are opened on both sides,
-so a change deep inside one is seen. Neither file need be open in a tab.
+**Two declarations compared** — the *Compare* view, listed with the other views above: it needs no
+workspace selection, and the two declarations may live anywhere.
  **Business lines only** (on by default,
 remembered) ignores what does not define the schema — XML comments, `xs:annotation` blocks,
 the XML declaration, the `xs:schema`, `xs:import` and `xs:include` tags, blank lines and

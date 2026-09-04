@@ -50,6 +50,7 @@
     <button class="tab active" data-view="model" type="button" data-i18n="view.model" data-i18n-title="view.model.title">Model</button>
     <button class="tab" data-view="text" type="button" data-i18n="view.text" data-i18n-title="view.text.title">Text</button>
     <button class="tab" data-view="graph" type="button" data-i18n="view.graph" data-i18n-title="view.graph.title">Graph</button>
+    <button class="tab" data-view="compare" type="button" data-i18n="view.compare" data-i18n-title="view.compare.title">Compare</button>
   </nav>
   <button id="exportBtn" class="menubtn" type="button" data-i18n="export.button" data-i18n-title="export.title" disabled>⤓ PNG</button>
   <button id="exportSvgBtn" class="menubtn" type="button" data-i18n="export.svg" data-i18n-title="export.svg.title" disabled>⤓ SVG</button>
@@ -215,6 +216,18 @@
       </div>
       <div id="modelCanvas"></div>
     </div>
+    <div id="objectCompare" class="view hidden">
+      <div id="objectCompareHeader">
+        <div><span id="objectCompareTitle"></span><br><span id="objectCompareSummary" class="muted"></span></div>
+        <span id="objectCompareLegend" class="legend"></span>
+        <button id="objectCompareClear" type="button" class="menubtn" data-i18n="objectCompare.clear" data-i18n-title="objectCompare.clear.title">Clear the marks</button>
+      </div>
+      <div id="objectCompareEmpty" class="muted"></div>
+      <div id="objectCompareBody" class="hidden">
+        <div class="cobj"><div class="cobj-head" id="objectCompareLeftName"></div><div class="cobj-canvas" id="objectCompareLeft"></div></div>
+        <div class="cobj"><div class="cobj-head" id="objectCompareRightName"></div><div class="cobj-canvas" id="objectCompareRight"></div></div>
+      </div>
+    </div>
     <div id="text" class="view hidden"></div>
     <div id="textFind" class="hidden">
       <input id="textFindInput" type="search" data-i18n-placeholder="text.find.placeholder" autocomplete="off" spellcheck="false">
@@ -236,13 +249,7 @@
         <span id="compareTools" class="panel-tools"><button id="compareExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="compareCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span>
         <button id="compareClose" type="button" class="menubtn" data-i18n="compare.close">Close</button>
       </div>
-      <div id="compareBody">
-        <table id="compareTable"></table>
-        <div id="compareObject" class="hidden">
-          <div class="cobj"><div class="cobj-head" id="compareObjectLeftName"></div><div class="cobj-canvas" id="compareObjectLeft"></div></div>
-          <div class="cobj"><div class="cobj-head" id="compareObjectRightName"></div><div class="cobj-canvas" id="compareObjectRight"></div></div>
-        </div>
-      </div>
+      <div id="compareBody"><table id="compareTable"></table></div>
     </div>
     <div id="validation" class="view hidden">
       <div id="validationHeader">

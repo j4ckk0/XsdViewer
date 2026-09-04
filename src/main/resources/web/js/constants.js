@@ -69,7 +69,7 @@ export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };
 /** Tags of the schema's imports (SchemaGraph.Import.tag). */
 export const IMPORT_TAG = { IMPORT: 'import', INCLUDE: 'include', REDEFINE: 'redefine' };
 
-export const VIEW = { GRAPH: 'graph', MODEL: 'model', TEXT: 'text' };
+export const VIEW = { GRAPH: 'graph', MODEL: 'model', TEXT: 'text', COMPARE: 'compare' };
 /** The kinds of particle of a content model (ParticleKind on the server): what a box of the Model view is. */
 export const PARTICLE = { SEQUENCE: 'sequence', CHOICE: 'choice', ALL: 'all', ELEMENT: 'element', GROUP: 'group', ANY: 'any', EXTENDS: 'extends', RESTRICTS: 'restricts' };
 /** The themes (js/theme.js): stored once chosen, stamped on <html> as data-theme. */
