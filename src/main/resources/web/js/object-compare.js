@@ -14,7 +14,7 @@
  */
 import { TEXT, kindOfId, nameOfId } from './constants.js';
 import { placeOfEntry } from './declarations.js';
-import { $, CLS, ID, esc } from './dom.js';
+import { $, CLS, ID, esc, legendHtml } from './dom.js';
 import { ensureModel } from './file-tabs.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
@@ -45,11 +45,6 @@ export function toggleMark(tab, id) {
 }
 
 export const clearMarks = () => { session.marked.length = 0; };
-
-/** Marks of a workspace that is gone go with it. */
-export const dropMarksOutside = (workspaces) => {
-  session.marked = session.marked.filter(m => workspaces.includes(m.ws));
-};
 
 /**
  * The two declarations to compare: the two marked ones, or — when only one is marked — that one and
@@ -95,9 +90,8 @@ export async function renderObjectCompare() {
   }
   const [left, right] = pair;
   $(ID.OBJECT_COMPARE_TITLE).textContent = t(MSG.OBJECT_COMPARE_TITLE, nameOf(left), nameOf(right));
-  $(ID.OBJECT_COMPARE_LEGEND).innerHTML = [[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, sideName(left))],
-    [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, sideName(right))], [CLS.MOVED, t(MSG.COMPARE_OBJECT_CHANGED)]]
-    .map(([cls, text]) => '<span class="' + CLS.LEGEND_ENTRY + ' ' + cls + '">' + esc(text) + '</span>').join('');
+  $(ID.OBJECT_COMPARE_LEGEND).innerHTML = legendHtml([[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, sideName(left))],
+    [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, sideName(right))], [CLS.MOVED, t(MSG.COMPARE_OBJECT_CHANGED)]]);
   for (const m of pair) if (m.entry && !m.entry.model) await ensureModel(m.entry, false);
   if (token !== drawing) return;   // marked or selected something else while the files were parsed
   const trees = pair.map(treeOf);

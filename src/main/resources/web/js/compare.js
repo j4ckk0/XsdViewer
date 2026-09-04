@@ -6,7 +6,7 @@
 import { businessLines } from './business-lines.js';
 import { cardinalityText } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { $, CLS, DATA, ID, dataAttr, esc, legendHtml, selector } from './dom.js';
 import { OP, diffLines, onlyMoves, splitLines } from './diff.js';
 import { plural, t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
@@ -160,8 +160,8 @@ export function renderCompare() {
 ;
   $(ID.COMPARE_TOOLS).classList.toggle(CLS.HIDDEN, !!file);
   // the colours of the line comparison: lines only on the left (red), only on the right (green), moved (blue)
-  $(ID.COMPARE_LEGEND).innerHTML = [[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, ln)], [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, rn)], [CLS.MOVED, t(MSG.COMPARE_LEGEND_MOVED)]]
-    .map(([cls, text]) => '<span class="' + CLS.LEGEND_ENTRY + ' ' + cls + '">' + esc(text) + '</span>').join('');
+  $(ID.COMPARE_LEGEND).innerHTML = legendHtml([[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, ln)],
+    [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, rn)], [CLS.MOVED, t(MSG.COMPARE_LEGEND_MOVED)]]);
   let html = '<thead><tr><th>' + esc(t(MSG.COMPARE_FILE)) + '</th><th>' + esc(ln) + '</th><th>' + esc(t(MSG.COMPARE_STATUS)) + '</th><th>' + esc(rn) + '</th></tr></thead><tbody>';
   const openButton = '<button class="' + CLS.COMPARE_OPEN + '" type="button" title="' + esc(t(MSG.COMPARE_OPEN_TAB)) + '">' + esc(t(MSG.COMPARE_OPEN_TAB_LABEL)) + '</button>';
   pairs.forEach((p, i) => {

@@ -4,7 +4,6 @@ import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
 import { renderFileList } from './file-list.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
-import { dropMarksOutside } from './object-compare.js';
 import { newTabState, newWorkspaceState, session } from './state.js';
 
 const SCHEMA_SEPARATOR = ' + ';
@@ -48,7 +47,7 @@ function settle(at) {
     if (before === session.tabs.length + session.workspaces.length) break;
   }
   session.compareSelection = session.compareSelection.filter(ws => session.workspaces.includes(ws));
-  dropMarksOutside(session.workspaces);
+  session.marked = session.marked.filter(mark => session.workspaces.includes(mark.ws));
   if (session.tabs.includes(session.active)) return false;
   session.active = session.tabs[Math.min(at, session.tabs.length - 1)];
   return true;

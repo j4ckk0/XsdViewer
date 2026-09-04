@@ -93,11 +93,7 @@ function compareSvg() {
   svg.setAttribute('xmlns', SVG_NS);
   svg.setAttribute('width', w); svg.setAttribute('height', h);
   svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-  const style = document.createElementNS(SVG_NS, SVG_STYLE_TAG);
-  style.textContent = pageCss() + '\nsvg { font: ' + getComputedStyle(document.body).font + '; }';
-  const bg = document.createElementNS(SVG_NS, SVG_RECT_TAG);
-  bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', background());
-  svg.append(style, bg);
+  standalone(svg, 0, 0, w, h);
   let dx = 0;
   for (const side of sides) {
     const g = document.createElementNS(SVG_NS, SVG_GROUP_TAG);
@@ -129,14 +125,19 @@ function graphSvg() {
   const svg = src.cloneNode(true);
   svg.setAttribute('width', w); svg.setAttribute('height', h);
   svg.setAttribute('viewBox', x + ' ' + y + ' ' + w + ' ' + h);
-  const font = getComputedStyle(document.body).font;
-  const style = document.createElementNS(SVG_NS, SVG_STYLE_TAG);
-  style.textContent = pageCss() + '\nsvg { font: ' + font + '; }';
-  svg.insertBefore(style, svg.firstChild);
+  return { svg: standalone(svg, x, y, w, h), w, h };
+}
+
+/** The page's styles and its background put under {@code svg}, so that the file renders on its own. */
+function standalone(svg, x, y, w, h) {
   const bg = document.createElementNS(SVG_NS, SVG_RECT_TAG);
-  bg.setAttribute('x', x); bg.setAttribute('y', y); bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', background());
-  svg.insertBefore(bg, style.nextSibling);
-  return { svg, w, h };
+  bg.setAttribute('x', x); bg.setAttribute('y', y); bg.setAttribute('width', w); bg.setAttribute('height', h);
+  bg.setAttribute('fill', background());
+  svg.insertBefore(bg, svg.firstChild);
+  const style = document.createElementNS(SVG_NS, SVG_STYLE_TAG);
+  style.textContent = pageCss() + '\nsvg { font: ' + getComputedStyle(document.body).font + '; }';
+  svg.insertBefore(style, svg.firstChild);
+  return svg;
 }
 
 /** Renders an SVG picture into a PNG file. */

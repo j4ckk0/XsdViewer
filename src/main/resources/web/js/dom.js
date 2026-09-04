@@ -323,6 +323,10 @@ export const DATA = {
 };
 export const dataAttr = (name, value) => ' data-' + name + '="' + esc(value) + '"';
 
+/** A legend: one chip per [class, text] pair, the class colouring it. */
+export const legendHtml = (entries) =>
+  entries.map(([cls, text]) => '<span class="' + CLS.LEGEND_ENTRY + ' ' + cls + '">' + esc(text) + '</span>').join('');
+
 /** Ids inside the graph SVG. */
 export const SVG_ID = {
   /** The heads of a list-of and a union-of link: a diamond, filled and hollow. */
