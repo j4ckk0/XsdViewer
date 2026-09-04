@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 4.7.0 — 2026-09-04
 
 - **Fix: the Compare view forgot what was folded.** Leaving the view and coming back, selecting another declaration or resizing the window reopened every box that had been put aside. What is folded is now kept until the two sides change.
 
