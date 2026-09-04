@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 4.4.0 — 2026-09-04
 
 - **The Compare view folds.** Every box holding something now carries a handle that puts it aside, and folding one folds the box matching it on the other side, so the two models stay read together; **⊞** and **⊟** open and fold them all. What is folded changes nothing to the comparison: the models are compared whole, and the marks and the summary stay as they were.
 
