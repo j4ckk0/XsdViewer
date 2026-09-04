@@ -3,7 +3,7 @@ import { VIEW, ZOOMABLE_VIEWS } from './constants.js';
 import { renderCompare } from './compare.js';
 import { renderDetails } from './details.js';
 import { canValidate, renderValidation } from './validate.js';
-import { listedOnly } from './workspace-actions.js';
+import { listedOnly } from './workspace-files.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { renderGraph } from './graph.js';
 import { t } from './i18n.js';

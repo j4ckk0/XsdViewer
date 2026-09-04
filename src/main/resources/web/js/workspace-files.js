@@ -1,6 +1,7 @@
 /** The files a workspace knows (workspace.files), open in a tab or only listed: {name, path (on disk), rel (in an opened folder), text, model, failed}. */
 import { LIBRARY_KEY_PREFIX, NAME_KEY_PREFIX } from './constants.js';
 import { session } from './state.js';
+import { activeWorkspace } from './tabs.js';
 
 /** Every identity a file (or the tab showing it) answers to: its path on disk, its path in an opened folder, else its name. */
 export function fileKeys(f) {
@@ -21,6 +22,9 @@ export function findFile(ws, file) {
 }
 
 /** Adds {@code file} ({name, path?, rel?, text, model?}) to {@code ws}, or completes the entry it already has; returns the entry. */
+/** The files of the active workspace that are listed but not open in a tab. */
+export const listedOnly = () => activeWorkspace().files.filter(entry => !tabOfFile(entry));
+
 export function registerFile(ws, file) {
   let entry = findFile(ws, file);
   if (!entry) {

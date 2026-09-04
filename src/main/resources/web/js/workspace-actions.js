@@ -20,9 +20,6 @@ export function startWorkspace() {
   renderPage();
 }
 
-/** The files of the active workspace listed but not open in a tab. */
-export const listedOnly = () => activeWorkspace().files.filter(entry => !tabOfFile(entry));
-
 /** Warns before opening this many tabs at once. */
 const OPEN_ALL_CONFIRM_FROM = 30;
 
