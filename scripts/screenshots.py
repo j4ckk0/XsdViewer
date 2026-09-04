@@ -300,6 +300,28 @@ SCENES = [
                  'summary': '1 only on the left, 3 only on the right, 3 changed',
                  'heads': 'complexType ProductType — product.xsd, v1|complexType ProductType — product.xsd, v2',
                  'marks': '1/3/6', 'marked': 1, 'guidance': 'Mark a declaration for c', 'details': True}),   # legacyCode gone; weight added with its own type; category, description and tag changed
+    dict(name='compare-two-objects', file='samples/compare/v1.xsdviewer.json', theme='light',
+         # two declarations that have nothing to do with one another: different names, different files, one workspace
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:CatalogType\"]').click();"
+                "document.querySelector('#detailsContent .cobj-mark').click();"
+                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('supplier.xsd')).click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:SupplierType\"]').click();"
+                "document.querySelector('#detailsContent .cobj-mark').click();"
+                "document.querySelector('.tab[data-view=\"compare\"]').click();"
+                "await new Promise(r => setTimeout(r, 400));"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'title': "document.getElementById('objectCompareTitle').textContent",
+                 'summary': "document.getElementById('objectCompareSummary').textContent",
+                 'heads': "[...document.querySelectorAll('#objectCompareBody .cobj-head')].map(h => h.textContent).join('|')",
+                 'left': "[...document.querySelectorAll('#objectCompareLeft .mbox .mname')].map(t => t.textContent).join('|')",
+                 'right': "[...document.querySelectorAll('#objectCompareRight .mbox .mname')].map(t => t.textContent).join('|')",
+                 'marks': "['removed','added','changed','same'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/')"},
+         expect={'title': 'complexType CatalogType compared with complexType SupplierType',
+                 'summary': '17 only on the left, 9 only on the right, 0 changed',
+                 'heads': 'complexType CatalogType — catalog.xsd, v1|complexType SupplierType — supplier.xsd, v1',
+                 'left': 'CatalogType|@issued : date|publisher|street|city|postalCode|country|product|@sku : Code|@category : string ?|name|description|price|discount|legacyCode|tag',
+                 'right': 'SupplierType|@code : Code|name|address|street|city|postalCode|country|rating',
+                 'marks': '17/9/0/4'}),   # nothing matches but the two roots and their sequences, which are the two subjects and are drawn plain
     # the four pictures of the README (screenshots/), on the comparison sample: shot like any other
     # scene, checked like any other, and written as JPEG by --docs
     dict(name='doc-model', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-model-view.jpg',
