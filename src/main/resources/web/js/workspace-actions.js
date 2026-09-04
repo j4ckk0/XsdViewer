@@ -3,7 +3,7 @@ import { chooseFolder, openWorkspaceFile, saveWorkspaceFile } from './api.js';
 import { busy } from './busy.js';
 import { MAX_AUTO_OPEN, MAX_FOLDER_FILES, TEXT, XSD_FILE_PATTERN } from './constants.js';
 import { ensureTab, parseInBackground } from './file-tabs.js';
-import { registerFile, tabOfFile } from './workspace-files.js';
+import { registerFile, savableFiles, tabOfFile } from './workspace-files.js';
 import { $, ID } from './dom.js';
 import { addToLibrary, normPath } from './folder-library.js';
 import { plural, t } from './i18n.js';
@@ -44,12 +44,12 @@ export function closeActiveWorkspace() {
 export async function saveWorkspace() {
   if (!session.dialogs) { toast(t(MSG.DIALOGS_UNAVAILABLE)); return; }
   const ws = activeWorkspace();
-  const own = tabsOf(ws);
-  const saved = own.filter(tab => tab.model && tab.path);
-  const skipped = own.filter(tab => tab.model && !tab.path).map(tab => tab.fileName);
+  const { saved, skipped } = savableFiles(ws);
   if (!saved.length) { toast(t(MSG.WORKSPACE_EMPTY)); return; }
   try {
-    const r = await saveWorkspaceFile(saved.map(tab => tab.path), Math.max(0, saved.indexOf(session.active)), ws.path);
+    // the file the reader is on is the one the workspace opens on
+    const active = Math.max(0, saved.findIndex(entry => entry === session.active.file));
+    const r = await saveWorkspaceFile(saved.map(entry => entry.path), active, ws.path);
     if (r.cancelled) return;
     ws.path = r.path;
     renderNavigation();

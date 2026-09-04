@@ -461,9 +461,9 @@ them comparable, later). The File menu:
 - **Open workspace…** — opens a `<name>.xsdviewer.json` as a new group next to the workspaces
   already open (an empty unsaved one is taken over; a workspace already open is brought to
   front; missing files are reported). Several workspaces can be open together.
-- **Save workspace…** (Ctrl+S) — writes the active workspace: the location of its files
-  (relative to the workspace file when they share its root) and which tab is shown; files
-  whose location is unknown are left out and named in the message. The workspace's own file
+- **Save workspace…** (Ctrl+S) — writes the active workspace: the location of every file it
+  knows, open in a tab or only listed (relative to the workspace file when they share its root),
+  and which one is shown; files whose location is unknown are left out and named in the message. The workspace's own file
   is proposed; the workspace takes the name of the file.
 - **Close workspace** — the active workspace and its tabs; **Close all tabs** closes every workspace.
 

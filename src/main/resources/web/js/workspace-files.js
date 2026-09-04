@@ -22,6 +22,18 @@ export function findFile(ws, file) {
 }
 
 /** Adds {@code file} ({name, path?, rel?, text, model?}) to {@code ws}, or completes the entry it already has; returns the entry. */
+/**
+ * What saving a workspace writes: every file of it the server read from disk, and the names of those
+ * it cannot write — a file opened in the browser, whose location the server never learnt. A workspace
+ * knows more files than it has tabs, since a large folder leaves most of them listed.
+ */
+export function savableFiles(ws) {
+  return {
+    saved: ws.files.filter(entry => entry.path),
+    skipped: ws.files.filter(entry => !entry.path).map(entry => entry.name),
+  };
+}
+
 /** The files of the active workspace that are listed but not open in a tab. */
 export const listedOnly = () => activeWorkspace().files.filter(entry => !tabOfFile(entry));
 

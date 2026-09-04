@@ -10,6 +10,8 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 - **The exports and the parser tidied for maintenance.** The export of a drawing, the painting of the source line by line, and the handing of a file to the browser are three modules instead of one. On the server, what a name stands for and how a reference is closed leave the XSD parser for a class of their own, which the content models already asked their questions of; the parser keeps the walking of the vocabulary.
 
+- **Fix: saving a workspace kept only the files open in a tab.** A folder opened as a workspace leaves most of its files listed rather than open, and those were left out of the saved file, so reopening the workspace showed a fraction of the folder. Every file the workspace knows is written, whether or not it has a tab.
+
 ## 4.6.0 — 2026-09-04
 
 - **The two side buttons say what they are for.** They sat in the details panel with nothing to tell a reader that they fill the Compare view, or that *left* and *right* mean the sides of it. They are now a **Compare view** section of the panel, under a line saying what they do, and read **◈ Left side** and **◈ Right side**.
