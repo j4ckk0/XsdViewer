@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 4.3.0 — 2026-09-04
 
 - **Fix: ⤓ PNG and ⤓ SVG did nothing in the Compare view.** Both buttons were disabled there, since neither model alone is the picture. They now export the two models as one image, side by side, each under the heading naming its declaration, its file and its workspace — the whole of each model, not the part the pane shows.
 
