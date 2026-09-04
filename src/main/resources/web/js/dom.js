@@ -86,6 +86,7 @@ export const ID = {
   GRAPH_LEGEND: 'graphLegend',
   MODEL: 'model',
   MODEL_CANVAS: 'modelCanvas',
+  MODEL_LEGEND: 'modelLegend',
   MODEL_TITLE: 'modelTitle',
   MODEL_EMPTY: 'modelEmpty',
   MODEL_EXPAND_ALL: 'modelExpandAll',

@@ -86,3 +86,54 @@ test('an anonymous type is drawn in place, with the attributes it declares', () 
   assert.equal(inline.children[0].children[0].name, 'deep');
   assert.equal(inline.attributes[0].name, 'lang');
 });
+
+// --- a WSDL's or a Schematron's own objects: no content model, but a chain, which is their model
+
+const node = (kind, name) => ({ id: kind + ':' + name, kind, name, content: [], attributes: [] });
+const service = node(NODE_KIND.SERVICE, 'PurchaseOrderService');
+const portType = node(NODE_KIND.PORT_TYPE, 'PurchaseOrderPortType');
+const operation = node(NODE_KIND.OPERATION, 'submitPurchaseOrder');
+const chain = [
+  { from: service.id, to: portType.id, label: 'PurchaseOrderPort' },
+  { from: portType.id, to: operation.id, label: 'operation' },
+];
+
+test('a service has its chain for a model: a box named after what the link leads to', () => {
+  const tree = buildTree(service, tab([service, portType, operation], { edges: chain }));
+  assert.equal(tree.children.length, 1);
+  const port = tree.children[0];
+  assert.equal(port.name, 'PurchaseOrderPortType', 'named after what it leads to');
+  assert.equal(port.word, 'PurchaseOrderPort', 'the link is the port');
+  assert.equal(port.kind, NODE_KIND.PORT_TYPE);
+  assert.equal(port.ref, portType.id, 'a click selects it');
+  assert.equal(port.expandable, true);
+  assert.equal(port.children.length, 0, 'folded until its path is opened');
+});
+
+test('a chain opens one level at a time, as a content model does', () => {
+  const tree = buildTree(service, tab([service, portType, operation], { edges: chain, expanded: ['/0'] }));
+  const op = tree.children[0].children[0];
+  assert.equal(op.name, 'submitPurchaseOrder');
+  assert.equal(op.word, 'operation');
+  assert.equal(op.expandable, undefined, 'the operation carries nothing further here');
+});
+
+test('where a chain reaches the schema, the content model takes over', () => {
+  const message = node(NODE_KIND.MESSAGE, 'SubmitPurchaseOrderRequest');
+  const element = { id: 'element:purchaseOrder', kind: NODE_KIND.ELEMENT, name: 'purchaseOrder', attributes: [],
+    content: [sequence({ kind: PARTICLE.ELEMENT, name: 'shipTo', type: 'complexType:USAddress', min: 1, max: 1 })] };
+  const tree = buildTree(message, tab([message, element],
+    { edges: [{ from: message.id, to: element.id, label: 'order' }], expanded: ['/0'] }));
+  const part = tree.children[0];
+  assert.equal(part.word, 'order', 'the part names the link');
+  assert.equal(part.kind, NODE_KIND.ELEMENT);
+  assert.equal(part.children[0].kind, PARTICLE.SEQUENCE, 'the element content model, not a chain');
+  assert.equal(part.children[0].children[0].name, 'shipTo');
+});
+
+test('a declaration that names nothing else draws nothing', () => {
+  const simple = node(NODE_KIND.SIMPLE_TYPE, 'SKU');
+  const tree = buildTree(simple, tab([simple]));
+  assert.equal(tree.children.length, 0);
+  assert.equal(tree.attributes.length, 0);
+});

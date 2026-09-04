@@ -91,7 +91,7 @@ SCENES = [
                  'legend': "document.querySelectorAll('#modelLegend .row').length + ':' + document.querySelectorAll('#modelLegend .lg').length",
                  'svgButton': "document.getElementById('exportSvgBtn').disabled"},
          expect={'boxes': 11, 'compositors': 2, 'names': 'Items|item|@partNum : SKU|productName|quantity|USPrice|comment|shipDate|ItemExtras',
-                 'handles': 1, 'cards': '0..*|0..1|0..1|0..1', 'legend': '3:12', 'svgButton': False}),   # ItemExtras (a group) opens on demand; comment refers to a global element of a built-in type: nothing inside
+                 'handles': 1, 'cards': '0..*|0..1|0..1|0..1', 'legend': '3:23', 'svgButton': False}),   # ItemExtras (a group) opens on demand; comment refers to a global element of a built-in type: nothing inside
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"
@@ -135,6 +135,30 @@ SCENES = [
                  'rounded': "[...document.querySelectorAll('#graphCanvas .node')].filter(g => g.querySelector('rect').getAttribute('rx')).map(g => g.className.baseVal.split(' ')[1]).sort().join(',')"},
          expect={'messages': 3, 'tabs': 3, 'legend': True, 'chainArrow': True, 'chainEdges': 7, 'plainEdges': 0,
                  'rounded': 'message,message,message,operation,portType'}),   # portType -> operation, its 3 messages, and each message to what it carries: every link has a service end   # the WSDL, purchaseOrder.xsd it imports, ext.xsd that one imports
+    dict(name='model-wsdl', file='samples/wsdl/purchaseOrderService.wsdl', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"service:PurchaseOrderService\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();"
+                "document.querySelector('#modelCanvas .mhandle').dispatchEvent(new MouseEvent('click', { bubbles: true }));",
+         checks={'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
+                 'words': "[...document.querySelectorAll('#modelCanvas .mbox .mword')].map(t => t.textContent).join('|')",
+                 'kinds': "[...document.querySelectorAll('#modelCanvas .mbox .mtype')].map(t => t.textContent).join('|')",
+                 'rounded': "[...document.querySelectorAll('#modelCanvas .mbox')].filter(g => g.querySelector('rect').getAttribute('rx') === '9').length",
+                 'legend': "getComputedStyle(document.querySelector('#modelLegend .lg.box.service')).display !== 'none'",
+                 'empty': "!document.getElementById('modelEmpty').classList.contains('hidden')"},
+         expect={'names': 'PurchaseOrderService|PurchaseOrderPortType|submitPurchaseOrder|getOrderStatus',
+                 'words': 'service|PurchaseOrderPort|operation|operation',
+                 'kinds': 'portType',
+                 'rounded': 4, 'legend': True, 'empty': False}),   # the service, its port to the portType, and that one opened on its two operations (whose word is already their kind, said once)
+    dict(name='model-schematron', file='samples/schematron/purchaseOrder.sch', theme='dark',
+         action="document.querySelector('#nodeList .item[data-id=\"phase:basic\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();"
+                "document.getElementById('modelExpandAll').click();",
+         checks={'words': "[...new Set([...document.querySelectorAll('#modelCanvas .mbox .mword')].map(t => t.textContent))].join('|')",
+                 'kinds': "[...new Set([...document.querySelectorAll('#modelCanvas .mbox .mtype')].map(t => t.textContent))].join('|')",
+                 'noXsdMarks': "getComputedStyle(document.querySelector('#modelLegend .lg.arrow.xsd')).display === 'none'",
+                 'legend': "getComputedStyle(document.querySelector('#modelLegend .lg.box.pattern')).display !== 'none'"},
+         expect={'words': 'phase|active|rule|assert|extends|report|diagnostic', 'kinds': 'pattern|rule',
+                 'noXsdMarks': True, 'legend': True}),   # a phase, its patterns, their rules and what those assert: a Schematron's chain is its model too
     dict(name='schematron-rule', file='samples/schematron/purchaseOrder.sch', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"rule:structure/po:item\"]').click();"
                 "const two = document.getElementById('twoLevels'); if (!two.checked) two.click();",

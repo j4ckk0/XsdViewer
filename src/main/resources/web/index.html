@@ -183,20 +183,31 @@
         <span id="modelEmpty" class="muted hidden" data-i18n="model.empty">No content model: a simple type, an attribute, or a declaration of another vocabulary.</span>
         <span id="modelLegend" class="legend">
           <span class="row">
-            <span class="lg box element" data-i18n="kind.element" data-i18n-title="legend.model.element.title">element</span>
-            <span class="lg box complexType" data-i18n="legend.derivation" data-i18n-title="legend.model.base.title">base type</span>
-            <span class="lg box group" data-i18n="kind.group" data-i18n-title="legend.model.group.title">group</span>
-            <span class="lg box attribute" data-i18n="kind.attribute" data-i18n-title="legend.model.attribute.title">attribute</span>
-            <span class="lg box external" data-i18n="kind.any" data-i18n-title="legend.model.any.title">any</span>
+            <span class="lg box service wsdl" data-i18n="kind.service" data-i18n-title="legend.model.chain.title">service</span>
+            <span class="lg box portType wsdl" data-i18n="kind.portType" data-i18n-title="legend.model.chain.title">portType</span>
+            <span class="lg box operation wsdl" data-i18n="kind.operation" data-i18n-title="legend.model.chain.title">operation</span>
+            <span class="lg box binding wsdl" data-i18n="kind.binding" data-i18n-title="legend.model.chain.title">binding</span>
+            <span class="lg box message wsdl" data-i18n="kind.message" data-i18n-title="legend.model.chain.title">message</span>
+            <span class="lg box phase schematron" data-i18n="kind.phase" data-i18n-title="legend.model.chain.title">phase</span>
+            <span class="lg box pattern schematron" data-i18n="kind.pattern" data-i18n-title="legend.model.chain.title">pattern</span>
+            <span class="lg box rule schematron" data-i18n="kind.rule" data-i18n-title="legend.model.chain.title">rule</span>
+            <span class="lg box assert schematron" data-i18n="kind.assert" data-i18n-title="legend.model.chain.title">assert</span>
+            <span class="lg box report schematron" data-i18n="kind.report" data-i18n-title="legend.model.chain.title">report</span>
+            <span class="lg box diagnostic schematron" data-i18n="kind.diagnostic" data-i18n-title="legend.model.chain.title">diagnostic</span>
+            <span class="lg box element xsd" data-i18n="kind.element" data-i18n-title="legend.model.element.title">element</span>
+            <span class="lg box complexType xsd" data-i18n="legend.derivation" data-i18n-title="legend.model.base.title">base type</span>
+            <span class="lg box group xsd" data-i18n="kind.group" data-i18n-title="legend.model.group.title">group</span>
+            <span class="lg box attribute xsd" data-i18n="kind.attribute" data-i18n-title="legend.model.attribute.title">attribute</span>
+            <span class="lg box external xsd" data-i18n="kind.any" data-i18n-title="legend.model.any.title">any</span>
           </span>
           <span class="row">
-            <span class="lg arrow" data-i18n-title="legend.model.compositor.title"><span class="compositor">···</span><span data-i18n="kind.sequence">sequence</span></span>
-            <span class="lg arrow" data-i18n-title="legend.model.compositor.title"><span class="compositor">◇</span><span data-i18n="kind.choice">choice</span></span>
-            <span class="lg arrow" data-i18n-title="legend.model.compositor.title"><span class="compositor">○</span><span data-i18n="kind.all">all</span></span>
-            <span class="lg arrow" data-i18n-title="legend.model.optional.title"><svg width="30" height="10" viewBox="0 0 30 10" aria-hidden="true"><line class="optional" x1="1" y1="5" x2="29" y2="5"/></svg><span data-i18n="legend.optional">optional</span></span>
+            <span class="lg arrow xsd" data-i18n-title="legend.model.compositor.title"><span class="compositor">···</span><span data-i18n="kind.sequence">sequence</span></span>
+            <span class="lg arrow xsd" data-i18n-title="legend.model.compositor.title"><span class="compositor">◇</span><span data-i18n="kind.choice">choice</span></span>
+            <span class="lg arrow xsd" data-i18n-title="legend.model.compositor.title"><span class="compositor">○</span><span data-i18n="kind.all">all</span></span>
+            <span class="lg arrow xsd" data-i18n-title="legend.model.optional.title"><svg width="30" height="10" viewBox="0 0 30 10" aria-hidden="true"><line class="optional" x1="1" y1="5" x2="29" y2="5"/></svg><span data-i18n="legend.optional">optional</span></span>
           </span>
           <span class="row">
-            <span class="lg arrow" data-i18n-title="legend.model.occurs.title"><span class="card">0..*</span><span data-i18n="legend.model.occurs">occurrences</span></span>
+            <span class="lg arrow xsd" data-i18n-title="legend.model.occurs.title"><span class="card">0..*</span><span data-i18n="legend.model.occurs">occurrences</span></span>
             <span class="lg arrow" data-i18n-title="legend.model.handle.title"><span class="handle">+</span><span data-i18n="legend.model.handle">opens</span></span>
             <span class="lg arrow" data-i18n-title="legend.model.recursive.title"><span class="compositor">↺</span><span data-i18n="legend.model.recursive">recursive</span></span>
           </span>

@@ -36,9 +36,14 @@ A Java server parses the schema and serves a web page offering three views:
   type, a global element, a group or a base type has a **+** handle that opens its content, taken
   from its own declaration in this file or in another file of the workspace (⊞ opens them all, six
   levels deep; a recursive type stops with ↺). A click on a box selects the declaration it refers
-  to. A legend in the toolbar reads on three lines: the kinds of box, the marks of the drawing
-  (the compositors, the dashed optional), then what a box tells of itself (its occurrences, its
-  **+** handle, the ↺ of a recursion). Each entry is explained in its tooltip. **⤓ PNG** and **⤓ SVG** export it like the graph.
+  to. A WSDL or a Schematron declares no particle, but has a chain of its own, and that chain is
+  the model such a file has: a service holds its ports, a portType its operations, an operation its
+  messages, a message the elements of its parts — where the schema's own content model takes over;
+  a phase holds its patterns, they their rules, they their assertions. Such a box carries the
+  link's word above the name of what it leads to, and opens the same way. A legend in the toolbar
+  reads on three lines: the kinds of box, the marks of the drawing (the compositors, the dashed
+  optional), then what a box tells of itself (its occurrences, its **+** handle, the ↺ of a
+  recursion). Each entry is explained in its tooltip. **⤓ PNG** and **⤓ SVG** export it like the graph.
 - **Text** – the schema source with line numbers and syntax colouring. The selected
   object's declaration is highlighted; click a highlighted line number to select that
   object.

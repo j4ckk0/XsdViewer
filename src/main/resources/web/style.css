@@ -749,6 +749,17 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 #modelLegend .lg.box.group { border-color: var(--c-group); }
 #modelLegend .lg.box.attribute { border-color: var(--c-attribute); }
 #modelLegend .lg.box.external { border-color: var(--c-external); background: var(--surface-2); }
+#modelLegend .lg.box.service { border-color: var(--c-service); }
+#modelLegend .lg.box.portType { border-color: var(--c-portType); }
+#modelLegend .lg.box.operation { border-color: var(--c-operation); }
+#modelLegend .lg.box.binding { border-color: var(--c-binding); }
+#modelLegend .lg.box.message { border-color: var(--c-message); }
+#modelLegend .lg.box.phase { border-color: var(--c-phase); }
+#modelLegend .lg.box.pattern { border-color: var(--c-pattern); }
+#modelLegend .lg.box.rule { border-color: var(--c-rule); }
+#modelLegend .lg.box.assert { border-color: var(--c-assert); }
+#modelLegend .lg.box.report { border-color: var(--c-report); }
+#modelLegend .lg.box.diagnostic { border-color: var(--c-diagnostic); }
 #modelLegend .lg.arrow .card { font-size: 11px; }
 #modelLegend .lg.arrow .handle { font-weight: 700; font-size: 11px; line-height: 12px; padding: 0 3px; border: 1px solid var(--muted); border-radius: 2px; background: var(--surface-2); }
 #modelCanvas { flex: 1; overflow: auto; }
@@ -766,6 +777,18 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .mbox.group rect { stroke: var(--c-group); }
 .mbox.attribute rect { stroke: var(--c-attribute); }
 .mbox.external rect { stroke: var(--c-external); fill: var(--surface-2); }
+/* the objects of a WSDL's service or of a Schematron's rules: their own colour, rounded as the graph draws them */
+.mbox.service rect { stroke: var(--c-service); }
+.mbox.portType rect { stroke: var(--c-portType); }
+.mbox.operation rect { stroke: var(--c-operation); }
+.mbox.binding rect { stroke: var(--c-binding); }
+.mbox.message rect { stroke: var(--c-message); }
+.mbox.phase rect { stroke: var(--c-phase); }
+.mbox.pattern rect { stroke: var(--c-pattern); }
+.mbox.rule rect { stroke: var(--c-rule); }
+.mbox.assert rect { stroke: var(--c-assert); }
+.mbox.report rect { stroke: var(--c-report); }
+.mbox.diagnostic rect { stroke: var(--c-diagnostic); }
 .mbox text { font-size: 13px; fill: var(--text); pointer-events: none; }
 .mbox .mglyph { font-size: 14px; font-weight: 700; fill: var(--muted); }
 .mbox .mtype { font-size: 10px; fill: var(--muted); }

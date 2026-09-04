@@ -45,6 +45,7 @@ export const TYPE_REFERENCE_KIND = 'type';
 export const ID_SEPARATOR = ':';
 export const nodeId = (kind, name) => kind + ID_SEPARATOR + name;
 export const kindOfId = (id) => id.slice(0, id.indexOf(ID_SEPARATOR));
+export const nameOfId = (id) => id.slice(id.indexOf(ID_SEPARATOR) + 1);
 
 /** Edge labels that name an XSD construct rather than an element / attribute (LinkLabel on the server). */
 export const LINK_LABEL = {
