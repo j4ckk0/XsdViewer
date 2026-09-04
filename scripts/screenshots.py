@@ -272,6 +272,17 @@ SCENES = [
                  'detail': "document.querySelectorAll('#compareTable .cdetail').length",
                  'tools': "document.getElementById('compareTools').classList.contains('hidden')"},
          expect={'tab': 'product.xsd (v1 ⇄ v2)', 'title': 'product.xsd: v1 compared with v2', 'rows': 1, 'detail': 1, 'tools': True}),   # catalog.xsd differs in its documentation only: identical business lines
+    dict(name='selection-in-panels', file='samples/purchaseOrder.xsd', theme='light',
+         # a click in the Model view marks the object in the Files panel and in the object list
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+                "const box = [...document.querySelectorAll('#modelCanvas .mbox.clickable')].find(b => b.dataset.id === 'complexType:USAddress');"
+                "box.dispatchEvent(new MouseEvent('click', { bubbles: true }));"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'files': "[...document.querySelectorAll('#filesContent .obj.selected')].map(e => e.dataset.id).join('|')",
+                 'objects': "[...document.querySelectorAll('#nodeList .item.selected')].map(e => e.dataset.id).join('|')",
+                 'title': "document.getElementById('modelTitle').textContent"},
+         expect={'files': 'complexType:USAddress', 'objects': 'complexType:USAddress',
+                 'title': 'complexType USAddress'}),   # the same object marked in both panels, from a click in the drawing
     dict(name='zoom', file='samples/purchaseOrder.xsd', theme='light',
          # the drawn views scale in their panel: the SVG grows, its viewBox does not, the panel scrolls
          action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"

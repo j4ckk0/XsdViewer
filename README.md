@@ -75,9 +75,9 @@ the graph shows the types themselves as neighbours of the declaration that names
 Files are opened with **File ▸ Open…** (Ctrl+O) or by dropping them anywhere in the window.
 Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸ New tab
 opens an empty one, × or a middle click closes one); every tab keeps its own view,
-selection, history and search filter. Selecting an object anywhere — the graph, the details panel,
-a line of the source — shows it in the object list of the left panel, opening its group when it was
-folded. The **search box** at the top of the left panel (Ctrl+F)
+selection, history and search filter. Selecting an object anywhere — the graph, the model, the details panel, a line of the source —
+marks it in both panels on the left: in the object list, whose group opens when it was folded, and
+among the objects of the file being shown in the Files panel. The **search box** at the top of the left panel (Ctrl+F)
 filters the Files panel and the object list below it — every schema of the workspace, open in a tab or
 not, is searched, by the objects' names but also by the names of the elements and attributes inside
 a declaration (a message's parts) and by the documentation, the reason being shown in grey after a

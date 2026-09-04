@@ -5,7 +5,7 @@
  * and a last row counts the files still being parsed, whose objects are not searchable yet.
  */
 import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
+import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { matchedBy, matches } from './search.js';
@@ -73,11 +73,13 @@ const byKindThenName = (a, b) => (KIND_ORDER.get(a.kind) - KIND_ORDER.get(b.kind
 /** The objects of a file to list: its declared ones — only those whose name contains {@code filter} when there is one —, by kind then name. */
 const listedObjects = (entry, filter) => entry.model.nodes.filter(n => declared(n) && matches(n, filter)).sort(byKindThenName);
 
-function objectsHtml(entry, filter) {
+function objectsHtml(entry, filter, active) {
   if (!entry.model) return entry.failed && !filter ? '<div class="' + CLS.ITEM + ' ' + CLS.EMPTY + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</div>' : '';
   return listedObjects(entry, filter).map(n => {
     const why = matchedBy(n, filter);
-    return '<div class="' + CLS.ITEM + ' ' + CLS.OBJECT + '"' + dataAttr(DATA.ID, n.id) + ' title="' + esc(n.id) + '">'
+    // the object being read is marked here as it is in the object list, but only in the file it is read from
+    const selected = active && n.id === session.active.selected ? ' ' + CLS.SELECTED : '';
+    return '<div class="' + CLS.ITEM + ' ' + CLS.OBJECT + selected + '"' + dataAttr(DATA.ID, n.id) + ' title="' + esc(n.id) + '">'
       + '<span class="' + CLS.DOT + ' ' + n.kind + '"></span><span>' + esc(n.name) + '</span>'
       + (why ? '<span class="' + CLS.WHY + '" title="' + esc(why) + '">' + esc(why) + '</span>' : '') + '</div>';
   }).join('');
@@ -99,7 +101,7 @@ function nodeHtml(node, dirPath, filter) {
   for (const f of node.files.sort((a, b) => a.shown.localeCompare(b.shown))) {
     const active = f.tab === session.active;
     const unfolded = f.entry && (!!filter || showsObjects(f.entry, active));
-    const objects = unfolded ? objectsHtml(f.entry, filter) : '';
+    const objects = unfolded ? objectsHtml(f.entry, filter, active) : '';
     if (filter && !objects) continue;   // no matching object (or not parsed yet: the panel is redrawn once it is)
     shownFiles++;
     html += '<div class="' + CLS.ITEM + ' ' + CLS.FILE + (active ? ' ' + CLS.SELECTED : '') + (f.tab ? ' ' + CLS.OPEN : '') + '"'
@@ -107,9 +109,20 @@ function nodeHtml(node, dirPath, filter) {
       + ' title="' + esc(f.path) + '">'
       + (f.entry ? '<span class="' + CLS.EXPANDER + '">' + (unfolded ? COLLAPSE_GLYPH : EXPAND_GLYPH) + '</span>' : '')
       + '<span class="' + (f.entry ? '' : CLS.EMPTY) + '">' + esc(f.shown) + '</span></div>';
-    if (unfolded) html += '<div class="' + CLS.GROUP_ITEMS + ' ' + CLS.OBJECTS + '">' + objects + '</div>';
+    if (unfolded) html += '<div class="' + CLS.GROUP_ITEMS + ' ' + CLS.OBJECTS + (active ? ' ' + CLS.ACTIVE : '') + '">' + objects + '</div>';
   }
   return html;
+}
+
+/** Moves the highlight to the object being read, among the objects of the file being shown; nothing is rebuilt. */
+export function renderFileListSelection() {
+  const selected = session.active.selected;
+  const shown = $(ID.FILES_CONTENT).querySelector(selector(CLS.OBJECTS) + selector(CLS.ACTIVE));
+  for (const el of $(ID.FILES_CONTENT).querySelectorAll(selector(CLS.OBJECT))) {
+    const on = !!shown && shown.contains(el) && el.dataset[DATA.ID] === selected;
+    el.classList.toggle(CLS.SELECTED, on);
+    if (on) el.scrollIntoView({ block: 'nearest' });
+  }
 }
 
 export function renderFileList() {

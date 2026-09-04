@@ -6,6 +6,8 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 - **The two side buttons say what they are for.** They sat in the details panel with nothing to tell a reader that they fill the Compare view, or that *left* and *right* mean the sides of it. They are now a **Compare view** section of the panel, under a line saying what they do, and read **◈ Left side** and **◈ Right side**.
 
+- **The object being read is marked in the Files panel too.** Selecting a declaration — in the model, the graph, the source, the details panel — already marked it in the object list; the Files panel now marks it as well, among the objects of the file being shown.
+
 ## 4.5.0 — 2026-09-04
 
 - **The Compare view has two sides you choose.** The details panel of a declaration offers **◈ Left** and **◈ Right**, and the button of the side holding it is coloured; clicking that side again takes it off, **⇄ Swap** puts each side where the other was, and **Clear the marks** empties both. Which side a declaration lands on no longer depends on the order things were picked in.

@@ -9,6 +9,7 @@ import { renderMainView, renderPage } from './page.js';
 import { ensureTab } from './file-tabs.js';
 import { resolveLocation } from './schema-loader.js';
 import { fileKeys, hasKey, registerFile } from './workspace-files.js';
+import { renderFileListSelection } from './file-list.js';
 import { renderNodeListSelection } from './sidebar.js';
 import { session } from './state.js';
 import { activateTab, tabsOf } from './tabs.js';
@@ -24,6 +25,7 @@ export function select(id, pushHistory = true) {
   st.selected = id;
   $(ID.BACK_BUTTON).disabled = st.history.length === 0;
   renderNodeListSelection();
+  renderFileListSelection();
   renderMainView();
   renderDetails();
   highlightTextLine(true);
