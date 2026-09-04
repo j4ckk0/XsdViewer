@@ -2,6 +2,12 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **Fix: the Compare view forgot what was folded.** Leaving the view and coming back, selecting another declaration or resizing the window reopened every box that had been put aside. What is folded is now kept until the two sides change.
+
+- **Fix: the tab bar could clip the top of its tabs.** It had a fixed height, so a scrollbar appearing inside it ate the room the tabs needed; it grows instead, and its scrollbars are thin.
+
 ## 4.6.0 — 2026-09-04
 
 - **The two side buttons say what they are for.** They sat in the details panel with nothing to tell a reader that they fill the Compare view, or that *left* and *right* mean the sides of it. They are now a **Compare view** section of the panel, under a line saying what they do, and read **◈ Left side** and **◈ Right side**.

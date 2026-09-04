@@ -24,42 +24,57 @@ const differs = (l, r) => cardinalityText(l.card || {}) !== cardinalityText(r.ca
 
 const rowsOf = (b) => [...b.attributes, ...b.children];
 
-/** A box matched with the other side is keyed by its pair, a box of one side alone by where it sits. */
-const PAIR_PREFIX = 'pair', SIDE_PREFIX = 'side';
-let pairs = 0;
+/**
+ * What a box is called when it is folded: the trail of what it and its parents are, from the root.
+ * A matched pair shares one trail, so folding a box folds the one matching it on the other side, and
+ * the trail says the same thing each time the models are compared — folds outlive a redrawing.
+ */
+const TRAIL_SEPARATOR = '/', OCCURRENCE = '#';
+const trailOf = (parent, box, occurrence) => parent + TRAIL_SEPARATOR + keyOf(box) + OCCURRENCE + occurrence;
 
-/** {@code box} and everything under it are on one side only. */
-function markAll(box, mark, counts) {
+/** {@code box} and everything under it are on one side only, so its trail is that side's. */
+function markAll(box, mark, counts, trail) {
   box.diff = mark;
-  box.foldKey = SIDE_PREFIX + mark + box.path;
+  box.foldKey = mark + ':' + trail;
   counts[mark]++;
-  for (const row of rowsOf(box)) markAll(row, mark, counts);
+  const seen = new Map();
+  for (const row of rowsOf(box)) {
+    const at = (seen.get(keyOf(row)) || 0) + 1;
+    seen.set(keyOf(row), at);
+    markAll(row, mark, counts, trailOf(trail, row, at));
+  }
 }
 
 /** Two boxes that stand for the same thing: their own difference, then what they hold. */
-function markPair(l, r, counts) {
+function markPair(l, r, counts, trail) {
   const mark = differs(l, r) ? DIFF.CHANGED : DIFF.SAME;
   l.diff = r.diff = mark;
-  l.foldKey = r.foldKey = PAIR_PREFIX + (pairs++);   // one key for the pair: folding one side folds the other
+  l.foldKey = r.foldKey = trail;
   counts[mark]++;
-  align(l.attributes, r.attributes, counts);
-  align(l.children, r.children, counts);
+  align(l.attributes, r.attributes, counts, trail);
+  align(l.children, r.children, counts, trail);
 }
 
-/** Two lists of boxes, matched in order by what each box is. */
-function align(ls, rs, counts) {
+/** Two lists of boxes, matched in order by what each box is; each box takes its trail from its parent's. */
+function align(ls, rs, counts, trail) {
+  const seen = new Map();
+  const next = (box) => {
+    const at = (seen.get(keyOf(box)) || 0) + 1;
+    seen.set(keyOf(box), at);
+    return trailOf(trail, box, at);
+  };
   const ops = diffLines(ls.map(keyOf), rs.map(keyOf));
   if (!ops) {   // too many boxes to align: pair them by position, the rest is one side's
     const common = Math.min(ls.length, rs.length);
-    for (let i = 0; i < common; i++) markPair(ls[i], rs[i], counts);
-    for (let i = common; i < ls.length; i++) markAll(ls[i], DIFF.REMOVED, counts);
-    for (let i = common; i < rs.length; i++) markAll(rs[i], DIFF.ADDED, counts);
+    for (let i = 0; i < common; i++) markPair(ls[i], rs[i], counts, next(ls[i]));
+    for (let i = common; i < ls.length; i++) markAll(ls[i], DIFF.REMOVED, counts, next(ls[i]));
+    for (let i = common; i < rs.length; i++) markAll(rs[i], DIFF.ADDED, counts, next(rs[i]));
     return;
   }
   for (const o of ops) {
-    if (o.op === OP.EQUAL) markPair(ls[o.a], rs[o.b], counts);
-    else if (o.op === OP.DELETE) markAll(ls[o.a], DIFF.REMOVED, counts);
-    else markAll(rs[o.b], DIFF.ADDED, counts);
+    if (o.op === OP.EQUAL) markPair(ls[o.a], rs[o.b], counts, next(ls[o.a]));
+    else if (o.op === OP.DELETE) markAll(ls[o.a], DIFF.REMOVED, counts, next(ls[o.a]));
+    else markAll(rs[o.b], DIFF.ADDED, counts, next(rs[o.b]));
   }
 }
 
@@ -69,10 +84,9 @@ function align(ls, rs, counts) {
  */
 export function markDifferences(left, right) {
   const counts = { [DIFF.SAME]: 0, [DIFF.CHANGED]: 0, [DIFF.REMOVED]: 0, [DIFF.ADDED]: 0 };
-  pairs = 0;
-  if (left && right) markPair(left, right, counts);
-  else if (left) markAll(left, DIFF.REMOVED, counts);
-  else if (right) markAll(right, DIFF.ADDED, counts);
+  if (left && right) markPair(left, right, counts, '');
+  else if (left) markAll(left, DIFF.REMOVED, counts, '');
+  else if (right) markAll(right, DIFF.ADDED, counts, '');
   return counts;
 }
 

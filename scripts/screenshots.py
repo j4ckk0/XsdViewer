@@ -343,6 +343,13 @@ SCENES = [
                 "window.__folded = boxes();"
                 "document.getElementById('objectCompareCollapseAll').click();"
                 "window.__all = boxes();"
+                "document.getElementById('objectCompareExpandAll').click();"
+                # folded, then away to another view and back: the folds are what was left
+                "fold('#objectCompareLeft .mbox.sequence .mhandle');"
+                "document.querySelector('.tab[data-view=\"text\"]').click();"
+                "document.querySelector('.tab[data-view=\"compare\"]').click();"
+                "await new Promise(r => setTimeout(r, 300));"
+                "window.__kept = boxes();"
                 "document.getElementById('objectCompareExpandAll').click();",
          checks={'title': "document.getElementById('objectCompareTitle').textContent",
                  'summary': "document.getElementById('objectCompareSummary').textContent",
@@ -352,6 +359,7 @@ SCENES = [
                  'boxesOpen': "window.__open",
                  'boxesFolded': "window.__folded",
                  'boxesAllFolded': "window.__all",
+                 'kept': "window.__kept",
                  'reopened': "document.querySelectorAll('#objectCompareBody .mbox').length",
                  'marked': "document.querySelectorAll('#detailsContent .cobj-mark.marked').length",
                  'guidance': "window.__empty",
@@ -360,7 +368,7 @@ SCENES = [
                  'summary': '1 only on the left, 3 only on the right, 3 changed',
                  'heads': 'complexType ProductType — product.xsd, v1|complexType ProductType — product.xsd, v2',
                  'marks': '1/3/6', 'marked': 1, 'guidance': 'Put a declaration on eac', 'details': True,
-                 'boxesOpen': 22, 'boxesFolded': 8, 'boxesAllFolded': 2, 'reopened': 22}),   # one sequence folded on both sides, then everything, then everything open again   # legacyCode gone; weight added with its own type; category, description and tag changed
+                 'boxesOpen': 22, 'boxesFolded': 8, 'boxesAllFolded': 2, 'kept': 8, 'reopened': 22}),   # one sequence folded on both sides, then everything, then everything open again   # legacyCode gone; weight added with its own type; category, description and tag changed
     dict(name='compare-sides', file='samples/compare/v1.xsdviewer.json', theme='light',
          # each side is chosen: filling one, taking it off, clearing both, swapping
          action=OPEN_V2 + "document.getElementById('compareClose').click();"

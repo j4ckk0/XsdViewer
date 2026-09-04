@@ -45,13 +45,15 @@ export const sideOf = (tab, id) => SIDES.find(side => holds(session.compared[sid
  */
 export function markSide(side, tab, id) {
   session.compared[side] = holds(session.compared[side], tab, id) ? null : markOf(tab, id);
+  folded().clear();   // the boxes put aside belonged to the pair drawn before
 }
 
-export const clearMarks = () => { session.compared = { left: null, right: null }; };
+export const clearMarks = () => { session.compared = { left: null, right: null }; folded().clear(); };
 
 export function swapSides() {
   const { left, right } = session.compared;
   session.compared = { left: right, right: left };
+  folded().clear();   // what only one side had swapped sides with it
 }
 
 /** The two declarations to draw, or null while either side is empty. */
@@ -74,21 +76,21 @@ function treeOf(mark) {
 
 /** Only the drawing of the last call is written: the files may have to be parsed first. */
 let drawing = 0;
-/** The boxes put aside, by the key the comparison gives them: a matched pair folds on both sides at once. */
-const folded = new Set();
-/** The trees last drawn, so that a fold redraws them without comparing again. */
+/** A cache of the last comparison, so that folding a box redraws the two models without comparing them again. */
 let drawn = null;
+
+const folded = () => session.comparedFolded;
 
 /** Folds a box, or opens it when it was folded, and redraws. */
 export function toggleFolded(key) {
-  if (!folded.delete(key)) folded.add(key);
+  if (!folded().delete(key)) folded().add(key);
   drawPair();
 }
 
 /** Every box holding something folded, or all of them open. */
 export function foldAll(fold) {
-  folded.clear();
-  if (fold) for (const tree of drawn || []) for (const box of boxesOf(tree)) if (box.children.length || box.attributes.length) folded.add(box.foldKey);
+  folded().clear();
+  if (fold) for (const tree of drawn || []) for (const box of boxesOf(tree)) if (box.children.length || box.attributes.length) folded().add(box.foldKey);
   drawPair();
 }
 
@@ -116,7 +118,6 @@ export async function renderObjectCompare() {
   if (token !== drawing) return;   // marked or selected something else while the files were parsed
   const trees = pair.map(treeOf);
   const counts = markDifferences(trees[0], trees[1]);
-  folded.clear();   // the boxes put aside belonged to the pair drawn before
   drawn = trees;
   drawSides(trees, pair);
   $(ID.OBJECT_COMPARE_SUMMARY).textContent = same(counts)
@@ -139,7 +140,7 @@ function drawPair() {
 }
 
 function drawSides(trees, pair) {
-  for (const tree of trees) for (const box of boxesOf(tree)) box.folded = folded.has(box.foldKey);
+  for (const tree of trees) for (const box of boxesOf(tree)) box.folded = folded().has(box.foldKey);
   draw(ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME, trees[0], pair[0]);
   draw(ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME, trees[1], pair[1]);
   applyZoom();   // both models are drawn now, and take the tab's level

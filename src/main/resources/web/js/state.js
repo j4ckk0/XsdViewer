@@ -54,6 +54,8 @@ export const session = {
   compareSelection: [],
   /** The two declarations the Compare view draws, one per side; either may be null. */
   compared: { left: null, right: null },
+  /** The boxes it draws folded, by the trail {@code model-diff.js} gives them; kept while the two sides do not change. */
+  comparedFolded: new Set(),
   /** Set when a link to an external declaration could not be resolved: checked whenever a file gets loaded. */
   pendingJump: null,
   /** Schema files of the folders opened in the browser (File ▸ Open folder…, or a dropped folder),
