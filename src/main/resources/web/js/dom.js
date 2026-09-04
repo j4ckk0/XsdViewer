@@ -67,7 +67,14 @@ export const ID = {
   COMPARE_BUTTON: 'compareBtn',
   CLEAR_SELECTION_BUTTON: 'clearSelectionBtn',
   COMPARE_HINT: 'compareHint',
+  TABBAR: 'tabbar',
+  VIEW_TABS: 'viewTabs',
+  COMPARISON: 'comparison',
+  COMPARISON_SECTIONS: 'comparisonSections',
   COMPARE: 'compare',
+  COMPARE_HEADER: 'compareHeader',
+  COMPARE_EMPTY: 'compareEmpty',
+  COMPARE_BODY: 'compareBody',
   COMPARE_TITLE: 'compareTitle',
   COMPARE_SUMMARY: 'compareSummary',
   COMPARE_LEGEND: 'compareLegend',
@@ -270,6 +277,10 @@ export const CLS = {
   MODEL_HANDLE: 'mhandle',
   MODEL_RECURSION: 'mrec',
   CLICKABLE: 'clickable',
+  /** On the chip of the comparison: it sits among the workspaces without being one. */
+  COMPARISON_CHIP: 'cmpchip',
+  /** One of the two sections of the comparison. */
+  SECTION_TAB: 'csection-tab',
   /** In a caption: the mark of the compositor a nested element sits in (a choice, an all). */
   COMPOSITOR: 'compositor',
   /** On a node: the values its declaration enumerates. */
@@ -322,8 +333,10 @@ export const DATA = {
   PATH: 'path',
   /** On an entry of the Links menu: the category of link it switches. */
   CATEGORY: 'category',
-  /** On a button of the details panel: which side of the Compare view it fills. */
+  /** On a button of the details panel: which side of the comparison it fills. */
   SIDE: 'side',
+  /** On a section button of the comparison: which of its two comparisons it shows. */
+  SECTION: 'section',
   /** On a schema list of the validation tab: xsd / schematron. */
   SOURCE: 'source',
   VIEW: 'view',

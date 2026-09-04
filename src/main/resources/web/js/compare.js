@@ -1,7 +1,7 @@
 /**
- * Comparing two workspaces (selected with Ctrl+click on their chips), folder-comparison style:
- * files paired by name and marked identical / different / only on one side, a different pair
- * expandable to its schema and line differences — or opened in a tab of its own (compare.file).
+ * The Files section of the comparison: two workspaces (selected with Ctrl+click on their chips)
+ * compared folder-style, their files paired by name and marked identical / different / only on one
+ * side, a different pair expandable to its schema and line differences.
  */
 import { businessLines } from './business-lines.js';
 import { cardinalityText } from './cardinality.js';
@@ -70,8 +70,6 @@ function lineDiff(pair) {
 let pairs = [];
 
 const isExpandable = (pair) => pair.status === STATUS.DIFFERENT || pair.status === STATUS.MOVED;
-const sameSides = (tab, left, right) => tab.compare && tab.compare.left === left && tab.compare.right === right;
-
 /** Ctrl+click on a chip: toggles the workspace's selection; the oldest selection gives way to a third. */
 export function toggleSelection(ws) {
   const sel = session.compareSelection;
@@ -82,40 +80,9 @@ export function toggleSelection(ws) {
 
 export const canCompare = () => session.compareSelection.length === COMPARED_WORKSPACES;
 
-
-/** Clear: no workspace is selected for a comparison any more; the caller redraws the bars. */
+/** Clear: no workspace is selected for the file comparison any more; the caller redraws. */
 export function clearSelection() {
-  session.compareSelection = [];
-}
-
-/** Opens (or brings to front) the comparison tab of the two selected workspaces; the caller redraws the page. Returns false when two are not selected. */
-export function startCompare() {
-  if (!canCompare()) return false;
-  const [left, right] = session.compareSelection;
-  let tab = session.tabs.find(x => sameSides(x, left, right) && !x.compare.file);
-  if (!tab) {
-    tab = newTab();
-    tab.compare = { left, right, file: null };
-  }
-  activateTab(tab);
-  return true;
-}
-
-/**
- * The row's button, or a double-click on it: opens (or brings to front) a tab showing the differences of that file
- * pair only, next to the comparison; the caller redraws the page. Returns false for a row without differences.
- */
-export function openPairTab(row) {
-  const pair = pairs[+row.dataset[DATA.ROW_INDEX]];
-  if (!pair || !isExpandable(pair)) return false;
-  const { left, right } = session.active.compare;
-  let tab = session.tabs.find(x => sameSides(x, left, right) && x.compare.file === pair.name);
-  if (!tab) {
-    tab = newTab();
-    tab.compare = { left, right, file: pair.name };
-  }
-  activateTab(tab);
-  return true;
+  session.compareSelection.length = 0;
 }
 
 /** Every file a workspace knows (open in a tab or only listed) by file name; the first one when a name appears twice. */
@@ -145,36 +112,34 @@ function pairFiles(left, right) {
   });
 }
 
-/** Draws the active comparison tab: every pair of the two workspaces, or the one file pair of a tab opened from a row (its differences shown at once). */
+/** Draws the Files section: every pair of the two selected workspaces, or what to do while fewer than two are selected. */
 export function renderCompare() {
-  const { left, right, file } = session.active.compare;
+  const [left, right] = session.compareSelection;
+  $(ID.COMPARE_EMPTY).classList.toggle(CLS.HIDDEN, !!(left && right));
+  $(ID.COMPARE_BODY).classList.toggle(CLS.HIDDEN, !(left && right));
+  $(ID.COMPARE_HEADER).classList.toggle(CLS.HIDDEN, !(left && right));
+  if (!(left && right)) { $(ID.COMPARE_EMPTY).textContent = t(MSG.COMPARE_SELECT_TWO); return; }
   const ln = workspaceName(left), rn = workspaceName(right);
   pairs = pairFiles(left, right);
-  if (file) pairs = pairs.filter(p => p.name === file);
   const count = (s) => pairs.filter(p => p.status === s).length;
-  const one = file ? pairs[0] : null;
   const side = (p) => p.status === STATUS.ONLY_LEFT ? ln : p.status === STATUS.ONLY_RIGHT ? rn : '';
-  $(ID.COMPARE_TITLE).textContent = file ? t(MSG.COMPARE_FILE_TITLE, file, ln, rn) : t(MSG.COMPARE_TITLE, ln, rn);
-  $(ID.COMPARE_SUMMARY).textContent = file ? (one ? t(STATUS_TEXT[one.status], side(one)) : '')
-    : t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT), count(STATUS.MOVED), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn)
-;
-  $(ID.COMPARE_TOOLS).classList.toggle(CLS.HIDDEN, !!file);
+  $(ID.COMPARE_TITLE).textContent = t(MSG.COMPARE_TITLE, ln, rn);
+  $(ID.COMPARE_SUMMARY).textContent = t(MSG.COMPARE_SUMMARY, pairs.length, count(STATUS.SAME), count(STATUS.DIFFERENT),
+    count(STATUS.MOVED), count(STATUS.ONLY_LEFT), ln, count(STATUS.ONLY_RIGHT), rn);
   // the colours of the line comparison: lines only on the left (red), only on the right (green), moved (blue)
   $(ID.COMPARE_LEGEND).innerHTML = legendHtml([[CLS.DELETED, t(MSG.COMPARE_ONLY_IN, ln)],
     [CLS.INSERTED, t(MSG.COMPARE_ONLY_IN, rn)], [CLS.MOVED, t(MSG.COMPARE_LEGEND_MOVED)]]);
   let html = '<thead><tr><th>' + esc(t(MSG.COMPARE_FILE)) + '</th><th>' + esc(ln) + '</th><th>' + esc(t(MSG.COMPARE_STATUS)) + '</th><th>' + esc(rn) + '</th></tr></thead><tbody>';
-  const openButton = '<button class="' + CLS.COMPARE_OPEN + '" type="button" title="' + esc(t(MSG.COMPARE_OPEN_TAB)) + '">' + esc(t(MSG.COMPARE_OPEN_TAB_LABEL)) + '</button>';
   pairs.forEach((p, i) => {
-    if (!file && isDiffOnly() && p.status === STATUS.SAME) return;
+    if (isDiffOnly() && p.status === STATUS.SAME) return;
     html += '<tr class="' + CLS.COMPARE_ROW + ' ' + p.status + (isExpandable(p) ? ' ' + CLS.EXPANDABLE : '') + '"' + dataAttr(DATA.ROW_INDEX, i) + '>'
       + '<td class="' + CLS.COMPARE_NAME + '">' + esc(p.name) + '</td>'
       // the side columns say whether the workspace holds the file, by its name: the path would be long, and is the tooltip
       + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.left ? shownPath(p.left) : '') + '">' + esc(p.left ? p.left.name : '') + '</td>'
-      + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side(p))) + (isExpandable(p) && !file ? openButton : '') + '</td>'
+      + '<td class="' + CLS.COMPARE_STATUS + '">' + esc(t(STATUS_TEXT[p.status], side(p))) + '</td>'
       + '<td class="' + CLS.COMPARE_PATH + '" title="' + esc(p.right ? shownPath(p.right) : '') + '">' + esc(p.right ? p.right.name : '') + '</td></tr>';
   });
   $(ID.COMPARE_TABLE).innerHTML = html + '</tbody>';
-  if (one && isExpandable(one)) toggleDetail($(ID.COMPARE_TABLE).querySelector('.' + CLS.EXPANDABLE));
 }
 
 /** Click on a row: shows / hides the differences of that pair under it (the files are parsed first when they were only listed). */
@@ -206,7 +171,8 @@ function schemaDiffHtml(pair) {
   if (!pair.left.model || !pair.right.model) return '<p class="' + CLS.META + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</p>';
   const d = diffModels(pair.left.model, pair.right.model);
   if (d.same) return '<p class="' + CLS.META + '">' + esc(t(MSG.COMPARE_SAME_MODEL)) + '</p>';
-  const ln = workspaceName(session.active.compare.left), rn = workspaceName(session.active.compare.right);
+  const [left, right] = session.compareSelection;
+  const ln = workspaceName(left), rn = workspaceName(right);
   const node = (n) => '<li><span class="' + CLS.DOT + ' ' + n.kind + '"></span>' + esc(kindLabel(n.kind) + ' ' + n.name) + '</li>';
   const edge = (e) => '<li>' + esc(e.from + ARROW + e.label + (cardinalityText(e) ? ' ' + cardinalityText(e) : '') + ARROW + e.to) + '</li>';
   const block = (title, items, render) => items.length ? '<h4>' + esc(title) + '</h4><ul>' + items.map(render).join('') + '</ul>' : '';

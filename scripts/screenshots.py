@@ -39,13 +39,19 @@ DOC_SIZE = '1920,1048'    # the pictures of the README: a window wide enough for
 HOLD_SECONDS = 6          # the load event is held this long: the scene's script runs at 1.5 s (the comparison scene opens a workspace first)
 ACTION_DELAY_MS = 1500
 
-# a second workspace, "v2" of the comparison sample, opened from files fetched through the proxy as if a folder had been dropped
+# a second workspace, "v2" of the comparison sample, opened as if a folder had been dropped, and both
+# workspaces selected: what the Files section of the comparison compares
 OPEN_V2 = ("const names = ['common.xsd', 'catalog.xsd', 'product.xsd', 'shipping.xsd'];"
            "const files = await Promise.all(names.map(async n => new File([await (await fetch('/__sample/samples/compare/v2/' + n)).text()], n)));"
            "const wa = await import('/js/workspace-actions.js'), st = await import('/js/state.js'), cmp = await import('/js/compare.js'), pg = await import('/js/page.js');"
            "await wa.openBrowserFolder(files, f => 'v2/' + f.name, 'v2');"
            "for (const ws of st.session.workspaces) cmp.toggleSelection(ws);"
-           "cmp.startCompare(); pg.renderPage();")
+           "pg.renderPage();")
+
+# the comparison is a place of its own, opened from the bar; it holds two sections
+OPEN_COMPARISON = "document.getElementById('compareBtn').click();"
+DECLARATIONS = OPEN_COMPARISON + "document.querySelector('#comparisonSections [data-section=\"objects\"]').click();"
+FILES = OPEN_COMPARISON + "document.querySelector('#comparisonSections [data-section=\"files\"]').click();"
 
 # name, file, theme, the script run on the page (may use the page's DOM and await), the checks (an expression per check name)
 SCENES = [
@@ -268,20 +274,15 @@ SCENES = [
          checks={'tabs': "document.querySelectorAll('#tabs .dtab').length",
                  'files': "document.getElementById('filesCount').textContent"},
          expect={'tabs': 4, 'files': '4'}),
-    dict(name='compare', file='samples/compare/v1.xsdviewer.json', theme='light', action=OPEN_V2,
+    dict(name='compare', file='samples/compare/v1.xsdviewer.json', theme='light', action=OPEN_V2 + FILES,
          checks={'rows': "document.querySelectorAll('#compareTable .crow').length",
-                 'openButtons': "document.querySelectorAll('#compareTable .copen').length",
-                 'label': "document.querySelector('#compareTable .copen').textContent"},
-         expect={'rows': 5, 'openButtons': 1, 'label': '⧉ In a tab'}),   # product.xsd is the one file differing in its business lines
-    dict(name='compare-file-tab', file='samples/compare/v1.xsdviewer.json', theme='light',
-         action=OPEN_V2 + "document.querySelector('#compareTable .crow.different .copen').click();"
-                "await new Promise(r => setTimeout(r, 300));",
-         checks={'tab': "document.querySelector('#tabs .dtab.active .tname').textContent",
-                 'title': "document.getElementById('compareTitle').textContent",
-                 'rows': "document.querySelectorAll('#compareTable .crow').length",
-                 'detail': "document.querySelectorAll('#compareTable .cdetail').length",
-                 'tools': "document.getElementById('compareTools').classList.contains('hidden')"},
-         expect={'tab': 'product.xsd (v1 ⇄ v2)', 'title': 'product.xsd: v1 compared with v2', 'rows': 1, 'detail': 1, 'tools': True}),   # catalog.xsd differs in its documentation only: identical business lines
+                 'summary': "document.getElementById('compareSummary').textContent.slice(0, 30)",
+                 'section': "document.querySelector('#comparisonSections .csection-tab.active').textContent",
+                 'chip': "document.querySelectorAll('#workspaces .cmpchip.active').length",
+                 'tabbar': "document.getElementById('tabbar').classList.contains('hidden')",
+                 'viewTabs': "document.getElementById('viewTabs').classList.contains('hidden')"},
+         expect={'rows': 5, 'summary': '5 files: 2 identical, 1 differ', 'section': 'Files', 'chip': 1,
+                 'tabbar': True, 'viewTabs': True}),   # a place of its own: no file tabs, no views
     dict(name='selection-in-panels', file='samples/purchaseOrder.xsd', theme='light',
          # a click in the Model view marks the object in the Files panel and in the object list
          action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
@@ -311,7 +312,7 @@ SCENES = [
                  'level': "document.getElementById('zoomLevel').textContent",
                  'shown': "!document.getElementById('zoomControls').classList.contains('hidden')",
                  'hiddenInText': "window.__hiddenInText"},
-         expect={'own': '710x621', 'zoomed': '1065x932', 'boxKept': True, 'level': '150%',
+         expect={'own': '710x623', 'zoomed': '1065x935', 'boxKept': True, 'level': '150%',
                  'shown': True, 'hiddenInText': True}),   # 1.5 times the drawing's own size, the level kept across the views
     dict(name='model-back', file='samples/purchaseOrder.xsd', theme='light',
          # a click on a box selects what it refers to; ← Back returns, and neither leaves the Model view
@@ -328,21 +329,17 @@ SCENES = [
          expect={'atStart': True, 'after': 'complexType USAddress | model', 'back': 'complexType PurchaseOrderType | model',
                  'disabled': False}),   # nothing to go back to at first; one step is left after this one, the file's own first selection
     dict(name='compare-object', file='samples/compare/v1.xsdviewer.json', theme='light',
-         action=OPEN_V2 + "document.getElementById('compareClose').click();"
-                # the view explains itself while nothing is marked
-                "document.querySelector('.tab[data-view=\"compare\"]').click();"
-                "window.__empty = document.getElementById('objectCompareEmpty').textContent.slice(0, 24);"
-                # ProductType of v1, marked, then the one of v2: two workspaces, two files of the same name
-                "[...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes('v1')).click();"
-                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
-                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "document.querySelector('#detailsContent .cobj-mark.left').click();"
-                "[...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes('v2')).click();"
-                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
-                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "document.querySelector('#detailsContent .cobj-mark.right').click();"
-                "document.querySelector('.tab[data-view=\"compare\"]').click();"
-                "await new Promise(r => setTimeout(r, 400));"
+         action=OPEN_V2 + DECLARATIONS
+                + "window.__empty = document.getElementById('objectCompareEmpty').textContent.slice(0, 24);"
+                # ProductType of v1 on the left, the one of v2 on the right: two workspaces, two files of the same name
+                "const pick = (w, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "pick('v1', 'left'); pick('v2', 'right');"
+                + DECLARATIONS
+                + "await new Promise(r => setTimeout(r, 400));"
                 "document.getElementById('toast').classList.add('hidden');"
                 "const boxes = () => document.querySelectorAll('#objectCompareBody .mbox').length;"
                 "const fold = (sel) => document.querySelector(sel).dispatchEvent(new MouseEvent('click', { bubbles: true }));"
@@ -354,10 +351,10 @@ SCENES = [
                 "document.getElementById('objectCompareCollapseAll').click();"
                 "window.__all = boxes();"
                 "document.getElementById('objectCompareExpandAll').click();"
-                # folded, then away to another view and back: the folds are what was left
+                # folded, then away to a workspace and back: the folds are what was left
                 "fold('#objectCompareLeft .mbox.sequence .mhandle');"
-                "document.querySelector('.tab[data-view=\"text\"]').click();"
-                "document.querySelector('.tab[data-view=\"compare\"]').click();"
+                "[...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')][0].click();"
+                "document.querySelector('#workspaces .cmpchip').click();"
                 "await new Promise(r => setTimeout(r, 300));"
                 "window.__kept = boxes();"
                 "document.getElementById('objectCompareExpandAll').click();",
@@ -365,33 +362,27 @@ SCENES = [
                  'summary': "document.getElementById('objectCompareSummary').textContent",
                  'heads': "[...document.querySelectorAll('#objectCompareBody .cobj-head')].map(h => h.textContent).join('|')",
                  'marks': "window.__marks",
-                 # a handle folds its box and the one matching it on the other side; ⊟ folds them all, ⊞ opens them
-                 'boxesOpen': "window.__open",
-                 'boxesFolded': "window.__folded",
-                 'boxesAllFolded': "window.__all",
+                 'boxesOpen': "window.__open", 'boxesFolded': "window.__folded", 'boxesAllFolded': "window.__all",
                  'kept': "window.__kept",
                  'reopened': "document.querySelectorAll('#objectCompareBody .mbox').length",
-                 'marked': "document.querySelectorAll('#detailsContent .cobj-mark.marked').length",
-                 'guidance': "window.__empty",
-                 'details': "document.getElementById('details').classList.contains('hidden')"},
+                 'guidance': "window.__empty"},
          expect={'title': 'complexType ProductType compared with complexType ProductType',
                  'summary': '1 only on the left, 3 only on the right, 3 changed',
                  'heads': 'complexType ProductType — product.xsd, v1|complexType ProductType — product.xsd, v2',
-                 'marks': '1/3/6', 'marked': 1, 'guidance': 'Put a declaration on eac', 'details': True,
-                 'boxesOpen': 22, 'boxesFolded': 8, 'boxesAllFolded': 2, 'kept': 8, 'reopened': 22}),   # one sequence folded on both sides, then everything, then everything open again   # legacyCode gone; weight added with its own type; category, description and tag changed
+                 'marks': '1/3/6', 'boxesOpen': 22, 'boxesFolded': 8, 'boxesAllFolded': 2, 'kept': 8, 'reopened': 22,
+                 'guidance': 'Put a declaration on eac'}),   # what only each side has, what changed, and the folding
     dict(name='compare-sides', file='samples/compare/v1.xsdviewer.json', theme='light',
          # each side is chosen: filling one, taking it off, clearing both, swapping
-         action=OPEN_V2 + "document.getElementById('compareClose').click();"
-                "const pickWs = (n) => [...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes(n)).click();"
-                "const pickTab = (n) => [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes(n)).click();"
-                "const btn = (side) => document.querySelector('#detailsContent .cobj-mark.' + side);"
-                "const pick = (w, id, side) => { pickWs(w); pickTab('product.xsd');"
-                "  document.querySelector('#nodeList .item[data-id=\"' + id + '\"]').click(); btn(side).click(); };"
-                "const state = await import('/js/state.js');"
+         action=OPEN_V2 + "const state = await import('/js/state.js');"
+                "const pick = (w, id, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"' + id + '\"]').click();"
+                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
                 "pick('v1', 'complexType:ProductType', 'left');"
                 "window.__afterLeft = [!!state.session.compared.left, !!state.session.compared.right].join('/');"
                 "pick('v2', 'complexType:ProductType', 'right');"
-                "document.querySelector('.tab[data-view=\"compare\"]').click(); await new Promise(r => setTimeout(r, 300));"
+                + DECLARATIONS + "await new Promise(r => setTimeout(r, 300));"
                 "const heads = () => [...document.querySelectorAll('#objectCompareBody .cobj-head')].map(h => h.textContent.split(', ').pop()).join('|');"
                 "window.__heads = heads();"
                 "document.getElementById('objectCompareSwap').click();"
@@ -403,9 +394,9 @@ SCENES = [
                 # both sides filled again, and one taken off by clicking the side that holds it
                 "pick('v1', 'complexType:ProductType', 'left');"
                 "pick('v2', 'complexType:ProductType', 'right');"
-                "btn('right').click();"
+                "document.querySelector('#detailsContent .cobj-mark.right').click();"
                 "window.__takenOff = [!!state.session.compared.left, !!state.session.compared.right].join('/');"
-                "document.querySelector('.tab[data-view=\"compare\"]').click(); await new Promise(r => setTimeout(r, 200));"
+                + DECLARATIONS + "await new Promise(r => setTimeout(r, 200));"
                 "window.__hiddenAgain = document.getElementById('objectCompareBody').classList.contains('hidden');"
                 "document.getElementById('toast').classList.add('hidden');",
          checks={'afterLeft': "window.__afterLeft", 'heads': "window.__heads", 'swapped': "window.__swapped",
@@ -413,7 +404,7 @@ SCENES = [
                  'takenOff': "window.__takenOff", 'hiddenAgain': "window.__hiddenAgain"},
          expect={'afterLeft': 'true/false', 'heads': 'v1|v2', 'swapped': 'v2|v1',
                  'cleared': 'false/false', 'hidden': True,
-                 'takenOff': 'true/false', 'hiddenAgain': True}),   # one side empty: nothing is drawn, whatever is selected
+                 'takenOff': 'true/false', 'hiddenAgain': True}),   # one side empty: nothing is drawn
     dict(name='compare-two-objects', file='samples/compare/v1.xsdviewer.json', theme='light',
          # two declarations that have nothing to do with one another: different names, different files, one workspace
          action="document.querySelector('#nodeList .item[data-id=\"complexType:CatalogType\"]').click();"
@@ -421,8 +412,8 @@ SCENES = [
                 "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('supplier.xsd')).click();"
                 "document.querySelector('#nodeList .item[data-id=\"complexType:SupplierType\"]').click();"
                 "document.querySelector('#detailsContent .cobj-mark.right').click();"
-                "document.querySelector('.tab[data-view=\"compare\"]').click();"
-                "await new Promise(r => setTimeout(r, 400));"
+                + DECLARATIONS
+                + "await new Promise(r => setTimeout(r, 400));"
                 "document.getElementById('toast').classList.add('hidden');"
                 # ⤓ SVG here writes one file holding both models: caught before it reaches the disk
                 "const exports = await import('/js/png-export.js');"
@@ -440,7 +431,6 @@ SCENES = [
                  'left': "[...document.querySelectorAll('#objectCompareLeft .mbox .mname')].map(t => t.textContent).join('|')",
                  'right': "[...document.querySelectorAll('#objectCompareRight .mbox .mname')].map(t => t.textContent).join('|')",
                  'marks': "['removed','added','changed','same'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/')",
-                 # the SVG export of this view: one picture holding both models, each under its heading
                  'svgButton': "document.getElementById('exportSvgBtn').disabled",
                  'svg': "window.__svg"},
          expect={'title': 'complexType CatalogType compared with complexType SupplierType',
@@ -448,23 +438,17 @@ SCENES = [
                  'heads': 'complexType CatalogType — catalog.xsd, v1|complexType SupplierType — supplier.xsd, v1',
                  'left': 'CatalogType|@issued : date|publisher|street|city|postalCode|country|product|@sku : Code|@category : string ?|name|description|price|discount|legacyCode|tag',
                  'right': 'SupplierType|@code : Code|name|address|street|city|postalCode|country|rating',
-                 'marks': '17/9/0/4',   # nothing matches but the two roots and their sequences, which are the two subjects and are drawn plain
+                 'marks': '17/9/0/4',   # nothing matches but the two roots and their sequences, the two subjects
                  'svgButton': False, 'svg': 'image/svg+xml|true|true'}),   # one file, both headings, the boxes of both models
-    # the four pictures of the README (screenshots/), on the comparison sample: shot like any other
-    # scene, checked like any other, and written as JPEG by --docs
     dict(name='doc-compare-view', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-view.jpg',
-         action=OPEN_V2 + "document.getElementById('compareClose').click();"
-                # the same declaration in two versions of the schema set: marked on each side
-                "[...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes('v1')).click();"
-                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
-                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "document.querySelector('#detailsContent .cobj-mark.left').click();"
-                "[...document.querySelectorAll('#workspaces .wsgroup')].find(w => w.textContent.includes('v2')).click();"
-                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
-                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "document.querySelector('#detailsContent .cobj-mark.right').click();"
-                "document.querySelector('.tab[data-view=\"compare\"]').click();"
-                "await new Promise(r => setTimeout(r, 400));"
+         action=OPEN_V2 + "const pick = (w, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "pick('v1', 'left'); pick('v2', 'right');"
+                + DECLARATIONS
+                + "await new Promise(r => setTimeout(r, 400));"
                 "document.getElementById('toast').classList.add('hidden');",
          checks={'summary': "document.getElementById('objectCompareSummary').textContent",
                  'marks': "['removed','added','changed'].map(c => document.querySelectorAll('#objectCompareBody .mbox.' + c).length).join('/')"},
@@ -493,8 +477,11 @@ SCENES = [
                  'view': "document.querySelector('.tab.active').dataset.view"},
          expect={'highlighted': 1, 'view': 'text'}),
     dict(name='doc-compare-workspaces', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-workspaces.jpg',
-         action=OPEN_V2 + "document.querySelector('#compareTable .crow.different').click();"
-                "await new Promise(r => setTimeout(r, 300));"
+         action=OPEN_V2 + FILES
+                # the listed files finish parsing in the background, and their end redraws the table
+                + "await new Promise(r => setTimeout(r, 600));"
+                "document.querySelector('#compareTable .crow.different').click();"
+                "await new Promise(r => setTimeout(r, 400));"
                 "document.getElementById('toast').classList.add('hidden');",
          checks={'sides': "[...document.querySelectorAll('#compareTable .crow .cpath')].map(t => t.textContent).join('|')",
                  'detail': "document.querySelectorAll('#compareTable .cdetail').length"},

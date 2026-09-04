@@ -33,22 +33,6 @@ the graph shows the types themselves as neighbours of the declaration that names
   object's declaration is highlighted; click a highlighted line number to select that
   object.
 
-- **Compare** – two declarations side by side, wherever each of them lives: two versions of the
-  same type in two workspaces, or two types that merely resemble one another. The view has two
-  sides, and the details panel of a declaration fills one from its **Compare view** section:
-  **◈ Left side** or **◈ Right side**, chosen, so which side a declaration lands on is never a
-  matter of the order things were picked in; the button of the side holding it is coloured, and
-  clicking that side again takes it off. **⇄ Swap**
-  puts each side where the other was, **Clear the marks** empties both, and nothing is drawn while
-  a side is empty. The two declarations may be in different files, different workspaces, and bear
-  different names; neither file need be open in a tab. The view draws the content model of each,
-  with every box marked: red for what only the left one has, green for what only the right one
-  has, blue for a box whose occurrences or type changed, and a summary counting them. The boxes are
-  matched by what each one is rather than by where it sits, so an element inserted on one side does
-  not mark everything below it as different; named types are opened on both sides, so a change deep
-  inside one is seen. Any box holding something carries a handle that puts it aside, and folding one
-  folds the box matching it on the other side, so the two models stay read together; **⊞** / **⊟**
-  open and fold them all. **⤓ PNG** / **⤓ SVG** save the two models as one picture.
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
   sits in the middle, what it links to is on the right, what uses it is on the left.
@@ -470,11 +454,30 @@ them comparable, later). The File menu:
 A workspace file can also be given on the command line: `scripts/run.sh samples/all.xsdviewer.json`.
 Opening and saving need the server's dialogs, i.e. a display.
 
-### Comparing two workspaces
+### Comparing
 
-**Ctrl+click** two workspace chips to select them (orange ring; **Clear** next to the button drops the selection), then **⇄ Compare** in the tab
-bar: a folder-comparison view lists every file the two workspaces know — open in a tab or
-only listed — **paired by name**, each
+**⇄ Compare** on the workspace bar opens the comparison: a chip of its own beside the workspace
+chips, and a place rather than a view of a file — it has no tabs and no Model / Text / Graph, since
+what it draws belongs to no single file. Clicking a workspace chip returns to that workspace, the
+chip's **×** closes the comparison and forgets what it was comparing. It holds two sections.
+
+**Declarations** — two declarations side by side, wherever each of them lives: two versions of the
+same type in two workspaces, or two types that merely resemble one another. The details panel of a
+declaration fills one side from its **Compare view** section: **◈ Left side** or **◈ Right side**,
+chosen, so which side a declaration lands on is never a matter of the order things were picked in;
+the button of the side holding it is coloured, and clicking that side again takes it off. **⇄ Swap**
+puts each side where the other was, **Clear the marks** empties both, and nothing is drawn while a
+side is empty. The view draws the content model of each, with every box marked: red for what only
+the left one has, green for what only the right one has, blue for a box whose occurrences or type
+changed, and a summary counting them. The boxes are matched by what each one is rather than by where
+it sits, so an element inserted on one side does not mark everything below it as different; named
+types are opened on both sides, so a change deep inside one is seen. Any box holding something
+carries a handle that puts it aside, and folding one folds the box matching it on the other side;
+**⊞** / **⊟** open and fold them all. **⤓ PNG** / **⤓ SVG** save the two models as one picture.
+
+**Files** — two workspaces compared file by file. **Ctrl+click** two workspace chips to select them
+(orange ring; **Clear the selection** in the section's header drops it): this section then lists
+every file the two workspaces know — open in a tab or only listed — **paired by name**, each
 marked *identical* (same text, line endings aside), *different*, or *only in* one of them, with
 a summary line. A *different* row expands to what changed in the schema — declarations and
 links (cardinality included) present on one side only — and to a side-by-side line
@@ -491,14 +494,8 @@ remembered) ignores what does not define the schema — XML comments, `xs:annota
 the XML declaration, the `xs:schema`, `xs:import` and `xs:include` tags, blank lines and
 indentation — both for the status and in the line comparison, which keeps the original line
 numbers. Each side of the line comparison scrolls sideways on its own when a line is long. **Differences only** hides the identical files and reduces a file's
-comparison to its changed lines with one line of context. The comparison is a tab of its own
-(`v1 ⇄ v2`) in the workspace it was started from: switch to and from it like any tab, close
-it with its `×`; closing one of the compared workspaces closes it too, and comparing the same
-pair again brings it back to front. **One file's differences in a tab**: the *⧉ In a tab* button
-next to the status of a *different* or *moved lines only* row, or a double-click on
-the row, opens that pair's differences in their own tab (`product.xsd (v1 ⇄ v2)`), next to the
-comparison, with the whole page's height; the two options apply there too, and opening the same
-pair again brings its tab to front. To try it: `scripts/run.sh samples/compare/v1.xsdviewer.json`,
+comparison to its changed lines with one line of context. Closing a compared workspace leaves this
+section with nothing to compare until two are selected again. To try it: `scripts/run.sh samples/compare/v1.xsdviewer.json`,
 then File ▸ Open workspace… `samples/compare/v2.xsdviewer.json` (what differs is listed in
 `samples/compare/README.md`).
 

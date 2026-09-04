@@ -823,7 +823,22 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .cobj-mark.marked.left { border-color: var(--diff-del-fg); color: var(--diff-del-fg); background: var(--diff-del-bg); font-weight: 600; }
 .cobj-mark.marked.right { border-color: var(--diff-ins-fg); color: var(--diff-ins-fg); background: var(--diff-ins-bg); font-weight: 600; }
 
-/* the Compare view: one model per marked declaration, side by side, each scrolling on its own */
+/* the comparison: a place of its own on the workspace bar, holding its two sections */
+.wsgroup.cmpchip .wsname { background: var(--surface); border: 1px dashed var(--accent); color: var(--accent); }
+.wsgroup.cmpchip.active .wsname { background: var(--accent); border-style: solid; color: #fff; }
+#comparison { display: flex; flex-direction: column; min-height: 0; }
+#comparisonSections { display: flex; gap: 4px; padding: 6px 16px 0; border-bottom: 1px solid var(--border); background: var(--panel); }
+.csection-tab {
+  padding: 5px 14px; font: inherit; font-size: 13px; cursor: pointer;
+  border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0;
+  background: transparent; color: var(--muted); margin-bottom: -1px;
+}
+.csection-tab:hover { background: var(--hover); color: var(--text); }
+.csection-tab.active { background: var(--bg); border-color: var(--border); color: var(--text); font-weight: 600; }
+.csection { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#compareEmpty { padding: 16px; max-width: 70ch; line-height: 1.5; }
+
+/* the Declarations section: one model per side, side by side, each scrolling on its own */
 #objectCompare { display: flex; flex-direction: column; min-height: 0; }
 #objectCompareHeader { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--panel); flex-wrap: wrap; }
 #objectCompareTitle { font-weight: 600; }

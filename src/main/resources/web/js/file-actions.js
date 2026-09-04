@@ -50,7 +50,7 @@ export async function openServerFiles(files) {
 }
 
 async function openInFreshTab(name, text, path) {
-  if (session.active.model || session.active.compare || session.active.validation) {
+  if (session.active.model || session.active.validation) {
     activateTab(newTab());
     renderPage();
   }

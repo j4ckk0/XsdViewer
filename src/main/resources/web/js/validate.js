@@ -27,7 +27,7 @@ export function onChange(fn) { redraw = fn; }
 /** True when the active tab shows a schema the server can validate against: an XSD or a Schematron (not a WSDL) with a location on disk. */
 export function canValidate() {
   const st = session.active;
-  return !!(st.model && st.path && !st.compare && !st.validation && !isWsdl(st.model));
+  return !!(st.model && st.path && !session.comparison.shown && !st.validation && !isWsdl(st.model));
 }
 
 /** True when a workspace file is a Schematron / an XSD: by its model when parsed, by its name otherwise. */

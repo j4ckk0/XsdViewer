@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **Comparing is a place of its own, not a view of a file.** **⇄ Compare** puts a chip beside the workspace chips, and that chip holds both comparisons as two sections: **Declarations**, two declarations side by side, and **Files**, two workspaces file by file. It is no workspace and no file — no tabs, no Model / Text / Graph, none of a workspace's doings — and its **×** closes it and forgets what it was comparing. A workspace shows its files and nothing else, so the fourth view tab goes, and so does the comparison tab that used to sit inside a workspace. Opening one file pair in a tab of its own goes with it: a row still expands to its differences where it sits.
+
 ## 4.7.0 — 2026-09-04
 
 - **Fix: the Compare view forgot what was folded.** Leaving the view and coming back, selecting another declaration or resizing the window reopened every box that had been put aside. What is folded is now kept until the two sides change.

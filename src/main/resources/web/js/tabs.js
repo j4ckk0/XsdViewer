@@ -1,6 +1,6 @@
 /** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. A tab shows a file, a comparison (compare.js) or a validation (validate.js). */
 import { WORKSPACE_FILE_SUFFIX } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
+import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { renderFileList } from './file-list.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
@@ -21,13 +21,6 @@ export function validationStatus(tab) {
   return v.result.valid ? CLS.VALID : CLS.INVALID;
 }
 
-/** The name of a comparison tab: "v1 ⇄ v2", or "x.xsd (v1 ⇄ v2)" for the differences of one file. */
-export function compareTitle(tab) {
-  const { left, right, file } = tab.compare;
-  const one = file;
-  return t(one ? MSG.COMPARE_FILE_TAB : MSG.COMPARE_TAB, ...(one ? [one] : []), workspaceName(left), workspaceName(right));
-}
-
 /**
  * After tabs went: comparisons of a gone workspace go too, a workspace left without tabs goes
  * (the last one gets an empty tab), a gone active tab is replaced by the one at {@code at}.
@@ -38,7 +31,6 @@ function settle(at) {
   for (;;) {
     const alive = new Set(session.workspaces);
     const before = session.tabs.length + session.workspaces.length;
-    session.tabs = session.tabs.filter(tab => !(tab.compare && (!alive.has(tab.compare.left) || !alive.has(tab.compare.right))));
     for (const ws of [...session.workspaces]) {
       if (tabsOf(ws).length) continue;
       if (session.workspaces.length > 1) session.workspaces.splice(session.workspaces.indexOf(ws), 1);
@@ -61,7 +53,7 @@ const PATH_SEPARATORS = /[\\/]/;
 export const tabsOf = (ws) => session.tabs.filter(tab => tab.workspace === ws);
 export const activeWorkspace = () => session.active.workspace;
 /** An unsaved workspace knowing no file: it can take the next workspace opened. */
-export const isEmptyWorkspace = (ws) => !ws.path && !ws.files.length && tabsOf(ws).every(tab => !tab.model && !tab.compare && !tab.validation);
+export const isEmptyWorkspace = (ws) => !ws.path && !ws.files.length && tabsOf(ws).every(tab => !tab.model && !tab.validation);
 
 /** The workspace file's name without its suffix, else the name it was given (an opened folder), else "Workspace n". */
 export function workspaceName(ws) {
@@ -161,25 +153,31 @@ export function renderNavigation() {
   let chips = '';
   session.workspaces.forEach((ws, w) => {
     const name = workspaceName(ws);
-    chips += '<div class="' + CLS.WORKSPACE_GROUP + (ws === session.active.workspace ? ' ' + CLS.ACTIVE : '')
+    chips += '<div class="' + CLS.WORKSPACE_GROUP + (!session.comparison.shown && ws === session.active.workspace ? ' ' + CLS.ACTIVE : '')
       + (session.compareSelection.includes(ws) ? ' ' + CLS.SELECTED : '') + '"' + dataAttr(DATA.WORKSPACE_INDEX, w) + '>'
       + '<span class="' + CLS.WORKSPACE_NAME + '" title="' + esc((ws.path || name) + '\n' + t(MSG.WORKSPACE_SELECT_HINT)) + '">' + esc(name)
       + '<button class="' + CLS.WORKSPACE_CLOSE + '" type="button" title="' + esc(t(MSG.WORKSPACE_CLOSE, name)) + '">×</button></span></div>';
   });
+  // the comparison sits on the same bar, being a place of its own; it is no workspace, and carries none of their doings
+  if (session.comparison.open) {
+    chips += '<div class="' + CLS.WORKSPACE_GROUP + ' ' + CLS.COMPARISON_CHIP + (session.comparison.shown ? ' ' + CLS.ACTIVE : '') + '">'
+      + '<span class="' + CLS.WORKSPACE_NAME + '" title="' + esc(t(MSG.COMPARISON_CHIP_TITLE)) + '">' + esc(t(MSG.COMPARISON_CHIP))
+      + '<button class="' + CLS.WORKSPACE_CLOSE + '" type="button" title="' + esc(t(MSG.COMPARISON_CLOSE)) + '">×</button></span></div>';
+  }
   $(ID.WORKSPACES).innerHTML = chips;
   let tabs = '';
   for (const tab of tabsOf(session.active.workspace)) {
-    const tabName = tab.compare ? compareTitle(tab) : tab.validation ? validationTitle(tab) : tab.fileName || t(MSG.TAB_UNTITLED);
-    tabs += '<div class="' + CLS.DOC_TAB + (tab === session.active ? ' ' + CLS.ACTIVE : '') + (tab.compare ? ' ' + CLS.COMPARE_TAB : '')
+    const tabName = tab.validation ? validationTitle(tab) : tab.fileName || t(MSG.TAB_UNTITLED);
+    tabs += '<div class="' + CLS.DOC_TAB + (!session.comparison.shown && tab === session.active ? ' ' + CLS.ACTIVE : '')
       + (tab.validation ? ' ' + CLS.VALIDATION_TAB + ' ' + validationStatus(tab) : '') + '"'
       + dataAttr(DATA.TAB_INDEX, session.tabs.indexOf(tab)) + ' title="' + esc(tab.path || tabName) + '">'
       + '<span class="' + CLS.DOC_TAB_NAME + '">' + esc(tabName) + '</span>'
       + '<button class="' + CLS.DOC_TAB_CLOSE + '" type="button" title="' + esc(t(MSG.TAB_CLOSE)) + '">×</button></div>';
   }
   $(ID.TABS).innerHTML = tabs;
-  const selected = session.compareSelection.length;
-  $(ID.COMPARE_BUTTON).disabled = selected !== 2;
-  $(ID.CLEAR_SELECTION_BUTTON).disabled = selected === 0;
-  $(ID.COMPARE_HINT).classList.toggle(CLS.HIDDEN, selected === 2 || session.workspaces.length < 2);   // shown once there is something to compare
+  $(ID.CLEAR_SELECTION_BUTTON).disabled = session.compareSelection.length === 0;
+  for (const b of $(ID.COMPARISON_SECTIONS).querySelectorAll(selector(CLS.SECTION_TAB))) {
+    b.classList.toggle(CLS.ACTIVE, b.dataset[DATA.SECTION] === session.comparison.section);
+  }
   renderFileList();
 }

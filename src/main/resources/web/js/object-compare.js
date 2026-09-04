@@ -12,7 +12,7 @@
  * ({@link placeOfEntry}), which is also what lets a named type be opened from another file of that
  * same workspace, so the models are compared as deep as they can be read.
  */
-import { TEXT, kindOfId, nameOfId } from './constants.js';
+import { COMPARE_SECTION, TEXT, kindOfId, nameOfId } from './constants.js';
 import { placeOfEntry } from './declarations.js';
 import { $, CLS, ID, esc, legendHtml } from './dom.js';
 import { ensureModel } from './file-tabs.js';
@@ -49,6 +49,24 @@ export function markSide(side, tab, id) {
 }
 
 export const clearMarks = () => { session.compared = { left: null, right: null }; folded().clear(); };
+
+/** ⇄ Compare: the comparison's chip appears on the workspace bar if it is not there, and is the place shown. */
+export function openComparison() {
+  session.comparison.open = true;
+  session.comparison.shown = true;
+}
+
+/** Its × : the place goes and takes what it was comparing with it, so it opens on nothing next time. */
+export function closeComparison() {
+  session.comparison = { open: false, shown: false, section: COMPARE_SECTION.OBJECTS };
+  session.compareSelection.length = 0;
+  clearMarks();
+}
+
+/** Which of the two comparisons the place draws. */
+export function showSection(section) {
+  session.comparison.section = section;
+}
 
 export function swapSides() {
   const { left, right } = session.compared;

@@ -37,7 +37,7 @@ const SVG_STYLE_TAG = 'style', SVG_RECT_TAG = 'rect';
 
 export function exportPng() {
   const st = session.active;
-  if (st.view === VIEW.COMPARE) { exportImage(compareSvg(), comparedName() + COMPARE_SUFFIX + FILE_EXTENSION); return; }
+  if (session.comparison.shown) { exportImage(compareSvg(), comparedName() + COMPARE_SUFFIX + FILE_EXTENSION); return; }
   if (!st.model) return;
   const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');
   if (st.view === VIEW.GRAPH || st.view === VIEW.MODEL) {
@@ -61,7 +61,7 @@ function pageCss() {
 /** ⤓ SVG: the graph as a vector image (its SVG, cropped, with the page's styles embedded). */
 export function exportSvg() {
   const st = session.active;
-  if (st.view === VIEW.COMPARE) { saveSvg(compareSvg(), comparedName() + COMPARE_SUFFIX + SVG_EXTENSION); return; }
+  if (session.comparison.shown) { saveSvg(compareSvg(), comparedName() + COMPARE_SUFFIX + SVG_EXTENSION); return; }
   if (!st.model || st.view === VIEW.TEXT) return;
   if (!st.selected) { toast(t(MSG.EXPORT_SELECT_FIRST)); return; }
   const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');

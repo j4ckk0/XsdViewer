@@ -33,7 +33,7 @@ function rows() {
   // listed by their path in the opened folder when they came from one (the path on disk, learnt later, would scatter them)
   const out = ws.files.map(entry => ({ entry, tab: tabOfFile(entry), name: entry.name, path: entry.rel || entry.path || entry.name }));
   for (const tab of session.tabs) {
-    if (tab.workspace === ws && !tab.file && !tab.compare) out.push({ entry: null, tab, name: tab.fileName || t(MSG.TAB_UNTITLED), path: tab.fileName || t(MSG.TAB_UNTITLED) });
+    if (tab.workspace === ws && !tab.file) out.push({ entry: null, tab, name: tab.fileName || t(MSG.TAB_UNTITLED), path: tab.fileName || t(MSG.TAB_UNTITLED) });
   }
   return out;
 }

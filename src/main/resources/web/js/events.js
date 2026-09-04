@@ -2,8 +2,8 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { clearSelection, initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
-import { clearMarks, foldAll, markSide, swapSides, toggleFolded } from './object-compare.js';
+import { clearSelection, initOptions, rememberOptions, setAllDetails, toggleDetail, toggleSelection } from './compare.js';
+import { clearMarks, closeComparison, foldAll, markSide, openComparison, showSection, swapSides, toggleFolded } from './object-compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, renderDetails, toggleDetails } from './details.js';
@@ -12,7 +12,7 @@ import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
-import { renderComparedObjects, renderMainView, renderPage, showView } from './page.js';
+import { renderComparison, renderComparedObjects, renderMainView, renderPage, showView } from './page.js';
 import { zoomIn, zoomOut, zoomReset } from './zoom.js';
 import { exportPng, exportSvg } from './png-export.js';
 import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, toggleSchemaInfo } from './sidebar.js';
@@ -118,34 +118,40 @@ function wireDocumentTabs() {
   // the workspace bar: one chip per workspace
   $(ID.WORKSPACES).addEventListener('click', (e) => {
     const ws = workspaceOf(e);
+    const chip = e.target.closest(selector(CLS.COMPARISON_CHIP));
+    if (chip) {
+      if (e.target.closest(selector(CLS.WORKSPACE_CLOSE))) closeComparison();
+      else session.comparison.shown = true;
+      renderPage();
+      return;
+    }
     if (!ws) return;
     if (e.target.closest(selector(CLS.WORKSPACE_CLOSE))) closeGroup(ws);
     // select for comparison: the details panel then offers to compare the selected declaration
     else if (e.ctrlKey || e.metaKey) { toggleSelection(ws); renderNavigation(); if (session.active.model) renderDetails(); }
-    else if (activateTab(tabToShow(ws))) renderPage();
+    else { session.comparison.shown = false; activateTab(tabToShow(ws)); renderPage(); }
   });
   $(ID.WORKSPACES).addEventListener('auxclick', (e) => {
     const ws = workspaceOf(e);
     if (ws && e.button === MIDDLE_BUTTON) { e.preventDefault(); closeGroup(ws); }
   });
-  $(ID.COMPARE_BUTTON).addEventListener('click', () => { if (startCompare()) renderPage(); else toast(t(MSG.COMPARE_NEED_TWO)); });
-  $(ID.CLEAR_SELECTION_BUTTON).addEventListener('click', () => { clearSelection(); renderNavigation(); });
-  $(ID.COMPARE_CLOSE).addEventListener('click', () => { if (session.active.compare) closeTab(session.active); renderPage(); });
+  // ⇄ Compare puts the comparison's chip on the bar, beside the workspaces, and shows it
+  $(ID.COMPARE_BUTTON).addEventListener('click', () => { openComparison(); renderPage(); });
+  $(ID.CLEAR_SELECTION_BUTTON).addEventListener('click', () => { clearSelection(); renderNavigation(); renderComparison(); });
+  $(ID.COMPARISON_SECTIONS).addEventListener('click', (e) => {
+    const b = e.target.closest(selector(CLS.SECTION_TAB));
+    if (b) { showSection(b.dataset[DATA.SECTION]); renderPage(); }
+  });
   initOptions();
   for (const id of [ID.COMPARE_BUSINESS_ONLY, ID.COMPARE_DIFF_ONLY]) {
-    $(id).addEventListener('change', () => { rememberOptions(); if (session.active.compare) renderCompare(); });
+    $(id).addEventListener('change', () => { rememberOptions(); renderComparison(); });
   }
   wireValidation();
   // a row shows / hides its differences; its ⧉ button, or a double-click, opens them in a tab of their own
   $(ID.COMPARE_TABLE).addEventListener('click', (e) => {
     const row = e.target.closest(selector(CLS.COMPARE_ROW));
     if (!row) return;
-    if (e.target.closest(selector(CLS.COMPARE_OPEN))) { if (openPairTab(row)) renderPage(); }
     else toggleDetail(row);
-  });
-  $(ID.COMPARE_TABLE).addEventListener('dblclick', (e) => {
-    const row = e.target.closest(selector(CLS.COMPARE_ROW));
-    if (row && !e.target.closest(selector(CLS.COMPARE_OPEN)) && openPairTab(row)) { window.getSelection()?.removeAllRanges(); renderPage(); }
   });
 }
 
@@ -194,7 +200,7 @@ function wireKeyboard() {
     if (ctrl && e.key.toLowerCase() === KEY.FIND) {
       e.preventDefault();
       // in the Text view, the find bar; elsewhere the object search
-      if (session.active.model && !session.active.compare && !session.active.validation && session.active.view === VIEW.TEXT) focusFind();
+      if (session.active.model && !session.comparison.shown && !session.active.validation && session.active.view === VIEW.TEXT) focusFind();
       else { $(ID.SEARCH).focus(); $(ID.SEARCH).select(); }
     }
     if (e.altKey && e.key === KEY.ARROW_LEFT) goBack();

@@ -69,11 +69,13 @@ export const CARDINALITY = { UNBOUNDED: -1, RANGE: '..', MANY: '*' };
 /** Tags of the schema's imports (SchemaGraph.Import.tag). */
 export const IMPORT_TAG = { IMPORT: 'import', INCLUDE: 'include', REDEFINE: 'redefine' };
 
-export const VIEW = { GRAPH: 'graph', MODEL: 'model', TEXT: 'text', COMPARE: 'compare' };
+export const VIEW = { GRAPH: 'graph', MODEL: 'model', TEXT: 'text' };
+/** The two things the comparison compares, its sections: declarations, and the files of two workspaces. */
+export const COMPARE_SECTION = { OBJECTS: 'objects', FILES: 'files' };
 /** How large the drawn views can be made in their panel, and the size they are drawn at. */
 export const ZOOM = { STEPS: [0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 3], DEFAULT: 1 };
 /** The views drawn as SVG, which the zoom scales; the text is read at the browser's own size. */
-export const ZOOMABLE_VIEWS = new Set([VIEW.GRAPH, VIEW.MODEL, VIEW.COMPARE]);
+export const ZOOMABLE_VIEWS = new Set([VIEW.GRAPH, VIEW.MODEL]);
 /** The kinds of particle of a content model (ParticleKind on the server): what a box of the Model view is. */
 export const PARTICLE = { SEQUENCE: 'sequence', CHOICE: 'choice', ALL: 'all', ELEMENT: 'element', GROUP: 'group', ANY: 'any', EXTENDS: 'extends', RESTRICTS: 'restricts' };
 /** The themes (js/theme.js): stored once chosen, stamped on <html> as data-theme. */

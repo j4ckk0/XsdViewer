@@ -46,11 +46,10 @@
   </div>
   <span id="fileName" class="filename" data-i18n="status.noFile">No file loaded</span>
   <span id="busy" class="busy hidden" role="status" aria-live="polite"><span class="wheel" aria-hidden="true"></span><span id="busyLabel"></span></span>
-  <nav class="tabs">
+  <nav id="viewTabs" class="tabs">
     <button class="tab active" data-view="model" type="button" data-i18n="view.model" data-i18n-title="view.model.title">Model</button>
     <button class="tab" data-view="text" type="button" data-i18n="view.text" data-i18n-title="view.text.title">Text</button>
     <button class="tab" data-view="graph" type="button" data-i18n="view.graph" data-i18n-title="view.graph.title">Graph</button>
-    <button class="tab" data-view="compare" type="button" data-i18n="view.compare" data-i18n-title="view.compare.title">Compare</button>
   </nav>
   <button id="exportBtn" class="menubtn" type="button" data-i18n="export.button" data-i18n-title="export.title" disabled>⤓ PNG</button>
   <button id="exportSvgBtn" class="menubtn" type="button" data-i18n="export.svg" data-i18n-title="export.svg.title" disabled>⤓ SVG</button>
@@ -59,9 +58,7 @@
 
 <div id="workspaceBar">
   <div id="workspaces"></div>
-  <span id="compareHint" class="hint" data-i18n="compare.hint">Ctrl+click two workspaces to compare them</span>
-  <button id="clearSelectionBtn" type="button" data-i18n="compare.clearSelection" data-i18n-title="compare.clearSelection.title" disabled>Clear</button>
-  <button id="compareBtn" type="button" data-i18n="compare.button" data-i18n-title="compare.button.title" disabled>⇄ Compare</button>
+  <button id="compareBtn" type="button" data-i18n="compare.button" data-i18n-title="compare.button.title">⇄ Compare</button>
 </div>
 
 <div id="tabbar">
@@ -217,7 +214,20 @@
       </div>
       <div id="modelCanvas"></div>
     </div>
-    <div id="objectCompare" class="view hidden">
+    <div id="text" class="view hidden"></div>
+    <div id="textFind" class="hidden">
+      <input id="textFindInput" type="search" data-i18n-placeholder="text.find.placeholder" autocomplete="off" spellcheck="false">
+      <span id="textFindCount" class="count"></span>
+      <button id="textFindPrev" class="panel-toggle" type="button" data-i18n-title="text.find.prev">▲</button>
+      <button id="textFindNext" class="panel-toggle" type="button" data-i18n-title="text.find.next">▼</button>
+      <button id="textFindClose" class="panel-toggle" type="button" data-i18n-title="text.find.close">×</button>
+    </div>
+    <div id="comparison" class="view hidden">
+      <div id="comparisonSections" role="tablist">
+        <button class="csection-tab" type="button" data-section="objects" data-i18n="comparison.objects" data-i18n-title="comparison.objects.title">Declarations</button>
+        <button class="csection-tab" type="button" data-section="files" data-i18n="comparison.files" data-i18n-title="comparison.files.title">Files</button>
+      </div>
+    <div id="objectCompare" class="csection hidden">
       <div id="objectCompareHeader">
         <div><span id="objectCompareTitle"></span><br><span id="objectCompareSummary" class="muted"></span></div>
         <span id="objectCompareLegend" class="legend"></span>
@@ -231,15 +241,7 @@
         <div class="cobj"><div class="cobj-head" id="objectCompareRightName"></div><div class="cobj-canvas" id="objectCompareRight"></div></div>
       </div>
     </div>
-    <div id="text" class="view hidden"></div>
-    <div id="textFind" class="hidden">
-      <input id="textFindInput" type="search" data-i18n-placeholder="text.find.placeholder" autocomplete="off" spellcheck="false">
-      <span id="textFindCount" class="count"></span>
-      <button id="textFindPrev" class="panel-toggle" type="button" data-i18n-title="text.find.prev">▲</button>
-      <button id="textFindNext" class="panel-toggle" type="button" data-i18n-title="text.find.next">▼</button>
-      <button id="textFindClose" class="panel-toggle" type="button" data-i18n-title="text.find.close">×</button>
-    </div>
-    <div id="compare" class="view hidden">
+    <div id="compare" class="csection hidden">
       <div id="compareHeader">
         <div><span id="compareTitle"></span><br><span id="compareSummary" class="muted"></span></div>
         <span id="compareLegend" class="legend" data-i18n-title="compare.legend.title"></span>
@@ -250,9 +252,11 @@
           <input type="checkbox" id="diffOnly"> <span data-i18n="compare.diffOnly">differences only</span>
         </label>
         <span id="compareTools" class="panel-tools"><button id="compareExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="compareCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span>
-        <button id="compareClose" type="button" class="menubtn" data-i18n="compare.close">Close</button>
+        <button id="clearSelectionBtn" type="button" class="menubtn" data-i18n="compare.clearSelection" data-i18n-title="compare.clearSelection.title">Clear the selection</button>
       </div>
+      <div id="compareEmpty" class="muted"></div>
       <div id="compareBody"><table id="compareTable"></table></div>
+    </div>
     </div>
     <div id="validation" class="view hidden">
       <div id="validationHeader">

@@ -1,4 +1,4 @@
-import { VIEW, ZOOM } from './constants.js';
+import { COMPARE_SECTION, VIEW, ZOOM } from './constants.js';
 
 /** Scroll positions of a tab's views, restored when the tab is shown again. */
 export const newScroll = () => ({ text: 0, graphTop: 0, graphLeft: 0, modelTop: 0, modelLeft: 0 });
@@ -12,7 +12,6 @@ export function newTabState() {
     located: null,      // promise of the server's search for the path of a file opened in the browser
     workspace: null,    // always set
     file: null,         // the entry of workspace.files shown, when the tab shows one
-    compare: null,      // {left, right} workspaces when the tab is a comparison; file: the name of the one file pair shown, when the tab shows one
     validation: null,   // {name, path, text, xsd, sch, phase, result, error, selected} when the tab shows the validation of a document (validate.js)
     text: '',
     model: null,
@@ -52,7 +51,13 @@ export const session = {
   workspaceCounter: 0,
   /** Workspaces selected with Ctrl+click on their chip, oldest first (at most two). */
   compareSelection: [],
-  /** The two declarations the Compare view draws, one per side; either may be null. */
+  /**
+   * The comparison: a place of its own on the workspace bar, not a view of a file nor a workspace.
+   * {@code open}: its chip is there; {@code shown}: it is the place being read, the active tab
+   * staying where the reader left it; {@code section}: which of its two comparisons is drawn.
+   */
+  comparison: { open: false, shown: false, section: COMPARE_SECTION.OBJECTS },
+  /** The two declarations its Declarations section draws, one per side; either may be null. */
   compared: { left: null, right: null },
   /** The boxes it draws folded, by the trail {@code model-diff.js} gives them; kept while the two sides do not change. */
   comparedFolded: new Set(),
