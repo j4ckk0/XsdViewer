@@ -813,10 +813,12 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .mbox.removed .mtype, .mbox.added .mtype, .mbox.removed .mword, .mbox.added .mword,
 .mbox.changed .mtype, .mbox.changed .mword { fill: var(--text); opacity: .75; }
 
-/* the details panel's button marking the selected declaration for the Compare view */
-.cobj-mark { margin: 6px 0 2px; padding: 3px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); cursor: pointer; }
+/* the details panel's buttons putting the selected declaration on one side of the Compare view */
+.cobj-sides { display: flex; gap: 6px; margin: 6px 0 2px; }
+.cobj-mark { padding: 3px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); cursor: pointer; }
 .cobj-mark:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
-.cobj-mark.marked { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.cobj-mark.marked.left { border-color: var(--diff-del-fg); color: var(--diff-del-fg); background: var(--diff-del-bg); font-weight: 600; }
+.cobj-mark.marked.right { border-color: var(--diff-ins-fg); color: var(--diff-ins-fg); background: var(--diff-ins-bg); font-weight: 600; }
 
 /* the Compare view: one model per marked declaration, side by side, each scrolling on its own */
 #objectCompare { display: flex; flex-direction: column; min-height: 0; }

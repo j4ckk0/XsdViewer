@@ -2,6 +2,12 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **The Compare view has two sides you choose.** The details panel of a declaration offers **◈ Left** and **◈ Right**, and the button of the side holding it is coloured; clicking that side again takes it off, **⇄ Swap** puts each side where the other was, and **Clear the marks** empties both. Which side a declaration lands on no longer depends on the order things were picked in.
+
+- **Fix: taking a declaration off the comparison seemed not to work.** Marking was a queue of two, and with one left the view compared it against whatever happened to be selected — so clearing one of the two redrew a comparison instead of stopping. Nothing is drawn now while a side is empty.
+
 ## 4.4.0 — 2026-09-04
 
 - **The Compare view folds.** Every box holding something now carries a handle that puts it aside, and folding one folds the box matching it on the other side, so the two models stay read together; **⊞** and **⊟** open and fold them all. What is folded changes nothing to the comparison: the models are compared whole, and the marks and the summary stay as they were.

@@ -47,7 +47,10 @@ function settle(at) {
     if (before === session.tabs.length + session.workspaces.length) break;
   }
   session.compareSelection = session.compareSelection.filter(ws => session.workspaces.includes(ws));
-  session.marked = session.marked.filter(mark => session.workspaces.includes(mark.ws));
+  for (const side of ['left', 'right']) {   // a side pointing into a workspace that is gone goes with it
+    const mark = session.compared[side];
+    if (mark && !session.workspaces.includes(mark.ws)) session.compared[side] = null;
+  }
   if (session.tabs.includes(session.active)) return false;
   session.active = session.tabs[Math.min(at, session.tabs.length - 1)];
   return true;

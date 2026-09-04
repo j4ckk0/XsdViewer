@@ -83,6 +83,7 @@ export const ID = {
   OBJECT_COMPARE_EXPAND_ALL: 'objectCompareExpandAll',
   OBJECT_COMPARE_COLLAPSE_ALL: 'objectCompareCollapseAll',
   OBJECT_COMPARE_CLEAR: 'objectCompareClear',
+  OBJECT_COMPARE_SWAP: 'objectCompareSwap',
   OBJECT_COMPARE_EMPTY: 'objectCompareEmpty',
   OBJECT_COMPARE_BODY: 'objectCompareBody',
   OBJECT_COMPARE_LEFT: 'objectCompareLeft',
@@ -188,6 +189,8 @@ export const CLS = {
   PENDING: 'pending',
   /** In the details panel: opens the comparison of the selected declaration with the other selected workspace. */
   /** In the details panel: marks the selected declaration for comparison. */
+  /** The pair of buttons putting the selected declaration on one side of the Compare view. */
+  MARK_BUTTONS: 'cobj-sides',
   MARK_BUTTON: 'cobj-mark',
   /** On that button when this declaration is one of the marked ones. */
   MARKED: 'marked',
@@ -319,6 +322,8 @@ export const DATA = {
   PATH: 'path',
   /** On an entry of the Links menu: the category of link it switches. */
   CATEGORY: 'category',
+  /** On a button of the details panel: which side of the Compare view it fills. */
+  SIDE: 'side',
   /** On a schema list of the validation tab: xsd / schematron. */
   SOURCE: 'source',
   VIEW: 'view',

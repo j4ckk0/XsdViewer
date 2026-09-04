@@ -26,39 +26,38 @@ import { session } from './state.js';
 import { workspaceName } from './tabs.js';
 import { applyZoom } from './zoom.js';
 
-/** How many declarations are marked at once. */
-export const MARKED_OBJECTS = 2;
+/** The two sides of the comparison, each holding one declaration or nothing. */
+export const SIDE = { LEFT: 'left', RIGHT: 'right' };
+export const SIDES = [SIDE.LEFT, SIDE.RIGHT];
 
 /** Where a marked declaration lives and which one it is; the tab may close, the file of its workspace stays. */
 const markOf = (tab, id) => ({ tab, ws: tab.workspace, entry: tab.file, fileName: tab.fileName, id });
 
-export const isMarked = (tab, id) => session.marked.some(m => m.tab === tab && m.id === id);
+const holds = (mark, tab, id) => !!mark && mark.tab === tab && mark.id === id;
 
-/** Marks a declaration for comparison, or unmarks it when it was marked; a third mark drops the oldest. Returns how many are marked. */
-export function toggleMark(tab, id) {
-  const i = session.marked.findIndex(m => m.tab === tab && m.id === id);
-  if (i >= 0) session.marked.splice(i, 1);
-  else {
-    session.marked.push(markOf(tab, id));
-    if (session.marked.length > MARKED_OBJECTS) session.marked.shift();
-  }
-  return session.marked.length;
-}
-
-export const clearMarks = () => { session.marked.length = 0; };
+/** The side holding this declaration, or null: what the details panel says of it. */
+export const sideOf = (tab, id) => SIDES.find(side => holds(session.compared[side], tab, id)) || null;
 
 /**
- * The two declarations to compare: the two marked ones, or — when only one is marked — that one and
- * whatever the active tab has selected. Null when there is nothing to compare yet.
+ * Puts a declaration on one side of the comparison, replacing what that side held; clicking the
+ * side it already holds takes it off. Each side is chosen, so which one a declaration lands on is
+ * never a matter of the order things were marked in.
  */
+export function markSide(side, tab, id) {
+  session.compared[side] = holds(session.compared[side], tab, id) ? null : markOf(tab, id);
+}
+
+export const clearMarks = () => { session.compared = { left: null, right: null }; };
+
+export function swapSides() {
+  const { left, right } = session.compared;
+  session.compared = { left: right, right: left };
+}
+
+/** The two declarations to draw, or null while either side is empty. */
 export function comparedPair() {
-  const marks = session.marked;
-  if (marks.length === MARKED_OBJECTS) return marks;
-  const st = session.active;
-  if (marks.length === 1 && st.model && st.selected && !(marks[0].tab === st && marks[0].id === st.selected)) {
-    return [marks[0], markOf(st, st.selected)];
-  }
-  return null;
+  const { left, right } = session.compared;
+  return left && right ? [left, right] : null;
 }
 
 /** The place a marked declaration is read from: its tab while it is open and parsed, else its file in the workspace. */
@@ -102,7 +101,8 @@ export async function renderObjectCompare() {
   $(ID.OBJECT_COMPARE_EMPTY).classList.toggle(CLS.HIDDEN, !!pair);
   $(ID.OBJECT_COMPARE_BODY).classList.toggle(CLS.HIDDEN, !pair);
   if (!pair) {
-    $(ID.OBJECT_COMPARE_EMPTY).textContent = t(session.marked.length ? MSG.OBJECT_COMPARE_ONE_MARKED : MSG.OBJECT_COMPARE_NONE_MARKED);
+    const held = SIDES.filter(side => session.compared[side]).length;
+    $(ID.OBJECT_COMPARE_EMPTY).textContent = t(held ? MSG.OBJECT_COMPARE_ONE_MARKED : MSG.OBJECT_COMPARE_NONE_MARKED);
     $(ID.OBJECT_COMPARE_TITLE).textContent = t(MSG.OBJECT_COMPARE_TITLE_EMPTY);
     $(ID.OBJECT_COMPARE_SUMMARY).textContent = '';
     $(ID.OBJECT_COMPARE_LEGEND).innerHTML = '';

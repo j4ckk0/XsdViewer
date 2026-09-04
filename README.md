@@ -34,18 +34,20 @@ the graph shows the types themselves as neighbours of the declaration that names
   object.
 
 - **Compare** – two declarations side by side, wherever each of them lives: two versions of the
-  same type in two workspaces, or two types that merely resemble one another. Mark one from its
-  details panel (**◈ Mark**), then mark a second — in another file, another workspace, under
-  another name — and this view draws the content model of each, with every box marked: red for
-  what only the left one has, green for what only the right one has, blue for a box whose
-  occurrences or type changed, and a summary counting them. The boxes are matched by what each one
-  is rather than by where it sits, so an element inserted on one side does not mark everything
-  below it as different; named types are opened on both sides, so a change deep inside one is seen.
-  With a single mark it compares that one with whatever you select, so a reference can be held
-  while the rest is browsed. Neither file need be open in a tab. Any box holding something carries
-  a handle that puts it aside, and folding one folds the box matching it on the other side, so the
-  two models stay read together; **⊞** / **⊟** open and fold them all. **Clear the marks** empties
-  the view, and **⤓ PNG** / **⤓ SVG** save the two models as one picture.
+  same type in two workspaces, or two types that merely resemble one another. The view has two
+  sides, and the details panel of a declaration fills one: **◈ Left** or **◈ Right**, chosen, so
+  which side a declaration lands on is never a matter of the order things were picked in; the
+  button of the side holding it is coloured, and clicking that side again takes it off. **⇄ Swap**
+  puts each side where the other was, **Clear the marks** empties both, and nothing is drawn while
+  a side is empty. The two declarations may be in different files, different workspaces, and bear
+  different names; neither file need be open in a tab. The view draws the content model of each,
+  with every box marked: red for what only the left one has, green for what only the right one
+  has, blue for a box whose occurrences or type changed, and a summary counting them. The boxes are
+  matched by what each one is rather than by where it sits, so an element inserted on one side does
+  not mark everything below it as different; named types are opened on both sides, so a change deep
+  inside one is seen. Any box holding something carries a handle that puts it aside, and folding one
+  folds the box matching it on the other side, so the two models stay read together; **⊞** / **⊟**
+  open and fold them all. **⤓ PNG** / **⤓ SVG** save the two models as one picture.
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
   sits in the middle, what it links to is on the right, what uses it is on the left.

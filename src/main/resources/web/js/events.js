@@ -3,7 +3,7 @@ import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, P
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
 import { clearSelection, initOptions, openPairTab, rememberOptions, renderCompare, setAllDetails, startCompare, toggleDetail, toggleSelection } from './compare.js';
-import { MARKED_OBJECTS, clearMarks, foldAll, toggleFolded, toggleMark } from './object-compare.js';
+import { clearMarks, foldAll, markSide, swapSides, toggleFolded } from './object-compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { initDetails, renderDetails, toggleDetails } from './details.js';
@@ -264,6 +264,7 @@ function wireViews() {
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
   $(ID.OBJECT_COMPARE_CLEAR).addEventListener('click', () => { clearMarks(); renderDetails(); renderComparedObjects(); });
+  $(ID.OBJECT_COMPARE_SWAP).addEventListener('click', () => { swapSides(); renderDetails(); renderComparedObjects(); });
   $(ID.OBJECT_COMPARE_EXPAND_ALL).addEventListener('click', () => foldAll(false));
   $(ID.OBJECT_COMPARE_COLLAPSE_ALL).addEventListener('click', () => foldAll(true));
   // a handle in either model folds its box, and the box matching it on the other side
@@ -344,13 +345,13 @@ function wireSelectionSources() {
   }
   $(ID.DETAILS).addEventListener('click', (e) => {
     if (e.target.closest('a[data-' + DATA.LINE + ']')) { showView(VIEW.TEXT); return; }
-    // marking a declaration: the details panel says so, and the Compare view redraws
-    if (e.target.closest(selector(CLS.MARK_BUTTON))) {
+    // one side of the Compare view takes the selected declaration, or gives it up when it held it
+    const sideButton = e.target.closest(selector(CLS.MARK_BUTTON));
+    if (sideButton) {
       const st = session.active;
-      const marked = toggleMark(st, st.selected);
+      markSide(sideButton.dataset[DATA.SIDE], st, st.selected);
       renderDetails();
       renderComparedObjects();
-      toast(t(marked === MARKED_OBJECTS ? MSG.OBJECT_MARK_TWO : marked ? MSG.OBJECT_MARK_ONE : MSG.OBJECT_MARK_NONE));
       return;
     }
     const link = e.target.closest(selector(CLS.LINK));

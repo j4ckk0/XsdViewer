@@ -52,8 +52,8 @@ export const session = {
   workspaceCounter: 0,
   /** Workspaces selected with Ctrl+click on their chip, oldest first (at most two). */
   compareSelection: [],
-  /** Declarations marked for comparison, oldest first (at most two): what the Compare view draws. */
-  marked: [],
+  /** The two declarations the Compare view draws, one per side; either may be null. */
+  compared: { left: null, right: null },
   /** Set when a link to an external declaration could not be resolved: checked whenever a file gets loaded. */
   pendingJump: null,
   /** Schema files of the folders opened in the browser (File ▸ Open folder…, or a dropped folder),
