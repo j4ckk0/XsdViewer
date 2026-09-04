@@ -5,6 +5,8 @@ import { loadInitialFile } from './file-actions.js';
 import { initI18n } from './i18n.js';
 import { initLanguageSelector } from './language-selector.js';
 import { initGraphFilters } from './graph-filters.js';
+import { initModelView } from './model-view.js';
+import { select } from './navigation.js';
 import { initPanels } from './panels.js';
 import { renderMainView, renderPage } from './page.js';
 import { startPresence } from './presence.js';
@@ -22,5 +24,6 @@ await initLanguageSelector();
 wireEvents();
 initGraphFilters(renderMainView);   // the Links and Types menus redraw the graph they filter
 initPanels(renderMainView);
+initModelView(select);
 renderPage();
 loadInitialFile();

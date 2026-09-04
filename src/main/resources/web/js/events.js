@@ -9,7 +9,6 @@ import { initDetails, toggleDetails } from './details.js';
 import { fileListClick, initFiles, isFilesCollapsed, renderFileList, setAllUnfolded, setFilesCollapsed, toggleFiles } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
-import { collapseAll as collapseModel, expandAll as expandModel, modelClick, toggleExpanded } from './model-view.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
 import { renderMainView, renderPage, showView } from './page.js';
@@ -258,15 +257,6 @@ function wireViews() {
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
   window.addEventListener('resize', renderMainView);
-  // the Model view: a handle opens or folds a box, a box that refers to a global declaration selects it
-  $(ID.MODEL_EXPAND_ALL).addEventListener('click', expandModel);
-  $(ID.MODEL_COLLAPSE_ALL).addEventListener('click', collapseModel);
-  $(ID.MODEL_CANVAS).addEventListener('click', (e) => {
-    const hit = modelClick(e.target);
-    if (!hit) return;
-    if (hit.path != null) toggleExpanded(hit.path);
-    else if (session.active.nodes.has(hit.id)) select(hit.id);
-  });
 }
 
 function wireSearch() {

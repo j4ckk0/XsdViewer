@@ -6,7 +6,7 @@
  * demand (a handle on the box), its content being that node's own, from this file or from another
  * file of the workspace. The tree is an SVG, which the PNG and SVG exports serve as they serve the graph.
  */
-import { NODE_KIND, PARTICLE, SVG_NS, TEXT } from './constants.js';
+import { LINK_LABEL, NODE_KIND, PARTICLE, SVG_NS, TEXT } from './constants.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { findInWorkspace, kindsOf } from './declarations.js';
 import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
@@ -30,9 +30,8 @@ const PATH_SEPARATOR = '/';
 
 const shorten = (s, max) => (s.length > max ? s.slice(0, max - 1) + ELLIPSIS : s);
 
-/** The node (of this tab, or of another file of the workspace) with {@code id}, resolved when it is an external placeholder; null when unknown. */
-function nodeOf(id) {
-  const st = session.active;
+/** The node of the tab {@code st} (or of another file of its workspace) with {@code id}, resolved when it is an external placeholder; null when unknown. */
+function nodeOf(id, st) {
   let n = st.nodes.get(id);
   if (n && n.kind !== NODE_KIND.EXTERNAL) return n;
   const name = n ? n.name : id.slice(id.indexOf(':') + 1);
@@ -42,29 +41,29 @@ function nodeOf(id) {
 }
 
 /** The content a node has of its own: its particles (and attributes), or, for an element of a named type, that type's. */
-function contentOf(n, path) {
+function contentOf(n, path, st) {
   if (!n) return null;
   if ((n.content && n.content.length) || (n.attributes && n.attributes.length)) return { particles: n.content || [], attributes: n.attributes || [], id: n.id };
   if (n.kind === NODE_KIND.ELEMENT) {   // a global element of a named type: the type's content
-    const st = session.active;
-    const typeEdge = (st.outEdges.get(n.id) || []).find(e => e.label === 'type');
+    const typeEdge = (st.outEdges.get(n.id) || []).find(e => e.label === LINK_LABEL.TYPE);
     if (typeEdge) {
-      const type = nodeOf(typeEdge.to);
-      if (type && !path.includes(type.id)) return contentOf(type, path);
+      const type = nodeOf(typeEdge.to, st);
+      if (type && !path.includes(type.id)) return contentOf(type, path, st);
     }
   }
   return null;
 }
 
 /**
- * The display tree: {kind, name, type, ref, card, children, attributes, path, expandable, expanded, recursive}.
- * {@code path}: the indexes from the root, what the expanded set holds. {@code onPath}: the node ids being expanded (recursion guard).
+ * The display tree of the declaration {@code root} in the tab {@code st}: {kind, name, type, ref,
+ * card, children, attributes, path, expandable, expanded, recursive}. {@code path}: the indexes from
+ * the root, what {@code st.modelExpanded} holds. {@code onPath}: the node ids being expanded (recursion guard).
+ * A function of the declaration and the tab alone, which is what the tests exercise.
  */
-function buildTree(root) {
-  const st = session.active;
+export function buildTree(root, st) {
   const expanded = st.modelExpanded;
   const onPath = [root.id];
-  const rootContent = contentOf(root, []);
+  const rootContent = contentOf(root, [], st);
   const tree = { kind: root.kind, name: root.name, id: root.id, path: '', children: [], attributes: [], root: true };
   if (rootContent) fill(tree, rootContent, onPath);
 
@@ -74,7 +73,7 @@ function buildTree(root) {
   }
 
   function attributeBox(a, path) {
-    const type = a.type ? nodeOf(a.type) : null;
+    const type = a.type ? nodeOf(a.type, st) : null;
     return { kind: NODE_KIND.ATTRIBUTE, name: a.name, path, ref: a.ref || '', typeId: a.type || '', typeName: type ? type.name : '', card: a, children: [], attributes: [] };
   }
 
@@ -87,10 +86,10 @@ function buildTree(root) {
     // what the box refers to — a type, a global element, a group, a base type — is expanded on demand
     const targetId = p.ref || p.type;
     if (!targetId) return box;
-    const target = nodeOf(targetId);
+    const target = nodeOf(targetId, st);
     box.typeName = target ? target.name : targetId.slice(targetId.indexOf(':') + 1);
     if (p.type && target && target.kind !== NODE_KIND.COMPLEX_TYPE && target.kind !== NODE_KIND.EXTERNAL) return box;   // a simple or built-in type: nothing inside
-    const content = target ? contentOf(target, ids) : null;
+    const content = target ? contentOf(target, ids, st) : null;
     if (!content) return box;
     if (ids.includes(content.id)) { box.recursive = true; return box; }
     box.expandable = true;
@@ -101,8 +100,24 @@ function buildTree(root) {
   return tree;
 }
 
+/**
+ * Wires the Model view: its two buttons, and the clicks in its canvas — a handle opens or folds a
+ * box, a box that refers to a global declaration selects it ({@code select}, from the navigation).
+ */
+export function initModelView(select) {
+  $(ID.MODEL_EXPAND_ALL).addEventListener('click', expandAll);
+  $(ID.MODEL_COLLAPSE_ALL).addEventListener('click', collapseAll);
+  $(ID.MODEL_CANVAS).addEventListener('click', (e) => {
+    const handle = e.target.closest(selector(CLS.MODEL_HANDLE));
+    if (handle) { toggleExpanded(handle.dataset[DATA.PATH]); return; }
+    const box = e.target.closest(selector(CLS.MODEL_BOX));
+    const id = box ? box.dataset[DATA.ID] : null;
+    if (id && session.active.nodes.has(id)) select(id);
+  });
+}
+
 /** Every expandable box open, down to EXPAND_ALL_DEPTH levels. */
-export function expandAll() {
+function expandAll() {
   const st = session.active;
   st.modelExpanded = new Set();
   for (let depth = 0; depth < EXPAND_ALL_DEPTH; depth++) {
@@ -113,19 +128,19 @@ export function expandAll() {
       if (box.expandable && !box.expanded) { st.modelExpanded.add(box.path); added = true; }
       box.children.forEach(walk);
     };
-    walk(buildTree(root));
+    walk(buildTree(root, st));
     if (!added) break;
   }
   renderModel();
 }
 
-export function collapseAll() {
+function collapseAll() {
   session.active.modelExpanded = new Set();
   renderModel();
 }
 
 /** The handle of a box clicked: its type, group or base type shown or folded. */
-export function toggleExpanded(path) {
+function toggleExpanded(path) {
   const set = session.active.modelExpanded;
   if (!set.delete(path)) set.add(path);
   renderModel();
@@ -151,7 +166,7 @@ export function renderModel() {
   const canvas = $(ID.MODEL_CANVAS);
   if (!st.model || !st.selected) { canvas.innerHTML = ''; return; }
   const root = st.nodes.get(st.selected);
-  const tree = buildTree(root);
+  const tree = buildTree(root, st);
   const rows = layout(tree, 0, 0);
   let maxDepth = 0;
   const all = [];
@@ -225,10 +240,3 @@ function titleOf(b) {
   return parts.join(TEXT.TOAST_SEPARATOR);
 }
 
-/** What a click in the canvas hit: {path} for a handle, {id} for a box that refers to a global node, else null. */
-export function modelClick(target) {
-  const handle = target.closest(selector(CLS.MODEL_HANDLE));
-  if (handle) return { path: handle.dataset[DATA.PATH] };
-  const box = target.closest(selector(CLS.MODEL_BOX));
-  return box && box.dataset[DATA.ID] ? { id: box.dataset[DATA.ID] } : null;
-}
