@@ -62,3 +62,23 @@ Followed for v2.6.0, v2.7.1 (30 August 2026) , v2.8.0, v3.0.0, v3.1.0, v3.2.0, v
 4. Update the "current release" line at the top of this file.
 
 Token for the API (the SSH key only serves `git push`): a **fine-grained** personal access token with *Repository access* = **Only select repositories → XsdViewer** — the default *Public repositories (read-only)* greys out the permissions and every write answers `403 Resource not accessible` — and *Contents: Read and write* (releases); *Administration: Read and write* is also needed to change the description or topics. Short expiry, revoke it afterwards. Kept in `~/.config/github/xsdviewer-release-token` (mode 600, outside the repository) for `scripts/release.sh` to read, or given as `$GITHUB_TOKEN`.
+
+## 7. The library on Maven Central
+
+`core` is meant to be published as `org.jtools:xsdviewer-core`; `app` never is. What it takes, once:
+
+1. **The namespace.** Maven Central hands out a groupId only to who owns it: `org.jtools` needs a
+   DNS TXT record on `jtools.org` carrying the verification key the portal gives, or the groupId
+   becomes `io.github.j4ckk0`, granted at once to the GitHub account. Decide this first: the
+   coordinates in `core/README.md` and every pom follow.
+2. **An account on <https://central.sonatype.com>**, and a *user token* from it, kept as the server
+   `central` in `~/.m2/settings.xml` (`<server><id>central</id><username>…</username><password>…</password></server>`).
+3. **A GPG key** (`gpg --gen-key`), its public part sent to a key server the portal reads
+   (`gpg --keyserver keyserver.ubuntu.com --send-keys <id>`); `maven-gpg-plugin` signs with the
+   default key, or `-Dgpg.keyname=<id>`.
+
+Then, for a version: `mvn -Ppublish -DskipTests deploy` builds core's jar, its sources and its
+javadoc, signs the three and uploads the bundle to the portal, where it is validated. Nothing is
+released until **Publish** is pressed there (`autoPublish` is off), so a mistake costs nothing.
+The version must not be a SNAPSHOT.
+

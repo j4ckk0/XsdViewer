@@ -49,6 +49,8 @@ import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXParseException;
@@ -156,23 +158,40 @@ public final class SchematronValidator {
      * @param schematronFile the Schematron (its includes resolve next to it)
      * @param xml            the document
      * @param phase          the phase to run: a phase id, {@link #ALL_PHASES}, or null for the schema's default
-     * @throws IOException              when a file cannot be read
-     * @throws SAXParseException        when the document is not well-formed
-     * @throws IllegalArgumentException when the file is not a Schematron or the phase unknown
+     * @throws IOException       when a file cannot be read
+     * @throws SAXParseException when the document is not well-formed: where, in it
+     * @throws SchemaException   when the file is not XML, not a Schematron, or the phase unknown — or the XPath engine fails
      */
-    public static Result validate(Path schematronFile, String xml, String phase) throws Exception {
-        Element root = SecureXmlFactories.newDocumentBuilder().parse(schematronFile.toFile()).getDocumentElement();
-        if (!SchematronDom.isSchematron(root) || !SchematronVocabulary.SCHEMA.equals(root.getLocalName())) {
-            throw new IllegalArgumentException(Messages.get(MessageKey.NOT_A_SCHEMATRON, root.getTagName()));
+    public static Result validate(Path schematronFile, String xml, String phase) throws IOException, SAXParseException, SchemaException {
+        Element root;
+        try {
+            root = SecureXmlFactories.newDocumentBuilder().parse(schematronFile.toFile()).getDocumentElement();
+        } catch (SAXException | ParserConfigurationException e) {   // the Schematron itself, not the document
+            throw new SchemaException(e);
         }
-        Document instance = LocatedDocument.parse(xml);
+        if (!SchematronDom.isSchematron(root) || !SchematronVocabulary.SCHEMA.equals(root.getLocalName())) {
+            throw new SchemaException(Messages.get(MessageKey.NOT_A_SCHEMATRON, root.getTagName()));
+        }
+        Document instance;
+        try {
+            instance = LocatedDocument.parse(xml);
+        } catch (SAXParseException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new SchemaException(e);
+        }
         List<String> unread = SchematronIncludes.resolve(root, schematronFile);
         SchematronValidator v = new SchematronValidator(root, instance, SchematronParser.elementIds(root));
         for (String why : unread) v.unsupported(why, "", "", "", "");
-        return v.run(phase);
+        try {
+            return v.run(phase);
+        } catch (XPathExpressionException e) {
+            throw new SchemaException(e);
+        }
     }
 
-    private Result run(String phase) throws XPathExpressionException {
+    /** @throws SchemaException when {@code phase} names no phase of the schema */
+    private Result run(String phase) throws XPathExpressionException, SchemaException {
         List<String> phases = SchematronDom.children(schema, SchematronVocabulary.PHASE).stream()
                 .map(p -> p.getAttribute(SchematronVocabulary.ATTR_ID)).filter(id -> !id.isEmpty()).toList();
         if (phase == null || phase.isEmpty()) {
@@ -181,7 +200,7 @@ public final class SchematronValidator {
         Set<String> active = null;
         if (!ALL_PHASES.equals(phase)) {
             Element p = SchematronDom.byId(schema, SchematronVocabulary.PHASE, phase);
-            if (p == null) throw new IllegalArgumentException(Messages.get(MessageKey.PHASE_UNKNOWN, phase));
+            if (p == null) throw new SchemaException(Messages.get(MessageKey.PHASE_UNKNOWN, phase));
             active = SchematronDom.children(p, SchematronVocabulary.ACTIVE).stream().map(a -> a.getAttribute(SchematronVocabulary.ATTR_PATTERN)).collect(Collectors.toSet());
         }
         Frame frame = lets(schema, instance, Frame.ROOT);

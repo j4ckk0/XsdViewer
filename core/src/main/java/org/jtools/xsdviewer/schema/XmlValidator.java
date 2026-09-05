@@ -1,4 +1,4 @@
-package org.jtools.xsdviewer.server;
+package org.jtools.xsdviewer.schema;
 
 /*-
  * #%L
@@ -32,7 +32,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
-import org.jtools.xsdviewer.schema.Severity;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -42,25 +41,33 @@ import org.xml.sax.SAXParseException;
  * from its file (its imports and includes resolve next to it; only files, never the network), the
  * document's problems are collected with their line and column rather than stopping at the first.
  */
-final class XmlValidator {
+public final class XmlValidator {
 
     /** Problems beyond this many are not collected: enough to see what is wrong. */
     static final int MAX_PROBLEMS = 200;
     private static final String FILE_ACCESS = "file";
 
     /** One problem of the document: {@code error} or {@code warning}, where, what. */
-    record Problem(String severity, int line, int column, String message) {}
+    public record Problem(String severity, int line, int column, String message) {}
 
     /** The outcome: valid when no error was found (warnings do not count), and the problems, truncated when too many. */
-    record Result(boolean valid, List<Problem> problems, boolean truncated) {}
+    public record Result(boolean valid, List<Problem> problems, boolean truncated) {}
 
     private XmlValidator() {}
 
     /**
-     * @throws SAXException when the schema itself cannot be compiled (its message says why)
-     * @throws IOException  when a file cannot be read
+     * @throws SchemaException when the schema itself cannot be compiled (its message says why)
+     * @throws IOException     when a file cannot be read
      */
-    static Result validate(Path schemaFile, String xml) throws SAXException, IOException {
+    public static Result validate(Path schemaFile, String xml) throws SchemaException, IOException {
+        try {
+            return compileAndValidate(schemaFile, xml);
+        } catch (SAXException e) {
+            throw new SchemaException(e);
+        }
+    }
+
+    private static Result compileAndValidate(Path schemaFile, String xml) throws SAXException, IOException {
         SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, FILE_ACCESS);

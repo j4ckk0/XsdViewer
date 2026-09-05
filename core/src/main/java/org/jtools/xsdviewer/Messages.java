@@ -32,8 +32,6 @@ public final class Messages {
 
     public static final String BUNDLE_NAME = "org.jtools.xsdviewer.messages";
 
-    private static final ResourceBundle.Control NO_DEFAULT_LOCALE_FALLBACK =
-            ResourceBundle.Control.getNoFallbackControl(ResourceBundle.Control.FORMAT_PROPERTIES);
     private static final ThreadLocal<Locale> REQUEST_LOCALE = new ThreadLocal<>();
     private static final String LANGUAGE_SEPARATORS = "[,;]";
 
@@ -68,8 +66,14 @@ public final class Messages {
         return first.isEmpty() ? null : Locale.forLanguageTag(first);
     }
 
+    /**
+     * The bundle of the locale's language, else the English base file — never the machine's language:
+     * a page asking for English on a French machine gets English. (Done by hand: a named module may
+     * not use a {@code ResourceBundle.Control}.)
+     */
     private static ResourceBundle bundle(Locale locale) {
-        return ResourceBundle.getBundle(BUNDLE_NAME, locale, NO_DEFAULT_LOCALE_FALLBACK);
+        ResourceBundle candidate = ResourceBundle.getBundle(BUNDLE_NAME, locale);
+        return candidate.getLocale().getLanguage().equals(locale.getLanguage()) ? candidate : ResourceBundle.getBundle(BUNDLE_NAME, Locale.ROOT);
     }
 
     /** The bundle's own locale; the base file is English. */

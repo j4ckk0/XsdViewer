@@ -4,6 +4,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
+- **The library's surface.** `SchemaParser.parse`, `SchematronValidator.validate` and `XmlValidator.validate` throw one typed `SchemaException` — its message saying why, in the language asked for — instead of a bare `Exception`; `XmlValidator` joins core's `schema` package. Core is the Java module `org.jtools.xsdviewer.core`, exporting `schema`, `json` and its messages; `Messages` no longer uses a `ResourceBundle.Control`, which a named module may not. A `publish` profile builds and signs the library's jar, sources and javadoc for Maven Central (PUBLISHING.md §7); `core/README.md` shows how it is used.
 - **Two Maven modules.** `core` (`org.jtools:xsdviewer-core`) is a library: the parsers of XML Schema, WSDL and Schematron into a graph of declarations, links and content models, the validators, the JSON writer, the messages — the JDK and nothing else. `app` is the tool: the server, the page, the distributions; its jar embeds core, so `java -jar xsdviewer.jar` runs alone as before. The jar is now built at `app/target/xsdviewer.jar`; the scripts, the workflows and the README follow.
 
 ## 4.13.0 — 2026-09-05

@@ -210,9 +210,9 @@ class XsdParserTest {
 
     @Test
     void rejectsNonSchemaXml() {
-        Exception e = assertThrows(Exception.class, () -> SchemaParser.parse("<root><a/></root>"));
+        Exception e = assertThrows(SchemaException.class, () -> SchemaParser.parse("<root><a/></root>"));
         assertEquals(Messages.get(MessageKey.NOT_A_SCHEMA, "root"), e.getMessage());
-        assertThrows(Exception.class, () -> SchemaParser.parse("not xml at all"));
+        assertThrows(SchemaException.class, () -> SchemaParser.parse("not xml at all"));   // not well-formed: the parser's message, as a SchemaException
     }
 
     @Test

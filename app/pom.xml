@@ -26,24 +26,41 @@
   <build>
     <finalName>xsdviewer</finalName>
     <plugins>
-      <!-- the classes of core join the application's before the jar is made: java -jar xsdviewer.jar needs nothing else -->
+      <!-- core's classes and messages join the jar once it is made, so that java -jar xsdviewer.jar needs
+           nothing else; its module descriptor stays out, the jar being a plain classpath one. The jar
+           plugin's manifest (main class, implementation entries) is kept. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
+        <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
             <id>embed-core</id>
-            <phase>prepare-package</phase>
+            <phase>package</phase>
             <goals>
-              <goal>unpack-dependencies</goal>
+              <goal>shade</goal>
             </goals>
             <configuration>
-              <includeArtifactIds>xsdviewer-core</includeArtifactIds>
-              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-              <excludes>META-INF/MANIFEST.MF</excludes>
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <filters>
+                <filter>
+                  <artifact>org.jtools:xsdviewer-core</artifact>
+                  <excludes>
+                    <exclude>module-info.class</exclude>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                  </excludes>
+                </filter>
+              </filters>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <!-- the library is what goes to Maven Central, not the tool -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <configuration>
+          <skipPublishing>true</skipPublishing>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -37,18 +37,25 @@ public final class SchemaParser {
 
     private SchemaParser() {}
 
-    public static SchemaGraph parse(String text) throws Exception {
-        Document doc = SecureXmlFactories.newDocumentBuilder().parse(new InputSource(new StringReader(text)));
-        Element root = doc.getDocumentElement();
-        if (XsdVocabulary.NAMESPACE.equals(root.getNamespaceURI()) && XsdVocabulary.SCHEMA.equals(root.getLocalName())) {
-            return XsdParser.parse(root, text);
+    /** @throws SchemaException when the text is not XML, or XML that is none of the three */
+    public static SchemaGraph parse(String text) throws SchemaException {
+        try {
+            Document doc = SecureXmlFactories.newDocumentBuilder().parse(new InputSource(new StringReader(text)));
+            Element root = doc.getDocumentElement();
+            if (XsdVocabulary.NAMESPACE.equals(root.getNamespaceURI()) && XsdVocabulary.SCHEMA.equals(root.getLocalName())) {
+                return XsdParser.parse(root, text);
+            }
+            if (WsdlVocabulary.NAMESPACE.equals(root.getNamespaceURI()) && WsdlVocabulary.DEFINITIONS.equals(root.getLocalName())) {
+                return WsdlParser.parse(root, text);
+            }
+            if (root.getNamespaceURI() != null && SchematronVocabulary.NAMESPACES.contains(root.getNamespaceURI())) {
+                return SchematronParser.parse(root, text);
+            }
+            throw new SchemaException(Messages.get(MessageKey.NOT_A_SCHEMA, root.getTagName()));
+        } catch (SchemaException e) {
+            throw e;
+        } catch (Exception e) {   // the XML parser: not well-formed, or what the JDK refuses (an external entity, say)
+            throw new SchemaException(e);
         }
-        if (WsdlVocabulary.NAMESPACE.equals(root.getNamespaceURI()) && WsdlVocabulary.DEFINITIONS.equals(root.getLocalName())) {
-            return WsdlParser.parse(root, text);
-        }
-        if (root.getNamespaceURI() != null && SchematronVocabulary.NAMESPACES.contains(root.getNamespaceURI())) {
-            return SchematronParser.parse(root, text);
-        }
-        throw new IllegalArgumentException(Messages.get(MessageKey.NOT_A_SCHEMA, root.getTagName()));
     }
 }

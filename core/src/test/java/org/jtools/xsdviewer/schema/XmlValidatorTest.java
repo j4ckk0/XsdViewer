@@ -1,4 +1,4 @@
-package org.jtools.xsdviewer.server;
+package org.jtools.xsdviewer.schema;
 
 /*-
  * #%L
@@ -30,7 +30,6 @@ import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.xml.sax.SAXException;
 
 /** Against samples/import/order.xsd, whose imports and includes (address, items, types) must resolve next to it. */
 class XmlValidatorTest {
@@ -73,6 +72,6 @@ class XmlValidatorTest {
     void aBrokenSchemaIsRefused(@TempDir Path dir) throws Exception {
         Path broken = dir.resolve("broken.xsd");
         Files.writeString(broken, "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"><xs:element name=\"a\" type=\"nope\"/></xs:schema>");
-        assertThrows(SAXException.class, () -> XmlValidator.validate(broken, "<a/>"));
+        assertThrows(SchemaException.class, () -> XmlValidator.validate(broken, "<a/>"));
     }
 }

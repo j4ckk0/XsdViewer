@@ -96,7 +96,7 @@ class SchematronValidatorTest {
         assertEquals("basic", basic.phase());
         assertEquals(6, basic.checked());
         assertFalse(SchematronValidator.validate(SCH, xml, SchematronValidator.ALL_PHASES).valid());
-        Exception e = assertThrows(IllegalArgumentException.class, () -> SchematronValidator.validate(SCH, xml, "nope"));
+        Exception e = assertThrows(SchemaException.class, () -> SchematronValidator.validate(SCH, xml, "nope"));
         assertTrue(e.getMessage().contains("nope"));
     }
 
@@ -193,7 +193,7 @@ class SchematronValidatorTest {
         assertEquals(1, e.getLineNumber());
         Path xsd = dir.resolve("x.xsd");
         Files.writeString(xsd, "<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema'/>");
-        assertThrows(IllegalArgumentException.class, () -> SchematronValidator.validate(xsd, "<a/>", null));
+        assertThrows(SchemaException.class, () -> SchematronValidator.validate(xsd, "<a/>", null));
     }
 
     /** The contract with the graph: what a problem names is a node of the Schematron as the page parsed it. */
