@@ -17,7 +17,12 @@
       <xs:element name="estimatedDeliveryDateWithTimeZoneOffset" type="xs:dateTime" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute name="purchaseOrderConfirmationReferenceNumber" type="xs:string" use="required"/>
+    <xs:attribute name="identifier" type="AnInternationalStandardSerialNumberIdentifierType"/>
   </xs:complexType>
+
+  <xs:simpleType name="AnInternationalStandardSerialNumberIdentifierType">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
 
   <xs:complexType name="PostalAddressWithDeliveryInstructionsType">
     <xs:sequence>

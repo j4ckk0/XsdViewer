@@ -5,6 +5,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 ## Unreleased
 
 - The Settings menu opens with the theme, the display choices first and the server option below.
+- An attribute box no longer paints its `@name : type` past its edge: the label is fitted to the box, a long name or a long type shortened with an ellipsis.
 
 ## 5.3.0 — 2026-09-05
 

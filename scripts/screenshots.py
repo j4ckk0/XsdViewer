@@ -296,9 +296,12 @@ SCENES = [
          checks={'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
                  'boxHeight': "document.querySelector('#modelCanvas .mbox rect').getAttribute('height')",
                  # a built-in-typed element carries no handle, so its name reaches further before the ellipsis
-                 'stringTypedName': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).find(n => n.startsWith('customerLoyalty'))"},
-         expect={'names': 'InternationalPurchaseOrde…|@purchaseOrderConfirmationReferenceNumber : string|customerLoyaltyProgramMem…|preferredInternation…|alternativeBillingAd…|consolidatedOrderLin…|estimatedDeliveryDateWith…',
-                 'boxHeight': '40', 'stringTypedName': 'customerLoyaltyProgramMem…'}),
+                 'stringTypedName': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).find(n => n.startsWith('customerLoyalty'))",
+                 # the long attribute's @name : type must stay inside its box
+                 'attrLabels': "[...document.querySelectorAll('#modelCanvas .mbox.attribute .mname')].map(t => t.textContent).join('|')",
+                 'attrsFit': "(() => [...document.querySelectorAll('#modelCanvas .mbox.attribute')].every(b => b.querySelector('.mname').getComputedTextLength() <= +b.querySelector('rect').getAttribute('width') - 8))().toString()"},
+         expect={'names': 'InternationalPurchaseOrde…|@purchaseOrderConfirmatio…|@identifier : AnInterna… ?|customerLoyaltyProgramMem…|preferredInternation…|alternativeBillingAd…|consolidatedOrderLin…|estimatedDeliveryDateWith…',
+                 'boxHeight': '40', 'stringTypedName': 'customerLoyaltyProgramMem…', 'attrLabels': '@purchaseOrderConfirmatio…|@identifier : AnInterna… ?', 'attrsFit': 'true'}),
     # Settings toggle: the cross-view handles (the model's ◎ and the graph's ▤, and the ×N mark) can be hidden
     dict(name='handles-toggle', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:Items\"]').click();"
