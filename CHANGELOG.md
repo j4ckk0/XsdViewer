@@ -2,12 +2,9 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 5.3.0 — 2026-09-05
 
 - **A Stop button halts a folder that is loading.** While a folder is being read or its files parsed in the background, the busy indicator offers Stop; a folder opened by mistake — a whole drive — is halted at once, the files not yet reached left listed and openable later.
-
-## Unreleased
-
 - **A model box gives a long name its own line.** The name now sits on the top line at the full width of the box, the type on the line below, and boxes are a little taller — so a long declaration name shows up close to the box edge rather than sharing its line with the type. `samples/longnames.xsd` is there to see it.
 - **Settings ▸ Model ⇄ graph handles** hides or shows the ◎ and ▤ handles that jump between the Model and Graph views, and the ×N mark counting the objects a box is shared by.
 
