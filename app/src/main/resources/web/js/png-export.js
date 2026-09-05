@@ -26,6 +26,8 @@ const FILE_EXTENSION = '.png';
 const SVG_EXTENSION = '.svg';
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n';
 const TEXT_SUFFIX = '-text', MODEL_SUFFIX = '-model', COMPARE_SUFFIX = '-compared';
+/** The compare view exports three pictures: each side alone, then both together. */
+const LEFT_SUFFIX = '-left', RIGHT_SUFFIX = '-right';
 /** The comparison as one picture: the gap between its two drawings, and the room the heading of each takes above it. */
 const COMPARE_GAP = 48, COMPARE_HEAD_H = 26, COMPARE_HEAD_BASELINE = 9;
 const FALLBACK_TEXT = '#000000';
@@ -39,7 +41,7 @@ const SVG_STYLE_TAG = 'style', SVG_RECT_TAG = 'rect';
 
 export function exportPng() {
   const st = session.active;
-  if (session.comparison.shown) { exportImage(compareSvg(), comparedName() + COMPARE_SUFFIX + FILE_EXTENSION); return; }
+  if (session.comparison.shown) { for (const p of comparePictures(FILE_EXTENSION)) exportImage(p.picture, p.name); return; }
   if (!st.model) return;
   const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');
   if (st.view === VIEW.GRAPH || st.view === VIEW.MODEL) {
@@ -63,7 +65,7 @@ function pageCss() {
 /** ⤓ SVG: the graph as a vector image (its SVG, cropped, with the page's styles embedded). */
 export function exportSvg() {
   const st = session.active;
-  if (session.comparison.shown) { saveSvg(compareSvg(), comparedName() + COMPARE_SUFFIX + SVG_EXTENSION); return; }
+  if (session.comparison.shown) { for (const p of comparePictures(SVG_EXTENSION)) saveSvg(p.picture, p.name); return; }
   if (!st.model || st.view === VIEW.TEXT) return;
   if (!st.selected) { toast(t(MSG.EXPORT_SELECT_FIRST)); return; }
   const base = (st.fileName || DEFAULT_BASENAME).replace(EXTENSION, '');
@@ -71,19 +73,42 @@ export function exportSvg() {
   saveSvg(graphSvg(), base + '-' + name + (st.view === VIEW.MODEL ? MODEL_SUFFIX : '') + SVG_EXTENSION);
 }
 
+/** A marked declaration's name, made safe for a file name. */
+const sideName = (mark) => nameOfId(mark.id).replace(UNSAFE_FILE_CHARS, '_');
+
 /** The file the comparison exports to: the two declarations it draws. */
 function comparedName() {
   const pair = comparedPair();
-  return pair ? pair.map(m => nameOfId(m.id).replace(UNSAFE_FILE_CHARS, '_')).join('-') : DEFAULT_BASENAME;
+  return pair ? pair.map(sideName).join('-') : DEFAULT_BASENAME;
+}
+
+/** The panes of the comparison: the left, the right, each a canvas and the heading naming it. */
+const LEFT_PANE = [ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME];
+const RIGHT_PANE = [ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME];
+
+/**
+ * The three pictures the compare view exports, each with its file name (extension {@code ext}): the
+ * left declaration alone, the right alone, then the two side by side as before. A picture is left
+ * out when its pane draws nothing (the text view, or a side not yet marked).
+ */
+function comparePictures(ext) {
+  const pair = comparedPair();
+  const left = pair ? sideName(pair[0]) : DEFAULT_BASENAME, right = pair ? sideName(pair[1]) : DEFAULT_BASENAME;
+  return [
+    { picture: compareSvg([LEFT_PANE]), name: left + COMPARE_SUFFIX + LEFT_SUFFIX + ext },
+    { picture: compareSvg([RIGHT_PANE]), name: right + COMPARE_SUFFIX + RIGHT_SUFFIX + ext },
+    { picture: compareSvg([LEFT_PANE, RIGHT_PANE]), name: comparedName() + COMPARE_SUFFIX + ext },
+  ].filter(p => p.picture);
 }
 
 /**
- * The two drawings of the comparison as one picture — the content models, or the neighbourhoods:
- * each cropped to what it draws, side by side, under the heading its pane carries, so the image says
- * which side is which. Null when either is missing, the text view drawing none.
+ * The given panes of the comparison as one picture — the content models, or the neighbourhoods: each
+ * cropped to what it draws, side by side when there are two, under the heading its pane carries, so
+ * the image says which side is which. Null when any asked pane draws nothing (the text view, or a
+ * side not yet marked).
  */
-function compareSvg() {
-  const sides = [[ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME], [ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME]]
+function compareSvg(panes) {
+  const sides = panes
     .map(([canvas, head]) => ({ src: $(canvas).querySelector(SVG_TAG), head: $(head).textContent }));
   if (sides.some(side => !side.src)) return null;
   for (const side of sides) {
@@ -91,7 +116,8 @@ function compareSvg() {
     side.x = Math.floor(bb.x - GRAPH_MARGIN); side.y = Math.floor(bb.y - GRAPH_MARGIN);
     side.w = Math.ceil(bb.width + 2 * GRAPH_MARGIN); side.h = Math.ceil(bb.height + 2 * GRAPH_MARGIN);
   }
-  const w = sides[0].w + COMPARE_GAP + sides[1].w, h = Math.max(sides[0].h, sides[1].h) + COMPARE_HEAD_H;
+  const w = sides.reduce((sum, side) => sum + side.w, 0) + COMPARE_GAP * (sides.length - 1);
+  const h = Math.max(...sides.map(side => side.h)) + COMPARE_HEAD_H;
   const svg = document.createElementNS(SVG_NS, SVG_TAG);
   svg.setAttribute('xmlns', SVG_NS);
   svg.setAttribute('width', w); svg.setAttribute('height', h);

@@ -243,6 +243,34 @@ SCENES = [
          checks={'order': "(() => { const kids = [...document.getElementById('details').children].map(c => c.id); return kids.indexOf('compareGroup') < kids.indexOf('detailsContent') ? 'compare-above' : 'compare-below'; })()",
                  'groupShown': "!document.getElementById('compareGroup').classList.contains('hidden')"},
          expect={'order': 'compare-above', 'groupShown': True}),
+    # the compare view exports three pictures: the left declaration, the right, then both — for PNG and for SVG
+    dict(name='compare-export-three', file='samples/compare/v1.xsdviewer.json', theme='light',
+         action=OPEN_V2 + DECLARATIONS
+                + "window.__downloads = []; window.__blobs = [];"
+                "window.__origUrl = URL.createObjectURL.bind(URL); URL.createObjectURL = (bl) => { window.__blobs.push(bl); return window.__origUrl(bl); };"
+                "HTMLAnchorElement.prototype.click = function () { window.__downloads.push(this.download); };"
+                "const pick = (w, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
+                "pick('v1', 'left'); pick('v2', 'right');" + DECLARATIONS
+                + "await new Promise(res => { const t = () => (document.querySelectorAll('#objectCompareBody .mbox').length ? res() : setTimeout(t, 40)); t(); });"
+                "document.getElementById('exportSvgBtn').click(); await new Promise(r => setTimeout(r, 400));"
+                "window.__svgFiles = window.__downloads.slice();"
+                "window.__svgWellFormed = window.__blobs.map(bl => bl).length && (await Promise.all(window.__blobs.map(b => b.text()))).every(x => !new DOMParser().parseFromString(x, 'image/svg+xml').querySelector('parsererror'));"
+                "window.__blobs = []; window.__downloads = [];"
+                "document.getElementById('exportBtn').click(); await new Promise(r => setTimeout(r, 2500));"
+                "window.__pngFiles = window.__downloads.slice();"
+                "window.__pngCount = window.__blobs.filter(bl => bl.type === 'image/png').length;",
+         checks={'svgFiles': "window.__svgFiles.join('|')",
+                 'svgWellFormed': "String(window.__svgWellFormed)",
+                 'pngFiles': "window.__pngFiles.join('|')",
+                 'pngCount': "window.__pngCount"},
+         expect={'svgFiles': 'ProductType-compared-left.svg|ProductType-compared-right.svg|ProductType-ProductType-compared.svg',
+                 'svgWellFormed': 'true',
+                 'pngFiles': 'ProductType-compared-left.png|ProductType-compared-right.png|ProductType-ProductType-compared.png',
+                 'pngCount': 3}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"
