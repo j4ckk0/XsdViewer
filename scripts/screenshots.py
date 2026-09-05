@@ -368,6 +368,13 @@ SCENES = [
                  'focusKept': "String(window.__focusKept)", 'movedThenBack': "String(window.__first === window.__afterUp && window.__first !== window.__second)",
                  'openedSomething': "String(window.__selected !== 'none')"},
          expect={'first': '▾ext.xsd', 'second': 'simpleType:Label', 'afterUp': '▾ext.xsd', 'focusKept': 'true', 'movedThenBack': 'true', 'openedSomething': 'true'}),
+    # the graph names its two directions: used by (left), links out (right)
+    dict(name='graph-directions', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:USAddress\"]').click();" + GRAPH_DRAWN,
+         checks={'labels': "[...document.querySelectorAll('#graphCanvas .gdir')].map(t => t.textContent).join('|')",
+                 # each label sits above the nodes of its own side
+                 'sides': "(() => { const g = [...document.querySelectorAll('#graphCanvas .gdir')]; const nodes = [...document.querySelectorAll('#graphCanvas .node:not(.center)')]; const labelBottom = Math.max(...g.map(l => l.getBoundingClientRect().bottom)); const nodeTop = Math.min(...nodes.map(n => n.getBoundingClientRect().top)); return String(g.length === 2 && labelBottom <= nodeTop); })()"},
+         expect={'labels': 'used by|links out', 'sides': 'true'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

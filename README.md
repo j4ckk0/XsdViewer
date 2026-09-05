@@ -294,7 +294,9 @@ so a long name shows up to the box edge. Each entry of the legend is explained i
 
 - **Graph** – the global objects of the schema (elements, complex types, simple types,
   groups, attribute groups, attributes) and their *level-1* links. The selected object
-  sits in the middle, what it links to is on the right, what uses it is on the left.
+  sits in the middle, what it links to is on the right (**links out**), what uses it is on the left
+  (**used by**) — the two directions named above their columns, the fan-in on the left being what the
+  Model view cannot show.
   **2 levels** adds a column on the right: what each linked object links to in turn,
   drawn as trees (e.g. complexType → element type → its own types and attributes); the
   left side, what uses the selected object, stays one step deep. The other files of the workspace take part, open in

@@ -161,6 +161,8 @@ export const MSG = {
   MODEL_TO_GRAPH_TITLE: 'model.toGraph.title',
   MODEL_SHARED_TITLE: 'model.shared.title',
   GRAPH_TO_MODEL_TITLE: 'graph.toModel.title',
+  GRAPH_USED_BY: 'graph.usedBy',
+  GRAPH_LINKS_OUT: 'graph.linksOut',
   GRAPH_IN_MODEL_TITLE: 'graph.inModel.title',
   DETAILS_NO_DECLARATION: 'details.noDeclaration',
   DETAILS_LINKS_OUT: 'details.linksOut',

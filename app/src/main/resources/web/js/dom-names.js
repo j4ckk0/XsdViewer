@@ -262,6 +262,8 @@ export const CLS = {
   // graph (SVG)
   NODE: 'node',
   CENTER: 'center',
+  /** The direction labels above the graph's columns (used by / links out). */
+  GRAPH_DIRECTION: 'gdir',
   /** On a node the model of the selected object walks through: the model's footprint on the graph. */
   IN_MODEL: 'in-model',
   /** The handle at the top right of a node: its model. */

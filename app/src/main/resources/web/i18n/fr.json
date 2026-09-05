@@ -153,6 +153,8 @@
   "legend.model.handle.title": "La poignée d'un type nommé, d'un élément global, d'un groupe ou d'un type de base : + ouvre son contenu, pris dans sa propre déclaration, dans ce fichier ou un autre de l'espace de travail ; − le replie. ⊞ les ouvre tous",
   "legend.model.recursive": "récursif",
   "legend.model.recursive.title": "Le type est déjà ouvert plus haut dans l'arbre : son contenu se répéterait",
+  "graph.usedBy": "utilisé par",
+  "graph.linksOut": "liens sortants",
   "graph.nodeTitle": "{0} {1}",
   "graph.kindInFile": "{0} · {1}",
 

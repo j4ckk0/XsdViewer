@@ -39,6 +39,8 @@ const CAPTION_LIFT = 6;
 const ELLIPSIS = '…';
 /** Length in px of the hollow arrowhead (9 marker units at markerWidth 12 x stroke 1.5): a derivation's line stops at its base. */
 const DERIVATION_ARROW_LENGTH = 16;
+/** The band above the columns that holds the direction labels (used by / links out). */
+const DIRECTION_BAND = 24;
 
 const shorten = (s, max) => (s.length > max ? s.slice(0, max - 1) + ELLIPSIS : s);
 
@@ -155,8 +157,10 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
   const gap = (W - 2 * MARGIN - cols * NODE_W) / (cols - 1);
   const colX = (c) => MARGIN + c * (NODE_W + gap);
   const rows = Math.max(rightRows, leftRows, 1);
-  const H = Math.max(canvas.clientHeight, rows * ROW + 2 * MARGIN + (selfLabels.length ? SELF_LOOP_ROOM : 0));
-  const cy = H / 2;
+  // the graph reads as a reference map: a band at the top names its two directions, the left what uses the centre, the right what it links to
+  const band = left.length || right.length ? DIRECTION_BAND : 0;
+  const H = Math.max(canvas.clientHeight, rows * ROW + 2 * MARGIN + band + (selfLabels.length ? SELF_LOOP_ROOM : 0));
+  const cy = band + (H - band) / 2;
   const cx = colX(ci) + NODE_W / 2, xLeft = colX(ci - 1), xR1 = colX(ci + 1);
   const xR2 = depth === 2 ? colX(ci + 2) : 0;
   const yOf = (i, count) => cy - ((count - 1) * ROW) / 2 + i * ROW;
@@ -210,7 +214,9 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
   }
   nodes.push(nodeOf(center, cx - NODE_W / 2, cy - NODE_H / 2, true, null));
 
-  svg += edges.join('') + labels.join('') + nodes.join('') + '</svg>';
+  const direction = (x, key) => '<text class="' + CLS.GRAPH_DIRECTION + '" x="' + x + '" y="15" text-anchor="middle">' + esc(t(key)) + '</text>';
+  const headers = (left.length ? direction(xLeft + NODE_W / 2, MSG.GRAPH_USED_BY) : '') + (right.length ? direction(xR1 + NODE_W / 2, MSG.GRAPH_LINKS_OUT) : '');
+  svg += edges.join('') + labels.join('') + nodes.join('') + headers + '</svg>';
   const hadFocus = canvas.contains(document.activeElement);
   canvas.innerHTML = svg;
   canvas.querySelector('svg').setAttribute('role', 'img');

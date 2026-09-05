@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **The Graph view names its two directions.** A band above the columns reads **used by** over the left and **links out** over the right, so the graph reads as a reference map — who points at the selected object, and what it points to — the left side being the fan-in the Model view cannot show.
+
 ## 5.3.3 — 2026-09-05
 
 - **The search field walks the Files tree with the arrow keys.** With a text entered and the field focused, ↑ / ↓ move a cursor through the file and object rows and Enter opens the one it rests on, without leaving the field.

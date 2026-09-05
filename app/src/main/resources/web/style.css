@@ -957,6 +957,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .lg.arrow svg line.chain.wsdl, .lg.arrow svg path.chain.wsdl { stroke: var(--c-service); fill: var(--c-service); }
 .lg.arrow svg line.chain.schematron, .lg.arrow svg path.chain.schematron { stroke: var(--c-pattern); fill: var(--c-pattern); }
 
+.gdir { fill: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; pointer-events: none; }
 #graphCanvas { flex: 1; overflow: auto; }
 #graphCanvas svg { display: block; }
 

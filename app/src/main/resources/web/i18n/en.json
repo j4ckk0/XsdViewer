@@ -153,6 +153,8 @@
   "legend.model.handle.title": "The handle of a named type, a global element, a group or a base type: + opens its content, taken from its own declaration in this file or another of the workspace; − folds it. ⊞ opens them all",
   "legend.model.recursive": "recursive",
   "legend.model.recursive.title": "The type is already open above in the tree: its content would repeat",
+  "graph.usedBy": "used by",
+  "graph.linksOut": "links out",
   "graph.nodeTitle": "{0} {1}",
   "graph.kindInFile": "{0} · {1}",
 
