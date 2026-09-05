@@ -4,6 +4,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
+- Fix: opening a file or object from the Files tree while in the Graph (or Text) view kept the view being read, instead of dropping to the Model view of the file moved to.
 - Fix: a base-type (derivation) arrow in the Graph fell short of its box after the relationship links were made heavier — the arrowheads are now a fixed size, so a heavier line no longer enlarges its head, and the hollow triangle meets the box again.
 
 ## 5.4.0 — 2026-09-05

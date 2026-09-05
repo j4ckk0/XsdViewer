@@ -383,6 +383,18 @@ SCENES = [
                  'derivationIsRelation': "String([...document.querySelectorAll('#graphCanvas .edge.derivation')].every(e => e.classList.contains('relation')))",
                  'relationCaption': "!!document.querySelector('#graphCanvas .link-name.relation')"},
          expect={'relationEdges': 'yes', 'derivationIsRelation': 'true', 'relationCaption': True}),
+    # navigating the Files tree keeps the view being read: from the graph, opening another file stays in the graph
+    dict(name='files-keep-view', file='samples/import/order.xsd', theme='light',
+         action="const st = await import('/js/state.js'); const ws = st.session.active.workspace;"
+                "for (let i = 0; i < 40 && ws.files.length < 2; i++) await new Promise(r => setTimeout(r, 100));"
+                "document.querySelector('.tab[data-view=\"graph\"]').click();" + GRAPH_DRAWN
+                + "window.__before = document.querySelector('#viewTabs .tab.active').dataset.view;"
+                "const other = [...document.querySelectorAll('#filesContent .item.file')].find(f => !f.textContent.includes('order.xsd'));"
+                "window.__had = !!other; window.__otherName = other ? other.textContent.trim() : 'none'; other.click();" + GRAPH_DRAWN
+                + "window.__after = document.querySelector('#viewTabs .tab.active').dataset.view;"
+                "window.__file = st.session.active.fileName;",
+         checks={'before': "window.__before", 'after': "window.__after", 'movedToAnotherFile': "String(window.__had && window.__file !== 'order.xsd')"},
+         expect={'before': 'graph', 'after': 'graph', 'movedToAnotherFile': 'true'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

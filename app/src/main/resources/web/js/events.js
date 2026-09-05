@@ -282,8 +282,10 @@ async function openFromFiles(target) {
   const hit = fileListClick(target);
   if (!hit) return;
   if (hit.entries) { openEntriesAsWorkspace(hit.folder, hit.entries); return; }
+  const view = session.active.view;   // keep the view being read (the graph, say) on the file we move to, as jumpTo does
   const tab = hit.tab || await ensureTab(hit.entry);
   if (!tab) return;
+  tab.view = view;
   if (activateTab(tab)) renderPage();
   if (hit.id) select(hit.id);
 }
