@@ -49,12 +49,14 @@
     <url>https://github.com/j4ckk0/XsdViewer/issues</url>
   </issueManagement>
 
-  <!-- Two modules: core, the library that parses a schema into a graph and validates a document,
-       with no dependency but the JDK; app, the server, the page and the distributions, which embeds
-       core in the one jar users run. -->
+  <!-- Three modules: core, the library that parses a schema into a graph, builds its content models,
+       compares and validates, with no dependency but the JDK; app, the server, the page and the
+       distributions, which embeds core in the one jar users run; examples, programs showing a developer
+       how the library and the HTTP API are used, built with the rest so they never go stale. -->
   <modules>
     <module>core</module>
     <module>app</module>
+    <module>examples</module>
   </modules>
 
   <properties>

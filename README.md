@@ -2,8 +2,15 @@
 
 [![build](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml/badge.svg)](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml)
 
-A small tool to explore XML Schema (`.xsd`) files in the browser — and the WSDL 1.1 (`.wsdl`)
-services built on such schemas, and the Schematron (`.sch`) rules written over them.
+XML Schema (`.xsd`) files explored in the browser — and the WSDL 1.1 (`.wsdl`) services built on
+such schemas, and the Schematron (`.sch`) rules written over them. Two ways in, depending on who you are:
+
+| | |
+|---|---|
+| **You read schemas.** XsdViewer is an application: download a [release](https://github.com/j4ckk0/XsdViewer/releases) for Windows, Linux or macOS (nothing to install, a Java runtime is inside) or the jar for a machine that has Java 21, run it, and the page opens in your browser. The rest of this file is for you: the [screenshots](#screenshots), the [views](#what-it-does), the [workspaces](#workspaces), the [comparison](#comparing), the [validation](#validation). |
+| **You write programs.** XsdViewer is also a library and an API: **`org.jtools:xsdviewer-core`** parses a schema into a graph of its declarations, builds the content model of any of them, compares two, validates a document — Java 21, the JDK and nothing else ([core/README.md](core/README.md)); and the server's **HTTP API** does the same for any program, stateless, one call at a time ([architecture.md](architecture.md#http-interface)). Start with [`examples/`](examples/README.md): four programs and five scripts, run against the [samples](samples/README.md), built with every release. |
+
+## What it does
 
 A Java server parses the files and serves a web page. What it does, in one screen:
 

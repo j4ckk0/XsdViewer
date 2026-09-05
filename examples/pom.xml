@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jtools</groupId>
+    <artifactId>xsdviewer-parent</artifactId>
+    <version>4.13.0</version>
+  </parent>
+
+  <artifactId>xsdviewer-examples</artifactId>
+  <packaging>jar</packaging>
+
+  <name>XsdViewer examples</name>
+  <description>Programs showing a developer how xsdviewer-core is used: reading a schema, the content model of a declaration, comparing two declarations, validating a document. Run from the root of the repository against samples/.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jtools</groupId>
+      <artifactId>xsdviewer-core</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- examples are read and run, never published -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <configuration>
+          <skipPublishing>true</skipPublishing>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
