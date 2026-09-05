@@ -21,6 +21,7 @@ import { NODE_KIND, PARTICLE, SVG_NS, TEXT, VIEW, isSchematron, isWsdl } from '.
 import { FAMILY, familyOf } from './link-categories.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { usersInWorkspace } from './declaration-lookup.js';
+import { crossViewHandles } from './view-options.js';
 import { $, dataAttr, esc, selector } from './dom.js';
 import { CLS, DATA, ID } from './dom-names.js';
 import { fetchModel } from './api.js';
@@ -33,12 +34,12 @@ import { MSG } from './message-keys.js';
 import { session } from './state.js';
 
 /** Boxes: the width of a declaration's or an element's, of a compositor's, of an attribute's; the height; the row pitch; the column gap. */
-const BOX_W = 190, COMPOSITOR_W = 44, ATTRIBUTE_W = 190, BOX_H = 34, ROW = 52, GAP = 46, MARGIN = 24;
+const BOX_W = 190, COMPOSITOR_W = 44, ATTRIBUTE_W = 190, BOX_H = 40, ROW = 58, GAP = 46, MARGIN = 24;
 /** The expand handle: a small square at the right edge of an expandable box. */
 const HANDLE = 14;
 /** Corner radius of the box of a family object (a WSDL's service, a Schematron's rules), as the graph rounds their nodes. */
 const FAMILY_RADIUS = 9;
-const NAME_MAX_CHARS = 22, TYPE_MAX_CHARS = 24;
+const NAME_MAX_CHARS = 26, TYPE_MAX_CHARS = 24;
 /** Room in a box: its padding, the gap between two texts of one line, and the width of a character of the name (13px) and of the small words (10px). */
 const PAD = 8, TEXT_GAP = 6, NAME_CHAR_W = 6.5, WORD_CHAR_W = 5.2;
 const ELLIPSIS = '…';
@@ -271,6 +272,7 @@ function allBoxes(tree) {
  * handle to the graph — and how many objects of the workspace use each, counted once per box drawn.
  */
 function tracesOf(st) {
+  if (!crossViewHandles()) return { declared: () => false, usersOf: () => 0 };   // the ◎ handle and the ×N mark are hidden
   const counts = new Map();
   const declared = (id) => { const n = st.nodes.get(id); return !!n && n.kind !== NODE_KIND.BUILTIN && n.kind !== NODE_KIND.EXTERNAL; };
   const usersOf = (id) => {
@@ -319,15 +321,24 @@ function boxSvg(b, x, y, w, foldable, traces) {
     const withWord = !!b.word;
     const opens = b.expandable || b.recursive || (foldable && hasRows(b));   // a handle opens or folds the box, or ↺ says it is open above
     const declared = declaredTarget(b, traces);   // the box stands for an object the graph has: a handle shows it there
+    const users = declared ? traces.usersOf(declared) : 0;
+    // the shared mark (×N) sits at the top right, unless a chain box already writes its kind there
+    const sharedShown = users > 1 && !(withWord && corner);
+    const sharedRoom = sharedShown ? (String(users).length + 1) * WORD_CHAR_W + TEXT_GAP : 0;
     const handleRoom = ((opens ? 1 : 0) + (declared ? 1 : 0)) * (HANDLE + 4);
     const room = w - 2 * PAD - handleRoom;   // what a line has for its texts
     const cornerRoom = corner ? corner.length * WORD_CHAR_W + TEXT_GAP : 0;
-    const wordMax = Math.floor((room - (withWord ? cornerRoom : 0)) / WORD_CHAR_W);
-    const nameMax = Math.min(NAME_MAX_CHARS, Math.floor((room - (withWord ? 0 : cornerRoom)) / NAME_CHAR_W));
+    // an element with a named type gets two lines: its name on top, at the full width of the box, the type below —
+    // so a long name reaches the box edge rather than sharing its line with the type
+    const nameOnTop = !withWord && !!corner;
+    const wordMax = Math.floor((room - cornerRoom - sharedRoom) / WORD_CHAR_W);
+    const nameShares = withWord ? 0 : sharedRoom;   // an element's name shares its top line with the shared mark, never with the type
+    const nameMax = Math.min(NAME_MAX_CHARS, Math.floor((room - nameShares) / NAME_CHAR_W));
+    const nameY = withWord ? BOX_H - 10 : nameOnTop ? 17 : BOX_H / 2 + 5;
     g += '<rect width="' + w + '" height="' + BOX_H + '" rx="' + radius + '"/>'
-      + (word ? '<text class="' + CLS.MODEL_WORD + '" x="' + PAD + '" y="12">' + esc(shorten(word, wordMax)) + '</text>' : '')
-      + '<text class="' + CLS.MODEL_NAME + '" x="' + PAD + '" y="' + (word ? BOX_H - 8 : BOX_H / 2 + 5) + '">' + esc(shorten(name, nameMax)) + '</text>'
-      + (corner ? '<text class="' + CLS.MODEL_TYPE + '" x="' + (w - PAD - handleRoom) + '" y="' + (withWord ? 12 : BOX_H - 6) + '" text-anchor="end">' + esc(corner) + '</text>' : '');
+      + (word ? '<text class="' + CLS.MODEL_WORD + '" x="' + PAD + '" y="13">' + esc(shorten(word, wordMax)) + '</text>' : '')
+      + '<text class="' + CLS.MODEL_NAME + '" x="' + PAD + '" y="' + nameY + '">' + esc(shorten(name, nameMax)) + '</text>'
+      + (corner ? '<text class="' + CLS.MODEL_TYPE + '" x="' + (w - PAD - handleRoom) + '" y="' + (withWord ? 13 : BOX_H - 9) + '" text-anchor="end">' + esc(corner) + '</text>' : '');
     if (foldable ? foldHandle : b.expandable) {
       g += handleSvg(w, foldable ? b.foldKey : b.path, foldable ? !b.folded : b.expanded);
     } else if (b.recursive) {
@@ -335,9 +346,7 @@ function boxSvg(b, x, y, w, foldable, traces) {
     }
     if (declared) {
       g += toGraphSvg(opens ? w - 2 * HANDLE - 7 : w - HANDLE - 3, t(MSG.MODEL_TO_GRAPH_TITLE, kindLabel(b.kind) + ' ' + b.name));
-      // the graph's count of what uses the object, at the top right — unless a chain box already writes its kind there
-      const users = traces.usersOf(declared);
-      if (users > 1 && !(withWord && corner)) g += '<text class="' + CLS.MODEL_SHARED + '" x="' + (w - PAD - handleRoom) + '" y="10" text-anchor="end">' + SHARED_MARK + users + '</text>';
+      if (sharedShown) g += '<text class="' + CLS.MODEL_SHARED + '" x="' + (w - PAD - handleRoom) + '" y="10" text-anchor="end">' + SHARED_MARK + users + '</text>';
     }
   }
   // the occurrences under the box, unless one and only one (an attribute's use is the ? of its label)

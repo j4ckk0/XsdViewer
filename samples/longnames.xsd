@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A schema whose declarations have deliberately long names, to show how the Model view fits a
+     name to the width of its box: the name fills its own line and the type sits on the line below. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:example:longnames"
+           xmlns="urn:example:longnames"
+           elementFormDefault="qualified">
+
+  <xs:element name="internationalPurchaseOrderConfirmation" type="InternationalPurchaseOrderConfirmationType"/>
+
+  <xs:complexType name="InternationalPurchaseOrderConfirmationType">
+    <xs:sequence>
+      <xs:element name="customerLoyaltyProgramMembershipIdentifier" type="xs:string"/>
+      <xs:element name="preferredInternationalShippingAddressReference" type="PostalAddressWithDeliveryInstructionsType"/>
+      <xs:element name="alternativeBillingAddressReference" type="PostalAddressWithDeliveryInstructionsType" minOccurs="0"/>
+      <xs:element name="consolidatedOrderLineItemCollection" type="OrderLineItemWithBackorderStatusType" maxOccurs="unbounded"/>
+      <xs:element name="estimatedDeliveryDateWithTimeZoneOffset" type="xs:dateTime" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="purchaseOrderConfirmationReferenceNumber" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="PostalAddressWithDeliveryInstructionsType">
+    <xs:sequence>
+      <xs:element name="recipientOrganisationLegalName" type="xs:string"/>
+      <xs:element name="streetAddressFirstLine" type="xs:string"/>
+      <xs:element name="streetAddressSecondLineOptional" type="xs:string" minOccurs="0"/>
+      <xs:element name="postalCodeOrZipCode" type="xs:string"/>
+      <xs:element name="isoCountryCodeAlphaTwo" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="OrderLineItemWithBackorderStatusType">
+    <xs:sequence>
+      <xs:element name="stockKeepingUnitIdentifier" type="xs:string"/>
+      <xs:element name="orderedQuantityInStockKeepingUnits" type="xs:positiveInteger"/>
+      <xs:element name="unitPriceInCustomerPreferredCurrency" type="xs:decimal"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

@@ -18,6 +18,7 @@ export const ID = {
   MENU_QUIT: 'menuQuit',
   SETTINGS_MENU_BUTTON: 'settingsMenuBtn',
   SETTINGS_MENU: 'settingsMenu',
+  MENU_HANDLES: 'menuHandles',
   MENU_AUTO_STOP: 'menuAutoStop',
   MENU_THEME: 'menuTheme',
   HELP_MENU_BUTTON: 'helpMenuBtn',

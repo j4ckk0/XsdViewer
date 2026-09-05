@@ -283,7 +283,8 @@ is a small schema exercising every kind of link.
   link's word above the name of what it leads to, and opens the same way. A legend in the toolbar
   reads on three lines: the kinds of box, the marks of the drawing (the compositors, the dashed
   optional), then what a box tells of itself (its occurrences, its **+** handle, the ↺ of a
-  recursion). Each entry is explained in its tooltip. What the graph knows is drawn on the boxes: a
+  recursion). A box gives its name the top line at the full width of the box, the type the line below,
+so a long name shows up to the box edge. Each entry of the legend is explained in its tooltip. What the graph knows is drawn on the boxes: a
   box standing for a declared type, element or group carries a **◎** handle that shows it in the
   graph — what else uses it, what it links to — and, at its top right, **×3** when three objects of
   the workspace use it: changing it changes them all. **⤓ PNG** and **⤓ SVG** export it like the graph.

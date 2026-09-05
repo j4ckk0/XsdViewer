@@ -5,6 +5,7 @@ import { CLS, DATA, ID } from './dom-names.js';
 import { closeAbout, showAbout } from './about.js';
 import { closeGuide, closeShortcuts, showGuide, showShortcuts } from './help.js';
 import { cancelLoading } from './busy.js';
+import { toggleCrossViewHandles } from './view-options.js';
 import { initOptions, rememberOptions, setAllDetails, toggleDetail } from './files-section.js';
 import { clearSelection, toggleSelection } from './workspace-selection.js';
 import { clearMarks, closeComparison, markSide, openComparison, showSection, swapSides } from './comparison-state.js';
@@ -67,6 +68,7 @@ function wireMenus() {
 function wireSettingsMenu() {
   $(ID.MENU_AUTO_STOP).addEventListener('click', () => { closeMenus(); toggleAutoStop(); });
   $(ID.MENU_THEME).addEventListener('click', () => { closeMenus(); toggleTheme(); });
+  $(ID.MENU_HANDLES).addEventListener('click', () => { closeMenus(); toggleCrossViewHandles(); renderMainView(); });
 }
 
 function wireHelpMenu() {

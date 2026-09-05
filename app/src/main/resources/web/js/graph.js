@@ -15,6 +15,7 @@ import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
 import { cachedTree, modelTree, openedIn } from './model-view.js';
+import { crossViewHandles } from './view-options.js';
 import { session } from './state.js';
 
 // ---- layout ----
@@ -80,7 +81,7 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
     }
   }
   /** A drawn node, with what the model says of it — whether it walks through any of {@code ids} — and, in a file's own graph, the handle to its model. */
-  const nodeOf = (n, x, y, isCenter, opts, ...ids) => nodeSvg(n, x, y, isCenter, Object.assign({ toModel: own, inModel: ids.some(id => opened.has(id)) }, opts), st);
+  const nodeOf = (n, x, y, isCenter, opts, ...ids) => nodeSvg(n, x, y, isCenter, Object.assign({ toModel: own && crossViewHandles(), inModel: ids.some(id => opened.has(id)) }, opts), st);
   const visible = (n) => !!n && isKindShown(n.kind);
   /** A row is drawn when its node is and its link is of a category the Links menu keeps. */
   const shownLink = (n, e, fromKind, toKind) => visible(n) && isLinkShown(e, fromKind, toKind);

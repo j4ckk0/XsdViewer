@@ -289,6 +289,38 @@ SCENES = [
                  'toast': "document.getElementById('toast').textContent.trim()",
                  'stopHiddenAfter': "String(document.getElementById('busyStop').classList.contains('hidden'))"},
          expect={'stopOffered': 'true', 'someLeftUnparsed': 'true', 'toast': 'Loading stopped', 'stopHiddenAfter': 'true'}),
+    # long declaration names: each name fills its own line up close to the box edge, the type on the line below
+    dict(name='model-long-names', file='samples/longnames.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalPurchaseOrderConfirmationType\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN,
+         checks={'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
+                 'boxHeight': "document.querySelector('#modelCanvas .mbox rect').getAttribute('height')",
+                 # a built-in-typed element carries no handle, so its name reaches further before the ellipsis
+                 'stringTypedName': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).find(n => n.startsWith('customerLoyalty'))"},
+         expect={'names': 'InternationalPurchaseOrde…|@purchaseOrderConfirmationReferenceNumber : string|customerLoyaltyProgramMem…|preferredInternation…|alternativeBillingAd…|consolidatedOrderLin…|estimatedDeliveryDateWith…',
+                 'boxHeight': '40', 'stringTypedName': 'customerLoyaltyProgramMem…'}),
+    # Settings toggle: the cross-view handles (the model's ◎ and the graph's ▤, and the ×N mark) can be hidden
+    dict(name='handles-toggle', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:Items\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN
+                + "window.__before = document.querySelectorAll('#modelCanvas .mgraph').length;"
+                "document.getElementById('settingsMenuBtn').click(); document.getElementById('menuHandles').click();" + MODEL_DRAWN
+                + "window.__after = document.querySelectorAll('#modelCanvas .mgraph').length;"
+                "window.__checkedOff = !document.getElementById('menuHandles').classList.contains('checked');"
+                "document.getElementById('settingsMenuBtn').click(); document.getElementById('menuHandles').click();" + MODEL_DRAWN
+                + "window.__back = document.querySelectorAll('#modelCanvas .mgraph').length;",
+         checks={'before': "String(window.__before > 0)", 'after': "String(window.__after)", 'checkedOff': "String(window.__checkedOff)", 'back': "String(window.__back > 0)"},
+         expect={'before': 'true', 'after': '0', 'checkedOff': 'true', 'back': 'true'}),
+    # the search field's clear cross: hidden while empty, shown once there is a filter, and it clears it
+    dict(name='search-clear', file='samples/purchaseOrder.xsd', theme='light',
+         action="const s = document.getElementById('search'); const x = document.getElementById('searchClear');"
+                "window.__emptyHidden = getComputedStyle(x).display === 'none';"
+                "s.value = 'Address'; s.dispatchEvent(new Event('input', {bubbles: true})); await new Promise(r => setTimeout(r, 200));"
+                "window.__shown = getComputedStyle(x).display !== 'none';"
+                "x.click(); await new Promise(r => setTimeout(r, 200));"
+                "window.__cleared = s.value === '' && getComputedStyle(x).display === 'none';",
+         checks={'emptyHidden': "String(window.__emptyHidden)", 'shownWithText': "String(window.__shown)", 'clearsIt': "String(window.__cleared)"},
+         expect={'emptyHidden': 'true', 'shownWithText': 'true', 'clearsIt': 'true'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

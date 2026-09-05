@@ -14,6 +14,7 @@ import { renderMainView, showView } from './view-router.js';
 import { startPresence } from './presence.js';
 import { initTheme } from './theme.js';
 import { applySettings, loadSettings } from './settings.js';
+import { applyViewOptions } from './view-options.js';
 import { session } from './state.js';
 
 startPresence();                             // first: the server counts this page from now on
@@ -21,6 +22,7 @@ await Promise.all([loadCapabilities(), loadSettings()]);   // first: the machine
 await initI18n(session.serverLanguage);
 applyCapabilities();
 applySettings();
+applyViewOptions();
 initTheme();
 await initLanguageSelector();
 wireEvents();
