@@ -79,7 +79,7 @@ declarations and links only on one side, then the two sources side by side.
   resemble one another — as models, as text or as graphs, what differs marked; or two workspaces
   file by file.
 - **Validation** of an XML document against the schema and the Schematron of the workspace.
-- **Export and zoom**: any drawing saved as PNG or SVG — the comparison as one picture of both sides —
+- **Export and zoom**: any drawing saved as PNG or SVG — the comparison as three pictures, each side alone then both —
   and a zoom of its own per tab.
 - **Nothing leaves your machine.** The server runs on your computer and the browser talks to it there;
   remote `schemaLocation`s are never fetched.
@@ -337,8 +337,9 @@ document against the shown schema, in a tab of its own (see *Validation* below).
 double-click restores the default width, the arrow keys move it when it has the focus); the widths
 are remembered by the browser. **⤓ PNG** in the top bar saves the current view as a PNG image,
 **⤓ SVG** it as a vector image (for documents) unless it is the text. Both take what the view
-draws whole, not the part on screen: in the *Compare* view that is one picture holding the two
-models side by side, each under the heading naming its declaration, its file and its workspace. In the Text view, a
+draws whole, not the part on screen. In the *Compare* view they save three pictures: the left
+declaration alone, the right alone, and the two side by side as before, each under the heading naming
+its declaration, its file and its workspace. In the Text view, a
 **find bar** (top right; Ctrl+F there) marks the lines holding a text and walks them with Enter / Shift+Enter.
 The drawn views — graph, model, comparison — carry a **zoom** at the bottom right of the panel
 (**−**, the level, **+**; a click on the level returns to the drawing's own size): it scales the
@@ -565,7 +566,7 @@ types are opened on both sides, so a change deep inside one is seen. Any box hol
 carries a handle that puts it aside, and folding one folds the box matching it on the other side;
 **⊞** / **⊟** open and fold them all. **Differences only** (remembered) keeps what differs in
 whichever view is shown: in the models the boxes that differ and those on the way to one, in the text
-the changed lines with one line of context, in the graphs the links only one side has. **⤓ PNG** / **⤓ SVG** save the two drawings as one picture.
+the changed lines with one line of context, in the graphs the links only one side has. **⤓ PNG** / **⤓ SVG** save three pictures: each declaration alone, then the two side by side.
 
 In **Text**, each side shows the source of its declaration alone — from its opening tag to its
 closing tag, with the line numbers it has in its file — the two aligned line by line and what differs
