@@ -785,6 +785,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .mbox.center > rect { stroke-width: 3; fill: var(--node-center); }
 .mbox.clickable { cursor: pointer; }
 .mbox.clickable:hover > rect { fill: var(--node-hover); }
+/* the box Graph -> Model brought into view: the node the keyboard rested on */
+.mbox.aimed > rect { stroke-width: 3; filter: drop-shadow(0 0 4px var(--accent)); }
 .mbox.sequence rect, .mbox.choice rect, .mbox.all rect { stroke: var(--muted); fill: var(--surface-2); }
 .mbox.element rect { stroke: var(--c-element); }
 .mbox.complexType rect { stroke: var(--c-complexType); }

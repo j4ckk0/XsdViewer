@@ -169,6 +169,43 @@ SCENES = [
          checks={'links': "[...document.querySelectorAll('#detailsContent .meta a')].map(a => a.textContent).join('|')",
                  'view': "document.querySelector('#viewTabs .tab.active').dataset.view"},
          expect={'links': 'line 50 → show in text|model|graph', 'view': 'graph'}),
+    # the exports, from a dark page: a file for each, well-formed, carrying the page's theme so its palette matches its background, and without the page's handles
+    dict(name='exports', file='samples/purchaseOrder.xsd', theme='dark',
+         action="window.__err = ''; window.addEventListener('error', e => { window.__err += e.message + ' @' + e.filename.split('/').pop() + ':' + e.lineno + ' | '; });"
+                "window.__blobs = []; window.__origUrl = URL.createObjectURL.bind(URL); URL.createObjectURL = (bl) => { window.__blobs.push(bl); return window.__origUrl(bl); };"
+                "HTMLAnchorElement.prototype.click = function () { window.__downloads = (window.__downloads || []).concat(this.download); };"
+                "document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();" + GRAPH_DRAWN
+                + "document.getElementById('exportSvgBtn').click(); await new Promise(r => setTimeout(r, 200)); window.__svg = await window.__blobs[0].text();"
+                "document.getElementById('exportBtn').click(); await new Promise(r => setTimeout(r, 900));"
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN
+                + "document.getElementById('exportSvgBtn').click(); await new Promise(r => setTimeout(r, 200)); window.__svgModel = await window.__blobs[window.__blobs.length - 1].text();"
+                "document.getElementById('exportBtn').click(); await new Promise(r => setTimeout(r, 900));",
+         checks={'err': "window.__err", 'downloads': "(window.__downloads || []).join('|')",
+                 'wellFormed': "['__svg', '__svgModel'].map(k => new DOMParser().parseFromString(window[k], 'image/svg+xml').querySelector('parsererror') ? 'broken' : 'ok').join('|')",
+                 'theme': "['__svg', '__svgModel'].map(k => new DOMParser().parseFromString(window[k], 'image/svg+xml').documentElement.dataset.theme).join('|')",
+                 'background': "new DOMParser().parseFromString(window.__svg, 'image/svg+xml').querySelector('rect').getAttribute('fill')",
+                 'handles': "['__svg','__svgModel'].map(k => new DOMParser().parseFromString(window[k], 'image/svg+xml').querySelectorAll('.nmodel, .mgraph').length).join(':')",
+                 'pngBlobs': "window.__blobs.filter(bl => bl.type === 'image/png').length"},
+         expect={'err': '', 'downloads': 'purchaseOrder-PurchaseOrderType.svg|purchaseOrder-PurchaseOrderType.png|purchaseOrder-PurchaseOrderType-model.svg|purchaseOrder-PurchaseOrderType-model.png',
+                 'wellFormed': 'ok|ok', 'theme': 'dark|dark', 'background': '#0f1216', 'handles': '0:0', 'pngBlobs': 2}),
+    # Graph -> Model keeps the node the keyboard rests on: the box standing for it is brought into view and marked
+    # (headless Firefox fires no real focus event, so the scene dispatches focusin as a browser would)
+    dict(name='graph-to-model-focus', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();" + GRAPH_DRAWN
+                + "const gn = document.querySelector('#graphCanvas .node[data-id=\"complexType:USAddress\"]'); gn.focus(); gn.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));"
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN,
+         checks={'aimed': "[...document.querySelectorAll('#modelCanvas .mbox.aimed')].map(b => b.dataset.id).join('|')",
+                 'view': "document.querySelector('#viewTabs .tab.active').dataset.view"},
+         expect={'aimed': 'complexType:USAddress', 'view': 'model'}),
+    # a level-2 node lies under a box not opened yet: the box above it is opened first, then the aim is met
+    dict(name='graph-to-model-focus-deep', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+                "document.getElementById('twoLevels').click();" + GRAPH_DRAWN
+                + "const dn = document.querySelector('#graphCanvas .node[data-id=\"simpleType:SKU\"]'); dn.focus(); dn.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));"
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN + MODEL_DRAWN,
+         checks={'aimedIsSku': "!!document.querySelector('#modelCanvas .mbox.aimed[data-id=\"simpleType:SKU\"]')",
+                 'itemsOpened': "document.querySelector('#modelCanvas .mbox[data-id=\"complexType:Items\"] .mhandle text') ? document.querySelector('#modelCanvas .mbox[data-id=\"complexType:Items\"] .mhandle text').textContent : 'no items box'"},
+         expect={'aimedIsSku': True, 'itemsOpened': '\u2212'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

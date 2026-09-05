@@ -345,6 +345,11 @@ function wireSelectionSources() {
     if (e.target.closest(selector(CLS.NODE_TO_MODEL))) activateNode(node).then(() => showView(VIEW.MODEL));
     else activateNode(node);
   });
+  // the node the keyboard rests on, which Graph → Model keeps under the eye (a node of another file is not in this file's model)
+  $(ID.GRAPH_CANVAS).addEventListener('focusin', (e) => {
+    const g = e.target.closest(selector(CLS.NODE));
+    session.active.graphFocus = g && g.dataset[DATA.TAB] == null && g.dataset[DATA.FILE] == null ? g.dataset[DATA.ID] : null;
+  });
   // the keyboard in the graph: arrows walk the nodes (drawn in reading order), Home is the centre, Enter / Space act as a click
   $(ID.GRAPH_CANVAS).addEventListener('keydown', (e) => {
     const g = e.target.closest(selector(CLS.NODE));

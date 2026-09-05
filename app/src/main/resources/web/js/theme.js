@@ -30,6 +30,9 @@ export function initTheme() {
 /** True while the page is dark. */
 const isDark = () => document.documentElement.dataset[DATA_THEME] === THEME.DARK;
 
+/** Gives {@code el} the page's theme: a picture made of the page's styles then takes the same palette on its own. */
+export const stampTheme = (el) => { el.dataset[DATA_THEME] = document.documentElement.dataset[DATA_THEME]; };
+
 /** Settings ▸ Dark theme / Light theme: the other one. */
 export function toggleTheme() {
   choice = isDark() ? THEME.LIGHT : THEME.DARK;

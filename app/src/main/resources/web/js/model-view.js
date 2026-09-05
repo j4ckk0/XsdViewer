@@ -198,7 +198,7 @@ export function renderModel() {
   const canvas = $(ID.MODEL_CANVAS);
   if (!st.model || !st.selected) { canvas.innerHTML = ''; return; }
   const cached = cachedTree(st);
-  if (cached) { draw(st, cached); return; }
+  if (cached) { draw(st, cached); aim(st, cached); return; }
   const key = requestKey(st);
   canvas.dataset[DATA.LOADING] = key;
   modelTree(st)
@@ -206,6 +206,7 @@ export function renderModel() {
       if (session.active !== st || requestKey(st) !== key) return;
       draw(st, tree);
       applyZoom();   // a new SVG, which takes the tab's level
+      aim(st, tree);
     })
     .catch(e => toast(e.message))
     .finally(() => { if (canvas.dataset[DATA.LOADING] === key) delete canvas.dataset[DATA.LOADING]; });   // a later request has its own key and clears its own mark
@@ -222,6 +223,47 @@ function draw(st, tree) {
   $(ID.MODEL_LEGEND).classList.toggle(CLS.WSDL, family === FAMILY.WSDL);
   $(ID.MODEL_LEGEND).classList.toggle(CLS.SCHEMATRON, family === FAMILY.SCHEMATRON);
   $(ID.MODEL_EMPTY).classList.toggle(CLS.HIDDEN, tree.children.length > 0 || tree.attributes.length > 0);
+}
+
+/** What a box stands for, when it is not the root: the object it refers to, else its type. */
+const standsFor = (b) => (b.root ? '' : b.ref || b.typeId);
+
+/**
+ * Brings into view the box standing for the node Graph → Model was left on ({@code st.modelAim}) and marks
+ * it. A second-level node of the graph lies under a box not opened yet — the first-level object that
+ * links to it —: that box is opened first, and the redrawing comes back here. The aim is dropped once
+ * met, or when the model has no box for it.
+ */
+function aim(st, tree) {
+  const id = st.modelAim;
+  if (!id) return;
+  const boxes = allBoxes(tree);
+  const box = boxes.find(b => standsFor(b) === id);
+  if (box) {
+    st.modelAim = null;
+    const canvas = $(ID.MODEL_CANVAS);
+    const el = canvas.querySelector(selector(CLS.MODEL_BOX) + '[data-' + DATA.PATH + '="' + box.path + '"]');
+    if (!el) return;
+    el.classList.add(CLS.MODEL_AIMED);
+    const r = el.getBoundingClientRect(), c = canvas.getBoundingClientRect();
+    canvas.scrollLeft += r.left - c.left - (c.width - r.width) / 2;
+    canvas.scrollTop += r.top - c.top - (c.height - r.height) / 2;
+    return;
+  }
+  const firstLevel = new Set((st.outEdges.get(st.selected) || []).map(e => e.to));
+  const above = boxes.find(b => b.expandable && !b.expanded && firstLevel.has(standsFor(b))
+    && (st.outEdges.get(standsFor(b)) || []).some(e => e.to === id));
+  if (!above) { st.modelAim = null; return; }
+  st.modelExpanded.add(above.path);
+  renderModel();
+}
+
+/** Every box of a tree, the attributes of each before its children. */
+function allBoxes(tree) {
+  const out = [];
+  const walk = (b) => { out.push(b); b.attributes.forEach(walk); b.children.forEach(walk); };
+  walk(tree);
+  return out;
 }
 
 /**

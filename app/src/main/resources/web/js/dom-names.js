@@ -281,6 +281,8 @@ export const CLS = {
   MODEL_WORD: 'mword',
   MODEL_HANDLE: 'mhandle',
   MODEL_RECURSION: 'mrec',
+  /** On the box Graph → Model brought into view: the node the keyboard rested on in the graph. */
+  MODEL_AIMED: 'aimed',
   /** The handle of a box standing for a declared object: the graph around that object. */
   MODEL_TO_GRAPH: 'mgraph',
   /** At the top right of such a box, how many objects use what it stands for. */

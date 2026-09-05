@@ -5,14 +5,15 @@
  * The Text view is not a drawing: {@link text-export.js} paints it.
  */
 import { MIME, SVG_NS, VIEW, nameOfId } from './constants.js';
-import { $ } from './dom.js';
-import { ID } from './dom-names.js';
+import { $, selector } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 import { comparedPair } from './comparison-state.js';
-import { saveBlob } from './file-download.js';
+import { saveBlob, saveCanvas } from './file-download.js';
 import { exportTextPng } from './text-export.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
+import { stampTheme } from './theme.js';
 import { toast } from './toast.js';
 
 const EXPORT_SCALE = 2;        // device pixels per CSS pixel
@@ -125,13 +126,19 @@ function graphSvg() {
   const x = Math.floor(bb.x - M), y = Math.floor(bb.y - M);
   const w = Math.ceil(bb.width + 2 * M), h = Math.ceil(bb.height + 2 * M);
   const svg = src.cloneNode(true);
+  // the handles to the other view are the page's, not the picture's
+  svg.querySelectorAll(selector(CLS.NODE_TO_MODEL) + ', ' + selector(CLS.MODEL_TO_GRAPH)).forEach(el => el.remove());
   svg.setAttribute('width', w); svg.setAttribute('height', h);
   svg.setAttribute('viewBox', x + ' ' + y + ' ' + w + ' ' + h);
   return { svg: standalone(svg, x, y, w, h), w, h };
 }
 
-/** The page's styles and its background put under {@code svg}, so that the file renders on its own. */
+/**
+ * The page's styles and its background put under {@code svg}, so that the file renders on its own — and
+ * the page's theme on its root, which is what the dark palette of those styles is keyed on.
+ */
 function standalone(svg, x, y, w, h) {
+  stampTheme(svg);
   const bg = document.createElementNS(SVG_NS, SVG_RECT_TAG);
   bg.setAttribute('x', x); bg.setAttribute('y', y); bg.setAttribute('width', w); bg.setAttribute('height', h);
   bg.setAttribute('fill', background());

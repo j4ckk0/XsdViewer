@@ -4,6 +4,9 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
+- **PNG and SVG export fixed.** PNG export did nothing (a lost import); SVG export wrote a file whose colours were the light theme's on a dark background. An exported picture now carries the page's theme, so its palette matches its background, and the ◎/▤ handles, which are page controls, are left out of it.
+- **Switching from the graph to the model keeps the node under the eye.** When the keyboard rests on a node other than the centre, Model opens with the box standing for it brought into view and marked; a node two steps out has the box above it opened first.
+
 - **The Model and Graph views point at each other.** A model box standing for a declared type, element or group carries a ◎ handle that shows it in the graph, centred on it; a graph node carries a ▤ handle that shows its model. The first line of the details panel links to the three views of the object.
 - **Each view carries a trace of the other's knowledge.** The graph tints the objects the model of the selected object walks through — the types opened in place there —, asking the server for that model when it is not at hand yet; a model box says how many objects of the workspace use what it stands for (×3), which the graph knows from the links into it.
 - The GitHub page is in four parts, each for a narrower reader than the one before: the application, the library on Maven Central, the open-source code, the architecture.

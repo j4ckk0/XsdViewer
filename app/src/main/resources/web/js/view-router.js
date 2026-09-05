@@ -58,6 +58,8 @@ const SHOWS = {
 export function showView(view) {
   const st = session.active;
   const comparing = session.comparison.shown;
+  // Graph → Model keeps the node under the eye: the model opens down to the box standing for it
+  if (!comparing && st.view === VIEW.GRAPH && view === VIEW.MODEL) st.modelAim = aimedNode(st);
   if (comparing) session.comparison.view = view; else st.view = view;
   document.querySelectorAll(selector(CLS.VIEW_TAB)).forEach(b => b.classList.toggle(CLS.ACTIVE, b.dataset[DATA.VIEW] === view));
   const place = placeShown(), shows = SHOWS[place];
@@ -86,6 +88,13 @@ export function showView(view) {
   $(ID.MENU_OPEN_ALL).disabled = place !== PLACE.FILE && place !== PLACE.EMPTY || !listedOnly().length;
   renderMainView();   // drawn now that it is shown, so that it is laid out for the room it has
   if (place === PLACE.FILE && view === VIEW.TEXT) highlightTextLine(true);
+}
+
+/** The node the keyboard rests on in the graph, when it is drawn there and is not the centre — the centre is the model's root already. */
+function aimedNode(st) {
+  const id = st.graphFocus;
+  if (!id || id === st.selected || !st.nodes.has(id)) return null;
+  return $(ID.GRAPH_CANVAS).querySelector(selector(CLS.NODE) + '[data-' + DATA.ID + '="' + id + '"]') ? id : null;
 }
 
 /** Draws whichever of the comparison's two sections is being read; nothing while the comparison is not the place shown. */

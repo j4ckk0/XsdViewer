@@ -304,7 +304,8 @@ is a small schema exercising every kind of link.
   needed. The details panel lists those users too. Each node carries a **▤** handle to its model, what
   a document of it holds; and the nodes the model of the selected object walks through — the types
   opened in place there — are tinted: the model's footprint on the map. The first line of the
-  details panel points at the three views of the object as well.
+  details panel points at the three views of the object as well. Switching to Model from a node the
+  keyboard rests on opens the model with that node's box in view and marked.
   Each link shows its **cardinality** after its name (`items 1..*`, `orderDate 0..1`): the
   `minOccurs`/`maxOccurs` of a nested element or group reference — through the enclosing
   `sequence`/`all`/`choice`, counted from the nearest enclosing element — or the `use` of an
