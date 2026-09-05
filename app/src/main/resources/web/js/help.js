@@ -28,6 +28,7 @@ const SHORTCUTS = [
   ['Home', MSG.SHORTCUT_GRAPH_CENTRE],
   ['Enter / Space', MSG.SHORTCUT_GRAPH_ACTIVATE],
   ['↑ ↓', MSG.SHORTCUT_PROBLEMS],
+  ['↑ ↓ / Enter', MSG.SHORTCUT_SEARCH_WALK],
   // the keystroke of this one is built at render time: the word 'click' is translated, and i18n is ready only then
   [() => 'Ctrl + ' + t(MSG.SHORTCUT_CLICK), MSG.SHORTCUT_SELECT_WORKSPACES],
 ];

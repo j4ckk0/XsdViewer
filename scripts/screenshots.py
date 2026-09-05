@@ -233,7 +233,7 @@ SCENES = [
                  'firstKey': "document.querySelector('#shortcutsBody td.keys').textContent",
                  'back': "[...document.querySelectorAll('#shortcutsBody tr')].find(r => r.querySelector('.keys').textContent.includes('Alt')).cells[1].textContent",
                  'clickKey': "[...document.querySelectorAll('#shortcutsBody td.keys')].map(c => c.textContent).find(k => k.startsWith('Ctrl + c'))"},
-         expect={'open': 'true', 'rows': 10, 'firstKey': 'Ctrl + O', 'back': 'Back to the declaration selected before', 'clickKey': 'Ctrl + click'}),
+         expect={'open': 'true', 'rows': 11, 'firstKey': 'Ctrl + O', 'back': 'Back to the declaration selected before', 'clickKey': 'Ctrl + click'}),
     # the Compare group sits above the declaration details, so it stays in view
     dict(name='compare-group-above', file='samples/compare/v1.xsdviewer.json', theme='light',
          action=OPEN_V2
@@ -350,6 +350,24 @@ SCENES = [
          checks={'labelsAligned': "(() => { const xs = [...document.querySelectorAll('#settingsMenu > button')].map(b => Math.round([...b.querySelectorAll('span')].filter(x => !x.classList.contains('check'))[0].getBoundingClientRect().left)); return String(xs.every(x => x === xs[0])); })()",
                  'order': "[...document.querySelectorAll('#settingsMenu > *')].map(e => e.tagName === 'DIV' ? '—' : e.id).join('|')"},
          expect={'labelsAligned': 'true', 'order': 'menuTheme|menuHandles|—|menuAutoStop'}),
+    # with a search entered and the field focused, Up/Down walk the Files tree and Enter opens the row
+    dict(name='search-arrows', file='samples/purchaseOrder.xsd', theme='light',
+         action="const s = document.getElementById('search'); s.focus(); s.value = 'a'; s.dispatchEvent(new Event('input', {bubbles: true}));"
+                "await new Promise(r => setTimeout(r, 300));"
+                "const down = () => s.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', bubbles: true, cancelable: true}));"
+                "const cur = () => { const c = document.querySelector('#filesContent .item.current'); return c ? (c.dataset.id || c.textContent.trim()) : 'none'; };"
+                "down(); window.__first = cur();"
+                "down(); window.__second = cur();"
+                "const up = s.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowUp', bubbles: true, cancelable: true})); window.__afterUp = cur();"
+                "window.__focusKept = document.activeElement === s;"
+                # Enter opens the row the cursor rests on
+                "s.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));"
+                "await new Promise(r => setTimeout(r, 300));"
+                "window.__selected = document.querySelector('#nodeList .item.selected') ? document.querySelector('#nodeList .item.selected').dataset.id : 'none';",
+         checks={'first': "window.__first", 'second': "window.__second", 'afterUp': "window.__afterUp",
+                 'focusKept': "String(window.__focusKept)", 'movedThenBack': "String(window.__first === window.__afterUp && window.__first !== window.__second)",
+                 'openedSomething': "String(window.__selected !== 'none')"},
+         expect={'first': '▾ext.xsd', 'second': 'simpleType:Label', 'afterUp': '▾ext.xsd', 'focusKept': 'true', 'movedThenBack': 'true', 'openedSomething': 'true'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

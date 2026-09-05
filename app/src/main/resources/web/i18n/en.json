@@ -58,6 +58,7 @@
   "shortcut.graphMove": "Move between the graph's nodes (Tab enters the graph)",
   "shortcut.graphCentre": "Jump to the graph's centre node",
   "shortcut.graphActivate": "Follow the focused graph node",
+  "shortcut.searchWalk": "From the search field, walk the Files tree and open a row",
   "shortcut.problems": "Move through the validation problems",
   "shortcut.click": "click",
   "shortcut.selectWorkspaces": "Pick two workspace chips to compare them",

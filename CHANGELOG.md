@@ -4,6 +4,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
+- **The search field walks the Files tree with the arrow keys.** With a text entered and the field focused, ↑ / ↓ move a cursor through the file and object rows and Enter opens the one it rests on, without leaving the field.
 - The Settings menu entries line up on one indent: the theme entry keeps the checkmark column its neighbours have, so nothing sits proud of the rest.
 
 ## 5.3.2 — 2026-09-05

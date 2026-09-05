@@ -242,6 +242,8 @@ export const CLS = {
   GROUP_ITEMS: 'group-items',
   ITEM: 'item',
   NO_MATCH: 'nomatch',
+  /** The row the search field's Up/Down keys rest on in the Files tree. */
+  CURRENT: 'current',
   DIR: 'dir',
   FILE: 'file',
   OBJECT: 'obj',

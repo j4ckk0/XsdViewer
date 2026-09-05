@@ -529,6 +529,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .tree .item.file.open { color: var(--text); font-weight: 600; }
 .tree .item.file .expander { display: inline-block; width: 12px; color: var(--muted); font-weight: 400; }
 .tree .item .empty { color: var(--muted); font-style: italic; font-weight: 400; }
+/* the row the search field's Up/Down keys rest on: a keyboard cursor, an accent bar at the left, apart from the blue of the current selection */
+.tree .item.current { background: var(--row-hover); box-shadow: inset 2px 0 0 var(--accent); }
 /* why a searched object is listed when its name does not match: the member or "documentation", grey, at the right */
 .item .why { margin-left: auto; padding-left: 8px; color: var(--muted); font-size: 11px; font-style: italic; overflow: hidden; text-overflow: ellipsis; }
 /* the count of files still being parsed, under the search results: wraps rather than being cut */

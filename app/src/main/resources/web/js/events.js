@@ -274,15 +274,32 @@ function wirePanels() {
   $(ID.FILES_COLLAPSE_ALL).addEventListener('click', () => setAllUnfolded(false));
   $(ID.OBJECTS_EXPAND_ALL).addEventListener('click', () => setAllGroupsExpanded(true));
   $(ID.OBJECTS_COLLAPSE_ALL).addEventListener('click', () => setAllGroupsExpanded(false));
-  $(ID.FILES_CONTENT).addEventListener('click', async (e) => {   // the Files panel: a file or an object shows its tab, opened when needed
-    const hit = fileListClick(e.target);
-    if (!hit) return;
-    if (hit.entries) { openEntriesAsWorkspace(hit.folder, hit.entries); return; }
-    const tab = hit.tab || await ensureTab(hit.entry);
-    if (!tab) return;
-    if (activateTab(tab)) renderPage();
-    if (hit.id) select(hit.id);
-  });
+  $(ID.FILES_CONTENT).addEventListener('click', (e) => openFromFiles(e.target));   // the Files panel: a file or an object shows its tab, opened when needed
+}
+
+/** Acts on a row of the Files tree (a file, or a matching object) as a click does: shows its tab, opened when needed, and selects the object. */
+async function openFromFiles(target) {
+  const hit = fileListClick(target);
+  if (!hit) return;
+  if (hit.entries) { openEntriesAsWorkspace(hit.folder, hit.entries); return; }
+  const tab = hit.tab || await ensureTab(hit.entry);
+  if (!tab) return;
+  if (activateTab(tab)) renderPage();
+  if (hit.id) select(hit.id);
+}
+
+/** The file and object rows of the Files tree the search can walk (only the visible ones). */
+const filesTreeRows = () => [...$(ID.FILES_CONTENT).querySelectorAll('.' + CLS.ITEM + '.' + CLS.FILE + ', .' + CLS.ITEM + '.' + CLS.OBJECT)].filter(el => el.offsetParent !== null);
+
+/** Moves the Up/Down cursor of the Files tree by {@code step}, from wherever it rests (or an end), and shows it. */
+function moveFilesCursor(step) {
+  const rows = filesTreeRows();
+  if (!rows.length) return;
+  const at = rows.findIndex(el => el.classList.contains(CLS.CURRENT));
+  const next = at < 0 ? (step > 0 ? 0 : rows.length - 1) : Math.max(0, Math.min(rows.length - 1, at + step));
+  rows.forEach(el => el.classList.remove(CLS.CURRENT));
+  rows[next].classList.add(CLS.CURRENT);
+  rows[next].scrollIntoView({ block: 'nearest' });
 }
 
 /** The comparison's own controls: the ⇄ Compare of the details panel, and in its Objects section the sides, the folds of the two models. */
@@ -318,7 +335,12 @@ function wireSearch() {
   };
   search.addEventListener('input', (e) => apply(e.target.value));
   search.addEventListener('keydown', (e) => {
-    if (e.key === KEY.ESCAPE) { e.target.value = ''; apply(''); e.target.blur(); }
+    if (e.key === KEY.ESCAPE) { e.target.value = ''; apply(''); e.target.blur(); return; }
+    // while a search is entered, Up/Down walk the Files tree and Enter opens the row they rest on, the field keeping the focus
+    if (!session.active.workspace.filter) return;
+    if (e.key === KEY.ARROW_DOWN) { e.preventDefault(); moveFilesCursor(1); }
+    else if (e.key === KEY.ARROW_UP) { e.preventDefault(); moveFilesCursor(-1); }
+    else if (e.key === KEY.ENTER) { const row = filesTreeRows().find(el => el.classList.contains(CLS.CURRENT)); if (row) { e.preventDefault(); openFromFiles(row); } }
   });
   $(ID.SEARCH_CLEAR).addEventListener('click', () => { search.value = ''; apply(''); search.focus(); });
   // the find bar of the Text view

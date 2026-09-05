@@ -69,6 +69,7 @@ export const MSG = {
   SHORTCUT_GRAPH_CENTRE: 'shortcut.graphCentre',
   SHORTCUT_GRAPH_ACTIVATE: 'shortcut.graphActivate',
   SHORTCUT_PROBLEMS: 'shortcut.problems',
+  SHORTCUT_SEARCH_WALK: 'shortcut.searchWalk',
   SHORTCUT_CLICK: 'shortcut.click',
   SHORTCUT_SELECT_WORKSPACES: 'shortcut.selectWorkspaces',
   HELP_CLOSE: 'help.close',

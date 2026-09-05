@@ -58,6 +58,7 @@
   "shortcut.graphMove": "Se déplacer entre les nœuds du graphe (Tab entre dans le graphe)",
   "shortcut.graphCentre": "Aller au nœud central du graphe",
   "shortcut.graphActivate": "Suivre le nœud du graphe qui a le focus",
+  "shortcut.searchWalk": "Depuis la recherche, parcourir l'arbre Fichiers et ouvrir une ligne",
   "shortcut.problems": "Parcourir les problèmes de validation",
   "shortcut.click": "clic",
   "shortcut.selectWorkspaces": "Choisir deux pastilles d'espace de travail pour les comparer",
