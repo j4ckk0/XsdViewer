@@ -38,7 +38,9 @@ Design choices that shape everything else:
 
 ## Modules
 
-### Server – `src/main/java/org/jtools/xsdviewer/`
+### Server – `core/` and `app/src/main/java/org/jtools/xsdviewer/`
+
+The Java side is two Maven modules: **core** (`org.jtools:xsdviewer-core`), the parsers, the validators, the JSON writer and the messages — a library with no dependency but the JDK — and **app**, the server and the page, whose jar embeds core's classes so that `java -jar xsdviewer.jar` needs nothing else. The tests run with the root of the repository as working directory in both modules (the parent pom's surefire configuration), so they read `samples/` and `app/src/main/resources/web` from there.
 
 Each class does one thing and is named for it; the packages follow the tiers of the diagram.
 
@@ -107,7 +109,7 @@ declaration opens, even when its attributes span several lines.
 Both XML parsers are configured with secure processing and external entities / DTD loading
 disabled: the input is an arbitrary user file.
 
-### Web client – `src/main/resources/web/`
+### Web client – `app/src/main/resources/web/`
 
 Static files, no build step, no framework: `index.html`, `style.css`, ES modules under `js/`
 (loaded by `<script type="module" src="js/app.js">`) and the texts under `i18n/`.
@@ -352,19 +354,19 @@ Build and test:
 
 | Tool | Version | Role |
 |---|---|---|
-| Maven | 3.9 | build; `mvn package` produces `target/xsdviewer.jar` |
+| Maven | 3.9 | build of the two modules; `mvn package` produces `core/target/xsdviewer-core-<version>.jar`, the library, and `app/target/xsdviewer.jar`, the tool |
 | maven-compiler-plugin | 3.13.0 | `--release 21` |
-| maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` (no shading needed: no dependencies) |
-| maven-surefire-plugin | 3.2.5 | runs the tests |
+| maven-dependency-plugin | 3.6.1 | `app` only: unpacks core's classes and resources into the application's before its jar is made, so the one jar runs alone |
+| maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` and the implementation entries About shows |
+| maven-surefire-plugin | 3.2.5 | runs the tests, from the root of the repository (`maven.multiModuleProjectDirectory`, pinned by the `.mvn/` directory) |
 | JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, `WsdlParserTest`, `SchematronParserTest`, `SchematronValidatorTest` and `SchemaGraphJsonWriterTest` (against the samples), `PageContractTest` (the vocabulary shared with `js/constants.js`: node kinds, link labels, API paths), `JavaScriptTestsTest` (runs `src/test/js/*.test.mjs` — the page's pure modules: diff, business lines, cardinalities, schema diff… — under Node when it is installed, skipped otherwise; the CI installs it), and `scripts/screenshots.py` (a visual smoke test with headless Firefox: the samples opened in the built jar, a few facts checked on the page, one screenshot per scene; the scenes carrying a `doc` name are the README's pictures, written as JPEG in `screenshots/` by `--docs`; `--only=a,b` runs named scenes, and a duplicate scene name is refused, a name being a file name and a result key), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `CommandLineOptionsTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` (the HTTP interface on an ephemeral port) |
 | `scripts/run.sh` / `scripts\run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
-| `src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; on Windows the `.bat` starts `javaw.exe` from a command line (`--console` to keep one) |
+| `app/src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; on Windows the `.bat` starts `javaw.exe` from a command line (`--console` to keep one) |
 | launch4j-maven-plugin | 2.7.0 | `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
 | `scripts/build.sh` / `scripts\build.bat` | – | `mvn package` |
 | `scripts/package.sh` / `scripts\package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
-| maven-clean-plugin | 3.2.0 | `dist` profile only: empties `releases/` (previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` / `.jar`) and deletes `target/jre` before the build |
-| maven-antrun-plugin | 3.1.0 | `dist` profile only: unpacks the JRE archives into `target/jre/{windows,linux}`; copies the jar to `releases/xsdviewer-<version>.jar` |
-| maven-assembly-plugin | 3.7.1 | `dist` profile only: `src/assembly/{windows,linux}.xml` → zip / tar.gz in `releases/` with the JRE, the jar, a launcher, `samples/` and `README.md` |
+| maven-clean-plugin | 3.2.0 | `dist` profile only (in `app`): empties `releases/` at the root (previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` / `-macos.tar.gz` / `.jar`) and deletes `app/target/jre` before the build |
+| maven-antrun-plugin | 3.1.0 | `dist` profile only: runs `app/src/build/runtimes.xml`, which unpacks the JDK archives of `jre/` (root), links a runtime per platform, and packs the archives into `releases/` with the jar, a launcher, `samples/` and `README.md` from the root |
 
 `mvn package -Pdist` produces `releases/xsdviewer-<version>-windows.zip`,
 `-linux.tar.gz` and `.jar` (git-ignored directory). The JRE archives under `jre/` (a build input, kept out of `src/`) are
@@ -376,33 +378,35 @@ executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's
 
 ```
 XsdViewer/
-├── pom.xml
-├── .github/workflows/build.yml   CI: mvn package on JDK 21, jar kept as artefact
-├── scripts/
-│   ├── run.sh, run.bat           build if needed + run
-│   ├── build.sh, build.bat       mvn package
-│   └── package.sh, package.bat   mvn package -Pdist  (zip / tar.gz with bundled JRE)
-├── README.md                     usage
-├── architecture.md               this file
-├── jre/                          JRE archives bundled by the dist profile (git-ignored, downloaded by hand)
+├── pom.xml                       the parent: the two modules, the shared metadata and plugin versions
+├── .mvn/                         pins the root of the build (maven.multiModuleProjectDirectory) for the tests and the dist profile
+├── core/                         org.jtools:xsdviewer-core — the library
+│   ├── pom.xml
+│   └── src/main/java/org/jtools/xsdviewer/
+│       ├── Messages, MessageKey          the texts (src/main/resources/org/jtools/xsdviewer/messages*.properties)
+│       ├── schema/                       SchemaParser, XsdParser, WsdlParser, SchematronParser, DeclarationLineIndex,
+│       │                                 SchematronValidator (+ SchematronDom, SchematronMessage, SchematronIncludes, LocatedDocument, Severity),
+│       │                                 SecureXmlFactories, SchemaGraph, SchemaGraphJsonWriter, NodeKind, LinkLabel, *Vocabulary
+│       └── json/                         JsonWriter, JsonReader, JsonStrings, JsonKey
+│   └── src/test/java/                    the parser, validator and JSON tests
+├── app/                          org.jtools:xsdviewer — the tool (its jar embeds core)
+│   ├── pom.xml                   the dist profile lives here
+│   ├── src/build/runtimes.xml    Ant: unpacking the JDKs, jlink, the archives
+│   ├── src/dist/                 xsdviewer.bat, xsdviewer.sh launchers
+│   └── src/main/java/org/jtools/xsdviewer/
+│       ├── XsdViewerApplication, CommandLineOptions, BrowserLauncher, Log, UserSettings, BuildInfo
+│       ├── server/                       XsdViewerServer, ApiPath, *Handler, XmlValidator, ServedSchemaFiles, SchemaFileFinder, FileDialogs, ...
+│       └── workspace/                    Workspace
+│   ├── src/main/resources/web/           the page: index.html, style.css, js/, i18n/
+│   ├── src/test/java/                    the server, workspace, command line, log and translation tests, the page's contract
+│   └── src/test/js/                      the tests of the page's pure modules
+├── .github/workflows/            build.yml (mvn package on JDK 21, the jar kept as artefact), release.yml (a pushed tag → the release)
+├── scripts/                      run, build, package, release, screenshots.py, changelog-section.py
+├── README.md, architecture.md, CHANGELOG.md, PUBLISHING.md
+├── jre/                          JDK archives the dist profile links runtimes from (git-ignored, downloaded by hand or by the workflow)
 ├── releases/                     output of the dist profile: zip, tar.gz, jar (git-ignored, README only)
-├── screenshots/                  the five pictures of the README (model, text, graph, the two comparisons), written by `scripts/screenshots.py --docs`
-├── samples/purchaseOrder.xsd     small schema exercising every kind of link (ext.xsd: the schema it imports; purchaseOrder.xml: a valid document)
-├── samples/import/               order.xsd + the files it imports / includes (link following)
-├── samples/wsdl/, samples/schematron/  a WSDL service and a Schematron over purchaseOrder.xsd
-└── src/
-    ├── assembly/                        windows.xml, linux.xml (dist profile)
-    ├── dist/                            xsdviewer.bat, xsdviewer.sh launchers
-    ├── main/java/org/jtools/xsdviewer/   XsdViewerApplication, CommandLineOptions, BrowserLauncher, Messages, MessageKey
-    │   ├── schema/                      SchemaParser, XsdParser, WsdlParser, SchematronParser, DeclarationLineIndex,
-    │   │                                SchematronValidator (+ SchematronDom, SchematronMessage, SchematronIncludes, LocatedDocument, Severity),
-    │   │                                SecureXmlFactories, SchemaGraph, SchemaGraphJsonWriter, NodeKind, LinkLabel, *Vocabulary
-    │   ├── server/                      XsdViewerServer, ApiPath, *Handler, ServedSchemaFiles, SchemaFileFinder, FileDialogs, ...
-    │   ├── workspace/                   Workspace
-    │   └── json/                        JsonWriter, JsonReader, JsonStrings, JsonKey
-    ├── main/resources/org/jtools/xsdviewer/  messages.properties, messages_fr.properties
-    ├── main/resources/web/              index.html, style.css, js/*.js, i18n/en.json, i18n/fr.json
-    └── test/java/org/jtools/xsdviewer/   CommandLineOptionsTest, TranslationsTest, schema/, json/, workspace/
+├── screenshots/                  the five pictures of the README, written by scripts/screenshots.py --docs
+└── samples/                      one sample per thing the tool does (samples/README.md)
 ```
 
 ## Extension points

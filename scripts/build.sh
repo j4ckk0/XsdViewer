@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build target/xsdviewer.jar (compile + tests).
+# Build app/target/xsdviewer.jar (compile + tests).
 #
 #   scripts/build.sh
 #   scripts/build.sh -DskipTests        # extra arguments are passed to mvn

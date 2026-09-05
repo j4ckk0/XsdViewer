@@ -49,7 +49,7 @@ import org.junit.jupiter.api.Test;
 class TranslationsTest {
 
     private static final String BUNDLE_DIR = "/org/jtools/xsdviewer/";
-    private static final Path WEB = Path.of("src/main/resources/web");
+    private static final Path WEB = Path.of("app/src/main/resources/web");
     private static final List<String> LANGUAGES = List.of("en", "fr");
     private static final String DEFAULT_LANGUAGE = "en";
 

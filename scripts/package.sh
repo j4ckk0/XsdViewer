@@ -4,7 +4,7 @@
 #   releases/xsdviewer-<version>-windows.zip
 #   releases/xsdviewer-<version>-linux.tar.gz
 #   releases/xsdviewer-<version>-macos.tar.gz
-#   releases/xsdviewer-<version>.jar             (copy of target/xsdviewer.jar)
+#   releases/xsdviewer-<version>.jar             (copy of app/target/xsdviewer.jar)
 #
 #   scripts/package.sh
 #   scripts/package.sh -DskipTests      # extra arguments are passed to mvn

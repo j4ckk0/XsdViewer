@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 class JavaScriptTestsTest {
 
     /** A pattern (Node expands it itself): a directory would be taken for a file. */
-    private static final String TESTS = "src/test/js/*.test.mjs";
+    private static final String TESTS = "app/src/test/js/*.test.mjs";
     private static final String NODE = "node";
     private static final String TEST_FLAG = "--test";
     private static final long TIMEOUT_SECONDS = 120;

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jtools</groupId>
+    <artifactId>xsdviewer-parent</artifactId>
+    <version>4.13.0</version>
+  </parent>
+
+  <artifactId>xsdviewer</artifactId>
+  <packaging>jar</packaging>
+
+  <name>XsdViewer</name>
+  <description>The tool: a local server serving the page that explores XML Schema, WSDL and Schematron files, built on xsdviewer-core, which its jar embeds.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jtools</groupId>
+      <artifactId>xsdviewer-core</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>xsdviewer</finalName>
+    <plugins>
+      <!-- the classes of core join the application's before the jar is made: java -jar xsdviewer.jar needs nothing else -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>embed-core</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeArtifactIds>xsdviewer-core</includeArtifactIds>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+              <excludes>META-INF/MANIFEST.MF</excludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>org.jtools.xsdviewer.XsdViewerApplication</mainClass>
+              <!-- Implementation-Version etc.: what Help > About shows -->
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!--
+      mvn package -Pdist
+      Builds the self-contained distributions, each with a bundled JRE
+      (from jre/ at the root of the repository) and a launcher script, in releases/:
+        releases/xsdviewer-<version>-windows.zip   xsdviewer.bat
+        releases/xsdviewer-<version>-linux.tar.gz  xsdviewer.sh
+        releases/xsdviewer-<version>.jar           copy of app/target/xsdviewer.jar
+    -->
+    <profile>
+      <!-- mvn package -Pdist (scripts/package.sh): the self-contained distributions. A trimmed runtime
+           per platform is made with jlink from the Temurin JDK archives found in jre/ (their jmods; see
+           README: Packaging) — only the platforms whose archive is there —, XsdViewer.exe with launch4j,
+           then the archives: src/build/runtimes.xml does the unpacking, the linking and the packing. -->
+      <id>dist</id>
+      <properties>
+        <jre.archives>${maven.multiModuleProjectDirectory}/jre</jre.archives>
+        <jdk.unpacked>${project.build.directory}/jdk</jdk.unpacked>
+        <jre.unpacked>${project.build.directory}/jre</jre.unpacked>
+        <!-- where the distributions land (git-ignored) -->
+        <dist.directory>${maven.multiModuleProjectDirectory}/releases</dist.directory>
+        <!-- what the runtimes hold: what the jar needs (jdeps, print-module-deps), java.xml said
+             explicitly, jdk.charsets for schema files in any encoding -->
+        <runtime.modules>java.base,java.desktop,java.logging,java.prefs,java.xml,jdk.httpserver,jdk.charsets</runtime.modules>
+      </properties>
+      <build>
+        <plugins>
+          <!-- Previous distributions (any version), the unpacked JDKs and the runtimes are removed
+               first, so that releases/ only ever holds the artefacts of this build. -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-clean-plugin</artifactId>
+            <version>3.2.0</version>
+            <executions>
+              <execution>
+                <id>clean-previous-distributions</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+                <configuration>
+                  <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                  <filesets>
+                    <fileset>
+                      <directory>${dist.directory}</directory>
+                      <includes>
+                        <include>${project.artifactId}-*-windows.zip</include>
+                        <include>${project.artifactId}-*-linux.tar.gz</include>
+                        <include>${project.artifactId}-*-macos.tar.gz</include>
+                        <include>${project.artifactId}-*.jar</include>
+                      </includes>
+                    </fileset>
+                    <fileset>
+                      <directory>${project.build.directory}</directory>
+                      <includes>
+                        <include>XsdViewer.exe</include>
+                        <include>jdk/**</include>
+                        <include>jre/**</include>
+                        <include>dist/**</include>
+                      </includes>
+                    </fileset>
+                  </filesets>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <executions>
+              <execution>
+                <!-- the JDK archives unpacked, a runtime linked for each platform present -->
+                <id>runtimes</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <ant antfile="${project.basedir}/src/build/runtimes.xml" target="runtimes" inheritAll="false">
+                      <property name="jre.archives" value="${jre.archives}"/>
+                      <property name="jdk.unpacked" value="${jdk.unpacked}"/>
+                      <property name="jre.unpacked" value="${jre.unpacked}"/>
+                      <property name="runtime.modules" value="${runtime.modules}"/>
+                    </ant>
+                  </target>
+                </configuration>
+              </execution>
+              <execution>
+                <!-- the archives, after the jar and the exe -->
+                <id>distributions</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <copy file="${project.build.directory}/${project.build.finalName}.jar"
+                          tofile="${dist.directory}/${project.artifactId}-${project.version}.jar"/>
+                    <ant antfile="${project.basedir}/src/build/runtimes.xml" target="distributions" inheritAll="false">
+                      <property name="jre.archives" value="${jre.archives}"/>
+                      <property name="jdk.unpacked" value="${jdk.unpacked}"/>
+                      <property name="jre.unpacked" value="${jre.unpacked}"/>
+                      <property name="dist.directory" value="${dist.directory}"/>
+                      <property name="dist.name" value="${project.artifactId}-${project.version}"/>
+                      <property name="jar" value="${project.build.directory}/${project.build.finalName}.jar"/>
+                      <property name="exe" value="${project.build.directory}/XsdViewer.exe"/>
+                      <property name="basedir.project" value="${project.basedir}"/>
+                      <property name="basedir.root" value="${maven.multiModuleProjectDirectory}"/>
+                      <property name="work" value="${project.build.directory}/dist"/>
+                    </ant>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <!-- XsdViewer.exe: a Windows launcher without a console (GUI subsystem) that runs the
+                 bundled jre\ with xsdviewer.jar; built from any OS. xsdviewer.bat keeps the console. -->
+            <groupId>com.akathist.maven.plugins.launch4j</groupId>
+            <artifactId>launch4j-maven-plugin</artifactId>
+            <version>2.7.0</version>
+            <executions>
+              <execution>
+                <id>windows-launcher</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>launch4j</goal>
+                </goals>
+                <configuration>
+                  <headerType>gui</headerType>
+                  <outfile>${project.build.directory}/XsdViewer.exe</outfile>
+                  <dontWrapJar>true</dontWrapJar>
+                  <jar>xsdviewer.jar</jar>
+                  <chdir>.</chdir>
+                  <errTitle>XsdViewer</errTitle>
+                  <jre>
+                    <path>jre</path>
+                    <requiresJdk>false</requiresJdk>
+                    <requires64Bit>true</requires64Bit>
+                    <minVersion>21</minVersion>
+                  </jre>
+                  <versionInfo>
+                    <fileVersion>${project.version}.0</fileVersion>
+                    <txtFileVersion>${project.version}</txtFileVersion>
+                    <fileDescription>XsdViewer - web-based viewer for XML Schema files</fileDescription>
+                    <copyright>jtools.org</copyright>
+                    <productVersion>${project.version}.0</productVersion>
+                    <txtProductVersion>${project.version}</txtProductVersion>
+                    <productName>XsdViewer</productName>
+                    <internalName>xsdviewer</internalName>
+                    <originalFilename>XsdViewer.exe</originalFilename>
+                  </versionInfo>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

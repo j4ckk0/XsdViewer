@@ -12,7 +12,7 @@ rem
 setlocal EnableDelayedExpansion
 
 cd /d "%~dp0.."
-set "JAR=target\xsdviewer.jar"
+set "JAR=app\target\xsdviewer.jar"
 
 set "REBUILD=0"
 set "ARGS="
@@ -35,7 +35,7 @@ if not exist "%JAR%" set "NEED_BUILD=1"
 if "%NEED_BUILD%"=="0" (
   powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$jar = (Get-Item '%JAR%').LastWriteTimeUtc;" ^
-    "$src = @(Get-Item pom.xml) + @(Get-ChildItem src -Recurse -File);" ^
+    "$src = @(Get-Item pom.xml) + @(Get-ChildItem core,app -Recurse -File | Where-Object { $_.FullName -notmatch '\\target\\' });" ^
     "if ($src | Where-Object { $_.LastWriteTimeUtc -gt $jar }) { exit 1 } else { exit 0 }"
   if errorlevel 1 set "NEED_BUILD=1"
 )

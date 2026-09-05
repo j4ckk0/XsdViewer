@@ -57,7 +57,7 @@ if ! $dry && ! git ls-remote --exit-code --tags github "refs/tags/$tag" >/dev/nu
 fi
 
 # The bundled runtime's version, from the image's release file (JAVA_VERSION="21.0.12.1").
-jre_version=$(grep -h '^JAVA_VERSION=' target/jre/*/release 2>/dev/null | head -1 | cut -d'"' -f2)
+jre_version=$(grep -h '^JAVA_VERSION=' app/target/jre/*/release 2>/dev/null | head -1 | cut -d'"' -f2)
 [ -n "$jre_version" ] || jre_version=21
 
 body=$(

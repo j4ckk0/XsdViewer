@@ -1,6 +1,6 @@
 @echo off
 rem
-rem Build target\xsdviewer.jar (compile + tests).
+rem Build app\target\xsdviewer.jar (compile + tests).
 rem
 rem   scripts\build.bat
 rem   scripts\build.bat -DskipTests        extra arguments are passed to mvn

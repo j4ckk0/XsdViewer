@@ -3,7 +3,7 @@ rem
 rem Build the self-contained distributions (jar + bundled JRE + launcher):
 rem   releases\xsdviewer-<version>-windows.zip
 rem   releases\xsdviewer-<version>-linux.tar.gz
-rem   releases\xsdviewer-<version>.jar             (copy of target\xsdviewer.jar)
+rem   releases\xsdviewer-<version>.jar             (copy of app\target\xsdviewer.jar)
 rem
 rem   scripts\package.bat
 rem   scripts\package.bat -DskipTests      extra arguments are passed to mvn

@@ -64,9 +64,9 @@
     <mkdir dir="${dist.directory}"/>
     <delete dir="${work}"/>
     <!-- the text files with the line endings of each platform -->
-    <copy todir="${work}/crlf"><fileset dir="${basedir.project}" includes="README.md,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.bat"/></copy>
+    <copy todir="${work}/crlf"><fileset dir="${basedir.root}" includes="README.md,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.bat"/></copy>
     <fixcrlf srcdir="${work}/crlf" eol="crlf" includes="**/*.md,**/*.xsd,**/*.wsdl,**/*.json,**/*.bat"/>
-    <copy todir="${work}/lf"><fileset dir="${basedir.project}" includes="README.md,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.sh"/></copy>
+    <copy todir="${work}/lf"><fileset dir="${basedir.root}" includes="README.md,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.sh"/></copy>
     <fixcrlf srcdir="${work}/lf" eol="lf" includes="**/*.md,**/*.xsd,**/*.wsdl,**/*.json,**/*.sh"/>
   </target>
 

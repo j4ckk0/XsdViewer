@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jtools</groupId>
+    <artifactId>xsdviewer-parent</artifactId>
+    <version>4.13.0</version>
+  </parent>
+
+  <artifactId>xsdviewer-core</artifactId>
+  <packaging>jar</packaging>
+
+  <name>XsdViewer core</name>
+  <description>Parses an XML Schema, a WSDL or a Schematron into a graph of its declarations and their links, with the content model of each; validates a document against a schema and a Schematron. The JDK and nothing else.</description>
+</project>

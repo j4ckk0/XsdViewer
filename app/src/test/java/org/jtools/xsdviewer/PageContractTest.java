@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
  */
 class PageContractTest {
 
-    private static final Path CONSTANTS_JS = Path.of("src/main/resources/web/js/constants.js");
+    private static final Path CONSTANTS_JS = Path.of("app/src/main/resources/web/js/constants.js");
 
     /** The string values of {@code export const NAME = { KEY: 'value', ... }} in constants.js. */
     private static Set<String> jsValues(String constant) throws Exception {

@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **Two Maven modules.** `core` (`org.jtools:xsdviewer-core`) is a library: the parsers of XML Schema, WSDL and Schematron into a graph of declarations, links and content models, the validators, the JSON writer, the messages — the JDK and nothing else. `app` is the tool: the server, the page, the distributions; its jar embeds core, so `java -jar xsdviewer.jar` runs alone as before. The jar is now built at `app/target/xsdviewer.jar`; the scripts, the workflows and the README follow.
+
 ## 4.13.0 — 2026-09-05
 
 - **The first screen.** The README opens on what the tool does today — three views, workspaces, comparison, validation — and its five pictures are redone; `samples/README.md` says what each sample is for, and the one whose name had doubled its suffix is gone. With nothing open the page says *Open a schema* and how — an XSD, a WSDL, a Schematron, a folder, or a drop — and *About* describes the tool as it is.

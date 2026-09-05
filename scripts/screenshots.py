@@ -3,13 +3,13 @@
 A visual smoke test of the page: opens the samples in the built jar, drives the page (a selection,
 a view, the theme), checks a few facts on it and saves a screenshot of each scene.
 
-    scripts/screenshots.py                 # after mvn package: target/screenshots/*.png, checks on stdout
+    scripts/screenshots.py                 # after mvn package: target/screenshots/*.png (the jar: app/target/xsdviewer.jar), checks on stdout
     scripts/screenshots.py --keep-going    # every scene even after a failed check
     scripts/screenshots.py --docs          # only the scenes of the README, saved as JPEG in screenshots/
     scripts/screenshots.py --only a,b      # only these scenes
     FIREFOX=/path/to/firefox scripts/screenshots.py
 
-Needs Firefox (its headless --screenshot) and the jar in target/. The page is reached through a
+Needs Firefox (its headless --screenshot) and the jar in app/target/. The page is reached through a
 small proxy that injects the scene's script and holds the page's load event until the script has
 run (a hidden image answered late), which is when Firefox takes the screenshot. A scene's script may
 await (it runs in an async function) and fetch a file of the repository from /__sample/<path>. Exit
@@ -29,7 +29,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-JAR = ROOT / 'target' / 'xsdviewer.jar'
+JAR = ROOT / 'app' / 'target' / 'xsdviewer.jar'
 OUT = ROOT / 'target' / 'screenshots'
 DOCS = ROOT / 'screenshots'   # the pictures of the README, written by --docs from the scenes carrying a "doc" name
 FIREFOX = os.environ.get('FIREFOX', 'firefox')

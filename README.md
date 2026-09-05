@@ -166,7 +166,7 @@ declarations and links only on one side, then the two sources side by side.
 Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)).
 
 ```bash
-scripts/run.sh                # builds target/xsdviewer.jar if needed, then starts the tool
+scripts/run.sh                # builds app/target/xsdviewer.jar if needed, then starts the tool
 scripts\run.bat               # same, on Windows
 ```
 
@@ -174,7 +174,7 @@ To only build the jar (`scripts/build.sh` / `scripts\build.bat`, i.e. `mvn packa
 
 ```bash
 mvn package
-java -jar target/xsdviewer.jar
+java -jar app/target/xsdviewer.jar
 ```
 
 The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
@@ -275,7 +275,7 @@ whatever their version, are deleted from `releases/` first):
 | `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled runtime, no console window at all. The exe is built with launch4j from any OS. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
 | `releases/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
 | `releases/xsdviewer-<version>-macos.tar.gz` | `xsdviewer.sh` — Apple silicon; a downloaded archive is quarantined by macOS, so once: `xattr -dr com.apple.quarantine xsdviewer-<version>` |
-| `releases/xsdviewer-<version>.jar` | copy of `target/xsdviewer.jar`, for people who have [Java 21](#installing-java-21): `java -jar xsdviewer-<version>.jar` |
+| `releases/xsdviewer-<version>.jar` | copy of `app/target/xsdviewer.jar`, for people who have [Java 21](#installing-java-21): `java -jar xsdviewer-<version>.jar` |
 
 When started without a console (the Windows launcher, a double-clicked jar), a start-up
 failure such as a port already in use is shown in a dialog instead of being lost.
@@ -561,24 +561,29 @@ or start the tool from the project folder and open `order.xsd` from the browser.
 
 ## Layout
 
+Two Maven modules under one parent pom. **`core`** is a library — `org.jtools:xsdviewer-core`, the JDK
+and nothing else — and **`app`** is the tool, whose jar embeds it:
+
 ```
-src/main/java/org/jtools/xsdviewer/
-  XsdViewerApplication   entry point: command line, server start-up, browser
-  CommandLineOptions, BrowserLauncher, Messages (+ MessageKey)
-  schema/                XsdParser (XSD text -> SchemaGraph), DeclarationLineIndex, SchemaGraphJsonWriter,
-                         NodeKind / LinkLabel / XsdVocabulary constants
-  server/                XsdViewerServer (JDK com.sun.net.httpserver) + one handler per path:
-                         ParseSchemaHandler, InitialFileHandler, OpenSchemaLocationHandler,
-                         LocateSchemaFileHandler, ChooseFilesHandler, SaveWorkspaceHandler,
-                         OpenWorkspaceHandler, CapabilitiesHandler, QuitHandler, StaticResourceHandler;
-                         FileDialogs (native dialog; kdialog / zenity on Linux)
-  workspace/             Workspace (the *.xsdviewer.json format)
+core/src/main/java/org/jtools/xsdviewer/
+  schema/                SchemaParser (the text of an XSD, a WSDL or a Schematron -> SchemaGraph), XsdParser,
+                         WsdlParser, SchematronParser, DeclarationLineIndex, SchemaGraphJsonWriter,
+                         SchematronValidator, NodeKind / LinkLabel / *Vocabulary constants
   json/                  JsonWriter, JsonReader, JsonStrings, JsonKey
-src/main/resources/org/jtools/xsdviewer/   messages.properties (English), messages_fr.properties – server texts
-src/main/resources/web/   index.html, style.css, js/ (ES modules, one per concern), i18n/en.json, i18n/fr.json – the client, no framework
-src/test/java/            parser, JSON, command line and translation tests (samples/purchaseOrder.xsd)
-samples/                  purchaseOrder.xsd (one file), import/ (order.xsd + imported / included files),
-                          compare/ (two versions of a schema set, v1 and v2, with a workspace each: see its README)
+  Messages (+ MessageKey)  the texts of the parsers' and the server's messages, English and French
+core/src/main/resources/org/jtools/xsdviewer/   messages.properties, messages_fr.properties
+core/src/test/java/       parser, validator and JSON tests (against samples/)
+app/src/main/java/org/jtools/xsdviewer/
+  XsdViewerApplication   entry point: command line, server start-up, browser
+  CommandLineOptions, BrowserLauncher, Log, UserSettings
+  server/                XsdViewerServer (JDK com.sun.net.httpserver) + one handler per path,
+                         XmlValidator, FileDialogs (native dialog; kdialog / zenity on Linux)
+  workspace/             Workspace (the *.xsdviewer.json format)
+app/src/main/resources/web/   index.html, style.css, js/ (ES modules, one per concern), i18n/en.json, i18n/fr.json – the client, no framework
+app/src/test/java/        server, workspace, command line, log and translation tests; the page's contract
+app/src/test/js/          the tests of the page's pure modules (Node's test runner, run from Maven when Node is found)
+app/src/dist/, app/src/build/   the launchers of the distributions and the Ant file building them (dist profile)
+samples/                  one sample per thing the tool does: see samples/README.md
 ```
 
 The page is shown in the language chosen in the drop-list at the right of the top bar

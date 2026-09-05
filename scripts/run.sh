@@ -12,7 +12,7 @@
 set -euo pipefail
 
 cd "$(dirname "$(readlink -f "$0")")/.."
-JAR=target/xsdviewer.jar
+JAR=app/target/xsdviewer.jar
 
 rebuild=false
 args=()
@@ -26,7 +26,7 @@ done
 command -v java >/dev/null || { echo "java not found in PATH (Java 21 required)" >&2; exit 1; }
 
 # Rebuild when asked, when the jar is missing, or when any source is newer than it.
-if $rebuild || [ ! -f "$JAR" ] || [ -n "$(find pom.xml src -newer "$JAR" -print -quit)" ]; then
+if $rebuild || [ ! -f "$JAR" ] || [ -n "$(find pom.xml core app -name target -prune -o -newer "$JAR" -print -quit)" ]; then
   command -v mvn >/dev/null || { echo "mvn not found in PATH, cannot build $JAR" >&2; exit 1; }
   echo "== building $JAR"
   mvn -q package

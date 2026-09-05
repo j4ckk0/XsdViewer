@@ -5,12 +5,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.jtools</groupId>
-  <artifactId>xsdviewer</artifactId>
+  <artifactId>xsdviewer-parent</artifactId>
   <version>4.13.0</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
-  <name>XsdViewer</name>
-  <description>Web-based viewer for XML Schema files: graph of the schema objects and their links, plus the source text.</description>
+  <name>XsdViewer build</name>
+  <description>Explore XML Schema, WSDL and Schematron files in the browser: a library that parses them into a graph, and the server serving the page.</description>
   <url>https://github.com/j4ckk0/XsdViewer</url>
   <inceptionYear>2026</inceptionYear>
 
@@ -49,38 +49,81 @@
     <url>https://github.com/j4ckk0/XsdViewer/issues</url>
   </issueManagement>
 
+  <!-- Two modules: core, the library that parses a schema into a graph and validates a document,
+       with no dependency but the JDK; app, the server, the page and the distributions, which embeds
+       core in the one jar users run. -->
+  <modules>
+    <module>core</module>
+    <module>app</module>
+  </modules>
+
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jtools</groupId>
+        <artifactId>xsdviewer-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>5.8.2</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.8.2</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
-    <finalName>xsdviewer</finalName>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.13.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.2.5</version>
+          <configuration>
+            <!-- the tests read the samples and the page from the root of the repository, whichever module they belong to -->
+            <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.4.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.6.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>2.4.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.2.5</version>
-      </plugin>
-      <!-- Apache 2.0 header at the top of every Java source (same convention as the jtools projects) -->
+      <!-- Apache 2.0 header at the top of every Java source of every module (same convention as the jtools projects) -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
-        <version>2.4.0</version>
         <configuration>
           <verbose>false</verbose>
           <licenseName>apache_v2</licenseName>
@@ -107,182 +150,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.4.1</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>org.jtools.xsdviewer.XsdViewerApplication</mainClass>
-              <!-- Implementation-Version etc.: what Help > About shows -->
-              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <!--
-      mvn package -Pdist
-      Builds the self-contained distributions, each with a bundled JRE
-      (from jre/ at the root of the project) and a launcher script, in releases/:
-        releases/xsdviewer-<version>-windows.zip   xsdviewer.bat
-        releases/xsdviewer-<version>-linux.tar.gz  xsdviewer.sh
-        releases/xsdviewer-<version>.jar           copy of target/xsdviewer.jar
-    -->
-    <profile>
-      <!-- mvn package -Pdist (scripts/package.sh): the self-contained distributions. A trimmed runtime
-           per platform is made with jlink from the Temurin JDK archives found in jre/ (their jmods; see
-           README: Packaging) — only the platforms whose archive is there —, XsdViewer.exe with launch4j,
-           then the archives: src/build/runtimes.xml does the unpacking, the linking and the packing. -->
-      <id>dist</id>
-      <properties>
-        <jre.archives>${project.basedir}/jre</jre.archives>
-        <jdk.unpacked>${project.build.directory}/jdk</jdk.unpacked>
-        <jre.unpacked>${project.build.directory}/jre</jre.unpacked>
-        <!-- where the distributions land (git-ignored) -->
-        <dist.directory>${project.basedir}/releases</dist.directory>
-        <!-- what the runtimes hold: what the jar needs (jdeps, print-module-deps), java.xml said
-             explicitly, jdk.charsets for schema files in any encoding -->
-        <runtime.modules>java.base,java.desktop,java.logging,java.prefs,java.xml,jdk.httpserver,jdk.charsets</runtime.modules>
-      </properties>
-      <build>
-        <plugins>
-          <!-- Previous distributions (any version), the unpacked JDKs and the runtimes are removed
-               first, so that releases/ only ever holds the artefacts of this build. -->
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-clean-plugin</artifactId>
-            <version>3.2.0</version>
-            <executions>
-              <execution>
-                <id>clean-previous-distributions</id>
-                <phase>initialize</phase>
-                <goals>
-                  <goal>clean</goal>
-                </goals>
-                <configuration>
-                  <excludeDefaultDirectories>true</excludeDefaultDirectories>
-                  <filesets>
-                    <fileset>
-                      <directory>${dist.directory}</directory>
-                      <includes>
-                        <include>${project.artifactId}-*-windows.zip</include>
-                        <include>${project.artifactId}-*-linux.tar.gz</include>
-                        <include>${project.artifactId}-*-macos.tar.gz</include>
-                        <include>${project.artifactId}-*.jar</include>
-                      </includes>
-                    </fileset>
-                    <fileset>
-                      <directory>${project.build.directory}</directory>
-                      <includes>
-                        <include>XsdViewer.exe</include>
-                        <include>jdk/**</include>
-                        <include>jre/**</include>
-                        <include>dist/**</include>
-                      </includes>
-                    </fileset>
-                  </filesets>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <version>3.1.0</version>
-            <executions>
-              <execution>
-                <!-- the JDK archives unpacked, a runtime linked for each platform present -->
-                <id>runtimes</id>
-                <phase>prepare-package</phase>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <configuration>
-                  <target>
-                    <ant antfile="${project.basedir}/src/build/runtimes.xml" target="runtimes" inheritAll="false">
-                      <property name="jre.archives" value="${jre.archives}"/>
-                      <property name="jdk.unpacked" value="${jdk.unpacked}"/>
-                      <property name="jre.unpacked" value="${jre.unpacked}"/>
-                      <property name="runtime.modules" value="${runtime.modules}"/>
-                    </ant>
-                  </target>
-                </configuration>
-              </execution>
-              <execution>
-                <!-- the archives, after the jar and the exe -->
-                <id>distributions</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>run</goal>
-                </goals>
-                <configuration>
-                  <target>
-                    <copy file="${project.build.directory}/${project.build.finalName}.jar"
-                          tofile="${dist.directory}/${project.artifactId}-${project.version}.jar"/>
-                    <ant antfile="${project.basedir}/src/build/runtimes.xml" target="distributions" inheritAll="false">
-                      <property name="jre.archives" value="${jre.archives}"/>
-                      <property name="jdk.unpacked" value="${jdk.unpacked}"/>
-                      <property name="jre.unpacked" value="${jre.unpacked}"/>
-                      <property name="dist.directory" value="${dist.directory}"/>
-                      <property name="dist.name" value="${project.artifactId}-${project.version}"/>
-                      <property name="jar" value="${project.build.directory}/${project.build.finalName}.jar"/>
-                      <property name="exe" value="${project.build.directory}/XsdViewer.exe"/>
-                      <property name="basedir.project" value="${project.basedir}"/>
-                      <property name="work" value="${project.build.directory}/dist"/>
-                    </ant>
-                  </target>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <!-- XsdViewer.exe: a Windows launcher without a console (GUI subsystem) that runs the
-                 bundled jre\ with xsdviewer.jar; built from any OS. xsdviewer.bat keeps the console. -->
-            <groupId>com.akathist.maven.plugins.launch4j</groupId>
-            <artifactId>launch4j-maven-plugin</artifactId>
-            <version>2.7.0</version>
-            <executions>
-              <execution>
-                <id>windows-launcher</id>
-                <phase>prepare-package</phase>
-                <goals>
-                  <goal>launch4j</goal>
-                </goals>
-                <configuration>
-                  <headerType>gui</headerType>
-                  <outfile>${project.build.directory}/XsdViewer.exe</outfile>
-                  <dontWrapJar>true</dontWrapJar>
-                  <jar>xsdviewer.jar</jar>
-                  <chdir>.</chdir>
-                  <errTitle>XsdViewer</errTitle>
-                  <jre>
-                    <path>jre</path>
-                    <requiresJdk>false</requiresJdk>
-                    <requires64Bit>true</requires64Bit>
-                    <minVersion>21</minVersion>
-                  </jre>
-                  <versionInfo>
-                    <fileVersion>${project.version}.0</fileVersion>
-                    <txtFileVersion>${project.version}</txtFileVersion>
-                    <fileDescription>XsdViewer - web-based viewer for XML Schema files</fileDescription>
-                    <copyright>jtools.org</copyright>
-                    <productVersion>${project.version}.0</productVersion>
-                    <txtProductVersion>${project.version}</txtProductVersion>
-                    <productName>XsdViewer</productName>
-                    <internalName>xsdviewer</internalName>
-                    <originalFilename>XsdViewer.exe</originalFilename>
-                  </versionInfo>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
