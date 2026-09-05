@@ -55,7 +55,7 @@ class SchemaGraphJsonWriterTest {
         g.edges.add(new SchemaGraph.Edge("element:a", "builtin:int", "n", new SchemaGraph.Cardinality(0, SchemaGraph.Cardinality.UNBOUNDED)));
         assertEquals("{\"targetNamespace\":\"urn:t\","
                 + "\"imports\":[{\"tag\":\"include\",\"namespace\":\"\",\"schemaLocation\":\"b.xsd\"}],"
-                + "\"nodes\":[{\"id\":\"element:a\",\"kind\":\"element\",\"name\":\"a\",\"ns\":\"urn:t\",\"line\":3,\"doc\":\"doc \\\"quoted\\\"\"}],"
+                + "\"nodes\":[{\"id\":\"element:a\",\"kind\":\"element\",\"name\":\"a\",\"ns\":\"urn:t\",\"line\":3,\"endLine\":0,\"doc\":\"doc \\\"quoted\\\"\"}],"
                 + "\"edges\":[{\"from\":\"element:a\",\"to\":\"builtin:string\",\"label\":\"type\"},"
                 + "{\"from\":\"element:a\",\"to\":\"builtin:int\",\"label\":\"n\",\"min\":0,\"max\":-1}]}", g.toJson());
     }

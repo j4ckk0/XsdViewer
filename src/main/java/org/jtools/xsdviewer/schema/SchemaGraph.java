@@ -113,26 +113,31 @@ public final class SchemaGraph {
      * {@code xpath}: the expression a Schematron rule or assertion is made of (its context, its test), empty otherwise;
      * {@code content} and {@code attributes}: the content model of an element's anonymous type, a complexType, a group, an attributeGroup.
      */
-    public record Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values, List<String> members, String xpath,
-                       List<Particle> content, List<Attribute> attributes) {
+    public record Node(String id, String kind, String name, String ns, int line, int endLine, String doc, List<Value> values, List<String> members,
+                       String xpath, List<Particle> content, List<Attribute> attributes) {
+        /** A node whose declaration is nowhere in this file: a built-in, or an object of another schema. */
         public Node(String id, String kind, String name, String ns, int line, String doc) {
-            this(id, kind, name, ns, line, doc, List.of(), List.of(), "", List.of(), List.of());
+            this(id, kind, name, ns, line, 0, doc, List.of(), List.of(), "", List.of(), List.of());
         }
 
-        public Node(String id, String kind, String name, String ns, int line, String doc, List<Value> values) {
-            this(id, kind, name, ns, line, doc, values, List.of(), "", List.of(), List.of());
+        public Node(String id, String kind, String name, String ns, int line, int endLine, String doc) {
+            this(id, kind, name, ns, line, endLine, doc, List.of(), List.of(), "", List.of(), List.of());
+        }
+
+        public Node(String id, String kind, String name, String ns, int line, int endLine, String doc, List<Value> values) {
+            this(id, kind, name, ns, line, endLine, doc, values, List.of(), "", List.of(), List.of());
         }
 
         public Node withMembers(List<String> members) {
-            return new Node(id, kind, name, ns, line, doc, values, members, xpath, content, attributes);
+            return new Node(id, kind, name, ns, line, endLine, doc, values, members, xpath, content, attributes);
         }
 
         public Node withXpath(String xpath) {
-            return new Node(id, kind, name, ns, line, doc, values, members, xpath, content, attributes);
+            return new Node(id, kind, name, ns, line, endLine, doc, values, members, xpath, content, attributes);
         }
 
         public Node withContent(List<Particle> content, List<Attribute> attributes) {
-            return new Node(id, kind, name, ns, line, doc, values, members, xpath, content, attributes);
+            return new Node(id, kind, name, ns, line, endLine, doc, values, members, xpath, content, attributes);
         }
     }
 

@@ -54,9 +54,10 @@ export const session = {
   /**
    * The comparison: a place of its own on the workspace bar, not a view of a file nor a workspace.
    * {@code open}: its chip is there; {@code shown}: it is the place being read, the active tab
-   * staying where the reader left it; {@code section}: which of its two comparisons is drawn.
+   * staying where the reader left it; {@code section}: which of its two comparisons is drawn;
+   * {@code view}: how the Objects section draws the two sides, the comparison's own and never a tab's.
    */
-  comparison: { open: false, shown: false, section: COMPARE_SECTION.OBJECTS },
+  comparison: { open: false, shown: false, section: COMPARE_SECTION.OBJECTS, view: VIEW.MODEL },
   /** The two declarations its Declarations section draws, one per side; either may be null. */
   compared: { left: null, right: null },
   /** The boxes it draws folded, by the trail {@code model-diff.js} gives them; kept while the two sides do not change. */

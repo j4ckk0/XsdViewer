@@ -37,18 +37,30 @@ const DERIVATION_ARROW_LENGTH = 16;
 
 const shorten = (s, max) => (s.length > max ? s.slice(0, max - 1) + ELLIPSIS : s);
 
-export function renderGraph() {
-  const st = session.active;
-  const canvas = $(ID.GRAPH_CANVAS);
-  if (!st.selected) { canvas.innerHTML = ''; return; }
+/**
+ * Draws the graph around the declaration {@code st.selected} of a place — the active tab, or one
+ * side of the comparison — into {@code canvas}. The Links and Types menus, being the reader's
+ * choice of what a graph shows, apply wherever one is drawn.
+ *
+ * @param st       the place read: its nodes, its link indexes, its workspace and its selection
+ * @param canvas   where the SVG goes, and whose size the layout is spread over
+ * @param options  {@code toolbar}: false where the graph has no toolbar of its own (the comparison);
+ *                 {@code markOf(node, edge)}: the class marking a row, for a graph drawn beside another
+ */
+export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), options = {}) {
+  if (!st || !st.selected) { canvas.innerHTML = ''; return; }
   const center = st.nodes.get(st.selected);
+  if (!center) { canvas.innerHTML = ''; return; }
   const depth = $(ID.TWO_LEVELS).checked ? 2 : 1;
-  $(ID.GRAPH_TITLE).textContent = t(MSG.GRAPH_NODE_TITLE, kindLabel(center.kind), center.name);
+  const markOf = options.markOf || (() => '');
   // the family the shown file belongs to: a WSDL's service objects, a Schematron's rules, or (null) a schema's own
   const family = isWsdl(st.model) ? FAMILY.WSDL : isSchematron(st.model) ? FAMILY.SCHEMATRON : null;
-  $(ID.GRAPH_LEGEND).classList.toggle(CLS.WSDL, family === FAMILY.WSDL);
-  $(ID.GRAPH_LEGEND).classList.toggle(CLS.SCHEMATRON, family === FAMILY.SCHEMATRON);
-  renderGraphFilters(family);
+  if (options.toolbar !== false) {
+    $(ID.GRAPH_TITLE).textContent = t(MSG.GRAPH_NODE_TITLE, kindLabel(center.kind), center.name);
+    $(ID.GRAPH_LEGEND).classList.toggle(CLS.WSDL, family === FAMILY.WSDL);
+    $(ID.GRAPH_LEGEND).classList.toggle(CLS.SCHEMATRON, family === FAMILY.SCHEMATRON);
+    renderGraphFilters(family);
+  }
   const visible = (n) => !!n && isKindShown(n.kind);
   /** A row is drawn when its node is and its link is of a category the Links menu keeps. */
   const shownLink = (n, e, fromKind, toKind) => visible(n) && isLinkShown(e, fromKind, toKind);
@@ -147,12 +159,12 @@ export function renderGraph() {
     const shown = r.resolved ? r.resolved.n : r.n;
     edges.push(curve(cx + NODE_W / 2, cy, xR1, y, r.edge, linkFamily(center.kind, shown.kind)));
     nodes.push(r.resolved
-      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge }, fileKind(r.resolved.n, r.resolved.place)))
-      : nodeSvg(r.n, xR1, y - NODE_H / 2, false, { link: r.edge }));
+      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge, mark: markOf(r.n, r.edge) }, fileKind(r.resolved.n, r.resolved.place)), st)
+      : nodeSvg(r.n, xR1, y - NODE_H / 2, false, { link: r.edge, mark: markOf(r.n, r.edge) }, st));
     r.children.forEach((c, k) => {
       const yc = first + k * ROW;
       edges.push(curve(xR1 + NODE_W, y, xR2, yc, c.edge, linkFamily(shown.kind, c.n.kind)));
-      nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, rowOpt(c)));
+      nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, rowOpt(c), st));
     });
     row += spanR(r);
   }
@@ -160,7 +172,7 @@ export function renderGraph() {
   left.forEach((l, i) => {
     const y = yOf(i, leftRows);
     edges.push(curve(xLeft + NODE_W, y, cx - NODE_W / 2, cy, l.edge, linkFamily(l.n.kind, center.kind)));
-    nodes.push(nodeSvg(l.n, xLeft, y - NODE_H / 2, false, rowOpt(l)));
+    nodes.push(nodeSvg(l.n, xLeft, y - NODE_H / 2, false, Object.assign(rowOpt(l), { mark: markOf(l.n, l.edge) }), st));
   });
   // self reference (recursive type)
   if (selfLabels.length) {
@@ -170,7 +182,7 @@ export function renderGraph() {
       + ' ' + (cx + SELF_LOOP_SPREAD) + ',' + top + '"/>');
     labels.push(textWithBg(cx, top - SELF_LABEL_LIFT, selfLabels.join(TEXT.LIST_SEPARATOR)));
   }
-  nodes.push(nodeSvg(center, cx - NODE_W / 2, cy - NODE_H / 2, true));
+  nodes.push(nodeSvg(center, cx - NODE_W / 2, cy - NODE_H / 2, true, null, st));
 
   svg += edges.join('') + labels.join('') + nodes.join('') + '</svg>';
   const hadFocus = canvas.contains(document.activeElement);
@@ -238,14 +250,14 @@ const linkTitle = (edge) => edge.label + (cardinalityText(edge) ? ' ' + cardinal
   + (edge.compositor ? ' (' + edge.compositor + ')' : '');
 
 /** @param opts {id} selected on click, {place} where the node lives when it is another file's (a tab or a listed file), {kindText} replaces the kind, {link} the edge captioned above the node */
-function nodeSvg(n, x, y, isCenter, opts) {
+function nodeSvg(n, x, y, isCenter, opts, st = session.active) {
   const o = opts || {};
   const name = shorten(n.name, isCenter ? NAME_MAX_CHARS_CENTER : NAME_MAX_CHARS);
   const kindText = o.kindText || kindLabel(n.kind);
   const caption = o.link ? captionSvg(o.link) : '';
   const values = n.values || [];   // a declaration that enumerates its values says how many
-  return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + '" tabindex="0" role="button" aria-label="' + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + '"' + dataAttr(DATA.ID, o.id || n.id)
-    + placeAttributes(o.place, session.active.workspace, dataAttr, DATA) + ' transform="translate(' + x + ',' + y + ')">'
+  return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + (o.mark ? ' ' + o.mark : '') + '" tabindex="0" role="button" aria-label="' + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + '"' + dataAttr(DATA.ID, o.id || n.id)
+    + placeAttributes(o.place, st.workspace, dataAttr, DATA) + ' transform="translate(' + x + ',' + y + ')">'
     + '<title>' + (o.link ? esc(linkTitle(o.link)) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name))
     + (values.length ? '\n' + esc(t(MSG.GRAPH_VALUES, values.length, values.slice(0, ENUM_VALUES_SHOWN).map(v => v.value).join(TEXT.LIST_SEPARATOR))) : '')
     + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'

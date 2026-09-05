@@ -851,6 +851,17 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 #objectCompareBody .cobj-head { padding: 6px 10px; font-weight: 600; font-size: 12px; background: var(--panel); border-bottom: 1px solid var(--border); }
 #objectCompareBody .cobj-canvas { flex: 1; overflow: auto; }
 #objectCompareBody .cobj-canvas svg { display: block; }
+
+/* a graph drawn beside another: the links only this side has, marked as the models mark their boxes */
+#objectCompareBody .node.del rect { fill: var(--diff-del-bg); stroke: var(--diff-del-fg); }
+#objectCompareBody .node.ins rect { fill: var(--diff-ins-bg); stroke: var(--diff-ins-fg); }
+
+/* the text view of the two declarations: the names side by side over one area scrolling both sources */
+#objectCompareBody.astext { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(0, 1fr); column-gap: 12px; }
+#objectCompareBody.astext .cobj { border: none; border-radius: 0; }
+#objectCompareBody.astext .cobj-head { border: 1px solid var(--border); border-radius: 6px 6px 0 0; }
+#objectCompareBody.astext .cobj-canvas { display: none; }
+#objectCompareBody.astext #objectCompareText { grid-column: 1 / -1; overflow: auto; min-height: 0; }
 .mhandle { cursor: pointer; }
 .mhandle rect { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1; }
 .mhandle:hover rect { fill: var(--hover); }

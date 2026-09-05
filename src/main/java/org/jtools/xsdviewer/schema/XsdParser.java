@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
+import org.jtools.xsdviewer.schema.DeclarationLineIndex.Span;
 import org.jtools.xsdviewer.schema.DeclarationLineIndex.Tag;
 import org.jtools.xsdviewer.schema.SchemaGraph.Cardinality;
 import org.w3c.dom.Element;
@@ -52,7 +53,10 @@ final class XsdParser {
     private final SchemaGraph graph;
     /** What a name stands for, and the links waiting for the end of the file: {@link References}. */
     private final References refs;
-    private final Map<String, Integer> lines;
+    /** The declarations this file does not write: a built-in, or an object of another schema. */
+    static final Span NOWHERE = new Span(0, 0);
+
+    private final Map<String, Span> lines;
     /** The names of the elements and attributes met inside each declaration, by owner id (for the search). */
     private final Map<String, Set<String>> members = new HashMap<>();
     /** The element declaring each xs:key / xs:unique, by the key's name: what a keyref refers to. */
@@ -67,8 +71,13 @@ final class XsdParser {
         return refs;
     }
 
-    /** A parser adding to {@code graph}; {@code lines}: the line of each declaration by node id (see {@link DeclarationLineIndex}). */
-    XsdParser(SchemaGraph graph, Map<String, Integer> lines) {
+    /** Where the declaration of {@code id} is written, or nowhere for a node the file does not declare. */
+    private Span spanOf(String id) {
+        return lines.getOrDefault(id, NOWHERE);
+    }
+
+    /** A parser adding to {@code graph}; {@code lines}: the lines each declaration spans, by node id (see {@link DeclarationLineIndex}). */
+    XsdParser(SchemaGraph graph, Map<String, Span> lines) {
         this.graph = graph;
         this.refs = new References(graph);
         this.lines = lines;
@@ -113,8 +122,9 @@ final class XsdParser {
             if (isGlobalDeclaration(c)) {
                 String name = c.getAttribute(XsdVocabulary.ATTR_NAME);
                 String id = SchemaGraph.nodeId(ln, name);
+                Span span = spanOf(id);
                 graph.nodes.put(id, new SchemaGraph.Node(id, ln, name, targetNamespace,
-                        lines.getOrDefault(id, 0), documentation(c), enumeration(c)));
+                        span.start(), span.end(), documentation(c), enumeration(c)));
             }
         }
 

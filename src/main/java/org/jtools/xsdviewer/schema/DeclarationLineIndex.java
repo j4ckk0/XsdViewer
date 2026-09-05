@@ -52,15 +52,20 @@ final class DeclarationLineIndex {
         String of(List<Tag> path);
     }
 
+    /** The lines a declaration spans: where its start tag opens and where its end tag closes (the same line when it is self-closed). */
+    record Span(int start, int end) {}
+
     private DeclarationLineIndex() {}
 
-    static Map<String, Integer> build(String text, DeclarationId idOf) throws Exception {
+    static Map<String, Span> build(String text, DeclarationId idOf) throws Exception {
         int[] lineStarts = lineStarts(text);
-        Map<String, Integer> result = new HashMap<>();
+        Map<String, Span> result = new HashMap<>();
 
         SecureXmlFactories.newSaxParser().parse(new InputSource(new StringReader(text)), new DefaultHandler() {
             private Locator locator;
             private final List<Tag> path = new ArrayList<>();
+            /** The declaration each depth opened, so the matching end tag closes the right one; null where a tag declares nothing. */
+            private final List<String> open = new ArrayList<>();
 
             @Override
             public void setDocumentLocator(Locator l) { locator = l; }
@@ -69,36 +74,51 @@ final class DeclarationLineIndex {
             public void startElement(String uri, String localName, String qName, Attributes attrs) {
                 path.add(new Tag(uri, localName, attrs.getValue(XsdVocabulary.ATTR_NAME)));
                 String id = idOf.of(path);
-                if (id == null || locator == null) return;
-                result.putIfAbsent(id, startTagLine(text, lineStarts, locator));
+                boolean first = id != null && locator != null && !result.containsKey(id);
+                if (first) result.put(id, new Span(startTagLine(text, lineStarts, locator), 0));
+                open.add(first ? id : null);
             }
 
             @Override
-            public void endElement(String uri, String localName, String qName) { path.remove(path.size() - 1); }
+            public void endElement(String uri, String localName, String qName) {
+                path.remove(path.size() - 1);
+                String id = open.remove(open.size() - 1);
+                // the locator points just past the '>' of the end tag, which is where the declaration stops
+                if (id != null && locator != null) result.put(id, new Span(result.get(id).start(), locator.getLineNumber()));
+            }
         });
         return result;
     }
 
     /**
-     * The line where every element's start tag opens, in document order (the root first): for a
-     * vocabulary whose declarations carry no name, the parser finds a node's line by the rank of its
-     * element, the same in its DOM walk as here.
+     * The lines every element spans, in document order (the root first): for a vocabulary whose
+     * declarations carry no name, the parser finds a node's lines by the rank of its element, the
+     * same in its DOM walk as here.
      */
-    static int[] elementLines(String text) throws Exception {
+    static List<Span> elementSpans(String text) throws Exception {
         int[] lineStarts = lineStarts(text);
-        List<Integer> result = new ArrayList<>();
+        List<Span> result = new ArrayList<>();
         SecureXmlFactories.newSaxParser().parse(new InputSource(new StringReader(text)), new DefaultHandler() {
             private Locator locator;
+            /** The rank of each element still open, its end tag not read yet. */
+            private final List<Integer> open = new ArrayList<>();
 
             @Override
             public void setDocumentLocator(Locator l) { locator = l; }
 
             @Override
             public void startElement(String uri, String localName, String qName, Attributes attrs) {
-                result.add(locator == null ? 0 : startTagLine(text, lineStarts, locator));
+                open.add(result.size());
+                result.add(new Span(locator == null ? 0 : startTagLine(text, lineStarts, locator), 0));
+            }
+
+            @Override
+            public void endElement(String uri, String localName, String qName) {
+                int rank = open.remove(open.size() - 1);
+                if (locator != null) result.set(rank, new Span(result.get(rank).start(), locator.getLineNumber()));
             }
         });
-        return result.stream().mapToInt(Integer::intValue).toArray();
+        return result;
     }
 
     /** A place in the text, 1-based. */

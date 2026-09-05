@@ -93,6 +93,8 @@ export const ID = {
   OBJECT_COMPARE_SWAP: 'objectCompareSwap',
   OBJECT_COMPARE_EMPTY: 'objectCompareEmpty',
   OBJECT_COMPARE_BODY: 'objectCompareBody',
+  OBJECT_COMPARE_FOLDS: 'objectCompareFolds',
+  OBJECT_COMPARE_TEXT: 'objectCompareText',
   OBJECT_COMPARE_LEFT: 'objectCompareLeft',
   OBJECT_COMPARE_RIGHT: 'objectCompareRight',
   OBJECT_COMPARE_LEFT_NAME: 'objectCompareLeftName',
@@ -157,6 +159,8 @@ export const CLS = {
   ACTIVE: 'active',
   /** A menu entry that is a switch, currently on (its .check mark is shown). */
   CHECKED: 'checked',
+  /** The Objects section drawing its two sides as text: the two names over one scrolling diff. */
+  AS_TEXT: 'astext',
   SELECTED: 'selected',
   COLLAPSED: 'collapsed',
   VIEW: 'view',

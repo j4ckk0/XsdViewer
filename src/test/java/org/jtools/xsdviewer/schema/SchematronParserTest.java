@@ -197,7 +197,7 @@ class SchematronParserTest {
     @Test
     void jsonCarriesTheExpression() {
         String json = model.toJson();
-        assertTrue(json.contains("\"id\":\"assert:PO-001\",\"kind\":\"assert\",\"name\":\"PO-001\",\"ns\":\"\",\"line\":23,\"doc\":\"[error] An order names both a shipping and a billing address.\",\"xpath\":\"po:shipTo and po:billTo\"}"), json);
-        assertFalse(json.contains("\"id\":\"phase:basic\",\"kind\":\"phase\",\"name\":\"basic\",\"ns\":\"\",\"line\":8,\"doc\":\"The structural checks only: what a quick import needs.\",\"xpath\""), "no xpath key without an expression");
+        assertTrue(json.contains("\"id\":\"assert:PO-001\",\"kind\":\"assert\",\"name\":\"PO-001\",\"ns\":\"\",\"line\":23,\"endLine\":23,\"doc\":\"[error] An order names both a shipping and a billing address.\",\"xpath\":\"po:shipTo and po:billTo\"}"), json);
+        assertFalse(json.contains("\"id\":\"phase:basic\",\"kind\":\"phase\",\"name\":\"basic\",\"ns\":\"\",\"line\":8,\"endLine\":11,\"doc\":\"The structural checks only: what a quick import needs.\",\"xpath\""), "no xpath key without an expression");
     }
 }

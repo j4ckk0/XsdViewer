@@ -52,6 +52,7 @@ public final class SchemaGraphJsonWriter {
                     .property(JsonKey.NAME, n.name())
                     .property(JsonKey.NS, n.ns())
                     .property(JsonKey.LINE, n.line())
+                    .property(JsonKey.END_LINE, n.endLine())
                     .property(JsonKey.DOC, n.doc());
             if (!n.xpath().isEmpty()) w.property(JsonKey.XPATH, n.xpath());
             if (!n.members().isEmpty()) {

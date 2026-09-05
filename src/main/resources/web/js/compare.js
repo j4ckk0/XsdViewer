@@ -155,7 +155,7 @@ export async function toggleDetail(row) {
   if (!row.isConnected) return;   // the table was redrawn meanwhile
   const detail = document.createElement('tr');
   detail.className = CLS.COMPARE_DETAIL;
-  detail.innerHTML = '<td colspan="4">' + schemaDiffHtml(pair) + textDiffHtml(pair) + '</td>';
+  detail.innerHTML = '<td colspan="4">' + schemaDiffHtml(pair) + textDiffHtml(lineDiff(pair)) + '</td>';
   row.after(detail);
 }
 
@@ -185,9 +185,11 @@ function schemaDiffHtml(pair) {
 /**
  * Side by side, one row per line pair (original line numbers); long identical runs folded; moved blocks in their own colour.
  * One table per side, each scrolling sideways on its own: the rows are one line high on both sides, so they stay aligned.
+ *
+ * @param diff  {la, lb, ops}: the lines of each side ({n, text}) and the edit script turning one into the other
+ * @param fold  whether long identical runs are folded, as two whole files need; a block of a few lines is shown whole
  */
-function textDiffHtml(pair) {
-  const { la, lb, ops } = lineDiff(pair);
+export function textDiffHtml({ la, lb, ops }, fold = true) {
   if (!ops) return '<p class="' + CLS.META + '">' + esc(t(MSG.COMPARE_TEXT_TOO_LARGE)) + '</p>';
   const row = (rowCls, lines, i, cls, op) => {
     const moved = op && op.moved;
@@ -195,7 +197,8 @@ function textDiffHtml(pair) {
     return '<tr class="' + rowCls + '"><td class="' + CLS.LINE_NUMBER + '"' + (note ? ' title="' + esc(note) + '"' : '') + '>' + (i == null ? '' : lines[i].n) + '</td>'
       + '<td class="' + CLS.CODE + (cls ? ' ' + cls : '') + (moved ? ' ' + CLS.MOVED : '') + '">' + esc(i == null ? '' : lines[i].text) + '</td></tr>';
   };
-  const keep = isDiffOnly() ? CONTEXT_LINES : FOLD_KEEP, foldAbove = isDiffOnly() ? 2 * CONTEXT_LINES : FOLD_ABOVE;
+  const keep = isDiffOnly() ? CONTEXT_LINES : FOLD_KEEP;
+  const foldAbove = fold ? (isDiffOnly() ? 2 * CONTEXT_LINES : FOLD_ABOVE) : Infinity;
   let left = '', right = '';
   const equal = (op) => { left += row(CLS.EQUAL, la, op.a); right += row(CLS.EQUAL, lb, op.b); };
   let i = 0;

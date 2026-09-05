@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jtools.xsdviewer.schema.DeclarationLineIndex.Span;
 import org.jtools.xsdviewer.schema.DeclarationLineIndex.Tag;
 import org.w3c.dom.Element;
 
@@ -46,11 +47,11 @@ final class WsdlParser {
 
     private final SchemaGraph graph = new SchemaGraph();
     private final XsdParser xsd;
-    private final Map<String, Integer> lines;
+    private final Map<String, Span> lines;
     /** The bindings declared here, by name: the port of a service reaches the portType through its binding. */
     private final Map<String, Element> bindings = new HashMap<>();
 
-    private WsdlParser(Map<String, Integer> lines) {
+    private WsdlParser(Map<String, Span> lines) {
         this.lines = lines;
         this.xsd = new XsdParser(graph, lines);
     }
@@ -186,7 +187,8 @@ final class WsdlParser {
     }
 
     private void node(String id, String kind, String name, String ns, Element decl) {
-        graph.nodes.put(id, new SchemaGraph.Node(id, kind, name, ns, lines.getOrDefault(id, 0), documentation(decl)));
+        Span span = lines.getOrDefault(id, XsdParser.NOWHERE);
+        graph.nodes.put(id, new SchemaGraph.Node(id, kind, name, ns, span.start(), span.end(), documentation(decl)));
     }
 
     private static String localPart(String qname) {

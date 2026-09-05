@@ -464,7 +464,10 @@ opens on the one the selection is ready for: **Files** when two workspace chips 
 bar, **Objects** otherwise.
 
 **Objects** — two declarations side by side, wherever each of them lives: two versions of the
-same type in two workspaces, or two types that merely resemble one another. The details panel of a
+same type in two workspaces, or two types that merely resemble one another. This section has the
+**Model / Text / Graph** switch of the top bar, which here draws the two declarations rather than a
+file, and the comparison remembers its own choice: switching there leaves every workspace tab where
+its reader left it. The details panel of a
 declaration fills one side from its **Compare view** section: **◈ Left side** or **◈ Right side**,
 chosen, so which side a declaration lands on is never a matter of the order things were picked in;
 the button of the side holding it is coloured, and clicking that side again takes it off. **⇄ Swap**
@@ -475,7 +478,18 @@ changed, and a summary counting them. The boxes are matched by what each one is 
 it sits, so an element inserted on one side does not mark everything below it as different; named
 types are opened on both sides, so a change deep inside one is seen. Any box holding something
 carries a handle that puts it aside, and folding one folds the box matching it on the other side;
-**⊞** / **⊟** open and fold them all. **⤓ PNG** / **⤓ SVG** save the two models as one picture.
+**⊞** / **⊟** open and fold them all. **⤓ PNG** / **⤓ SVG** save the two drawings as one picture.
+
+In **Text**, each side shows the source of its declaration alone — from its opening tag to its
+closing tag, with the line numbers it has in its file — the two aligned line by line and what differs
+marked. The lines are matched on their shape rather than their spacing, so the same declaration
+written at another depth still matches line for line; what is shown is the source as it is written.
+
+In **Graph**, each side shows the neighbourhood of its declaration — what it leads to, what uses it —
+with the links the other side does not have marked: red on the left, green on the right. A link
+counts as the same when its name, its target and its cardinality are, so an element that became
+required, or a maxOccurs that changed, marks both sides. The **Links** and **Types** menus of the
+graph view apply here too, being the reader's choice of what a graph shows.
 
 **Files** — two workspaces compared file by file. **Ctrl+click** two workspace chips to select them
 (orange ring; **Clear the selection** in the section's header drops it): this section then lists

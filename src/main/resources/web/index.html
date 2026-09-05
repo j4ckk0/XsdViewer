@@ -234,7 +234,7 @@
       <div id="objectCompareHeader">
         <div><span id="objectCompareTitle"></span><br><span id="objectCompareSummary" class="muted"></span></div>
         <span id="objectCompareLegend" class="legend"></span>
-        <span class="panel-tools"><button id="objectCompareExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="objectCompareCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span>
+        <span id="objectCompareFolds" class="panel-tools"><button id="objectCompareExpandAll" class="panel-toggle" type="button" data-i18n-title="tree.expandAll">⊞</button><button id="objectCompareCollapseAll" class="panel-toggle" type="button" data-i18n-title="tree.collapseAll">⊟</button></span>
         <button id="objectCompareSwap" type="button" class="menubtn" data-i18n="objectCompare.swap" data-i18n-title="objectCompare.swap.title">⇄ Swap</button>
         <button id="objectCompareClear" type="button" class="menubtn" data-i18n="objectCompare.clear" data-i18n-title="objectCompare.clear.title">Clear the marks</button>
       </div>
@@ -242,6 +242,8 @@
       <div id="objectCompareBody" class="hidden">
         <div class="cobj"><div class="cobj-head" id="objectCompareLeftName"></div><div class="cobj-canvas" id="objectCompareLeft"></div></div>
         <div class="cobj"><div class="cobj-head" id="objectCompareRightName"></div><div class="cobj-canvas" id="objectCompareRight"></div></div>
+        <!-- the text view: the two sources under the two names, one scrolling area so the lines stay side by side -->
+        <div id="objectCompareText" class="hidden"></div>
       </div>
     </div>
     <div id="compare" class="csection hidden">

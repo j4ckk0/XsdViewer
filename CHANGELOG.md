@@ -2,6 +2,11 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 4.10.0 — 2026-09-05
+
+- **The comparison draws its two declarations as Model, Text or Graph.** The **Model / Text / Graph** switch of the top bar comes back while the Objects section is read, and acts on the comparison: it keeps a view of its own, so switching there leaves every workspace tab where its reader left it. **Text** shows the source of each declaration alone, from its opening tag to its closing tag, the two aligned line by line with what differs marked — lines matched on their shape rather than their spacing, so the same declaration written at another depth still matches. **Graph** shows the neighbourhood of each, the links the other side does not have marked red on the left and green on the right; a link counts as the same when its name, its target and its cardinality are. The header says what the drawn view found: boxes, lines or links. **⤓ PNG** / **⤓ SVG** save the two drawings as one picture, the text view drawing none.
+- The parser records where a declaration ends as well as where it starts, which is what lets the source of one be read on its own.
+
 ## 4.9.0 — 2026-09-05
 
 - **Fix: the language selector left the right end of the top bar in the comparison.** The controls of that end are pushed right as a group, and what carried the push was the Model / Text / Graph tabs — hidden in the comparison, which is a place of its own and has no views. The whole group, tabs, exports and language, now holds the right edge whichever of them is hidden.

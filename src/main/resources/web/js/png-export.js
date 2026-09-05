@@ -76,8 +76,9 @@ function comparedName() {
 }
 
 /**
- * The two models of the Compare view as one picture: each cropped to what it draws, side by side,
- * under the heading its pane carries, so the image says which side is which. Null when either is missing.
+ * The two drawings of the comparison as one picture — the content models, or the neighbourhoods:
+ * each cropped to what it draws, side by side, under the heading its pane carries, so the image says
+ * which side is which. Null when either is missing, the text view drawing none.
  */
 function compareSvg() {
   const sides = [[ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME], [ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME]]

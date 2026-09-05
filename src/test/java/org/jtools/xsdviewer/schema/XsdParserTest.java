@@ -356,6 +356,27 @@ class XsdParserTest {
     }
 
     @Test
+    void aDeclarationSpansFromItsStartTagToItsEndTag() throws Exception {
+        // the lines a declaration covers: what the comparison reads to show two of them as text
+        SchemaGraph m = SchemaParser.parse("""
+                <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:s">
+                  <xs:complexType name="T">
+                    <xs:sequence>
+                      <xs:element name="a" type="xs:string"/>
+                    </xs:sequence>
+                  </xs:complexType>
+                  <xs:element name="e" type="xs:string"/>
+                </xs:schema>""");
+        SchemaGraph.Node type = m.nodes.get("complexType:T");
+        assertEquals(2, type.line());
+        assertEquals(6, type.endLine());
+        SchemaGraph.Node element = m.nodes.get("element:e");   // self-closed: it starts and ends on its line
+        assertEquals(7, element.line());
+        assertEquals(7, element.endLine());
+        assertEquals(0, m.nodes.get("builtin:string").endLine());   // not declared here
+    }
+
+    @Test
     void contentModelsNameWhatTheLinksName() {
         assertContentNamesLinkedNodes(model);
     }

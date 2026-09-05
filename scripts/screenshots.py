@@ -386,6 +386,76 @@ SCENES = [
                  'heads': 'complexType ProductType — product.xsd, v1|complexType ProductType — product.xsd, v2',
                  'marks': '1/3/6', 'boxesOpen': 22, 'boxesFolded': 8, 'boxesAllFolded': 2, 'kept': 8, 'reopened': 22,
                  'guidance': 'Put a declaration on eac'}),   # what only each side has, what changed, and the folding
+    dict(name='compare-text', file='samples/compare/v1.xsdviewer.json', theme='light',
+         # the comparison shows its two declarations as text: their source, line beside line
+         action=OPEN_V2 + DECLARATIONS
+                + "const pick = (w, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "pick('v1', 'left'); pick('v2', 'right');"
+                + DECLARATIONS
+                + "await new Promise(r => setTimeout(r, 400));"
+                "document.getElementById('toast').classList.add('hidden');"
+                "document.querySelector('#viewTabs .tab[data-view=\"text\"]').click();"
+                "await new Promise(r => setTimeout(r, 300));",
+         checks={'viewTabs': "document.getElementById('viewTabs').classList.contains('hidden')",
+                 'active': "document.querySelector('#viewTabs .tab.active').textContent",
+                 'summary': "document.getElementById('objectCompareSummary').textContent",
+                 'chips': "document.querySelectorAll('#objectCompareLegend .lg').length",
+                 'sides': "document.querySelectorAll('#objectCompareText .cside table.diff').length",
+                 'rows': "document.querySelectorAll('#objectCompareText .cside:first-child tr').length",
+                 'deleted': "document.querySelectorAll('#objectCompareText td.code.del').length",
+                 'inserted': "document.querySelectorAll('#objectCompareText td.code.ins').length",
+                 'firstLine': "document.querySelector('#objectCompareText .cside td.ln').textContent",
+                 'folds': "document.getElementById('objectCompareFolds').classList.contains('hidden')",
+                 'heads': "[...document.querySelectorAll('#objectCompareBody .cobj-head')].map(h => h.textContent).join('|')"},
+         # ProductType spans lines 13-25 in both files; four of its lines differ (minOccurs of description,
+         # legacyCode against weight, maxOccurs of tag, use of category)
+         expect={'viewTabs': False, 'active': 'Text', 'summary': '4 lines only on the left, 4 only on the right', 'chips': 2, 'sides': 2, 'rows': 13, 'deleted': 4, 'inserted': 4,
+                 'firstLine': '13', 'folds': True,
+                 'heads': 'complexType ProductType — product.xsd, v1|complexType ProductType — product.xsd, v2'}),
+    dict(name='compare-graph', file='samples/compare/v1.xsdviewer.json', theme='light',
+         # the comparison shows the neighbourhood of each declaration, the links only one side has marked
+         action=OPEN_V2 + DECLARATIONS
+                + "const pick = (w, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "pick('v1', 'left'); pick('v2', 'right');"
+                + DECLARATIONS
+                + "await new Promise(r => setTimeout(r, 400));"
+                "document.getElementById('toast').classList.add('hidden');"
+                "const view = (v) => document.querySelector('#viewTabs .tab[data-view=\"' + v + '\"]').click();"
+                "const count = (sel) => document.querySelectorAll(sel).length;"
+                "view('graph');"
+                "await new Promise(r => setTimeout(r, 300));"
+                "window.__graphs = count('#objectCompareBody .cobj-canvas svg');"
+                "window.__center = document.querySelector('#objectCompareLeft .node.center text').textContent;"
+                "window.__onlyLeft = count('#objectCompareLeft .node.del');"
+                "window.__onlyRight = count('#objectCompareRight .node.ins');"
+                "window.__unmarked = count('#objectCompareLeft .node:not(.del):not(.center)');"
+                "window.__summary = document.getElementById('objectCompareSummary').textContent;"
+                "window.__chips = count('#objectCompareLegend .lg');"
+                "window.__folds = document.getElementById('objectCompareFolds').classList.contains('hidden');"
+                # and back to the models, which the comparison draws again as it did
+                "view('model');"
+                "await new Promise(r => setTimeout(r, 300));",
+         checks={'active': "document.querySelector('#viewTabs .tab.active').textContent",
+                 'graphs': "window.__graphs", 'leftCenter': "window.__center",
+                 'onlyLeft': "window.__onlyLeft", 'onlyRight': "window.__onlyRight", 'unmarked': "window.__unmarked",
+                 'summary': "window.__summary", 'chips': "window.__chips", 'folds': "window.__folds",
+                 'boxesBack': "document.querySelectorAll('#objectCompareBody .mbox').length",
+                 'textGone': "document.getElementById('objectCompareText').classList.contains('hidden')",
+                 'foldsBack': "document.getElementById('objectCompareFolds').classList.contains('hidden')"},
+         # the four links the other side does not have are the four the text view shows as changed lines:
+         # description (optional against required), legacyCode, tag (0..* against 0..10), category (optional against required)
+         expect={'active': 'Model', 'graphs': 2, 'leftCenter': 'ProductType',
+                 'onlyLeft': 4, 'onlyRight': 4, 'unmarked': 5,
+                 'summary': '4 links only on the left, 4 only on the right', 'chips': 2, 'folds': True,
+                 'boxesBack': 22, 'textGone': True, 'foldsBack': False}),
     dict(name='compare-sides', file='samples/compare/v1.xsdviewer.json', theme='light',
          # each side is chosen: filling one, taking it off, clearing both, swapping
          action=OPEN_V2 + "const state = await import('/js/state.js');"

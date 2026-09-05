@@ -44,7 +44,7 @@ export function renderPage() {
   renderNavigation();
   if (st.validation) renderValidation();
   if (session.comparison.shown) renderComparison();
-  showView(st.view);
+  showView(currentView());
   $(ID.TEXT).scrollTop = st.scroll.text;
   $(ID.GRAPH_CANVAS).scrollTop = st.scroll.graphTop;
   $(ID.GRAPH_CANVAS).scrollLeft = st.scroll.graphLeft;
@@ -52,22 +52,28 @@ export function renderPage() {
   $(ID.MODEL_CANVAS).scrollLeft = st.scroll.modelLeft;
 }
 
+/** The view being read: the comparison's own while it is the place shown, else the active tab's. */
+export const currentView = () => (session.comparison.shown ? session.comparison.view : session.active.view);
+
 /**
- * Shows one of the views of the active tab's file (VIEW.GRAPH / VIEW.MODEL / VIEW.TEXT), unless the
- * comparison or a validation is the place being read: those take the whole page, having no file.
+ * Shows one of the views (VIEW.MODEL / VIEW.TEXT / VIEW.GRAPH), of the active tab's file or of the
+ * two declarations the comparison holds — the comparison keeps a view of its own, so switching there
+ * leaves every tab where its reader left it. A validation takes the whole page and has no view.
  */
 export function showView(view) {
   const st = session.active;
-  st.view = view;
-  document.querySelectorAll(selector(CLS.VIEW_TAB)).forEach(b => b.classList.toggle(CLS.ACTIVE, b.dataset[DATA.VIEW] === view));
   const comparing = session.comparison.shown, elsewhere = comparing || !!st.validation;   // no file is being read
+  if (comparing) session.comparison.view = view; else st.view = view;
+  document.querySelectorAll(selector(CLS.VIEW_TAB)).forEach(b => b.classList.toggle(CLS.ACTIVE, b.dataset[DATA.VIEW] === view));
   const loaded = !!st.model;
+  // the comparison draws two declarations in its Objects section; its Files section is a list of file pairs
+  const objects = comparing && session.comparison.section === COMPARE_SECTION.OBJECTS;
   $(ID.COMPARISON).classList.toggle(CLS.HIDDEN, !comparing);
   $(ID.COMPARE).classList.toggle(CLS.HIDDEN, !comparing || session.comparison.section !== COMPARE_SECTION.FILES);
   $(ID.OBJECT_COMPARE).classList.toggle(CLS.HIDDEN, !comparing || session.comparison.section !== COMPARE_SECTION.OBJECTS);
   $(ID.VALIDATION).classList.toggle(CLS.HIDDEN, !st.validation || comparing);
   $(ID.TABBAR).classList.toggle(CLS.HIDDEN, comparing);   // the comparison holds no file, so it has no tabs
-  $(ID.VIEW_TABS).classList.toggle(CLS.HIDDEN, elsewhere);
+  $(ID.VIEW_TABS).classList.toggle(CLS.HIDDEN, comparing ? !objects : !!st.validation);
   $(ID.SIDEBAR).classList.toggle(CLS.HIDDEN, elsewhere);
   $(ID.EMPTY).classList.toggle(CLS.HIDDEN, loaded || elsewhere);
   $(ID.GRAPH).classList.toggle(CLS.HIDDEN, !loaded || elsewhere || view !== VIEW.GRAPH);
@@ -75,12 +81,12 @@ export function showView(view) {
   $(ID.TEXT).classList.toggle(CLS.HIDDEN, !loaded || elsewhere || view !== VIEW.TEXT);
   $(ID.TEXT_FIND).classList.toggle(CLS.HIDDEN, !loaded || elsewhere || view !== VIEW.TEXT);
   $(ID.DETAILS).classList.toggle(CLS.HIDDEN, !loaded || elsewhere);
-  // the comparison exports its two models as one picture, so it needs two to draw rather than a file
-  const objects = comparing && session.comparison.section === COMPARE_SECTION.OBJECTS;
-  const nothingToExport = st.validation || (comparing ? !objects || !comparedPair() : !loaded);
+  // the comparison exports its two drawings as one picture, so it needs two to draw rather than a file
+  const drawn = ZOOMABLE_VIEWS.has(view);   // the model and the graph are SVGs; the text is not drawn
+  const nothingToExport = st.validation || (comparing ? !objects || !drawn || !comparedPair() : !loaded);
   $(ID.EXPORT_BUTTON).disabled = nothingToExport;
   $(ID.EXPORT_SVG_BUTTON).disabled = nothingToExport || (!comparing && view === VIEW.TEXT);
-  $(ID.ZOOM_CONTROLS).classList.toggle(CLS.HIDDEN, objects ? !comparedPair() : elsewhere || !ZOOMABLE_VIEWS.has(view) || !loaded);
+  $(ID.ZOOM_CONTROLS).classList.toggle(CLS.HIDDEN, objects ? !drawn || !comparedPair() : elsewhere || !drawn || !loaded);
   updateSplitters();
   $(ID.MENU_VALIDATE).disabled = !canValidate();
   $(ID.MENU_OPEN_ALL).disabled = elsewhere || !listedOnly().length;

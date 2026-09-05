@@ -22,12 +22,14 @@ package org.jtools.xsdviewer.schema;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
+import org.jtools.xsdviewer.schema.DeclarationLineIndex.Span;
 import org.w3c.dom.Element;
 
 /**
@@ -61,8 +63,8 @@ final class SchematronParser {
     private record Pending(String from, String to, String label) {}
 
     private final SchemaGraph graph = new SchemaGraph();
-    private final int[] lines;
-    /** The rank of each element in document order: its line is {@code lines[rank]}. */
+    private final List<Span> lines;
+    /** The rank of each element in document order: the lines it spans are {@code lines.get(rank)}. */
     private final Map<Element, Integer> ranks = new IdentityHashMap<>();
     private final List<Pending> pending = new ArrayList<>();
     private final Set<String> ids = new HashSet<>();
@@ -70,18 +72,18 @@ final class SchematronParser {
     private final Map<Element, String> elementIds = new IdentityHashMap<>();
     private int patterns;
 
-    private SchematronParser(int[] lines) {
+    private SchematronParser(List<Span> lines) {
         this.lines = lines;
     }
 
     /** The graph of a Schematron file: {@code root} is its root element, {@code text} the file (for the line numbers). */
     static SchemaGraph parse(Element root, String text) throws Exception {
-        return parse(root, new SchematronParser(DeclarationLineIndex.elementLines(text))).graph;
+        return parse(root, new SchematronParser(DeclarationLineIndex.elementSpans(text))).graph;
     }
 
     /** The node id of each declaring element of {@code root} (phases, patterns, rules, assertions, diagnostics), without line numbers. */
     static Map<Element, String> elementIds(Element root) {
-        return parse(root, new SchematronParser(new int[0])).elementIds;
+        return parse(root, new SchematronParser(List.of())).elementIds;
     }
 
     private static SchematronParser parse(Element root, SchematronParser parser) {
@@ -100,9 +102,10 @@ final class SchematronParser {
         for (Element c : XsdParser.children(e)) rank(c);
     }
 
-    private int line(Element e) {
+    /** The lines the element spans, or nowhere when the SAX pass did not reach it. */
+    private Span span(Element e) {
         Integer rank = ranks.get(e);
-        return rank == null || rank >= lines.length ? 0 : lines[rank];
+        return rank == null || rank >= lines.size() ? XsdParser.NOWHERE : lines.get(rank);
     }
 
     /** A child of the schema (or a fragment's root). */
@@ -216,7 +219,8 @@ final class SchematronParser {
     private String node(String kind, String key, String name, Element decl, String doc, String xpath) {
         String id = SchemaGraph.nodeId(kind, key);
         for (int n = 2; !ids.add(id); n++) id = SchemaGraph.nodeId(kind, key + DUPLICATE_MARK + n);
-        graph.nodes.put(id, new SchemaGraph.Node(id, kind, name, "", line(decl), doc).withXpath(xpath));
+        Span span = span(decl);
+        graph.nodes.put(id, new SchemaGraph.Node(id, kind, name, "", span.start(), span.end(), doc).withXpath(xpath));
         elementIds.put(decl, id);
         return id;
     }
