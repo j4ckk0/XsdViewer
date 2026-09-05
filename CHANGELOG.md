@@ -2,6 +2,11 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 5.0.1 — 2026-09-05
+
+- **The Compare group of the details panel says what each side already holds.** A side button is drawn hollow and dashed in its colour when it holds another object — still a click away, and its tooltip names what would be replaced — beside the filled look of the side holding the object being read, and the plain look of a free one.
+- The group speaks of an **object** rather than a declaration, in its hint and in the three tooltips: what a side holds may be an element, a type, a service or a rule.
+
 ## 5.0.0 — 2026-09-05
 
 XsdViewer becomes two things: the application it has always been, and a library and an HTTP API a

@@ -46,6 +46,7 @@ export const MSG = {
   OBJECT_SIDE_RIGHT: 'object.side.right',
   OBJECT_MARK_TITLE: 'object.mark.title',
   OBJECT_MARK_OFF_TITLE: 'object.mark.off.title',
+  OBJECT_MARK_TAKEN_TITLE: 'object.mark.taken.title',
   COMPARE_OBJECT_SAME: 'compare.object.same',
   COMPARE_OBJECT_SUMMARY: 'compare.object.summary',
   COMPARE_OBJECT_ABSENT: 'compare.object.absent',

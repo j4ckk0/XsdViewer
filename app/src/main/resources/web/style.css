@@ -822,6 +822,11 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .cobj-mark:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
 .cobj-mark.marked.left { border-color: var(--diff-del-fg); color: var(--diff-del-fg); background: var(--diff-del-bg); font-weight: 600; }
 .cobj-mark.marked.right { border-color: var(--diff-ins-fg); color: var(--diff-ins-fg); background: var(--diff-ins-bg); font-weight: 600; }
+/* the side holds another object: its colour, but hollow and dashed — a click is still allowed, and replaces what is there */
+.cobj-mark.taken { border-style: dashed; background: none; }
+.cobj-mark.taken.left { border-color: var(--diff-del-fg); color: var(--diff-del-fg); }
+.cobj-mark.taken.right { border-color: var(--diff-ins-fg); color: var(--diff-ins-fg); }
+.cobj-mark.taken:hover { background: var(--hover); }
 
 /* the comparison: a place of its own on the workspace bar, holding its two sections */
 .wsgroup.cmpchip .wsname { background: var(--surface); border: 1px dashed var(--accent); color: var(--accent); }

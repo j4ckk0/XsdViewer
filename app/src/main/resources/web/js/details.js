@@ -1,7 +1,7 @@
 /** The right panel, under the schema header (sidebar.js): the selected object, its expression (a Schematron rule's context, an assertion's test), its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
 import { cardinalityText, isOptional } from './cardinality.js';
-import { NODE_KIND, STORAGE_KEY } from './constants.js';
-import { SIDE, SIDES, sideOf } from './comparison-state.js';
+import { NODE_KIND, STORAGE_KEY, TEXT, kindOfId, nameOfId } from './constants.js';
+import { SIDE, SIDES, heldBy, sideOf } from './comparison-state.js';
 import { placeAttributes, usersInWorkspace } from './declaration-lookup.js';
 import { $, dataAttr, esc } from './dom.js';
 import { CLS, DATA, ID } from './dom-names.js';
@@ -61,10 +61,25 @@ function renderCompareGroup(n) {
   const label = { [SIDE.LEFT]: MSG.OBJECT_MARK_LEFT, [SIDE.RIGHT]: MSG.OBJECT_MARK_RIGHT };
   const sideName = { [SIDE.LEFT]: MSG.OBJECT_SIDE_LEFT, [SIDE.RIGHT]: MSG.OBJECT_SIDE_RIGHT };
   $(ID.COMPARE_SIDES).innerHTML = '<div class="' + CLS.META + '">' + esc(t(MSG.DETAILS_COMPARE_HINT)) + '</div>'
-    + '<div class="' + CLS.MARK_BUTTONS + '">' + SIDES.map(side =>
-      '<button class="' + CLS.MARK_BUTTON + ' ' + side + (on === side ? ' ' + CLS.MARKED : '') + '" type="button"'
-      + dataAttr(DATA.SIDE, side) + ' title="' + esc(t(on === side ? MSG.OBJECT_MARK_OFF_TITLE : MSG.OBJECT_MARK_TITLE, t(sideName[side]))) + '">'
-      + esc(t(label[side])) + '</button>').join('') + '</div>';
+    + '<div class="' + CLS.MARK_BUTTONS + '">' + SIDES.map(side => sideButton(side, on === side, t(sideName[side]), t(label[side]))).join('') + '</div>';
+}
+
+/** What a side holds, named as the comparison names it: the object, then the file it was read from. */
+const heldName = (mark) => t(MSG.MODEL_TITLE, kindLabel(kindOfId(mark.id)), nameOfId(mark.id)) + TEXT.TOAST_SEPARATOR + mark.fileName;
+
+/**
+ * One side's button, in one of its three states: it holds the object being read (coloured, a click
+ * takes it off), it holds another one (marked as taken, and its tooltip says which — a click puts
+ * this object there instead), or it is free.
+ */
+function sideButton(side, isThisOne, sideName, label) {
+  const held = heldBy(side);
+  const taken = !isThisOne && !!held;
+  const title = isThisOne ? t(MSG.OBJECT_MARK_OFF_TITLE, sideName)
+    : taken ? t(MSG.OBJECT_MARK_TAKEN_TITLE, sideName, heldName(held))
+      : t(MSG.OBJECT_MARK_TITLE, sideName);
+  return '<button class="' + CLS.MARK_BUTTON + ' ' + side + (isThisOne ? ' ' + CLS.MARKED : taken ? ' ' + CLS.TAKEN : '') + '" type="button"'
+    + dataAttr(DATA.SIDE, side) + ' title="' + esc(title) + '">' + esc(label) + '</button>';
 }
 
 /** The Compare group folds to its title line; unfolded until the user folds it once. */

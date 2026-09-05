@@ -24,6 +24,9 @@ const markOf = (tab, id) => ({ tab, ws: tab.workspace, entry: tab.file, fileName
 
 const holds = (mark, tab, id) => !!mark && mark.tab === tab && mark.id === id;
 
+/** What a side holds, or null: the declaration itself, wherever it lives. */
+export const heldBy = (side) => session.compared[side];
+
 /** The side holding this declaration, or null: what the details panel says of it. */
 export const sideOf = (tab, id) => SIDES.find(side => holds(session.compared[side], tab, id)) || null;
 

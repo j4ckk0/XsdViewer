@@ -535,6 +535,29 @@ SCENES = [
          # lines 13-16 fold to one row with a line of context on each side; the left graph keeps its centre and the 4 marked links
          expect={'allBoxes': 22, 'diffBoxes': 14, 'sameBoxes': 4, 'textRows': 12, 'textFolds': 1,
                  'graphNodes': 5, 'graphNodesAll': 10, 'boxesBack': 22, 'remembered': '0'}),
+    dict(name='compare-side-states', file='samples/compare/v1.xsdviewer.json', theme='light',
+         # a side button in its three states: free, holding this object, holding another one
+         action=OPEN_V2 + "window.addEventListener('error', e => { window.__err = e.message; });"
+                "const buttons = () => [...document.querySelectorAll('#compareSides .cobj-mark')].map(b => b.className + '|' + b.title).join(' ~~ ');"
+                "[...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes('v1')).click();"
+                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "window.__free = buttons();"
+                "document.querySelector('#compareSides .cobj-mark.left').click();"
+                "window.__mine = buttons();"
+                # another object of the same file — the product element: the left side now holds something else
+                "document.querySelector('#nodeList .item[data-id=\"element:product\"]').click();"
+                "window.__other = buttons();",
+         checks={'free': "window.__free", 'mine': "window.__mine", 'other': "window.__other",
+                 'takenIsClickable': "!document.querySelector('#compareSides .cobj-mark.taken').disabled"},
+         expect={'free': 'cobj-mark left|Draw this object on the left side of the comparison'
+                         ' ~~ cobj-mark right|Draw this object on the right side of the comparison',
+                 'mine': 'cobj-mark left marked|The left side of the comparison holds this object: click to take it off'
+                         ' ~~ cobj-mark right|Draw this object on the right side of the comparison',
+                 # another object read: the side is marked as taken and its tooltip says by what, and it still takes a click
+                 'other': 'cobj-mark left taken|The left side holds complexType ProductType — product.xsd: click to put this object there instead'
+                          ' ~~ cobj-mark right|Draw this object on the right side of the comparison',
+                 'takenIsClickable': True}),
     dict(name='compare-sides', file='samples/compare/v1.xsdviewer.json', theme='light',
          # each side is chosen: filling one, taking it off, clearing both, swapping
          action=OPEN_V2 + "const state = await import('/js/state.js');"

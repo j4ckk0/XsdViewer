@@ -199,8 +199,10 @@ export const CLS = {
   /** In the details panel: the pair of buttons putting the selected declaration on one side of the comparison. */
   MARK_BUTTONS: 'cobj-sides',
   MARK_BUTTON: 'cobj-mark',
-  /** On that button when this declaration is one of the marked ones. */
+  /** On that button when this declaration is the one that side holds. */
   MARKED: 'marked',
+  /** On that button when the side holds another object: still a click away, but it would replace what is there. */
+  TAKEN: 'taken',
   /** A checkbox option of the comparison header. */
   OPTION: 'opt',
   /** On a splitter being dragged. */
