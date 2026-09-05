@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.jtools.xsdviewer.compare.LineDiff.Op;
-import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.model.Box;
 import org.jtools.xsdviewer.schema.SchemaGraph.Cardinality;
 
@@ -52,10 +51,6 @@ public final class ModelDiff {
         /** True when the two models hold nothing that differs. */
         public boolean same() {
             return changed == 0 && removed == 0 && added == 0;
-        }
-
-        public void write(JsonWriter w) {
-            w.beginObject().property(SAME, same).property(CHANGED, changed).property(REMOVED, removed).property(ADDED, added).endObject();
         }
 
         private void count(String mark) {

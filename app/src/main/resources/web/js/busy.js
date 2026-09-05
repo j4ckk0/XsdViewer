@@ -3,7 +3,8 @@
  * (opening files, reading a folder, parsing listed files, looking for linked schemas). Several
  * actions may run at once: the wheel stays until the last one ends, the label is the latest one's.
  */
-import { $, CLS, ID } from './dom.js';
+import { $ } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 
 /** Quick actions do not flash the wheel: it appears only when an action lasts longer than this. */
 const SHOW_DELAY_MS = 200;

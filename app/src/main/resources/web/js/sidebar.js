@@ -1,6 +1,7 @@
 /** The searchable list of objects by kind (left panel) and the schema header (namespace, imports, counts) at the top of the details panel (right). */
 import { KINDS, NODE_KIND, STORAGE_KEY } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { $, dataAttr, esc, selector } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { foldable } from './foldable.js';
 import { t } from './i18n.js';
 import { groupLabel } from './kind-labels.js';

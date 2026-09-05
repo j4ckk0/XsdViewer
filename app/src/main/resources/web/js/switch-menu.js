@@ -8,7 +8,8 @@
  */
 import { TEXT } from './constants.js';
 import { FAMILY } from './link-categories.js';
-import { $, CLS, selector } from './dom.js';
+import { $, selector } from './dom.js';
+import { CLS } from './dom-names.js';
 
 /**
  * @param button   id of the menu's button

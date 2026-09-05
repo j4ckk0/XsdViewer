@@ -1,5 +1,5 @@
 /**
- * Finding declarations across the whole workspace — its open tabs and its listed files, parsed in
+ * Looking declarations up across the whole workspace — its open tabs and its listed files, parsed in
  * the background but not open —: what an external placeholder resolves to, and who uses what.
  * A "place" is where a declaration lives: {tab} or {entry}, with {model, nodes, outEdges, inEdges, fileName} alike.
  */

@@ -5,7 +5,8 @@
  * laid out for the room they have, so {@code initPanels} is given what redraws the shown one.
  */
 import { KEY, PANEL, STORAGE_KEY } from './constants.js';
-import { $, CLS, ID } from './dom.js';
+import { $ } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 
 /** The two splitters: the panel each one sizes, on which side, and where its width is kept. */
 const SPLITTERS = [

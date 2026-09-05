@@ -1,11 +1,13 @@
 /** Moving the selection: within the file (with a back history) and across files, following links to external declarations. */
 import { NODE_KIND, TEXT } from './constants.js';
-import { findIn, findInWorkspace, kindsOf, locationsFor } from './declarations.js';
+import { findIn, findInWorkspace, kindsOf, locationsFor } from './declaration-lookup.js';
 import { renderDetails } from './details.js';
-import { $, ID } from './dom.js';
+import { $ } from './dom.js';
+import { ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
-import { renderMainView, renderPage } from './page.js';
+import { renderPage } from './page.js';
+import { renderMainView } from './view-router.js';
 import { ensureTab } from './file-tabs.js';
 import { resolveLocation } from './schema-loader.js';
 import { fileKeys, hasKey, registerFile } from './workspace-files.js';

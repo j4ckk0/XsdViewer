@@ -1,5 +1,6 @@
 /** Syntax colouring of XML text, without any parsing: comments, processing instructions, tags, attributes, values. */
-import { TOKEN_CLS, esc } from './dom.js';
+import { esc } from './dom.js';
+import { TOKEN_CLS } from './dom-names.js';
 
 const COMMENT_START = '<!--', COMMENT_END = '-->';
 const PI_START = '<?', PI_END = '?>';

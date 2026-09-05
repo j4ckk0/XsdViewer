@@ -1,11 +1,12 @@
 /** Wiring of the page's controls to the actions: menu, tabs, keyboard, drag and drop, clicks in the views. */
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
-import { $, CLS, DATA, ID, selector } from './dom.js';
+import { $, selector } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { closeAbout, showAbout } from './about.js';
-import { initOptions, rememberOptions, setAllDetails, toggleDetail } from './compare.js';
-import { clearSelection, toggleSelection } from './compare-selection.js';
-import { clearMarks, closeComparison, markSide, openComparison, showSection, swapSides } from './comparison.js';
-import { foldAll, initDiffOnly, rememberDiffOnly, toggleFolded } from './object-compare.js';
+import { initOptions, rememberOptions, setAllDetails, toggleDetail } from './files-section.js';
+import { clearSelection, toggleSelection } from './workspace-selection.js';
+import { clearMarks, closeComparison, markSide, openComparison, showSection, swapSides } from './comparison-state.js';
+import { foldAll, initDiffOnly, rememberDiffOnly, toggleFolded } from './objects-section.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { compareGroup, detailsPanel, renderDetails } from './details.js';
@@ -14,7 +15,8 @@ import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
 import { followExternal, goBack, jumpTo, select } from './navigation.js';
-import { renderComparison, renderComparedObjects, renderMainView, renderPage, showView } from './page.js';
+import { renderPage } from './page.js';
+import { renderComparison, renderComparedObjects, renderMainView, showView } from './view-router.js';
 import { zoomIn, zoomOut, zoomReset } from './zoom.js';
 import { exportPng, exportSvg } from './png-export.js';
 import { renderNodeList, schemaInfo, setAllGroupsExpanded, toggleGroup } from './sidebar.js';

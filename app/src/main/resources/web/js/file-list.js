@@ -5,7 +5,8 @@
  * and a last row counts the files still being parsed, whose objects are not searchable yet.
  */
 import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_KEY, TEXT } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { $, dataAttr, esc, selector } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { foldable } from './foldable.js';
 import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';

@@ -2,7 +2,8 @@
 import { chooseFiles, fetchInitialFile, quitServer } from './api.js';
 import { busy } from './busy.js';
 import { XML_FILE_PATTERN } from './constants.js';
-import { $, CLS, ID, esc } from './dom.js';
+import { $, esc } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { openLinkedSchemas } from './linked-schemas.js';
 import { MSG } from './message-keys.js';

@@ -2,7 +2,8 @@
  * The find bar of the Text view: the lines holding a text are marked, Enter / Shift+Enter walk them
  * (the current one scrolled into view), a count says where. Ctrl+F in the Text view focuses it.
  */
-import { $, CLS, ID, selector } from './dom.js';
+import { $, selector } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 
 let found = [];
 let current = -1;

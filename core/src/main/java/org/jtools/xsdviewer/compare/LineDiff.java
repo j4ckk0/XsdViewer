@@ -24,9 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jtools.xsdviewer.json.JsonKey;
-import org.jtools.xsdviewer.json.JsonWriter;
-
 /**
  * The line diff of two texts: the edit script turning the lines of one into the lines of the other
  * (a longest common subsequence, the common start and end trimmed first), with the moved blocks
@@ -54,18 +51,6 @@ public final class LineDiff {
             this.op = op;
             this.a = a;
             this.b = b;
-        }
-
-        public void write(JsonWriter w) {
-            w.beginObject().property(JsonKey.OP, String.valueOf(op));
-            if (a >= 0) w.property(JsonKey.A, a);
-            if (b >= 0) w.property(JsonKey.B, b);
-            if (moved) {
-                w.property(JsonKey.MOVED, true);
-                if (movedTo >= 0) w.property(JsonKey.MOVED_TO, movedTo);
-                if (movedFrom >= 0) w.property(JsonKey.MOVED_FROM, movedFrom);
-            }
-            w.endObject();
         }
     }
 

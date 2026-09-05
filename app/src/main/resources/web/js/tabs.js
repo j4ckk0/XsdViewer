@@ -1,7 +1,8 @@
-/** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. A tab shows a file, a comparison (compare.js) or a validation (validate.js). */
+/** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. A tab shows a file or a validation; the comparison is a place of its own on the workspace bar (comparison-state.js). */
 import { WORKSPACE_FILE_SUFFIX } from './constants.js';
-import { clearSelection, isSelected, pruneSelection } from './compare-selection.js';
-import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { clearSelection, isSelected, pruneSelection } from './workspace-selection.js';
+import { $, dataAttr, esc, selector } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { renderFileList } from './file-list.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';

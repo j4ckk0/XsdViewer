@@ -1,6 +1,7 @@
 /** The text view: the schema source with line numbers, syntax colours and the selected declaration highlighted. */
 import { VIEW } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { $, dataAttr, esc, selector } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';

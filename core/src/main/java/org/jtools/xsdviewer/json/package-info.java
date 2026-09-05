@@ -1,0 +1,28 @@
+/**
+ * Writing and reading the JSON the page and the HTTP API speak, without a library.
+ *
+ * <p>{@link org.jtools.xsdviewer.json.JsonWriter} builds it, {@link org.jtools.xsdviewer.json.JsonReader}
+ * parses it, and {@link org.jtools.xsdviewer.json.JsonKey} holds every key both sides agree on — the
+ * contract the page's {@code js/constants.js} mirrors.
+ */
+package org.jtools.xsdviewer.json;
+
+/*-
+ * #%L
+ * XsdViewer core
+ * %%
+ * Copyright (C) 2026 jtools.org
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */

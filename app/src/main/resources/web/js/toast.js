@@ -1,5 +1,6 @@
 import { ServerUnreachableError } from './api.js';
-import { $, CLS, ID } from './dom.js';
+import { $ } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 

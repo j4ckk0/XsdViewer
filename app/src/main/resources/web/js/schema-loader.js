@@ -1,7 +1,8 @@
 /** Getting a schema into a tab: parsing through the server, indexing, and finding the files links point to. */
 import { ServerUnreachableError, locateFile, openLocation, parseSchema } from './api.js';
 import { REMOTE_LOCATION_MARK } from './constants.js';
-import { $, ID } from './dom.js';
+import { $ } from './dom.js';
+import { ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { findInLibrary } from './folder-library.js';
 import { MSG } from './message-keys.js';

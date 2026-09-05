@@ -5,8 +5,9 @@
  * The Text view is not a drawing: {@link text-export.js} paints it.
  */
 import { MIME, SVG_NS, VIEW, nameOfId } from './constants.js';
-import { $, ID } from './dom.js';
-import { comparedPair } from './comparison.js';
+import { $ } from './dom.js';
+import { ID } from './dom-names.js';
+import { comparedPair } from './comparison-state.js';
 import { saveBlob } from './file-download.js';
 import { exportTextPng } from './text-export.js';
 import { t } from './i18n.js';

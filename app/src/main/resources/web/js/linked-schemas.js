@@ -8,7 +8,7 @@ import { MAX_AUTO_OPEN, TEXT } from './constants.js';
 import { ensureTab } from './file-tabs.js';
 import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
-import { renderMainView } from './page.js';
+import { renderMainView } from './view-router.js';
 import { resolveLocation } from './schema-loader.js';
 import { renderNavigation } from './tabs.js';
 import { toast } from './toast.js';

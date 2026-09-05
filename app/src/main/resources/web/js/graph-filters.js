@@ -5,7 +5,7 @@
  * menus say what its links may lead to.
  */
 import { KINDS, STORAGE_KEY } from './constants.js';
-import { DATA, ID } from './dom.js';
+import { DATA, ID } from './dom-names.js';
 import { LINK_CATEGORIES, linkCategory } from './link-categories.js';
 import { switchMenu } from './switch-menu.js';
 

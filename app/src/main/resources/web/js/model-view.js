@@ -20,7 +20,8 @@
 import { NODE_KIND, PARTICLE, SVG_NS, TEXT, isSchematron, isWsdl } from './constants.js';
 import { FAMILY, familyOf } from './link-categories.js';
 import { cardinalityText, isOptional } from './cardinality.js';
-import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { $, dataAttr, esc, selector } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { fetchModel } from './api.js';
 import { tabSide, libraryKey } from './model-requests.js';
 import { toast } from './toast.js';
@@ -158,7 +159,7 @@ export function renderModel() {
   if (!st.model || !st.selected) { canvas.innerHTML = ''; return; }
   const key = requestKey(st);
   if (st.modelTree && st.modelTree.key === key) { draw(st, st.modelTree.tree); return; }
-  canvas.dataset[DATA.LOADING] = DATA.LOADING;
+  canvas.dataset[DATA.LOADING] = key;
   fetchModel(Object.assign(tabSide(st, st.selected), { expanded: [...st.modelExpanded] }))
     .then(tree => {
       if (session.active !== st || requestKey(st) !== key) return;
@@ -167,7 +168,7 @@ export function renderModel() {
       applyZoom();   // a new SVG, which takes the tab's level
     })
     .catch(e => toast(e.message))
-    .finally(() => { if (requestKey(session.active) === key) delete canvas.dataset[DATA.LOADING]; });
+    .finally(() => { if (canvas.dataset[DATA.LOADING] === key) delete canvas.dataset[DATA.LOADING]; });   // a later request has its own key and clears its own mark
 }
 
 function draw(st, tree) {

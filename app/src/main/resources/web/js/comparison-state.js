@@ -1,5 +1,5 @@
 /**
- * The comparison: a place of its own on the workspace bar, not a view of a file nor a workspace. It
+ * The state of the comparison: a place of its own on the workspace bar, not a view of a file nor a workspace. It
  * holds two sections — the Objects one comparing two declarations, the Files one comparing two
  * workspaces — and, for its Objects section, a view of its own (model, text or graph), so switching
  * there leaves every tab's view where its reader left it.
@@ -11,8 +11,8 @@
  * pair: they are forgotten whenever a side changes.
  */
 import { COMPARE_SECTION, VIEW } from './constants.js';
-import { clearSelection, canCompare } from './compare-selection.js';
-import { placeOfEntry } from './declarations.js';
+import { clearSelection, canCompare } from './workspace-selection.js';
+import { placeOfEntry } from './declaration-lookup.js';
 import { session } from './state.js';
 
 /** The two sides, each holding one declaration or nothing. */
@@ -27,7 +27,7 @@ const holds = (mark, tab, id) => !!mark && mark.tab === tab && mark.id === id;
 /** The side holding this declaration, or null: what the details panel says of it. */
 export const sideOf = (tab, id) => SIDES.find(side => holds(session.compared[side], tab, id)) || null;
 
-/** The boxes of the drawn models put aside, by the trail model-diff.js gives each box. */
+/** The boxes of the drawn models put aside, by the trail the server gives each box. */
 export const foldedBoxes = () => session.comparedFolded;
 
 /** Puts a declaration on one side, replacing what that side held; clicking the side it already holds takes it off. */

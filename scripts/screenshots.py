@@ -43,7 +43,7 @@ ACTION_DELAY_MS = 1500    # the longest the scene's script waits for the page to
 # workspaces selected: what the Files section of the comparison compares
 OPEN_V2 = ("const names = ['common.xsd', 'catalog.xsd', 'product.xsd', 'shipping.xsd'];"
            "const files = await Promise.all(names.map(async n => new File([await (await fetch('/__sample/samples/compare/v2/' + n)).text()], n)));"
-           "const wa = await import('/js/workspace-actions.js'), st = await import('/js/state.js'), cmp = await import('/js/compare-selection.js'), pg = await import('/js/page.js');"
+           "const wa = await import('/js/workspace-actions.js'), st = await import('/js/state.js'), cmp = await import('/js/workspace-selection.js'), pg = await import('/js/page.js');"
            "await wa.openBrowserFolder(files, f => 'v2/' + f.name, 'v2');"
            "for (const ws of st.session.workspaces) cmp.toggleSelection(ws);"
            "pg.renderPage();")

@@ -6,10 +6,11 @@
  */
 import { COMPOSITOR, ID_SEPARATOR, LINK_LABEL, NODE_KIND, SVG_NS, TEXT, isSchematron, isWsdl } from './constants.js';
 import { FAMILY, STRUCTURAL_LINK_LABELS, familyOf, isDerivation, labelFamily, linkFamily } from './link-categories.js';
-import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declarations.js';
+import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declaration-lookup.js';
 import { isKindShown, isLinkShown, renderGraphFilters } from './graph-filters.js';
 import { cardinalityText, isOptional } from './cardinality.js';
-import { $, CLS, DATA, ID, SVG_ID, dataAttr, esc, selector } from './dom.js';
+import { $, dataAttr, esc, selector } from './dom.js';
+import { CLS, DATA, ID, SVG_ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';

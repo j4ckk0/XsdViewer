@@ -1,6 +1,7 @@
 /** What the server can do for the page (native dialogs, its language and versions), and the menu entries that depend on it. */
 import { fetchCapabilities } from './api.js';
-import { $, ID } from './dom.js';
+import { $ } from './dom.js';
+import { ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';

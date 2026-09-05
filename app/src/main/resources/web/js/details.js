@@ -1,9 +1,10 @@
 /** The right panel, under the schema header (sidebar.js): the selected object, its expression (a Schematron rule's context, an assertion's test), its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
 import { cardinalityText, isOptional } from './cardinality.js';
 import { NODE_KIND, STORAGE_KEY } from './constants.js';
-import { SIDE, SIDES, sideOf } from './comparison.js';
-import { placeAttributes, usersInWorkspace } from './declarations.js';
-import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
+import { SIDE, SIDES, sideOf } from './comparison-state.js';
+import { placeAttributes, usersInWorkspace } from './declaration-lookup.js';
+import { $, dataAttr, esc } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { GLYPHS, foldable } from './foldable.js';
 import { updateSplitters } from './panels.js';
 import { t } from './i18n.js';

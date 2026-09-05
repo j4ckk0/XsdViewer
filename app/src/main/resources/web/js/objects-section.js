@@ -1,5 +1,5 @@
 /**
- * The Objects section of the comparison: the two declarations {@code comparison.js} holds, drawn
+ * The Objects section of the comparison, a view: the two declarations {@code comparison-state.js} holds, drawn
  * side by side the way the comparison's own view asks. The comparing itself is the server's
  * ({@code POST /api/compare/declarations}, {@code POST /api/compare/texts}): this module asks, keeps
  * the answer for the pair drawn last, and draws. Each view is one entry of {@link VIEWS}: what it draws
@@ -19,10 +19,11 @@
 import { compareDeclarations, compareTexts } from './api.js';
 import { DIFF, OP, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW, kindOfId, nameOfId } from './constants.js';
 import { cardinalityText } from './cardinality.js';
-import { textDiffHtml } from './compare.js';
-import { SIDES, comparedPair, foldedBoxes, placeOf } from './comparison.js';
+import { textDiffHtml } from './files-section.js';
+import { SIDES, comparedPair, foldedBoxes, placeOf } from './comparison-state.js';
 import { declarationLines } from './declaration-source.js';
-import { $, CLS, ID, esc, legendHtml } from './dom.js';
+import { $, esc, legendHtml } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 import { ensureModel } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { t } from './i18n.js';

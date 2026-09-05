@@ -7,7 +7,8 @@
  * across sessions, being a way of looking at what is on screen rather than a setting.
  */
 import { ZOOM } from './constants.js';
-import { $, ID } from './dom.js';
+import { $ } from './dom.js';
+import { ID } from './dom-names.js';
 import { session } from './state.js';
 
 const PERCENT = 100;

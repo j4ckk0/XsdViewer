@@ -5,7 +5,8 @@
  * <html>, which the stylesheet's palette reads; js/theme-boot.js stamps it before anything is drawn.
  */
 import { STORAGE_KEY, THEME } from './constants.js';
-import { $, ID } from './dom.js';
+import { $ } from './dom.js';
+import { ID } from './dom-names.js';
 import { translate } from './i18n.js';
 import { MSG } from './message-keys.js';
 

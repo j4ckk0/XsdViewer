@@ -8,7 +8,8 @@
 import { chooseFiles, openLocation, validateXml } from './api.js';
 import { busy } from './busy.js';
 import { ALL_PHASES, ID_SEPARATOR, NODE_KIND, PROBLEM_SEVERITY, PROBLEM_SOURCE, SCHEMATRON_FILE_PATTERN, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, XSD_ONLY_FILE_PATTERN, isSchematron, isWsdl, kindOfId } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { $, dataAttr, esc, selector } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { plural, t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';

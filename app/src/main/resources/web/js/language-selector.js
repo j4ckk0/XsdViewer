@@ -2,7 +2,8 @@
 import { applyCapabilities } from './capabilities.js';
 import { compareGroup, detailsPanel } from './details.js';
 import { filesPanel } from './file-list.js';
-import { $, ID, esc } from './dom.js';
+import { $, esc } from './dom.js';
+import { ID } from './dom-names.js';
 import { availableLanguages, language, setLanguage } from './i18n.js';
 import { renderPage } from './page.js';
 import { schemaInfo } from './sidebar.js';

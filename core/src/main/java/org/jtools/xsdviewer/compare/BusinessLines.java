@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jtools.xsdviewer.json.JsonKey;
-import org.jtools.xsdviewer.json.JsonWriter;
-
 /**
  * The "business" lines of a schema text: what remains once XML comments and xs:annotation blocks
  * (documentation, appinfo) are removed, the wiring tags dropped (the XML declaration, the xs:schema
@@ -37,11 +34,7 @@ import org.jtools.xsdviewer.json.JsonWriter;
 public final class BusinessLines {
 
     /** A line as compared: its 1-based number in the original text, and its text. */
-    public record Line(int n, String text) {
-        public void write(JsonWriter w) {
-            w.beginObject().property(JsonKey.N, n).property(JsonKey.TEXT, text).endObject();
-        }
-    }
+    public record Line(int n, String text) {}
 
     private static final String COMMENT_START = "<!--", COMMENT_END = "-->";
     private static final Pattern ANNOTATION_START = Pattern.compile("<(?:[\\w.-]+:)?annotation(?=[\\s>/])");

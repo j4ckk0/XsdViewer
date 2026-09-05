@@ -1,5 +1,5 @@
 /**
- * The workspaces selected for the Files section of the comparison: Ctrl+click on a chip selects
+ * The state of the workspace selection, for the Files section of the comparison: Ctrl+click on a chip selects
  * one, two at most, the oldest giving way to a third. This is the one module that changes the
  * selection; the others read it.
  */

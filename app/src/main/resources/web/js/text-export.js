@@ -3,7 +3,8 @@
  * a canvas — the line numbers, the highlighted line's background, and each token in the colour the
  * page gives it. A source too tall for one image is cut to what the reader has in front of them.
  */
-import { $, CLS, ID, selector } from './dom.js';
+import { $, selector } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { saveCanvas } from './file-download.js';

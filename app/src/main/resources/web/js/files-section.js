@@ -1,12 +1,13 @@
 /**
- * The Files section of the comparison: two workspaces (selected with Ctrl+click on their chips, {@code compare-selection.js})
+ * The Files section of the comparison, a view: two workspaces (selected with Ctrl+click on their chips, {@code workspace-selection.js})
  * compared folder-style, their files paired by name and marked identical / different / only on one
  * side, a different pair expandable to its schema and line differences.
  */
 import { cardinalityText } from './cardinality.js';
 import { OP, PAIR_STATUS, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
 import { compareSchemas, compareTexts, compareWorkspaces } from './api.js';
-import { $, CLS, DATA, ID, dataAttr, esc, legendHtml } from './dom.js';
+import { $, dataAttr, esc, legendHtml } from './dom.js';
+import { CLS, DATA, ID } from './dom-names.js';
 import { plural, t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';

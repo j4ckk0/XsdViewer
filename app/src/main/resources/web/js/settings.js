@@ -1,6 +1,7 @@
 /** The Settings menu: the server's automatic stop (GET / POST /api/settings), kept by the server from one run to the next. */
 import { fetchSettings, saveSettings } from './api.js';
-import { $, CLS, ID } from './dom.js';
+import { $ } from './dom.js';
+import { CLS, ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { toast, toastServerError } from './toast.js';

@@ -18,15 +18,24 @@
  * #L%
  */
 /**
- * XsdViewer core: parses an XML Schema, a WSDL or a Schematron into a graph of its declarations,
- * their links and their content models ({@code schema}), writes that graph as JSON ({@code json}),
- * validates a document against a schema and a Schematron, and carries the texts of its messages in
- * English and French ({@code Messages}). The JDK and nothing else.
+ * XsdViewer core: everything the tool knows about a schema, with no dependency but the JDK.
+ *
+ * <ul>
+ * <li>{@code schema} — parsing an XML Schema, a WSDL or a Schematron into a {@code SchemaGraph} of
+ *     its declarations and their links, and validating a document against a schema and a Schematron.
+ * <li>{@code model} — the content model of one declaration as a tree of boxes, what a document of it
+ *     holds, read across the files of a {@code Library}.
+ * <li>{@code compare} — two declarations, two texts, two schemas or two workspaces compared.
+ * <li>{@code json} — writing those answers as the JSON the page and the HTTP API speak.
+ * <li>{@code Messages} — the texts of the messages, in English and French.
+ * </ul>
  */
 module org.jtools.xsdviewer.core {
     requires java.xml;
 
     exports org.jtools.xsdviewer;
     exports org.jtools.xsdviewer.schema;
+    exports org.jtools.xsdviewer.model;
+    exports org.jtools.xsdviewer.compare;
     exports org.jtools.xsdviewer.json;
 }

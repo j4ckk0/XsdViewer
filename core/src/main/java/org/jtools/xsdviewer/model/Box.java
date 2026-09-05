@@ -23,16 +23,17 @@ package org.jtools.xsdviewer.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jtools.xsdviewer.json.JsonKey;
-import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.schema.SchemaGraph.Cardinality;
 
 /**
- * One box of a content model as the page draws it: the declaration at the root, then a compositor, an
- * element, an attribute, a group reference, a wildcard, a base type, or — for a WSDL's or a
- * Schematron's own object — what a link of its chain leads to, the link's {@code word} above its name.
- * {@code path} is its place in the tree (the indexes from the root, {@code /0/a1/2}), what the page
- * names an opened box by; {@code diff} and {@code foldKey} are set once two models are compared.
+ * One box of a content model: the declaration at the root, then a compositor, an element, an
+ * attribute, a group reference, a wildcard, a base type, or — for a WSDL's or a Schematron's own
+ * object — what a link of its chain leads to, the link's {@code word} above its name.
+ *
+ * <p>{@code path} is its place in the tree (the indexes from the root, {@code /0/a1/2}), by which a
+ * reader names an opened box; {@code diff} and {@code foldKey} are set once two models are compared
+ * ({@link org.jtools.xsdviewer.compare.ModelDiff}). A box knows nothing of how it is drawn or
+ * written: {@link BoxJsonWriter} turns a tree into the JSON the page reads.
  */
 public final class Box {
 
@@ -57,7 +58,7 @@ public final class Box {
     public final boolean root;
     public final List<Box> attributes = new ArrayList<>();
     public final List<Box> children = new ArrayList<>();
-    /** How the box differs from the one matching it on the other side ({@link org.jtools.xsdviewer.compare.ModelDiff}), and the trail naming the pair. */
+    /** How the box differs from the one matching it on the other side, and the trail naming that pair. */
     public String diff, foldKey;
 
     Box(String kind, String name, String id, String path, boolean root) {
@@ -66,27 +67,6 @@ public final class Box {
         this.id = id;
         this.path = path;
         this.root = root;
-    }
-
-    /** The JSON the page draws from: every field it reads, the flags only when set, the occurrences only when there are some. */
-    public void write(JsonWriter w) {
-        w.beginObject().property(JsonKey.KIND, kind).property(JsonKey.NAME, name);
-        if (id != null) w.property(JsonKey.ID, id);
-        w.property(JsonKey.PATH, path).property(JsonKey.REF, ref).property(JsonKey.TYPE_ID, typeId).property(JsonKey.TYPE_NAME, typeName)
-                .property(JsonKey.WORD, word).property(JsonKey.NAMESPACE, namespace);
-        if (card != null) {
-            w.name(JsonKey.CARD).beginObject().property(JsonKey.MIN, card.min()).property(JsonKey.MAX, card.max()).endObject();
-        }
-        if (expandable) w.property(JsonKey.EXPANDABLE, true);
-        if (expanded) w.property(JsonKey.EXPANDED, true);
-        if (recursive) w.property(JsonKey.RECURSIVE, true);
-        if (root) w.property(JsonKey.ROOT, true);
-        if (diff != null) w.property(JsonKey.DIFF, diff).property(JsonKey.FOLD_KEY, foldKey);
-        w.name(JsonKey.ATTRIBUTES).beginArray();
-        for (Box a : attributes) a.write(w);
-        w.endArray().name(JsonKey.CHILDREN).beginArray();
-        for (Box c : children) c.write(w);
-        w.endArray().endObject();
     }
 
     /** This box and every box under it, the attributes of each before its children. */

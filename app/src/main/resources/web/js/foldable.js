@@ -4,7 +4,8 @@
  * it goes next, and the state remembered in the browser across sessions.
  */
 import { STORAGE_FALSE, STORAGE_TRUE } from './constants.js';
-import { $, CLS } from './dom.js';
+import { $ } from './dom.js';
+import { CLS } from './dom-names.js';
 import { t } from './i18n.js';
 
 /** The glyphs of a group folding to its title line, and of a panel folding to a strip at the side. */

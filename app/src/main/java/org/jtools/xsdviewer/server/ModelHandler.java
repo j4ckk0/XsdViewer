@@ -26,12 +26,12 @@ import java.util.Map;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.json.JsonKey;
-import org.jtools.xsdviewer.json.JsonReader;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.model.Box;
+import org.jtools.xsdviewer.model.BoxJsonWriter;
 import org.jtools.xsdviewer.model.ContentTree;
 import org.jtools.xsdviewer.schema.SchemaGraph.Node;
-import org.jtools.xsdviewer.server.RequestFiles.Side;
+import org.jtools.xsdviewer.server.RequestBody.Side;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -47,23 +47,17 @@ final class ModelHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange ex) throws IOException {
-        if (!HttpResponses.requirePost(ex)) return;
-        Map<String, Object> request;
-        try {
-            request = JsonReader.asObject(JsonReader.parse(HttpResponses.readBody(ex)));
-        } catch (IllegalArgumentException e) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.INVALID_JSON, e.getMessage()));
-            return;
-        }
-        Side side = RequestFiles.side(request);
+        Map<String, Object> request = JsonRequest.of(ex);
+        if (request == null) return;
+        Side side = RequestBody.side(request);
         Node root = side.home() != null ? side.home().node(side.id()) : null;
         if (root == null) {
             HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.DECLARATION_EXPECTED, side.id()));
             return;
         }
-        Box tree = ContentTree.build(root, side.home(), side.library(), RequestFiles.expanded(request), RequestFiles.flag(request, JsonKey.OPEN_ALL));
+        Box tree = ContentTree.build(root, side.home(), side.library(), RequestBody.expanded(request), RequestBody.flag(request, JsonKey.OPEN_ALL));
         JsonWriter w = new JsonWriter();
-        tree.write(w);
+        BoxJsonWriter.write(w, tree);
         HttpResponses.json(ex, HttpStatus.OK, w.toString());
     }
 }
