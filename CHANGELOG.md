@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 5.4.0 — 2026-09-05
 
 - **Derivation and substitution links are drawn louder than plain content** in the Graph: a type relationship (`extends`, `restricts`, `is a`, `substitutes`) is a heavier line in its own colour, its caption bold in that colour, so the type relationships stand out from the elements a declaration contains.
 - **The Graph view names its two directions.** A band above the columns reads **used by** over the left and **links out** over the right, so the graph reads as a reference map — who points at the selected object, and what it points to — the left side being the fan-in the Model view cannot show.
