@@ -30,24 +30,26 @@ In a project of your own, the dependency is `org.jtools:xsdviewer-core` ([core/R
 
 The server is a local tool: it binds to `127.0.0.1:8080` unless told otherwise, and answers the
 page's requests, which any program can make too. Every call is stateless — the request carries the
-files' texts — so each script is the whole story. Start the server, then run them from the root:
+files' texts — so each program is the whole story. `xsdviewer.mjs` is the five calls as functions
+(Node 18 or later, its own `fetch`; the same code runs in a browser page); the other files use them.
+Start the server, then run them from the root:
 
 ```sh
 scripts/run.sh --no-browser --keep-alive        # or java -jar app/target/xsdviewer.jar --no-browser --keep-alive
-examples/api/parse.sh samples/purchaseOrder.xsd
-examples/api/model.sh complexType:PurchaseOrderType samples/purchaseOrder.xsd samples/ext.xsd
-examples/api/compare-declarations.sh complexType:ProductType samples/compare/v1/product.xsd samples/compare/v2/product.xsd
-examples/api/compare-texts.sh samples/compare/v1/product.xsd samples/compare/v2/product.xsd
-examples/api/compare-workspaces.sh samples/compare/v1 samples/compare/v2
+node examples/api/parse.mjs samples/purchaseOrder.xsd
+node examples/api/model.mjs complexType:PurchaseOrderType samples/purchaseOrder.xsd samples/ext.xsd
+node examples/api/compare-declarations.mjs complexType:ProductType samples/compare/v1 samples/compare/v2
+node examples/api/compare-texts.mjs samples/compare/v1/product.xsd samples/compare/v2/product.xsd
+node examples/api/compare-workspaces.mjs samples/compare/v1 samples/compare/v2
 ```
 
-| Script | Endpoint | Answer |
+| Program | Endpoint | Answer |
 |---|---|---|
-| `parse.sh` | `POST /api/parse`, the file's text | the graph: `nodes` (with `content` and `attributes`), `edges`, `imports` |
-| `model.sh` | `POST /api/model`, `{files, home, id, openAll}` | the content model tree, one box per particle |
-| `compare-declarations.sh` | `POST /api/compare/declarations`, `{left, right}` sides | the two trees marked, the counts, the links only one side has |
-| `compare-texts.sh` | `POST /api/compare/texts`, `{left, right, businessOnly}` | the lines of each side, the edit script, whether only blocks moved |
-| `compare-workspaces.sh` | `POST /api/compare/workspaces`, `{left: [files], right: [files], businessOnly}` | the pairs by name with a status each |
+| `parse.mjs` | `POST /api/parse`, the file's text | the graph: `nodes` (with `content` and `attributes`), `edges`, `imports` |
+| `model.mjs` | `POST /api/model`, `{files, home, id, openAll}` | the content model tree, one box per particle |
+| `compare-declarations.mjs` | `POST /api/compare/declarations`, `{left, right}` sides | the two trees marked, the counts, the links only one side has |
+| `compare-texts.mjs` | `POST /api/compare/texts`, `{left, right, businessOnly}` | the lines of each side, the edit script, whether only blocks moved |
+| `compare-workspaces.mjs` | `POST /api/compare/workspaces`, `{left: [files], right: [files], businessOnly}` | the pairs by name with a status each |
 
-The scripts need `curl` and `python3` (to build the JSON bodies); `XSDVIEWER_URL` points them at another
-server. The bodies and answers are described in [architecture.md](../architecture.md#http-interface).
+`XSDVIEWER_URL` points the programs at another server. The bodies and answers are described in
+[architecture.md](../architecture.md#http-interface).

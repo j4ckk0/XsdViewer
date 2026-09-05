@@ -407,7 +407,7 @@ XsdViewer/
 │   ├── src/main/resources/web/           the page: index.html, style.css, js/, i18n/
 │   ├── src/test/java/                    the server, workspace, command line, log and translation tests, the page's contract
 │   └── src/test/js/                      the tests of the page's pure modules
-├── examples/                     org.jtools:xsdviewer-examples — programs on the library (src/main/java, run by ExamplesTest) and scripts on the API (api/*.sh), on samples/
+├── examples/                     org.jtools:xsdviewer-examples — programs on the library (src/main/java, run by ExamplesTest) and JavaScript programs on the API (api/*.mjs), on samples/
 ├── .github/workflows/            build.yml (mvn package on JDK 21, the jar kept as artefact), release.yml (a pushed tag → the release)
 ├── scripts/                      run, build, package, release, screenshots.py, changelog-section.py
 ├── README.md, architecture.md, CHANGELOG.md, PUBLISHING.md
