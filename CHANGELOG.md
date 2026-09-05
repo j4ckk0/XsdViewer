@@ -2,7 +2,9 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 5.1.0 — 2026-09-05
+
+The Model and Graph views work as a pair: each points at the other, and each shows what the other knows. Export is mended.
 
 - **PNG and SVG export fixed.** PNG export did nothing (a lost import); SVG export wrote a file whose colours were the light theme's on a dark background. An exported picture now carries the page's theme, so its palette matches its background, and the ◎/▤ handles, which are page controls, are left out of it.
 - **Switching from the graph to the model keeps the node under the eye.** When the keyboard rests on a node other than the centre, Model opens with the box standing for it brought into view and marked; a node two steps out has the box above it opened first.
