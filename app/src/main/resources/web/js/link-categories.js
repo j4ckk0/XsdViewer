@@ -44,6 +44,8 @@ export const LINK_CATEGORIES = Object.values(LINK_CATEGORY);
 /** Edge labels of a derivation (a type to its base type, a Schematron pattern or rule to the abstract one it builds on): drawn with a hollow arrowhead, as a UML generalisation. */
 const DERIVATION_LINK_LABELS = new Set([LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.IS_A]);
 export const isDerivation = (edge) => DERIVATION_LINK_LABELS.has(edge.label);
+/** A type relationship the graph draws louder than plain content: a derivation (extends / restricts / is a) or a substitution. */
+export const isRelation = (edge) => DERIVATION_LINK_LABELS.has(edge.label) || edge.label === LINK_LABEL.SUBSTITUTES;
 
 /**
  * The category of the link {@code edge} between a node of kind {@code fromKind} and one of kind

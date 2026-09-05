@@ -13,7 +13,7 @@ import { foldAll, initDiffOnly, rememberDiffOnly, toggleFolded } from './objects
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { compareGroup, detailsPanel, renderDetails } from './details.js';
-import { fileListClick, filesPanel, renderFileList, setAllUnfolded } from './file-list.js';
+import { fileListClick, filesCursor, filesPanel, renderFileList, setAllUnfolded } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
@@ -288,19 +288,6 @@ async function openFromFiles(target) {
   if (hit.id) select(hit.id);
 }
 
-/** The file and object rows of the Files tree the search can walk (only the visible ones). */
-const filesTreeRows = () => [...$(ID.FILES_CONTENT).querySelectorAll('.' + CLS.ITEM + '.' + CLS.FILE + ', .' + CLS.ITEM + '.' + CLS.OBJECT)].filter(el => el.offsetParent !== null);
-
-/** Moves the Up/Down cursor of the Files tree by {@code step}, from wherever it rests (or an end), and shows it. */
-function moveFilesCursor(step) {
-  const rows = filesTreeRows();
-  if (!rows.length) return;
-  const at = rows.findIndex(el => el.classList.contains(CLS.CURRENT));
-  const next = at < 0 ? (step > 0 ? 0 : rows.length - 1) : Math.max(0, Math.min(rows.length - 1, at + step));
-  rows.forEach(el => el.classList.remove(CLS.CURRENT));
-  rows[next].classList.add(CLS.CURRENT);
-  rows[next].scrollIntoView({ block: 'nearest' });
-}
 
 /** The comparison's own controls: the ⇄ Compare of the details panel, and in its Objects section the sides, the folds of the two models. */
 function wireComparison() {
@@ -338,9 +325,9 @@ function wireSearch() {
     if (e.key === KEY.ESCAPE) { e.target.value = ''; apply(''); e.target.blur(); return; }
     // while a search is entered, Up/Down walk the Files tree and Enter opens the row they rest on, the field keeping the focus
     if (!session.active.workspace.filter) return;
-    if (e.key === KEY.ARROW_DOWN) { e.preventDefault(); moveFilesCursor(1); }
-    else if (e.key === KEY.ARROW_UP) { e.preventDefault(); moveFilesCursor(-1); }
-    else if (e.key === KEY.ENTER) { const row = filesTreeRows().find(el => el.classList.contains(CLS.CURRENT)); if (row) { e.preventDefault(); openFromFiles(row); } }
+    if (e.key === KEY.ARROW_DOWN) { e.preventDefault(); filesCursor.move(1); }
+    else if (e.key === KEY.ARROW_UP) { e.preventDefault(); filesCursor.move(-1); }
+    else if (e.key === KEY.ENTER) { const row = filesCursor.current(); if (row) { e.preventDefault(); openFromFiles(row); } }
   });
   $(ID.SEARCH_CLEAR).addEventListener('click', () => { search.value = ''; apply(''); search.focus(); });
   // the find bar of the Text view

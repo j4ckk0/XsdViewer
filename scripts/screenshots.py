@@ -375,6 +375,14 @@ SCENES = [
                  # each label sits above the nodes of its own side
                  'sides': "(() => { const g = [...document.querySelectorAll('#graphCanvas .gdir')]; const nodes = [...document.querySelectorAll('#graphCanvas .node:not(.center)')]; const labelBottom = Math.max(...g.map(l => l.getBoundingClientRect().bottom)); const nodeTop = Math.min(...nodes.map(n => n.getBoundingClientRect().top)); return String(g.length === 2 && labelBottom <= nodeTop); })()"},
          expect={'labels': 'used by|links out', 'sides': 'true'}),
+    # derivation and substitution links are drawn louder than plain content: their edges carry the relation class
+    dict(name='graph-relations', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();" + GRAPH_DRAWN,
+         checks={'relationEdges': "document.querySelectorAll('#graphCanvas .edge.relation').length > 0 ? 'yes' : 'no'",
+                 # the derivation edge to USAddress is both a derivation (hollow head) and a relation (loud)
+                 'derivationIsRelation': "String([...document.querySelectorAll('#graphCanvas .edge.derivation')].every(e => e.classList.contains('relation')))",
+                 'relationCaption': "!!document.querySelector('#graphCanvas .link-name.relation')"},
+         expect={'relationEdges': 'yes', 'derivationIsRelation': 'true', 'relationCaption': True}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

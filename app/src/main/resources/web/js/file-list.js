@@ -181,6 +181,25 @@ export function fileListClick(target) {
   return { entry };
 }
 
+/** The file and object rows a keyboard walk can land on in the Files tree (only the visible ones). */
+const walkableRows = () => [...$(ID.FILES_CONTENT).querySelectorAll(selector(CLS.ITEM) + selector(CLS.FILE) + ', ' + selector(CLS.ITEM) + selector(CLS.OBJECT))].filter(el => el.offsetParent !== null);
+
+/** The Up/Down cursor of the Files tree, a row marked with {@code CLS.CURRENT}: move it by a step, or read the row it rests on. */
+export const filesCursor = {
+  move(step) {
+    const rows = walkableRows();
+    if (!rows.length) return;
+    const at = rows.findIndex(el => el.classList.contains(CLS.CURRENT));
+    const next = at < 0 ? (step > 0 ? 0 : rows.length - 1) : Math.max(0, Math.min(rows.length - 1, at + step));
+    rows.forEach(el => el.classList.remove(CLS.CURRENT));
+    rows[next].classList.add(CLS.CURRENT);
+    rows[next].scrollIntoView({ block: 'nearest' });
+  },
+  current() {
+    return walkableRows().find(el => el.classList.contains(CLS.CURRENT)) || null;
+  },
+};
+
 /** Unfolds every folder and every file's objects, or folds them all. */
 export function setAllUnfolded(unfolded) {
   foldedDirs.clear();

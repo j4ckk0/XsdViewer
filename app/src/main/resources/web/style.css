@@ -37,6 +37,7 @@
 
   --c-element: #2563eb;
   --c-complexType: #ea8a1a;
+  --c-relation: #7c3aed;   /* derivation / substitution: the graph's type relationships */
   --c-simpleType: #16a34a;
   --c-group: #7c3aed;
   --c-attributeGroup: #db2777;
@@ -96,6 +97,7 @@
   --diff-mov-fg: #c7d2fe;
   /* the kinds too dark for a dark ground */
   --c-element: #3b82f6;
+  --c-relation: #a78bfa;   /* derivation / substitution, on dark */
   --c-service: #818cf8;
   --c-message: #f43f5e;
   --c-phase: #a5b4fc;
@@ -951,6 +953,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .lg.arrow svg line.optional { stroke-dasharray: 4 3; }
 .lg.arrow svg path { fill: var(--edge); }
 .lg.arrow svg path.derivation { fill: var(--surface); stroke: var(--edge); stroke-width: 1.2; }
+.lg.arrow svg line.relation { stroke: var(--c-relation); stroke-width: 2.2; }
+.lg.arrow svg path.relation { stroke: var(--c-relation); }
 .lg.arrow .compositor, .lg.arrow .enum { font-weight: 700; }
 .lg.arrow .enum { color: var(--c-simpleType); }
 .lg.arrow svg line.chain { stroke-width: 2.2; }
@@ -1002,6 +1006,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .edge.chain { stroke-width: 2.2; }
 .edge.chain.wsdl { stroke: var(--c-service); }
 .edge.chain.schematron { stroke: var(--c-pattern); }
+/* a type relationship (derivation, substitution): louder than plain content — heavier and in its own colour */
+.edge.relation { stroke: var(--c-relation); stroke-width: 2.2; }
 .arrow-head { fill: var(--edge); }
 .arrow-head.derivation { fill: var(--surface); stroke: var(--edge); }
 /* a list of a type: a filled diamond; a union of types: a hollow one */
@@ -1018,6 +1024,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .node .link-name.chain { font-size: 11px; font-weight: 700; letter-spacing: .03em; }
 .node .link-name.chain.wsdl { fill: var(--c-service); }
 .node .link-name.chain.schematron { fill: var(--c-pattern); }
+.node .link-name.relation, .node .link-name .relation { font-size: 11px; font-weight: 700; font-style: normal; letter-spacing: .03em; fill: var(--c-relation); }
 .node .link-name .card { font-size: 11px; font-weight: 400; font-style: normal; fill: var(--muted); }
 .node .link-name .compositor { font-size: 11px; font-weight: 400; fill: var(--muted); }
 /* the values a declaration enumerates, at the bottom of its node */

@@ -5,7 +5,7 @@
  * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
 import { COMPOSITOR, ID_SEPARATOR, LINK_LABEL, NODE_KIND, SVG_NS, TEXT, VIEW, isSchematron, isWsdl } from './constants.js';
-import { FAMILY, STRUCTURAL_LINK_LABELS, familyOf, isDerivation, labelFamily, linkFamily } from './link-categories.js';
+import { FAMILY, STRUCTURAL_LINK_LABELS, familyOf, isDerivation, isRelation, labelFamily, linkFamily } from './link-categories.js';
 import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declaration-lookup.js';
 import { isKindShown, isLinkShown, renderGraphFilters } from './graph-filters.js';
 import { cardinalityText, isOptional } from './cardinality.js';
@@ -238,7 +238,7 @@ function curve(x1, y1, x2, y2, edge, family) {
   const derivation = isDerivation(edge);
   if (derivation) x2 -= DERIVATION_ARROW_LENGTH;   // the hollow head, anchored at its base, fills the gap up to the node
   const cls = CLS.EDGE + (isOptional(edge) ? ' ' + CLS.OPTIONAL : '') + (derivation ? ' ' + CLS.DERIVATION : '')
-    + (family ? ' ' + CLS.CHAIN + ' ' + family : '');
+    + (family ? ' ' + CLS.CHAIN + ' ' + family : isRelation(edge) ? ' ' + CLS.RELATION : '');
   const head = derivation ? SVG_ID.DERIVATION_ARROW
     : edge.label === LINK_LABEL.LIST_OF ? SVG_ID.LIST_ARROW
       : edge.label === LINK_LABEL.UNION_OF ? SVG_ID.UNION_ARROW : SVG_ID.ARROW;
@@ -268,7 +268,7 @@ function captionSvg(edge) {
   const mark = COMPOSITOR_MARK[edge.compositor];
   const markSvg = mark ? '<tspan class="' + CLS.COMPOSITOR + '">' + mark + ' </tspan>' : '';
   const word = (w, cls) => '<text class="' + CLS.LINK_NAME + ' ' + cls + optional + '" x="2" y="-' + CAPTION_LIFT + '">' + markSvg + esc(w) + cardSvg + '</text>';
-  const structural = (w) => word(w, CLS.STRUCTURAL);
+  const structural = (w) => word(w, isRelation(edge) ? CLS.RELATION : CLS.STRUCTURAL);
   const family = labelFamily(label);
   if (family) return word(label, CLS.CHAIN + ' ' + family);
   if (label === LINK_LABEL.ATTRIBUTE_REF) return structural(LINK_LABEL.REF);

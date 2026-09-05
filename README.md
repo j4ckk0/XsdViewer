@@ -476,7 +476,9 @@ node (`≡ 3`), the values themselves in its tooltip and in the details panel. T
 XSD built-in types (`xs:string`…) appear as grey-filled nodes with a grey border (toggle with
 the **built-in types** checkbox). Objects referenced but not declared in the file (imported /
 included ones) appear as grey-filled *external* nodes with a red border. Dashed lines are
-reserved for optional links, hollow arrowheads for derivations (`extends`, `restricts`, `is a`).
+reserved for optional links, hollow arrowheads for derivations (`extends`, `restricts`, `is a`). A
+**type relationship** — a derivation or a `substitutes` — is drawn heavier and in its own colour, its
+word bold in that colour, so it stands out from the elements a declaration merely contains.
 
 **Help ▸ User guide…** opens a guide to the views, workspaces, the comparison and validation, in the
 page's language; **Keyboard shortcuts…** lists every keystroke; the menu also links to the online

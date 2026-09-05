@@ -281,6 +281,8 @@ export const CLS = {
   OPTIONAL: 'optional',
   /** An edge to a base type (extends / restricts). */
   DERIVATION: 'derivation',
+  /** A type-relationship edge and caption (derivation or substitution): drawn louder than plain content. */
+  RELATION: 'relation',
   /** The arrowhead of an edge (a marker path), coloured by the stylesheet. */
   ARROW_HEAD: 'arrow-head',
   /** The head of a list-of link (a filled diamond) and of a union-of link (a hollow one). */
