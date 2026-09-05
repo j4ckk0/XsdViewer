@@ -168,15 +168,17 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
   const rowOpt = (row) => Object.assign({ link: row.edge }, row.place ? { place: row.place } : {}, row.place ? fileKind(row.n, row.place) : {});
 
   let svg = '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
-    + '<defs><marker id="' + SVG_ID.ARROW + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">'
+    // markerUnits="userSpaceOnUse" fixes each arrowhead at a constant size: a heavier relation line no longer
+    // enlarges its head, so the hollow derivation triangle still meets the box across the gap the line reserves for it
+    + '<defs><marker id="' + SVG_ID.ARROW + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse">'
     + '<path class="' + CLS.ARROW_HEAD + '" d="M0,0 L10,5 L0,10 z"/></marker>'
     // a derivation: a hollow triangle, larger, as a UML generalisation
-    + '<marker id="' + SVG_ID.DERIVATION_ARROW + '" viewBox="0 0 10 10" refX="0.5" refY="5" markerWidth="12" markerHeight="12" orient="auto">'
+    + '<marker id="' + SVG_ID.DERIVATION_ARROW + '" viewBox="0 0 10 10" refX="0.5" refY="5" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto">'
     + '<path class="' + CLS.ARROW_HEAD + ' ' + CLS.DERIVATION + '" d="M0.5,0.5 L9.5,5 L0.5,9.5 z"/></marker>'
     // a list of a type, a union of types: a diamond instead of the arrowhead, filled for the list, hollow for the union
-    + '<marker id="' + SVG_ID.LIST_ARROW + '" viewBox="0 0 12 10" refX="12" refY="5" markerWidth="10" markerHeight="9" orient="auto">'
+    + '<marker id="' + SVG_ID.LIST_ARROW + '" viewBox="0 0 12 10" refX="12" refY="5" markerWidth="15" markerHeight="13.5" markerUnits="userSpaceOnUse" orient="auto">'
     + '<path class="' + CLS.ARROW_HEAD + ' ' + CLS.LIST + '" d="M0,5 L6,0.5 L12,5 L6,9.5 z"/></marker>'
-    + '<marker id="' + SVG_ID.UNION_ARROW + '" viewBox="0 0 12 10" refX="12" refY="5" markerWidth="10" markerHeight="9" orient="auto">'
+    + '<marker id="' + SVG_ID.UNION_ARROW + '" viewBox="0 0 12 10" refX="12" refY="5" markerWidth="15" markerHeight="13.5" markerUnits="userSpaceOnUse" orient="auto">'
     + '<path class="' + CLS.ARROW_HEAD + ' ' + CLS.UNION + '" d="M0.5,5 L6,1 L11.5,5 L6,9 z"/></marker></defs>';
 
   const edges = [], labels = [], nodes = [];

@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- Fix: a base-type (derivation) arrow in the Graph fell short of its box after the relationship links were made heavier — the arrowheads are now a fixed size, so a heavier line no longer enlarges its head, and the hollow triangle meets the box again.
+
 ## 5.4.0 — 2026-09-05
 
 - **Derivation and substitution links are drawn louder than plain content** in the Graph: a type relationship (`extends`, `restricts`, `is a`, `substitutes`) is a heavier line in its own colour, its caption bold in that colour, so the type relationships stand out from the elements a declaration contains.
