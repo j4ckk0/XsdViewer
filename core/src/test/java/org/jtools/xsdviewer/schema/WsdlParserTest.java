@@ -72,7 +72,7 @@ class WsdlParserTest {
         assertEquals("http://example.com/po/service", node("service:PurchaseOrderService").ns());
         assertEquals(1, model.imports.size());
         SchemaGraph.Import i = model.imports.get(0);
-        assertEquals(XsdVocabulary.IMPORT, i.tag());
+        assertEquals(XsdNames.IMPORT, i.tag());
         assertEquals("http://example.com/po", i.namespace());
         assertEquals("../purchaseOrder.xsd", i.schemaLocation());
         assertEquals("The purchase order service, over SOAP 1.1.", node("service:PurchaseOrderService").doc());
@@ -122,7 +122,7 @@ class WsdlParserTest {
         assertTrue(m.edges.stream().anyMatch(e -> e.from().equals("service:S") && e.to().equals("binding:B") && e.label().equals("P")));
         assertEquals(NodeKind.EXTERNAL, m.nodes.get("binding:B").kind());
         assertEquals("urn:other", m.nodes.get("binding:B").ns());
-        assertEquals(WsdlVocabulary.IMPORT, m.imports.get(0).tag());
+        assertEquals(WsdlNames.IMPORT, m.imports.get(0).tag());
         assertEquals("other.wsdl", m.imports.get(0).schemaLocation());
     }
 }

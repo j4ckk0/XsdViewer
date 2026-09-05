@@ -88,7 +88,7 @@ final class SchematronParser {
 
     private static SchematronParser parse(Element root, SchematronParser parser) {
         parser.rank(root);
-        if (SchematronVocabulary.SCHEMA.equals(root.getLocalName())) {
+        if (SchematronNames.SCHEMA.equals(root.getLocalName())) {
             for (Element c : children(root)) parser.topLevel(c);
         } else {
             parser.topLevel(root);   // a fragment: a pattern, a rule, a phase... to be included by a schema
@@ -111,48 +111,48 @@ final class SchematronParser {
     /** A child of the schema (or a fragment's root). */
     private void topLevel(Element c) {
         switch (c.getLocalName()) {
-            case SchematronVocabulary.INCLUDE -> include(c);
-            case SchematronVocabulary.PHASE -> phase(c);
-            case SchematronVocabulary.PATTERN -> pattern(c);
-            case SchematronVocabulary.RULE -> rule(c, null);
-            case SchematronVocabulary.DIAGNOSTICS -> {
-                for (Element d : children(c, SchematronVocabulary.DIAGNOSTIC)) diagnostic(d);
+            case SchematronNames.INCLUDE -> include(c);
+            case SchematronNames.PHASE -> phase(c);
+            case SchematronNames.PATTERN -> pattern(c);
+            case SchematronNames.RULE -> rule(c, null);
+            case SchematronNames.DIAGNOSTICS -> {
+                for (Element d : children(c, SchematronNames.DIAGNOSTIC)) diagnostic(d);
             }
-            case SchematronVocabulary.DIAGNOSTIC -> diagnostic(c);
+            case SchematronNames.DIAGNOSTIC -> diagnostic(c);
             default -> { }
         }
     }
 
     private void include(Element inc) {
-        graph.imports.add(new SchemaGraph.Import(SchematronVocabulary.INCLUDE, "", inc.getAttribute(SchematronVocabulary.ATTR_HREF)));
+        graph.imports.add(new SchemaGraph.Import(SchematronNames.INCLUDE, "", inc.getAttribute(SchematronNames.ATTR_HREF)));
     }
 
     private void phase(Element phase) {
-        if (!phase.hasAttribute(SchematronVocabulary.ATTR_ID)) return;
-        String name = phase.getAttribute(SchematronVocabulary.ATTR_ID);
+        if (!phase.hasAttribute(SchematronNames.ATTR_ID)) return;
+        String name = phase.getAttribute(SchematronNames.ATTR_ID);
         String id = node(NodeKind.PHASE, name, name, phase, paragraphs(phase), "");
-        for (Element a : children(phase, SchematronVocabulary.ACTIVE)) {
-            if (a.hasAttribute(SchematronVocabulary.ATTR_PATTERN)) {
-                pending.add(new Pending(id, SchemaGraph.nodeId(NodeKind.PATTERN, a.getAttribute(SchematronVocabulary.ATTR_PATTERN)), LinkLabel.ACTIVE));
+        for (Element a : children(phase, SchematronNames.ACTIVE)) {
+            if (a.hasAttribute(SchematronNames.ATTR_PATTERN)) {
+                pending.add(new Pending(id, SchemaGraph.nodeId(NodeKind.PATTERN, a.getAttribute(SchematronNames.ATTR_PATTERN)), LinkLabel.ACTIVE));
             }
         }
     }
 
     private void pattern(Element pattern) {
         patterns++;
-        String key = first(pattern, SchematronVocabulary.ATTR_ID, XsdVocabulary.ATTR_NAME);
-        String title = SchematronDom.text(SchematronDom.child(pattern, SchematronVocabulary.TITLE));
+        String key = first(pattern, SchematronNames.ATTR_ID, XsdNames.ATTR_NAME);
+        String title = SchematronDom.text(SchematronDom.child(pattern, SchematronNames.TITLE));
         if (key == null) key = !title.isEmpty() ? title : UNNAMED_PATTERN + patterns;
         String doc = paragraphs(pattern);
         if (!title.isEmpty() && !title.equals(key)) doc = doc.isEmpty() ? title : title + '\n' + doc;
         String id = node(NodeKind.PATTERN, key, key, pattern, doc, "");
-        if (pattern.hasAttribute(SchematronVocabulary.ATTR_IS_A)) {
-            pending.add(new Pending(id, SchemaGraph.nodeId(NodeKind.PATTERN, pattern.getAttribute(SchematronVocabulary.ATTR_IS_A)), LinkLabel.IS_A));
+        if (pattern.hasAttribute(SchematronNames.ATTR_IS_A)) {
+            pending.add(new Pending(id, SchemaGraph.nodeId(NodeKind.PATTERN, pattern.getAttribute(SchematronNames.ATTR_IS_A)), LinkLabel.IS_A));
         }
         for (Element c : children(pattern)) {
             switch (c.getLocalName()) {
-                case SchematronVocabulary.INCLUDE -> include(c);
-                case SchematronVocabulary.RULE -> {
+                case SchematronNames.INCLUDE -> include(c);
+                case SchematronNames.RULE -> {
                     String ruleId = rule(c, SchemaGraph.nameOf(id));
                     if (ruleId != null) graph.edges.add(new SchemaGraph.Edge(id, ruleId, LinkLabel.RULE));
                 }
@@ -163,8 +163,8 @@ final class SchematronParser {
 
     /** A rule of a pattern whose key is {@code scope} (null for a rule fragment): its id, or null when it has neither id nor context. */
     private String rule(Element rule, String scope) {
-        String context = rule.getAttribute(SchematronVocabulary.ATTR_CONTEXT);
-        String key = rule.getAttribute(SchematronVocabulary.ATTR_ID);
+        String context = rule.getAttribute(SchematronNames.ATTR_CONTEXT);
+        String key = rule.getAttribute(SchematronNames.ATTR_ID);
         if (key.isEmpty()) {
             if (context.isEmpty()) return null;
             key = scope == null ? context : scope + SCOPE_SEPARATOR + context;
@@ -172,13 +172,13 @@ final class SchematronParser {
         String id = node(NodeKind.RULE, key, context.isEmpty() ? key : context, rule, "", context);
         for (Element c : children(rule)) {
             switch (c.getLocalName()) {
-                case SchematronVocabulary.INCLUDE -> include(c);
-                case SchematronVocabulary.EXTENDS -> {
-                    if (c.hasAttribute(SchematronVocabulary.ATTR_RULE)) {
-                        pending.add(new Pending(id, SchemaGraph.nodeId(NodeKind.RULE, c.getAttribute(SchematronVocabulary.ATTR_RULE)), LinkLabel.EXTENDS));
+                case SchematronNames.INCLUDE -> include(c);
+                case SchematronNames.EXTENDS -> {
+                    if (c.hasAttribute(SchematronNames.ATTR_RULE)) {
+                        pending.add(new Pending(id, SchemaGraph.nodeId(NodeKind.RULE, c.getAttribute(SchematronNames.ATTR_RULE)), LinkLabel.EXTENDS));
                     }
                 }
-                case SchematronVocabulary.ASSERT, SchematronVocabulary.REPORT -> {
+                case SchematronNames.ASSERT, SchematronNames.REPORT -> {
                     String assertionId = assertion(c, SchemaGraph.nameOf(id));
                     if (assertionId != null) graph.edges.add(new SchemaGraph.Edge(id, assertionId, c.getLocalName()));
                 }
@@ -190,19 +190,19 @@ final class SchematronParser {
 
     /** An assert / report of the rule whose key is {@code scope}: its id, or null without a test. */
     private String assertion(Element a, String scope) {
-        String test = a.getAttribute(SchematronVocabulary.ATTR_TEST);
-        String key = a.getAttribute(SchematronVocabulary.ATTR_ID);
+        String test = a.getAttribute(SchematronNames.ATTR_TEST);
+        String key = a.getAttribute(SchematronNames.ATTR_ID);
         String name = key.isEmpty() ? test : key;   // an assertion is known by its id when it has one, else by its test
         if (key.isEmpty()) {
             if (test.isEmpty()) return null;
             key = scope + SCOPE_SEPARATOR + test;
         }
-        String role = first(a, SchematronVocabulary.ATTR_ROLE, SchematronVocabulary.ATTR_FLAG);
+        String role = first(a, SchematronNames.ATTR_ROLE, SchematronNames.ATTR_FLAG);
         String message = message(a);
         String doc = role == null ? message : ROLE_OPEN + role + ROLE_CLOSE + message;
         String id = node(a.getLocalName(), key, name, a, doc, test);
-        if (a.hasAttribute(SchematronVocabulary.ATTR_DIAGNOSTICS)) {
-            for (String d : a.getAttribute(SchematronVocabulary.ATTR_DIAGNOSTICS).trim().split(WHITESPACE)) {
+        if (a.hasAttribute(SchematronNames.ATTR_DIAGNOSTICS)) {
+            for (String d : a.getAttribute(SchematronNames.ATTR_DIAGNOSTICS).trim().split(WHITESPACE)) {
                 if (!d.isEmpty()) pending.add(new Pending(id, SchemaGraph.nodeId(NodeKind.DIAGNOSTIC, d), LinkLabel.DIAGNOSTIC));
             }
         }
@@ -210,8 +210,8 @@ final class SchematronParser {
     }
 
     private void diagnostic(Element d) {
-        if (!d.hasAttribute(SchematronVocabulary.ATTR_ID)) return;
-        String name = d.getAttribute(SchematronVocabulary.ATTR_ID);
+        if (!d.hasAttribute(SchematronNames.ATTR_ID)) return;
+        String name = d.getAttribute(SchematronNames.ATTR_ID);
         node(NodeKind.DIAGNOSTIC, name, name, d, message(d), "");
     }
 
@@ -255,7 +255,7 @@ final class SchematronParser {
     /** The {@code p} paragraphs of a phase or pattern, one per line. */
     private static String paragraphs(Element e) {
         StringBuilder sb = new StringBuilder();
-        for (Element p : children(e, SchematronVocabulary.PARAGRAPH)) {
+        for (Element p : children(e, SchematronNames.PARAGRAPH)) {
             if (sb.length() > 0) sb.append('\n');
             sb.append(SchematronDom.text(p));
         }

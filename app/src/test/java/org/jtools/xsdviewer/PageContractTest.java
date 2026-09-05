@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 import org.jtools.xsdviewer.schema.LinkLabel;
 import org.jtools.xsdviewer.schema.NodeKind;
 import org.jtools.xsdviewer.schema.SchemaGraph;
-import org.jtools.xsdviewer.schema.XsdVocabulary;
+import org.jtools.xsdviewer.schema.XsdNames;
 import org.jtools.xsdviewer.workspace.Workspace;
 import org.junit.jupiter.api.Test;
 
@@ -102,7 +102,7 @@ class PageContractTest {
 
     @Test
     void importTagsAndFileNames() throws Exception {
-        assertEquals(Set.of(XsdVocabulary.IMPORT, XsdVocabulary.INCLUDE, XsdVocabulary.REDEFINE), jsValues("IMPORT_TAG"));
+        assertEquals(Set.of(XsdNames.IMPORT, XsdNames.INCLUDE, XsdNames.REDEFINE), jsValues("IMPORT_TAG"));
         String js = Files.readString(CONSTANTS_JS);
         assertTrue(js.contains("WORKSPACE_FILE_SUFFIX = '" + Workspace.FILE_SUFFIX + "'"), "the workspace file suffix");
         assertTrue(js.contains("ID_SEPARATOR = '" + SchemaGraph.ID_SEPARATOR + "'"), "the node id separator");

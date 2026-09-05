@@ -49,8 +49,8 @@ final class SchematronIncludes {
     }
 
     private static void resolve(Element e, Path file, int depth, List<String> failures) {
-        for (Element inc : new ArrayList<>(SchematronDom.descendants(e, SchematronVocabulary.INCLUDE))) {
-            String href = inc.getAttribute(SchematronVocabulary.ATTR_HREF);
+        for (Element inc : new ArrayList<>(SchematronDom.descendants(e, SchematronNames.INCLUDE))) {
+            String href = inc.getAttribute(SchematronNames.ATTR_HREF);
             Path target = file.resolveSibling(href).normalize();
             if (href.isEmpty() || href.contains(REMOTE_LOCATION_MARK) || !Files.isRegularFile(target) || depth >= MAX_DEPTH) {
                 failures.add(Messages.get(MessageKey.INCLUDE_NOT_FOUND, href));

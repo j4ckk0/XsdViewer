@@ -127,7 +127,7 @@ class XsdParserTest {
     @Test
     void schemaHeader() {
         assertEquals("http://example.com/po", model.targetNamespace);
-        assertEquals(List.of(new SchemaGraph.Import(XsdVocabulary.IMPORT, "http://example.com/ext", "ext.xsd")), model.imports);
+        assertEquals(List.of(new SchemaGraph.Import(XsdNames.IMPORT, "http://example.com/ext", "ext.xsd")), model.imports);
     }
 
     @Test

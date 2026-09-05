@@ -20,10 +20,15 @@ package org.jtools.xsdviewer.schema;
  * #L%
  */
 
-/** The XML Schema namespace and the local names of the elements and attributes this tool reads. */
-public final class XsdVocabulary {
+/**
+ * The names the XML Schema specification defines, as they are written in a schema file: its
+ * namespace, the local names of the elements this tool reads and of their attributes. Not texts a
+ * reader sees — those are {@link org.jtools.xsdviewer.MessageKey} — but the words of the language
+ * being parsed, the same whatever the reader's own language.
+ */
+public final class XsdNames {
 
-    private XsdVocabulary() {}
+    private XsdNames() {}
 
     public static final String NAMESPACE = "http://www.w3.org/2001/XMLSchema";
 

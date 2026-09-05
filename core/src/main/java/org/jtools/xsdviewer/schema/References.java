@@ -52,7 +52,7 @@ final class References implements ContentModelBuilder.Ids {
     /** A qualified name split into the namespace it resolves to (empty when unbound) and its local part. */
     private record QName(String ns, String local) {
         static QName resolve(String qname, Element ctx) {
-            int colon = qname.indexOf(XsdVocabulary.QNAME_SEPARATOR);
+            int colon = qname.indexOf(XsdNames.QNAME_SEPARATOR);
             String prefix = colon < 0 ? null : qname.substring(0, colon);
             String local = colon < 0 ? qname : qname.substring(colon + 1);
             String ns = ctx.lookupNamespaceURI(prefix);
@@ -94,7 +94,7 @@ final class References implements ContentModelBuilder.Ids {
         QName q = QName.resolve(qname, ctx);
         String declared = declaredType(q.local());
         if (declared != null) return declared;
-        return XsdVocabulary.NAMESPACE.equals(q.ns()) ? SchemaGraph.nodeId(NodeKind.BUILTIN, q.local())
+        return XsdNames.NAMESPACE.equals(q.ns()) ? SchemaGraph.nodeId(NodeKind.BUILTIN, q.local())
                 : SchemaGraph.nodeId(NodeKind.TYPE_REFERENCE, q.local());
     }
 
@@ -104,7 +104,7 @@ final class References implements ContentModelBuilder.Ids {
         String id = typeId(qname, ctx);
         if (NodeKind.BUILTIN.equals(SchemaGraph.kindOf(id))) {
             graph.nodes.computeIfAbsent(id, k -> new SchemaGraph.Node(id, NodeKind.BUILTIN, q.local(),
-                    XsdVocabulary.NAMESPACE, 0, Messages.get(MessageKey.BUILTIN_TYPE_DOC)));
+                    XsdNames.NAMESPACE, 0, Messages.get(MessageKey.BUILTIN_TYPE_DOC)));
             graph.edges.add(new SchemaGraph.Edge(owner, id, label, card, compositor));
         } else {
             pending.add(new Pending(new SchemaGraph.Edge(owner, id, label, card, compositor), q.ns()));

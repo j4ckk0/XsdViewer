@@ -8,8 +8,16 @@
  * {@link org.jtools.xsdviewer.schema.SchematronValidator} check a document; the vocabularies
  * ({@link org.jtools.xsdviewer.schema.NodeKind}, {@link org.jtools.xsdviewer.schema.LinkLabel},
  * {@link org.jtools.xsdviewer.schema.ParticleKind}, {@link org.jtools.xsdviewer.schema.Family},
- * {@link org.jtools.xsdviewer.schema.Severity} and the {@code *Vocabulary} classes) name what they
+ * {@link org.jtools.xsdviewer.schema.Severity} and the {@code *Names} classes, which hold the words each specification defines) name what they
  * produce; {@link org.jtools.xsdviewer.schema.SchemaException} is what they throw.
+ *
+ * <p>Two families of constants, which the names keep apart. {@code XsdNames}, {@code WsdlNames} and
+ * {@code SchematronNames} hold the words each specification defines — what a file being read is
+ * written in, fixed by W3C, OASIS and ISO. {@code NodeKind}, {@code LinkLabel}, {@code ParticleKind},
+ * {@code Family} and {@code Severity} hold the words of the model produced, which this project
+ * defines and the page mirrors in {@code js/constants.js} — a contract {@code PageContractTest}
+ * checks. Neither family is a message key: the texts a reader sees are
+ * {@link org.jtools.xsdviewer.MessageKey}, translated in {@code messages*.properties}.
  *
  * <p>Everything else here is package-private and no part of that promise: the parsers of each
  * vocabulary, the line index, the DOM helpers, the XML factories. A consumer cannot reach them, and

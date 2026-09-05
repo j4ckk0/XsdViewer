@@ -27,14 +27,14 @@ public final class ParticleKind {
 
     private ParticleKind() {}
 
-    public static final String SEQUENCE = XsdVocabulary.SEQUENCE;
-    public static final String CHOICE = XsdVocabulary.CHOICE;
-    public static final String ALL = XsdVocabulary.ALL;
-    public static final String ELEMENT = XsdVocabulary.ELEMENT;
+    public static final String SEQUENCE = XsdNames.SEQUENCE;
+    public static final String CHOICE = XsdNames.CHOICE;
+    public static final String ALL = XsdNames.ALL;
+    public static final String ELEMENT = XsdNames.ELEMENT;
     /** A reference to a global group: its content is the group's. */
-    public static final String GROUP = XsdVocabulary.GROUP;
+    public static final String GROUP = XsdNames.GROUP;
     /** A wildcard: its namespace constraint is its name. */
-    public static final String ANY = XsdVocabulary.ANY;
+    public static final String ANY = XsdNames.ANY;
     /** The base type of a complex type, whose content comes first. */
     public static final String EXTENDS = LinkLabel.EXTENDS;
     public static final String RESTRICTS = LinkLabel.RESTRICTS;

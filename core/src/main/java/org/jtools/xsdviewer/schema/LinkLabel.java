@@ -70,8 +70,8 @@ public final class LinkLabel {
     /** A Schematron pattern to the abstract pattern it instantiates; a rule extends an abstract rule with {@link #EXTENDS}. */
     public static final String IS_A = "is a";
     /** A Schematron rule to one of its assertions: the assertion's own element name. */
-    public static final String ASSERT = SchematronVocabulary.ASSERT;
-    public static final String REPORT = SchematronVocabulary.REPORT;
+    public static final String ASSERT = SchematronNames.ASSERT;
+    public static final String REPORT = SchematronNames.REPORT;
     /** A Schematron assertion to a diagnostic it names. */
     public static final String DIAGNOSTIC = "diagnostic";
 

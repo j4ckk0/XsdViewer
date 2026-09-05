@@ -149,8 +149,8 @@ public final class SchematronValidator {
             public Iterator<String> getPrefixes(String uri) { return Collections.emptyIterator(); }
         });
         xpath.setXPathVariableResolver(name -> evaluating.variables().get(name.getLocalPart()));
-        for (Element ns : SchematronDom.children(schema, SchematronVocabulary.NS)) {
-            prefixes.put(ns.getAttribute(SchematronVocabulary.ATTR_PREFIX), ns.getAttribute(SchematronVocabulary.ATTR_URI));
+        for (Element ns : SchematronDom.children(schema, SchematronNames.NS)) {
+            prefixes.put(ns.getAttribute(SchematronNames.ATTR_PREFIX), ns.getAttribute(SchematronNames.ATTR_URI));
         }
     }
 
@@ -169,7 +169,7 @@ public final class SchematronValidator {
         } catch (SAXException | ParserConfigurationException e) {   // the Schematron itself, not the document
             throw new SchemaException(e);
         }
-        if (!SchematronDom.isSchematron(root) || !SchematronVocabulary.SCHEMA.equals(root.getLocalName())) {
+        if (!SchematronDom.isSchematron(root) || !SchematronNames.SCHEMA.equals(root.getLocalName())) {
             throw new SchemaException(Messages.get(MessageKey.NOT_A_SCHEMATRON, root.getTagName()));
         }
         Document instance;
@@ -192,34 +192,34 @@ public final class SchematronValidator {
 
     /** @throws SchemaException when {@code phase} names no phase of the schema */
     private Result run(String phase) throws XPathExpressionException, SchemaException {
-        List<String> phases = SchematronDom.children(schema, SchematronVocabulary.PHASE).stream()
-                .map(p -> p.getAttribute(SchematronVocabulary.ATTR_ID)).filter(id -> !id.isEmpty()).toList();
+        List<String> phases = SchematronDom.children(schema, SchematronNames.PHASE).stream()
+                .map(p -> p.getAttribute(SchematronNames.ATTR_ID)).filter(id -> !id.isEmpty()).toList();
         if (phase == null || phase.isEmpty()) {
-            phase = schema.hasAttribute(SchematronVocabulary.ATTR_DEFAULT_PHASE) ? schema.getAttribute(SchematronVocabulary.ATTR_DEFAULT_PHASE) : ALL_PHASES;
+            phase = schema.hasAttribute(SchematronNames.ATTR_DEFAULT_PHASE) ? schema.getAttribute(SchematronNames.ATTR_DEFAULT_PHASE) : ALL_PHASES;
         }
         Set<String> active = null;
         if (!ALL_PHASES.equals(phase)) {
-            Element p = SchematronDom.byId(schema, SchematronVocabulary.PHASE, phase);
+            Element p = SchematronDom.byId(schema, SchematronNames.PHASE, phase);
             if (p == null) throw new SchemaException(Messages.get(MessageKey.PHASE_UNKNOWN, phase));
-            active = SchematronDom.children(p, SchematronVocabulary.ACTIVE).stream().map(a -> a.getAttribute(SchematronVocabulary.ATTR_PATTERN)).collect(Collectors.toSet());
+            active = SchematronDom.children(p, SchematronNames.ACTIVE).stream().map(a -> a.getAttribute(SchematronNames.ATTR_PATTERN)).collect(Collectors.toSet());
         }
         Frame frame = lets(schema, instance, Frame.ROOT);
-        for (Element pattern : SchematronDom.children(schema, SchematronVocabulary.PATTERN)) {
+        for (Element pattern : SchematronDom.children(schema, SchematronNames.PATTERN)) {
             if (isAbstract(pattern)) continue;
-            if (active != null && !active.contains(pattern.getAttribute(SchematronVocabulary.ATTR_ID))) continue;
+            if (active != null && !active.contains(pattern.getAttribute(SchematronNames.ATTR_ID))) continue;
             String patternId = ids.get(pattern);
             Element body = pattern;
             Frame own = frame;
-            if (pattern.hasAttribute(SchematronVocabulary.ATTR_IS_A)) {   // an instance of an abstract pattern: its rules, with the parameters
-                String name = pattern.getAttribute(SchematronVocabulary.ATTR_IS_A);
-                body = SchematronDom.byId(schema, SchematronVocabulary.PATTERN, name);
+            if (pattern.hasAttribute(SchematronNames.ATTR_IS_A)) {   // an instance of an abstract pattern: its rules, with the parameters
+                String name = pattern.getAttribute(SchematronNames.ATTR_IS_A);
+                body = SchematronDom.byId(schema, SchematronNames.PATTERN, name);
                 if (body == null) {
                     unsupported(Messages.get(MessageKey.ABSTRACT_PATTERN_MISSING, name), "", "", patternId, "");
                     continue;
                 }
                 Map<String, String> params = new LinkedHashMap<>();
-                for (Element param : SchematronDom.children(pattern, SchematronVocabulary.PARAM)) {
-                    params.put(param.getAttribute(XsdVocabulary.ATTR_NAME), param.getAttribute(SchematronVocabulary.ATTR_VALUE));
+                for (Element param : SchematronDom.children(pattern, SchematronNames.PARAM)) {
+                    params.put(param.getAttribute(XsdNames.ATTR_NAME), param.getAttribute(SchematronNames.ATTR_VALUE));
                 }
                 own = frame.withParams(params);
             }
@@ -238,10 +238,10 @@ public final class SchematronValidator {
             return;
         }
         Set<Node> fired = Collections.newSetFromMap(new IdentityHashMap<>());
-        for (Element rule : SchematronDom.children(pattern, SchematronVocabulary.RULE)) {
-            if (isAbstract(rule) || !rule.hasAttribute(SchematronVocabulary.ATTR_CONTEXT)) continue;
+        for (Element rule : SchematronDom.children(pattern, SchematronNames.RULE)) {
+            if (isAbstract(rule) || !rule.hasAttribute(SchematronNames.ATTR_CONTEXT)) continue;
             String ruleId = ids.get(rule);
-            String context = frame.substitute(rule.getAttribute(SchematronVocabulary.ATTR_CONTEXT));
+            String context = frame.substitute(rule.getAttribute(SchematronNames.ATTR_CONTEXT));
             NodeList nodes;
             try {
                 nodes = (NodeList) evaluate(selection(context), instance, XPathConstants.NODESET, frame);
@@ -272,21 +272,21 @@ public final class SchematronValidator {
         visited.add(rule);
         for (Element c : SchematronDom.children(rule)) {
             switch (c.getLocalName()) {
-                case SchematronVocabulary.EXTENDS -> {
-                    String name = c.getAttribute(SchematronVocabulary.ATTR_RULE);
-                    Element base = name.isEmpty() ? null : SchematronDom.byId(schema, SchematronVocabulary.RULE, name);
+                case SchematronNames.EXTENDS -> {
+                    String name = c.getAttribute(SchematronNames.ATTR_RULE);
+                    Element base = name.isEmpty() ? null : SchematronDom.byId(schema, SchematronNames.RULE, name);
                     if (base != null) collect(base, assertions, lets, visited);
                     else unsupported(Messages.get(MessageKey.ABSTRACT_RULE_MISSING, name), "", ids.get(rule), "", "");
                 }
-                case SchematronVocabulary.LET -> lets.add(c);
-                case SchematronVocabulary.ASSERT, SchematronVocabulary.REPORT -> assertions.add(c);
+                case SchematronNames.LET -> lets.add(c);
+                case SchematronNames.ASSERT, SchematronNames.REPORT -> assertions.add(c);
                 default -> { }
             }
         }
     }
 
     private void assertion(Element a, Node node, String ruleId, String patternId, Frame frame) {
-        String test = frame.substitute(a.getAttribute(SchematronVocabulary.ATTR_TEST));
+        String test = frame.substitute(a.getAttribute(SchematronNames.ATTR_TEST));
         String id = ids.get(a);
         boolean value;
         try {
@@ -296,13 +296,13 @@ public final class SchematronValidator {
             return;
         }
         checked++;
-        boolean fires = SchematronVocabulary.REPORT.equals(a.getLocalName()) == value;
+        boolean fires = SchematronNames.REPORT.equals(a.getLocalName()) == value;
         if (!fires) return;
-        String role = a.hasAttribute(SchematronVocabulary.ATTR_ROLE) ? a.getAttribute(SchematronVocabulary.ATTR_ROLE) : a.getAttribute(SchematronVocabulary.ATTR_FLAG);
+        String role = a.hasAttribute(SchematronNames.ATTR_ROLE) ? a.getAttribute(SchematronNames.ATTR_ROLE) : a.getAttribute(SchematronNames.ATTR_FLAG);
         StringBuilder message = new StringBuilder(message(a, node, frame));
         // the diagnostics the assertion names, rendered on the same node, follow the message
-        for (String d : a.getAttribute(SchematronVocabulary.ATTR_DIAGNOSTICS).trim().split(WHITESPACE)) {
-            Element diagnostic = d.isEmpty() ? null : SchematronDom.byId(schema, SchematronVocabulary.DIAGNOSTIC, d);
+        for (String d : a.getAttribute(SchematronNames.ATTR_DIAGNOSTICS).trim().split(WHITESPACE)) {
+            Element diagnostic = d.isEmpty() ? null : SchematronDom.byId(schema, SchematronNames.DIAGNOSTIC, d);
             if (diagnostic != null) message.append(DIAGNOSTIC_SEPARATOR).append(message(diagnostic, node, frame));
         }
         add(new Problem(severity(role), LocatedDocument.line(node), LocatedDocument.column(node), message.toString(), LocatedDocument.location(node), id, ruleId, patternId, test));
@@ -347,7 +347,7 @@ public final class SchematronValidator {
     }
 
     private static boolean isAbstract(Element e) {
-        return SchematronVocabulary.TRUE.equals(e.getAttribute(SchematronVocabulary.ATTR_ABSTRACT));
+        return SchematronNames.TRUE.equals(e.getAttribute(SchematronNames.ATTR_ABSTRACT));
     }
 
     private static String severity(String role) {
@@ -359,17 +359,17 @@ public final class SchematronValidator {
 
     /** {@code frame} plus the {@code let}s that are direct children of {@code e}, evaluated on {@code context}. */
     private Frame lets(Element e, Node context, Frame frame) throws XPathExpressionException {
-        return lets(SchematronDom.children(e, SchematronVocabulary.LET), context, frame);
+        return lets(SchematronDom.children(e, SchematronNames.LET), context, frame);
     }
 
     private Frame lets(List<Element> lets, Node context, Frame frame) throws XPathExpressionException {
         for (Element let : lets) {
-            String name = let.getAttribute(XsdVocabulary.ATTR_NAME);
-            if (!let.hasAttribute(SchematronVocabulary.ATTR_VALUE)) {
+            String name = let.getAttribute(XsdNames.ATTR_NAME);
+            if (!let.hasAttribute(SchematronNames.ATTR_VALUE)) {
                 frame = frame.with(name, let.getTextContent());
                 continue;
             }
-            XPathExpression expr = compile(frame.substitute(let.getAttribute(SchematronVocabulary.ATTR_VALUE)));
+            XPathExpression expr = compile(frame.substitute(let.getAttribute(SchematronNames.ATTR_VALUE)));
             evaluating = frame;
             XPathEvaluationResult<?> r = expr.evaluateExpression(context);
             Object value = switch (r.type()) {

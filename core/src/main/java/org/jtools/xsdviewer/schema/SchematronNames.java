@@ -22,12 +22,13 @@ package org.jtools.xsdviewer.schema;
 import java.util.Set;
 
 /**
- * The Schematron names the parser knows: the elements of the ISO Schematron namespace (the older
- * Schematron 1.5 namespace is read the same way) and their attributes.
+ * The names the Schematron specification defines, as they are written in a rule file: the elements
+ * of the ISO Schematron namespace (the older Schematron 1.5 namespace is read the same way) and
+ * their attributes — the words of the language being parsed, never a text shown to a reader.
  */
-public final class SchematronVocabulary {
+public final class SchematronNames {
 
-    private SchematronVocabulary() {}
+    private SchematronNames() {}
 
     /** ISO/IEC 19757-3. */
     public static final String NAMESPACE = "http://purl.oclc.org/dsdl/schematron";
@@ -60,7 +61,7 @@ public final class SchematronVocabulary {
     public static final String SPAN = "span";
     public static final String DIR = "dir";
 
-    // attributes (name is XsdVocabulary's)
+    // attributes (name is XsdNames's)
     public static final String ATTR_ID = "id";
     public static final String ATTR_CONTEXT = "context";
     public static final String ATTR_TEST = "test";

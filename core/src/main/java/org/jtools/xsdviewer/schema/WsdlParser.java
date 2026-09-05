@@ -67,19 +67,19 @@ final class WsdlParser {
         if (t.name() == null) return null;
         switch (path.size()) {
             case DECLARATION_DEPTH -> {
-                if (WsdlVocabulary.NAMESPACE.equals(t.uri()) && NodeKind.WSDL_DECLARATIONS.contains(t.localName())) {
+                if (WsdlNames.NAMESPACE.equals(t.uri()) && NodeKind.WSDL_DECLARATIONS.contains(t.localName())) {
                     return SchemaGraph.nodeId(t.localName(), t.name());
                 }
             }
             case OPERATION_DEPTH -> {
                 Tag parent = path.get(1);
-                if (t.is(WsdlVocabulary.NAMESPACE, WsdlVocabulary.OPERATION) && parent.is(WsdlVocabulary.NAMESPACE, WsdlVocabulary.PORT_TYPE)
+                if (t.is(WsdlNames.NAMESPACE, WsdlNames.OPERATION) && parent.is(WsdlNames.NAMESPACE, WsdlNames.PORT_TYPE)
                         && parent.name() != null) {
                     return operationId(parent.name(), t.name());
                 }
             }
             case INLINE_SCHEMA_DECLARATION_DEPTH -> {
-                if (path.get(1).is(WsdlVocabulary.NAMESPACE, WsdlVocabulary.TYPES) && path.get(2).is(XsdVocabulary.NAMESPACE, XsdVocabulary.SCHEMA)) {
+                if (path.get(1).is(WsdlNames.NAMESPACE, WsdlNames.TYPES) && path.get(2).is(XsdNames.NAMESPACE, XsdNames.SCHEMA)) {
                     return XsdParser.globalDeclarationId(t);
                 }
             }
@@ -94,27 +94,27 @@ final class WsdlParser {
     }
 
     private SchemaGraph doParse(Element definitions) {
-        String tns = definitions.getAttribute(XsdVocabulary.ATTR_TARGET_NAMESPACE);
+        String tns = definitions.getAttribute(XsdNames.ATTR_TARGET_NAMESPACE);
         graph.targetNamespace = tns;
 
         // Pass 1: the imports, the inline schemas, the declarations as nodes.
         for (Element c : children(definitions)) {
             switch (c.getLocalName()) {
-                case WsdlVocabulary.IMPORT -> graph.imports.add(new SchemaGraph.Import(WsdlVocabulary.IMPORT,
-                        c.getAttribute(XsdVocabulary.ATTR_NAMESPACE), c.getAttribute(WsdlVocabulary.ATTR_LOCATION)));
-                case WsdlVocabulary.TYPES -> {
+                case WsdlNames.IMPORT -> graph.imports.add(new SchemaGraph.Import(WsdlNames.IMPORT,
+                        c.getAttribute(XsdNames.ATTR_NAMESPACE), c.getAttribute(WsdlNames.ATTR_LOCATION)));
+                case WsdlNames.TYPES -> {
                     for (Element s : XsdParser.children(c)) {
-                        if (XsdVocabulary.NAMESPACE.equals(s.getNamespaceURI()) && XsdVocabulary.SCHEMA.equals(s.getLocalName())) xsd.collectSchema(s);
+                        if (XsdNames.NAMESPACE.equals(s.getNamespaceURI()) && XsdNames.SCHEMA.equals(s.getLocalName())) xsd.collectSchema(s);
                     }
                 }
-                case WsdlVocabulary.MESSAGE, WsdlVocabulary.PORT_TYPE, WsdlVocabulary.BINDING, WsdlVocabulary.SERVICE -> {
-                    if (!c.hasAttribute(XsdVocabulary.ATTR_NAME)) continue;
-                    String name = c.getAttribute(XsdVocabulary.ATTR_NAME);
+                case WsdlNames.MESSAGE, WsdlNames.PORT_TYPE, WsdlNames.BINDING, WsdlNames.SERVICE -> {
+                    if (!c.hasAttribute(XsdNames.ATTR_NAME)) continue;
+                    String name = c.getAttribute(XsdNames.ATTR_NAME);
                     node(SchemaGraph.nodeId(c.getLocalName(), name), c.getLocalName(), name, tns, c);
-                    if (WsdlVocabulary.BINDING.equals(c.getLocalName())) bindings.put(name, c);
-                    if (WsdlVocabulary.PORT_TYPE.equals(c.getLocalName())) {
-                        for (Element op : children(c, WsdlVocabulary.OPERATION)) {
-                            String opName = op.getAttribute(XsdVocabulary.ATTR_NAME);
+                    if (WsdlNames.BINDING.equals(c.getLocalName())) bindings.put(name, c);
+                    if (WsdlNames.PORT_TYPE.equals(c.getLocalName())) {
+                        for (Element op : children(c, WsdlNames.OPERATION)) {
+                            String opName = op.getAttribute(XsdNames.ATTR_NAME);
                             node(operationId(name, opName), NodeKind.OPERATION, opName, tns, op);
                         }
                     }
@@ -125,53 +125,53 @@ final class WsdlParser {
 
         // Pass 2: the links.
         for (Element c : children(definitions)) {
-            if (!c.hasAttribute(XsdVocabulary.ATTR_NAME)) continue;
-            String name = c.getAttribute(XsdVocabulary.ATTR_NAME);
+            if (!c.hasAttribute(XsdNames.ATTR_NAME)) continue;
+            String name = c.getAttribute(XsdNames.ATTR_NAME);
             String id = SchemaGraph.nodeId(c.getLocalName(), name);
             switch (c.getLocalName()) {
-                case WsdlVocabulary.MESSAGE -> {
-                    List<String> parts = children(c, WsdlVocabulary.PART).stream().map(p -> p.getAttribute(XsdVocabulary.ATTR_NAME)).filter(n -> !n.isEmpty()).toList();
+                case WsdlNames.MESSAGE -> {
+                    List<String> parts = children(c, WsdlNames.PART).stream().map(p -> p.getAttribute(XsdNames.ATTR_NAME)).filter(n -> !n.isEmpty()).toList();
                     if (!parts.isEmpty()) graph.nodes.computeIfPresent(id, (k, n) -> n.withMembers(parts));
-                    for (Element part : children(c, WsdlVocabulary.PART)) {
-                        String partName = part.getAttribute(XsdVocabulary.ATTR_NAME);
-                        if (part.hasAttribute(WsdlVocabulary.ATTR_ELEMENT)) {
-                            xsd.references().link(id, NodeKind.ELEMENT, part.getAttribute(WsdlVocabulary.ATTR_ELEMENT), part, partName, null);
-                        } else if (part.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
-                            xsd.references().linkType(id, part.getAttribute(XsdVocabulary.ATTR_TYPE), part, partName, null);
+                    for (Element part : children(c, WsdlNames.PART)) {
+                        String partName = part.getAttribute(XsdNames.ATTR_NAME);
+                        if (part.hasAttribute(WsdlNames.ATTR_ELEMENT)) {
+                            xsd.references().link(id, NodeKind.ELEMENT, part.getAttribute(WsdlNames.ATTR_ELEMENT), part, partName, null);
+                        } else if (part.hasAttribute(XsdNames.ATTR_TYPE)) {
+                            xsd.references().linkType(id, part.getAttribute(XsdNames.ATTR_TYPE), part, partName, null);
                         }
                     }
                 }
-                case WsdlVocabulary.PORT_TYPE -> {
-                    for (Element op : children(c, WsdlVocabulary.OPERATION)) {
-                        String opId = operationId(name, op.getAttribute(XsdVocabulary.ATTR_NAME));
+                case WsdlNames.PORT_TYPE -> {
+                    for (Element op : children(c, WsdlNames.OPERATION)) {
+                        String opId = operationId(name, op.getAttribute(XsdNames.ATTR_NAME));
                         graph.edges.add(new SchemaGraph.Edge(id, opId, LinkLabel.OPERATION));
                         for (Element io : XsdParser.children(op)) {
                             String label = switch (io.getLocalName()) {
-                                case WsdlVocabulary.INPUT -> LinkLabel.INPUT;
-                                case WsdlVocabulary.OUTPUT -> LinkLabel.OUTPUT;
-                                case WsdlVocabulary.FAULT -> LinkLabel.FAULT;
+                                case WsdlNames.INPUT -> LinkLabel.INPUT;
+                                case WsdlNames.OUTPUT -> LinkLabel.OUTPUT;
+                                case WsdlNames.FAULT -> LinkLabel.FAULT;
                                 default -> null;
                             };
-                            if (label != null && io.hasAttribute(WsdlVocabulary.ATTR_MESSAGE)) {
-                                xsd.references().link(opId, NodeKind.MESSAGE, io.getAttribute(WsdlVocabulary.ATTR_MESSAGE), io, label, null);
+                            if (label != null && io.hasAttribute(WsdlNames.ATTR_MESSAGE)) {
+                                xsd.references().link(opId, NodeKind.MESSAGE, io.getAttribute(WsdlNames.ATTR_MESSAGE), io, label, null);
                             }
                         }
                     }
                 }
-                case WsdlVocabulary.BINDING -> {
-                    if (c.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
-                        xsd.references().link(id, NodeKind.PORT_TYPE, c.getAttribute(XsdVocabulary.ATTR_TYPE), c, LinkLabel.BINDS, null);
+                case WsdlNames.BINDING -> {
+                    if (c.hasAttribute(XsdNames.ATTR_TYPE)) {
+                        xsd.references().link(id, NodeKind.PORT_TYPE, c.getAttribute(XsdNames.ATTR_TYPE), c, LinkLabel.BINDS, null);
                     }
                 }
-                case WsdlVocabulary.SERVICE -> {
-                    for (Element port : children(c, WsdlVocabulary.PORT)) {
-                        if (!port.hasAttribute(WsdlVocabulary.ATTR_BINDING)) continue;
-                        String portName = port.getAttribute(XsdVocabulary.ATTR_NAME);
-                        String bindingRef = port.getAttribute(WsdlVocabulary.ATTR_BINDING);
+                case WsdlNames.SERVICE -> {
+                    for (Element port : children(c, WsdlNames.PORT)) {
+                        if (!port.hasAttribute(WsdlNames.ATTR_BINDING)) continue;
+                        String portName = port.getAttribute(XsdNames.ATTR_NAME);
+                        String bindingRef = port.getAttribute(WsdlNames.ATTR_BINDING);
                         // through a binding declared here, the port reaches its portType; otherwise the link stops at the binding
                         Element binding = bindings.get(localPart(bindingRef));
-                        if (binding != null && binding.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
-                            xsd.references().link(id, NodeKind.PORT_TYPE, binding.getAttribute(XsdVocabulary.ATTR_TYPE), binding, portName, null);
+                        if (binding != null && binding.hasAttribute(XsdNames.ATTR_TYPE)) {
+                            xsd.references().link(id, NodeKind.PORT_TYPE, binding.getAttribute(XsdNames.ATTR_TYPE), binding, portName, null);
                         } else {
                             xsd.references().link(id, NodeKind.BINDING, bindingRef, port, portName, null);
                         }
@@ -192,13 +192,13 @@ final class WsdlParser {
     }
 
     private static String localPart(String qname) {
-        int colon = qname.indexOf(XsdVocabulary.QNAME_SEPARATOR);
+        int colon = qname.indexOf(XsdNames.QNAME_SEPARATOR);
         return colon < 0 ? qname : qname.substring(colon + 1);
     }
 
     /** The child elements of {@code e} in the WSDL namespace. */
     private static List<Element> children(Element e) {
-        return XsdParser.children(e).stream().filter(c -> WsdlVocabulary.NAMESPACE.equals(c.getNamespaceURI())).toList();
+        return XsdParser.children(e).stream().filter(c -> WsdlNames.NAMESPACE.equals(c.getNamespaceURI())).toList();
     }
 
     /** The child elements of {@code e} in the WSDL namespace named {@code localName}. */
@@ -208,7 +208,7 @@ final class WsdlParser {
 
     /** The text of the declaration's first wsdl:documentation. */
     private static String documentation(Element decl) {
-        for (Element d : children(decl, WsdlVocabulary.DOCUMENTATION)) {
+        for (Element d : children(decl, WsdlNames.DOCUMENTATION)) {
             String text = d.getTextContent().trim().replaceAll(LINE_BREAK_WITH_INDENT, "\n");
             return text.length() > MAX_DOCUMENTATION_LENGTH ? text.substring(0, MAX_DOCUMENTATION_LENGTH) : text;
         }

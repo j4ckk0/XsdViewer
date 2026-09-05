@@ -119,7 +119,7 @@ final class DeclarationLineIndex {
 
             @Override
             public void startElement(String uri, String localName, String qName, Attributes attrs) {
-                path.add(new Tag(uri, localName, attrs.getValue(XsdVocabulary.ATTR_NAME)));
+                path.add(new Tag(uri, localName, attrs.getValue(XsdNames.ATTR_NAME)));
                 int rank = count++;
                 open.add(new int[] { rank, locator == null ? 0 : startTagLine(text, lineStarts, locator) });
                 onStart.element(path, rank);

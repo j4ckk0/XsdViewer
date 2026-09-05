@@ -61,9 +61,9 @@ final class SchematronMessage {
                 sb.append(n.getNodeValue());
             } else if (n instanceof Element c && SchematronDom.isSchematron(c)) {
                 switch (c.getLocalName()) {
-                    case SchematronVocabulary.VALUE_OF -> sb.append(leaf.valueOf(c.getAttribute(SchematronVocabulary.ATTR_SELECT)));
-                    case SchematronVocabulary.NAME -> sb.append(leaf.name(c.getAttribute(SchematronVocabulary.ATTR_PATH)));
-                    case SchematronVocabulary.EMPH, SchematronVocabulary.SPAN, SchematronVocabulary.DIR -> collect(c, leaf, sb);
+                    case SchematronNames.VALUE_OF -> sb.append(leaf.valueOf(c.getAttribute(SchematronNames.ATTR_SELECT)));
+                    case SchematronNames.NAME -> sb.append(leaf.name(c.getAttribute(SchematronNames.ATTR_PATH)));
+                    case SchematronNames.EMPH, SchematronNames.SPAN, SchematronNames.DIR -> collect(c, leaf, sb);
                     default -> { }
                 }
             }

@@ -83,7 +83,7 @@ final class XsdParser {
     /** The graph of an XSD file: {@code schema} is its root, {@code text} the file (for the line numbers). */
     static SchemaGraph parse(Element schema, String text) throws Exception {
         SchemaGraph graph = new SchemaGraph();
-        graph.targetNamespace = schema.getAttribute(XsdVocabulary.ATTR_TARGET_NAMESPACE);
+        graph.targetNamespace = schema.getAttribute(XsdNames.ATTR_TARGET_NAMESPACE);
         XsdParser parser = new XsdParser(graph, DeclarationLineIndex.build(text, XsdParser::declarationId));
         parser.collectSchema(schema);
         parser.refs.resolve();
@@ -97,7 +97,7 @@ final class XsdParser {
 
     /** The id of the node a tag declares when it is a named XSD global declaration (its parent being an xs:schema), else null. */
     static String globalDeclarationId(Tag t) {
-        boolean declaration = XsdVocabulary.NAMESPACE.equals(t.uri()) && NodeKind.GLOBAL_DECLARATIONS.contains(t.localName());
+        boolean declaration = XsdNames.NAMESPACE.equals(t.uri()) && NodeKind.GLOBAL_DECLARATIONS.contains(t.localName());
         return declaration && t.name() != null ? SchemaGraph.nodeId(t.localName(), t.name()) : null;
     }
 
@@ -106,18 +106,18 @@ final class XsdParser {
      * schema's own target namespace), their references as links to resolve. Call {@link #resolve()} once at the end.
      */
     void collectSchema(Element schema) {
-        String targetNamespace = schema.getAttribute(XsdVocabulary.ATTR_TARGET_NAMESPACE);
+        String targetNamespace = schema.getAttribute(XsdNames.ATTR_TARGET_NAMESPACE);
 
         // Pass 1: the global declarations become nodes.
         for (Element c : children(schema)) {
             String ln = c.getLocalName();
-            if (XsdVocabulary.IMPORT.equals(ln) || XsdVocabulary.INCLUDE.equals(ln) || XsdVocabulary.REDEFINE.equals(ln)) {
+            if (XsdNames.IMPORT.equals(ln) || XsdNames.INCLUDE.equals(ln) || XsdNames.REDEFINE.equals(ln)) {
                 graph.imports.add(new SchemaGraph.Import(ln,
-                        c.getAttribute(XsdVocabulary.ATTR_NAMESPACE), c.getAttribute(XsdVocabulary.ATTR_SCHEMA_LOCATION)));
+                        c.getAttribute(XsdNames.ATTR_NAMESPACE), c.getAttribute(XsdNames.ATTR_SCHEMA_LOCATION)));
                 continue;
             }
             if (isGlobalDeclaration(c)) {
-                String name = c.getAttribute(XsdVocabulary.ATTR_NAME);
+                String name = c.getAttribute(XsdNames.ATTR_NAME);
                 String id = SchemaGraph.nodeId(ln, name);
                 Span span = spanOf(id);
                 graph.nodes.put(id, new SchemaGraph.Node(id, ln, name, targetNamespace,
@@ -128,7 +128,7 @@ final class XsdParser {
         // Pass 2: the links, the members met on the way, and the content model (the ids being those of the links).
         for (Element c : children(schema)) {
             if (isGlobalDeclaration(c)) {
-                String id = SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdVocabulary.ATTR_NAME));
+                String id = SchemaGraph.nodeId(c.getLocalName(), c.getAttribute(XsdNames.ATTR_NAME));
                 collect(c, id, true, Cardinality.ONE, "");
                 Set<String> found = members.get(id);
                 if (found != null) graph.nodes.computeIfPresent(id, (k, n) -> n.withMembers(List.copyOf(found)));
@@ -140,7 +140,7 @@ final class XsdParser {
         }
         // A keyref links to the element declaring the key it refers to (a key of this schema; else the keyref's owner, being what is known).
         for (KeyRef kr : keyRefs) {
-            String local = kr.refer().substring(kr.refer().indexOf(XsdVocabulary.QNAME_SEPARATOR) + 1);
+            String local = kr.refer().substring(kr.refer().indexOf(XsdNames.QNAME_SEPARATOR) + 1);
             String keyOwner = keyOwners.get(local);
             if (keyOwner != null) graph.edges.add(new SchemaGraph.Edge(kr.owner(), keyOwner, LinkLabel.keyref(kr.name())));
         }
@@ -149,13 +149,13 @@ final class XsdParser {
 
     /** Records a name met inside {@code owner}'s declaration: a nested element or attribute, by name or by the local name of its ref. */
     private void member(String owner, String name) {
-        int colon = name.indexOf(XsdVocabulary.QNAME_SEPARATOR);
+        int colon = name.indexOf(XsdNames.QNAME_SEPARATOR);
         boolean wildcard = name.indexOf('(') >= 0;   // "any (##other)": the constraint may hold a colon
         members.computeIfAbsent(owner, k -> new LinkedHashSet<>()).add(colon < 0 || wildcard ? name : name.substring(colon + 1));
     }
 
     private static boolean isGlobalDeclaration(Element c) {
-        return NodeKind.GLOBAL_DECLARATIONS.contains(c.getLocalName()) && c.hasAttribute(XsdVocabulary.ATTR_NAME);
+        return NodeKind.GLOBAL_DECLARATIONS.contains(c.getLocalName()) && c.hasAttribute(XsdNames.ATTR_NAME);
     }
 
     /**
@@ -167,85 +167,85 @@ final class XsdParser {
      * @param compositor the xs:sequence / xs:choice / xs:all {@code e} sits in directly, empty when it sits in none
      */
     private void collect(Element e, String owner, boolean self, Cardinality enclosing, String compositor) {
-        if (!XsdVocabulary.NAMESPACE.equals(e.getNamespaceURI())) return; // e.g. content of xs:appinfo
+        if (!XsdNames.NAMESPACE.equals(e.getNamespaceURI())) return; // e.g. content of xs:appinfo
         String ln = e.getLocalName();
         Cardinality inner = enclosing;   // what the children of e are enclosed in
         String innerCompositor = compositor;
         switch (ln) {
-            case XsdVocabulary.ANNOTATION -> { return; }
-            case XsdVocabulary.ELEMENT -> {
+            case XsdNames.ANNOTATION -> { return; }
+            case XsdNames.ELEMENT -> {
                 Cardinality card = self ? null : particle(e).within(enclosing);
-                if (!self && e.hasAttribute(XsdVocabulary.ATTR_REF)) member(owner, e.getAttribute(XsdVocabulary.ATTR_REF));
-                if (!self && e.hasAttribute(XsdVocabulary.ATTR_NAME)) member(owner, e.getAttribute(XsdVocabulary.ATTR_NAME));
-                if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    refs.link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.REF, card, compositor);
+                if (!self && e.hasAttribute(XsdNames.ATTR_REF)) member(owner, e.getAttribute(XsdNames.ATTR_REF));
+                if (!self && e.hasAttribute(XsdNames.ATTR_NAME)) member(owner, e.getAttribute(XsdNames.ATTR_NAME));
+                if (e.hasAttribute(XsdNames.ATTR_REF)) {
+                    refs.link(owner, NodeKind.ELEMENT, e.getAttribute(XsdNames.ATTR_REF), e, LinkLabel.REF, card, compositor);
                     return;
                 }
-                String name = e.getAttribute(XsdVocabulary.ATTR_NAME);
-                if (e.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
+                String name = e.getAttribute(XsdNames.ATTR_NAME);
+                if (e.hasAttribute(XsdNames.ATTR_TYPE)) {
                     // a nested element is labelled with just its name: "shipTo", not "child shipTo"
-                    refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e, self ? LinkLabel.TYPE : name, card, compositor);
+                    refs.linkType(owner, e.getAttribute(XsdNames.ATTR_TYPE), e, self ? LinkLabel.TYPE : name, card, compositor);
                 }
-                if (self && e.hasAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP)) {
-                    refs.link(owner, NodeKind.ELEMENT, e.getAttribute(XsdVocabulary.ATTR_SUBSTITUTION_GROUP), e, LinkLabel.SUBSTITUTES, null);
+                if (self && e.hasAttribute(XsdNames.ATTR_SUBSTITUTION_GROUP)) {
+                    refs.link(owner, NodeKind.ELEMENT, e.getAttribute(XsdNames.ATTR_SUBSTITUTION_GROUP), e, LinkLabel.SUBSTITUTES, null);
                 }
                 inner = Cardinality.ONE;   // an anonymous type's content is counted from this element
                 innerCompositor = "";      // and sits in the compositors of that type, not in this element's
             }
-            case XsdVocabulary.ATTRIBUTE -> {
+            case XsdNames.ATTRIBUTE -> {
                 Cardinality card = self ? null : attributeUse(e);
-                if (!self && e.hasAttribute(XsdVocabulary.ATTR_REF)) member(owner, e.getAttribute(XsdVocabulary.ATTR_REF));
-                if (!self && e.hasAttribute(XsdVocabulary.ATTR_NAME)) member(owner, e.getAttribute(XsdVocabulary.ATTR_NAME));
-                if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    refs.link(owner, NodeKind.ATTRIBUTE, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_REF, card);
+                if (!self && e.hasAttribute(XsdNames.ATTR_REF)) member(owner, e.getAttribute(XsdNames.ATTR_REF));
+                if (!self && e.hasAttribute(XsdNames.ATTR_NAME)) member(owner, e.getAttribute(XsdNames.ATTR_NAME));
+                if (e.hasAttribute(XsdNames.ATTR_REF)) {
+                    refs.link(owner, NodeKind.ATTRIBUTE, e.getAttribute(XsdNames.ATTR_REF), e, LinkLabel.ATTRIBUTE_REF, card);
                     return;
                 }
-                if (e.hasAttribute(XsdVocabulary.ATTR_TYPE)) {
-                    refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_TYPE), e,
-                            self ? LinkLabel.TYPE : LinkLabel.attribute(e.getAttribute(XsdVocabulary.ATTR_NAME)), card);
+                if (e.hasAttribute(XsdNames.ATTR_TYPE)) {
+                    refs.linkType(owner, e.getAttribute(XsdNames.ATTR_TYPE), e,
+                            self ? LinkLabel.TYPE : LinkLabel.attribute(e.getAttribute(XsdNames.ATTR_NAME)), card);
                 }
             }
-            case XsdVocabulary.GROUP -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    refs.link(owner, NodeKind.GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.GROUP, particle(e).within(enclosing), compositor);
-                    return;
-                }
-            }
-            case XsdVocabulary.ATTRIBUTE_GROUP -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_REF)) {
-                    refs.link(owner, NodeKind.ATTRIBUTE_GROUP, e.getAttribute(XsdVocabulary.ATTR_REF), e, LinkLabel.ATTRIBUTE_GROUP, null);
+            case XsdNames.GROUP -> {
+                if (e.hasAttribute(XsdNames.ATTR_REF)) {
+                    refs.link(owner, NodeKind.GROUP, e.getAttribute(XsdNames.ATTR_REF), e, LinkLabel.GROUP, particle(e).within(enclosing), compositor);
                     return;
                 }
             }
-            case XsdVocabulary.ANY, XsdVocabulary.ANY_ATTRIBUTE -> {   // a wildcard: listed among the members with its namespace constraint
-                String ns = e.hasAttribute(XsdVocabulary.ATTR_NAMESPACE) ? e.getAttribute(XsdVocabulary.ATTR_NAMESPACE) : XsdVocabulary.NAMESPACE_ANY;
+            case XsdNames.ATTRIBUTE_GROUP -> {
+                if (e.hasAttribute(XsdNames.ATTR_REF)) {
+                    refs.link(owner, NodeKind.ATTRIBUTE_GROUP, e.getAttribute(XsdNames.ATTR_REF), e, LinkLabel.ATTRIBUTE_GROUP, null);
+                    return;
+                }
+            }
+            case XsdNames.ANY, XsdNames.ANY_ATTRIBUTE -> {   // a wildcard: listed among the members with its namespace constraint
+                String ns = e.hasAttribute(XsdNames.ATTR_NAMESPACE) ? e.getAttribute(XsdNames.ATTR_NAMESPACE) : XsdNames.NAMESPACE_ANY;
                 member(owner, ln + " (" + ns + ")");
             }
-            case XsdVocabulary.KEY, XsdVocabulary.UNIQUE -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_NAME)) keyOwners.putIfAbsent(e.getAttribute(XsdVocabulary.ATTR_NAME), owner);
+            case XsdNames.KEY, XsdNames.UNIQUE -> {
+                if (e.hasAttribute(XsdNames.ATTR_NAME)) keyOwners.putIfAbsent(e.getAttribute(XsdNames.ATTR_NAME), owner);
             }
-            case XsdVocabulary.KEYREF -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_REFER)) {
-                    keyRefs.add(new KeyRef(owner, e.getAttribute(XsdVocabulary.ATTR_NAME), e.getAttribute(XsdVocabulary.ATTR_REFER), e));
+            case XsdNames.KEYREF -> {
+                if (e.hasAttribute(XsdNames.ATTR_REFER)) {
+                    keyRefs.add(new KeyRef(owner, e.getAttribute(XsdNames.ATTR_NAME), e.getAttribute(XsdNames.ATTR_REFER), e));
                 }
             }
-            case XsdVocabulary.SEQUENCE, XsdVocabulary.ALL -> { inner = particle(e).within(enclosing); innerCompositor = ln; }
-            case XsdVocabulary.CHOICE -> {   // one branch or another: each is optional
+            case XsdNames.SEQUENCE, XsdNames.ALL -> { inner = particle(e).within(enclosing); innerCompositor = ln; }
+            case XsdNames.CHOICE -> {   // one branch or another: each is optional
                 inner = particle(e).within(enclosing).withMin(0);
                 innerCompositor = ln;
             }
-            case XsdVocabulary.EXTENSION -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.EXTENDS, null);
+            case XsdNames.EXTENSION -> {
+                if (e.hasAttribute(XsdNames.ATTR_BASE)) refs.linkType(owner, e.getAttribute(XsdNames.ATTR_BASE), e, LinkLabel.EXTENDS, null);
             }
-            case XsdVocabulary.RESTRICTION -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_BASE)) refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_BASE), e, LinkLabel.RESTRICTS, null);
+            case XsdNames.RESTRICTION -> {
+                if (e.hasAttribute(XsdNames.ATTR_BASE)) refs.linkType(owner, e.getAttribute(XsdNames.ATTR_BASE), e, LinkLabel.RESTRICTS, null);
             }
-            case XsdVocabulary.LIST -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_ITEM_TYPE)) refs.linkType(owner, e.getAttribute(XsdVocabulary.ATTR_ITEM_TYPE), e, LinkLabel.LIST_OF, null);
+            case XsdNames.LIST -> {
+                if (e.hasAttribute(XsdNames.ATTR_ITEM_TYPE)) refs.linkType(owner, e.getAttribute(XsdNames.ATTR_ITEM_TYPE), e, LinkLabel.LIST_OF, null);
             }
-            case XsdVocabulary.UNION -> {
-                if (e.hasAttribute(XsdVocabulary.ATTR_MEMBER_TYPES)) {
-                    for (String t : e.getAttribute(XsdVocabulary.ATTR_MEMBER_TYPES).trim().split(WHITESPACE)) {
+            case XsdNames.UNION -> {
+                if (e.hasAttribute(XsdNames.ATTR_MEMBER_TYPES)) {
+                    for (String t : e.getAttribute(XsdNames.ATTR_MEMBER_TYPES).trim().split(WHITESPACE)) {
                         if (!t.isEmpty()) refs.linkType(owner, t, e, LinkLabel.UNION_OF, null);
                     }
                 }
@@ -257,17 +257,17 @@ final class XsdParser {
 
     /** minOccurs..maxOccurs of a particle (element, group reference, compositor); 1..1 when absent. */
     static Cardinality particle(Element e) {
-        int min = intAttribute(e, XsdVocabulary.ATTR_MIN_OCCURS, 1);
-        String max = e.getAttribute(XsdVocabulary.ATTR_MAX_OCCURS);
-        if (XsdVocabulary.MAX_OCCURS_UNBOUNDED.equals(max)) return new Cardinality(min, Cardinality.UNBOUNDED);
-        return new Cardinality(min, intAttribute(e, XsdVocabulary.ATTR_MAX_OCCURS, 1));
+        int min = intAttribute(e, XsdNames.ATTR_MIN_OCCURS, 1);
+        String max = e.getAttribute(XsdNames.ATTR_MAX_OCCURS);
+        if (XsdNames.MAX_OCCURS_UNBOUNDED.equals(max)) return new Cardinality(min, Cardinality.UNBOUNDED);
+        return new Cardinality(min, intAttribute(e, XsdNames.ATTR_MAX_OCCURS, 1));
     }
 
     /** The cardinality of an attribute from its {@code use}: optional unless said otherwise. */
     static Cardinality attributeUse(Element e) {
-        return switch (e.getAttribute(XsdVocabulary.ATTR_USE)) {
-            case XsdVocabulary.USE_REQUIRED -> Cardinality.ONE;
-            case XsdVocabulary.USE_PROHIBITED -> Cardinality.NONE;
+        return switch (e.getAttribute(XsdNames.ATTR_USE)) {
+            case XsdNames.USE_REQUIRED -> Cardinality.ONE;
+            case XsdNames.USE_PROHIBITED -> Cardinality.NONE;
             default -> Cardinality.OPTIONAL;
         };
     }
@@ -289,22 +289,22 @@ final class XsdParser {
      */
     private static List<SchemaGraph.Value> enumeration(Element decl) {
         Element restriction = switch (decl.getLocalName()) {
-            case XsdVocabulary.SIMPLE_TYPE -> child(decl, XsdVocabulary.RESTRICTION);
-            case XsdVocabulary.ELEMENT, XsdVocabulary.ATTRIBUTE -> {
-                Element simple = child(decl, XsdVocabulary.SIMPLE_TYPE);
-                yield simple == null ? null : child(simple, XsdVocabulary.RESTRICTION);
+            case XsdNames.SIMPLE_TYPE -> child(decl, XsdNames.RESTRICTION);
+            case XsdNames.ELEMENT, XsdNames.ATTRIBUTE -> {
+                Element simple = child(decl, XsdNames.SIMPLE_TYPE);
+                yield simple == null ? null : child(simple, XsdNames.RESTRICTION);
             }
-            case XsdVocabulary.COMPLEX_TYPE -> {
-                Element content = child(decl, XsdVocabulary.SIMPLE_CONTENT);
-                yield content == null ? null : child(content, XsdVocabulary.RESTRICTION);
+            case XsdNames.COMPLEX_TYPE -> {
+                Element content = child(decl, XsdNames.SIMPLE_CONTENT);
+                yield content == null ? null : child(content, XsdNames.RESTRICTION);
             }
             default -> null;
         };
         if (restriction == null) return List.of();
         List<SchemaGraph.Value> values = new ArrayList<>();
         for (Element e : children(restriction)) {
-            if (XsdVocabulary.NAMESPACE.equals(e.getNamespaceURI()) && XsdVocabulary.ENUMERATION.equals(e.getLocalName())) {
-                values.add(new SchemaGraph.Value(e.getAttribute(XsdVocabulary.ATTR_VALUE), documentation(e)));
+            if (XsdNames.NAMESPACE.equals(e.getNamespaceURI()) && XsdNames.ENUMERATION.equals(e.getLocalName())) {
+                values.add(new SchemaGraph.Value(e.getAttribute(XsdNames.ATTR_VALUE), documentation(e)));
             }
         }
         return values;
@@ -313,7 +313,7 @@ final class XsdParser {
     /** The first child element of {@code e} in the XSD namespace named {@code localName}, or null. */
     static Element child(Element e, String localName) {
         for (Element c : children(e)) {
-            if (XsdVocabulary.NAMESPACE.equals(c.getNamespaceURI()) && localName.equals(c.getLocalName())) return c;
+            if (XsdNames.NAMESPACE.equals(c.getNamespaceURI()) && localName.equals(c.getLocalName())) return c;
         }
         return null;
     }
@@ -321,10 +321,10 @@ final class XsdParser {
     /** The xs:documentation texts of the declaration's first xs:annotation, joined by line breaks. */
     private static String documentation(Element decl) {
         for (Element a : children(decl)) {
-            if (!XsdVocabulary.ANNOTATION.equals(a.getLocalName())) continue;
+            if (!XsdNames.ANNOTATION.equals(a.getLocalName())) continue;
             StringBuilder sb = new StringBuilder();
             for (Element d : children(a)) {
-                if (XsdVocabulary.DOCUMENTATION.equals(d.getLocalName())) {
+                if (XsdNames.DOCUMENTATION.equals(d.getLocalName())) {
                     if (sb.length() > 0) sb.append('\n');
                     sb.append(d.getTextContent().trim().replaceAll(LINE_BREAK_WITH_INDENT, "\n"));
                 }

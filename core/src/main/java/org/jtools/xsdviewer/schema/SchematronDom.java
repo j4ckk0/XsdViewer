@@ -32,7 +32,7 @@ final class SchematronDom {
     private SchematronDom() {}
 
     static boolean isSchematron(Element e) {
-        return e.getNamespaceURI() != null && SchematronVocabulary.NAMESPACES.contains(e.getNamespaceURI());
+        return e.getNamespaceURI() != null && SchematronNames.NAMESPACES.contains(e.getNamespaceURI());
     }
 
     /** The child elements of {@code e} in a Schematron namespace. */
@@ -62,7 +62,7 @@ final class SchematronDom {
 
     /** The descendant of {@code root} named {@code localName} whose {@code id} is {@code id}, or null. */
     static Element byId(Element root, String localName, String id) {
-        for (Element e : descendants(root, localName)) if (id.equals(e.getAttribute(SchematronVocabulary.ATTR_ID))) return e;
+        for (Element e : descendants(root, localName)) if (id.equals(e.getAttribute(SchematronNames.ATTR_ID))) return e;
         return null;
     }
 

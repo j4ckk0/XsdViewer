@@ -42,13 +42,13 @@ public final class SchemaParser {
         try {
             Document doc = SecureXmlFactories.newDocumentBuilder().parse(new InputSource(new StringReader(text)));
             Element root = doc.getDocumentElement();
-            if (XsdVocabulary.NAMESPACE.equals(root.getNamespaceURI()) && XsdVocabulary.SCHEMA.equals(root.getLocalName())) {
+            if (XsdNames.NAMESPACE.equals(root.getNamespaceURI()) && XsdNames.SCHEMA.equals(root.getLocalName())) {
                 return XsdParser.parse(root, text);
             }
-            if (WsdlVocabulary.NAMESPACE.equals(root.getNamespaceURI()) && WsdlVocabulary.DEFINITIONS.equals(root.getLocalName())) {
+            if (WsdlNames.NAMESPACE.equals(root.getNamespaceURI()) && WsdlNames.DEFINITIONS.equals(root.getLocalName())) {
                 return WsdlParser.parse(root, text);
             }
-            if (root.getNamespaceURI() != null && SchematronVocabulary.NAMESPACES.contains(root.getNamespaceURI())) {
+            if (root.getNamespaceURI() != null && SchematronNames.NAMESPACES.contains(root.getNamespaceURI())) {
                 return SchematronParser.parse(root, text);
             }
             throw new SchemaException(Messages.get(MessageKey.NOT_A_SCHEMA, root.getTagName()));

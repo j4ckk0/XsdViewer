@@ -20,10 +20,14 @@ package org.jtools.xsdviewer.schema;
  * #L%
  */
 
-/** The WSDL 1.1 names the parser knows: elements of the WSDL namespace and their attributes. */
-public final class WsdlVocabulary {
+/**
+ * The names the WSDL 1.1 specification defines, as they are written in a service description: its
+ * namespace, the elements this tool reads and their attributes — the words of the language being
+ * parsed, never a text shown to a reader.
+ */
+public final class WsdlNames {
 
-    private WsdlVocabulary() {}
+    private WsdlNames() {}
 
     public static final String NAMESPACE = "http://schemas.xmlsoap.org/wsdl/";
 
@@ -43,7 +47,7 @@ public final class WsdlVocabulary {
     public static final String PORT = "port";
     public static final String DOCUMENTATION = "documentation";
 
-    // attributes (name, type and targetNamespace are XsdVocabulary's)
+    // attributes (name, type and targetNamespace are XsdNames's)
     public static final String ATTR_ELEMENT = "element";
     public static final String ATTR_MESSAGE = "message";
     public static final String ATTR_BINDING = "binding";

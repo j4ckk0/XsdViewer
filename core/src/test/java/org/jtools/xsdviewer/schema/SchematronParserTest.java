@@ -149,7 +149,7 @@ class SchematronParserTest {
                   </pattern>
                   <pattern><rule context="c"><assert test="d">m</assert></rule></pattern>
                 </schema>""");
-        assertEquals(List.of(new SchemaGraph.Import(SchematronVocabulary.INCLUDE, "", "common.sch")), m.imports);
+        assertEquals(List.of(new SchemaGraph.Import(SchematronNames.INCLUDE, "", "common.sch")), m.imports);
         assertEquals(NodeKind.EXTERNAL, m.nodes.get("pattern:elsewhere").kind());
         assertEquals(NodeKind.EXTERNAL, m.nodes.get("rule:shared").kind());
         assertEquals(NodeKind.EXTERNAL, m.nodes.get("diagnostic:d2").kind());
