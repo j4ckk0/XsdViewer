@@ -23,7 +23,7 @@ export function renderPage() {
   document.title = shown ? t(MSG.APP_TITLE_WITH_FILE, shown) : t(MSG.APP_TITLE);
   $(ID.FILE_NAME).textContent = shown || t(MSG.STATUS_NO_FILE);
   $(ID.FILE_NAME).title = loaded ? (st.path || st.fileName) : '';
-  $(ID.SEARCH).value = st.filter;
+  $(ID.SEARCH).value = st.workspace.filter;
   $(ID.BACK_BUTTON).disabled = st.history.length === 0;
   if (loaded) {
     renderSchemaInfo();

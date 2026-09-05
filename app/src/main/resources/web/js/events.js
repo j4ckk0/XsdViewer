@@ -309,10 +309,10 @@ function wireComparison() {
 function wireSearch() {
   const search = $(ID.SEARCH);
   const apply = (value) => {
-    const had = !!session.active.filter;
-    session.active.filter = value.trim();
+    const had = !!session.active.workspace.filter;
+    session.active.workspace.filter = value.trim();
     // a search reaches every file of the workspace: the Files panel opens for it, since that is where the other files answer
-    if (!had && session.active.filter && filesPanel.isFolded()) filesPanel.set(false);   // a search unfolds the Files panel it searches
+    if (!had && session.active.workspace.filter && filesPanel.isFolded()) filesPanel.set(false);   // a search unfolds the Files panel it searches
     if (session.active.model) renderNodeList();
     renderFileList();
   };

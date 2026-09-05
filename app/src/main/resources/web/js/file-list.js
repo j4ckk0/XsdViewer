@@ -130,7 +130,7 @@ export function renderFileListSelection() {
 export function renderFileList() {
   dirEntries.clear();
   const list = rows();
-  const filter = session.active.filter.toLowerCase();
+  const filter = session.active.workspace.filter.toLowerCase();
   shownFiles = 0;
   let html = nodeHtml(tree(list), '', filter);
   // while a search runs, the head says how many files answer it: the panel may be folded

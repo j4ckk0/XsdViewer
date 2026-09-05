@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **The search text stays when you select a result in another file.** The workspace search is now the workspace's, shared by its tabs, rather than each tab's own — so selecting a match in another file no longer empties the box.
+
 ## 5.3.1 — 2026-09-05
 
 - The Settings menu opens with the theme, the display choices first and the server option below.

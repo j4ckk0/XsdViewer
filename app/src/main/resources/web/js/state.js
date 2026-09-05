@@ -23,7 +23,6 @@ export function newTabState() {
     history: [],
     view: VIEW.MODEL,   // what a tab opens on: what a document of the declaration holds
     zoom: ZOOM.DEFAULT,
-    filter: '',
     collapsed: new Set(),
     modelExpanded: new Set(),
     /** The content model tree the server answered last for this tab, with the key of the request it answered: a redraw for the room asks nothing again. */
@@ -44,6 +43,8 @@ export function newWorkspaceState(number) {
     lastActive: null,  // the tab shown when the workspace was last active
     /** The schema files of the workspace, open in a tab or not: {name, path, rel, text, model, failed} (see workspace-files.js). */
     files: [],
+    filter: '',   // the search text, shared by every tab: a search reaches the whole workspace
+
   };
 }
 

@@ -29,7 +29,7 @@ export const schemaInfo = foldable({
 
 export function renderNodeList() {
   const st = session.active;
-  const f = st.filter.toLowerCase();
+  const f = st.workspace.filter.toLowerCase();
   const byKind = new Map(KINDS.map(k => [k, []]));
   for (const n of st.model.nodes) {
     if (!matches(n, f)) continue;

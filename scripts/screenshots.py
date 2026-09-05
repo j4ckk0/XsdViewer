@@ -330,6 +330,20 @@ SCENES = [
          action="document.getElementById('settingsMenuBtn').click();",
          checks={'order': "[...document.querySelectorAll('#settingsMenu > button')].map(b => b.id).join('|')"},
          expect={'order': 'menuTheme|menuHandles|menuAutoStop'}),
+    # the search text is the workspace's, so selecting a result in another file keeps it in the box
+    dict(name='search-kept', file='samples/import/order.xsd', theme='light',
+         action="const st = await import('/js/state.js'); const ws = st.session.active.workspace;"
+                "for (let i = 0; i < 40 && ws.files.some(f => !f.model && !f.failed); i++) await new Promise(r => setTimeout(r, 100));"
+                "const s = document.getElementById('search'); s.value = 'ss'; s.dispatchEvent(new Event('input', {bubbles: true}));"
+                "await new Promise(r => setTimeout(r, 300));"
+                "window.__before = st.session.active.fileName;"
+                "const obj = [...document.querySelectorAll('#filesContent .item.obj')].find(i => i.dataset.id && i.closest('.group-items') && !i.closest('.group-items').previousElementSibling.textContent.includes('order.xsd'));"
+                "window.__had = !!obj; obj.click(); await new Promise(r => setTimeout(r, 300));"
+                "window.__after = st.session.active.fileName; window.__sel = st.session.active.selected;",
+         checks={'boxKept': "document.getElementById('search').value",
+                 'jumpedToAnotherFile': "String(window.__had && window.__after !== window.__before)",
+                 'selectedSomething': "String(!!window.__sel)"},
+         expect={'boxKept': 'ss', 'jumpedToAnotherFile': 'true', 'selectedSomething': 'true'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

@@ -324,11 +324,11 @@ so a long name shows up to the box edge. Each entry of the legend is explained i
 Files are opened with **File ▸ Open…** (Ctrl+O) or by dropping them anywhere in the window.
 Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸ New tab
 opens an empty one, × or a middle click closes one); every tab keeps its own view,
-selection, history and search filter. Selecting an object anywhere — the graph, the model, the details panel, a line of the source —
+selection and history, and the workspace one search filter across them all. Selecting an object anywhere — the graph, the model, the details panel, a line of the source —
 marks it in both panels on the left: in the object list, whose group opens when it was folded, and
 among the objects of the file being shown in the Files panel. The **search box** at the top of the left panel (Ctrl+F)
 filters the Files panel and the object list below it — every schema of the workspace, open in a tab or
-not, is searched, by the objects' names but also by the names of the elements and attributes inside
+not, is searched, and the search stays as you select a result, even one in another file, by the objects' names but also by the names of the elements and attributes inside
 a declaration (a message's parts) and by the documentation, the reason being shown in grey after a
 listed object. The search reaches every file of the workspace, so the Files panel opens when a
 search starts and its head counts the files that answer (`3 of 120`); a file still being parsed, or
