@@ -9,7 +9,7 @@ nothing else. It is the Java module `org.jtools.xsdviewer.core`.
 <dependency>
   <groupId>org.jtools</groupId>
   <artifactId>xsdviewer-core</artifactId>
-  <version>5.0.0</version>
+  <version>5.4.2</version>
 </dependency>
 ```
 
