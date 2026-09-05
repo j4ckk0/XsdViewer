@@ -58,6 +58,8 @@ public final class MessageKey {
     public static final String INTERNAL_ERROR = "api.internalError";
     public static final String DIALOG_FAILED = "api.dialogFailed";
     public static final String SCHEMA_EXPECTED = "api.schemaExpected";
+    /** A model or comparison request whose home file is not a schema, or names no declaration of it. */
+    public static final String DECLARATION_EXPECTED = "api.declarationExpected";
     public static final String SCHEMA_NOT_COMPILED = "api.schemaNotCompiled";
     public static final String NOT_A_WORKSPACE = "api.notAWorkspace";
     public static final String WORKSPACE_EXPECTED = "api.workspaceExpected";

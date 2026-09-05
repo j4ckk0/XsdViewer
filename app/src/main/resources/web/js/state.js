@@ -25,7 +25,9 @@ export function newTabState() {
     zoom: ZOOM.DEFAULT,
     filter: '',
     collapsed: new Set(),
-    modelExpanded: new Set(),   // the boxes of the Model view opened on demand (their paths in the tree)
+    modelExpanded: new Set(),
+    /** The content model tree the server answered last for this tab, with the key of the request it answered: a redraw for the room asks nothing again. */
+    modelTree: null,   // the boxes of the Model view opened on demand (their paths in the tree)
     scroll: newScroll(),
   };
 }

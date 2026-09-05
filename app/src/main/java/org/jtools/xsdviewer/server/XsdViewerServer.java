@@ -73,6 +73,11 @@ public final class XsdViewerServer {
         http.createContext(ApiPath.WORKSPACE_SAVE, localized(new SaveWorkspaceHandler()));
         http.createContext(ApiPath.WORKSPACE_OPEN, localized(new OpenWorkspaceHandler(files)));
         http.createContext(ApiPath.VALIDATE, localized(new ValidateHandler(files)));
+        http.createContext(ApiPath.MODEL, localized(new ModelHandler()));
+        http.createContext(ApiPath.COMPARE_DECLARATIONS, localized(new CompareDeclarationsHandler()));
+        http.createContext(ApiPath.COMPARE_TEXTS, localized(new CompareTextsHandler()));
+        http.createContext(ApiPath.COMPARE_SCHEMAS, localized(new CompareSchemasHandler()));
+        http.createContext(ApiPath.COMPARE_WORKSPACES, localized(new CompareWorkspacesHandler()));
         http.createContext(ApiPath.ROOT, localized(new StaticResourceHandler()));
         http.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
         http.start();

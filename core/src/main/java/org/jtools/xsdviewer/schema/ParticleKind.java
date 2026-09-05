@@ -38,4 +38,9 @@ public final class ParticleKind {
     /** The base type of a complex type, whose content comes first. */
     public static final String EXTENDS = LinkLabel.EXTENDS;
     public static final String RESTRICTS = LinkLabel.RESTRICTS;
+
+    /** A sequence, a choice or an all: a particle holding others, drawn as a box of its own. */
+    public static boolean isCompositor(String kind) {
+        return SEQUENCE.equals(kind) || CHOICE.equals(kind) || ALL.equals(kind);
+    }
 }

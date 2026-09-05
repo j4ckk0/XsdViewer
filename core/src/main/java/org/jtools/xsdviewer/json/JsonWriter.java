@@ -79,6 +79,13 @@ public final class JsonWriter {
         return this;
     }
 
+    /** The JSON {@code null}: a side that has nothing, a diff that could not be computed. */
+    public JsonWriter nullValue() {
+        separate();
+        sb.append("null");
+        return this;
+    }
+
     public JsonWriter value(int i) {
         separate();
         sb.append(i);

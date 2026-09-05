@@ -3,15 +3,13 @@
  * compared folder-style, their files paired by name and marked identical / different / only on one
  * side, a different pair expandable to its schema and line differences.
  */
-import { businessLines } from './business-lines.js';
 import { cardinalityText } from './cardinality.js';
-import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
+import { OP, PAIR_STATUS, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
+import { compareSchemas, compareTexts, compareWorkspaces } from './api.js';
 import { $, CLS, DATA, ID, dataAttr, esc, legendHtml } from './dom.js';
-import { OP, diffLines, onlyMoves, splitLines } from './diff.js';
 import { plural, t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
-import { diffModels } from './schema-diff.js';
 import { session } from './state.js';
 import { ensureModel } from './file-tabs.js';
 import { workspaceName } from './tabs.js';
@@ -20,9 +18,8 @@ import { workspaceName } from './tabs.js';
 const FOLD_ABOVE = 6, FOLD_KEEP = 2, CONTEXT_LINES = 1;
 /** How the text diff of two files folds, as the *differences only* option asks. */
 const folding = () => (isDiffOnly() ? { keep: CONTEXT_LINES, above: 2 * CONTEXT_LINES } : { keep: FOLD_KEEP, above: FOLD_ABOVE });
-const STATUS = { SAME: 'same', DIFFERENT: 'different', MOVED: 'moved', ONLY_LEFT: 'only-left', ONLY_RIGHT: 'only-right' };
+const STATUS = PAIR_STATUS;
 const STATUS_TEXT = { [STATUS.SAME]: MSG.COMPARE_SAME, [STATUS.DIFFERENT]: MSG.COMPARE_DIFFERENT, [STATUS.MOVED]: MSG.COMPARE_MOVED, [STATUS.ONLY_LEFT]: MSG.COMPARE_ONLY_IN, [STATUS.ONLY_RIGHT]: MSG.COMPARE_ONLY_IN };
-const LINE_BREAK = /\r\n/g;
 const ARROW = ' → ';
 
 /** The two options of the view, remembered across sessions: "business lines only" (on by default) and "differences only". */
@@ -50,23 +47,6 @@ export function rememberOptions() {
   }
 }
 
-/** The lines compared, with their original numbers: every line, or the business lines only. */
-function comparedLines(text) {
-  const raw = canonical(text);
-  return isBusinessOnly() ? businessLines(raw) : splitLines(raw).map((line, i) => ({ n: i + 1, text: line }));
-}
-
-const comparedText = (text) => comparedLines(text).map(l => l.text).join('\n');
-
-/** The line diff of a pair, computed once: {la, lb, ops} (ops null when the texts are too different to align). */
-function lineDiff(pair) {
-  if (!pair.diff) {
-    const la = comparedLines(pair.left.text), lb = comparedLines(pair.right.text);
-    pair.diff = { la, lb, ops: diffLines(la.map(l => l.text), lb.map(l => l.text)) };
-  }
-  return pair.diff;
-}
-
 /** The pairs of the comparison being shown, by row index. */
 let pairs = [];
 
@@ -83,30 +63,29 @@ const shownPath = (f) => f.path || f.rel || f.name;
 
 const canonical = (text) => text.replace(LINE_BREAK, '\n');
 
-/** [{name, left, right, status}] for every file name of either workspace, sorted. */
-function pairFiles(left, right) {
+/** [{name, left, right, status}] for every file name of either workspace, sorted: the server pairs the names and says the status of each pair. */
+async function pairFiles(left, right) {
   const l = filesOf(left), r = filesOf(right);
-  const names = [...new Set([...l.keys(), ...r.keys()])].sort((a, b) => a.localeCompare(b));
-  return names.map(name => {
-    const a = l.get(name) || null, b = r.get(name) || null;
-    const pair = { name, left: a, right: b, status: STATUS.DIFFERENT, diff: null };
-    if (!a) pair.status = STATUS.ONLY_RIGHT;
-    else if (!b) pair.status = STATUS.ONLY_LEFT;
-    else if (comparedText(a.text) === comparedText(b.text)) pair.status = STATUS.SAME;
-    else if (lineDiff(pair).ops && onlyMoves(lineDiff(pair).ops)) pair.status = STATUS.MOVED;
-    return pair;
-  });
+  const files = (byName) => [...byName.values()].map(f => ({ name: f.name, text: f.text }));
+  const { pairs: paired } = await compareWorkspaces(files(l), files(r), isBusinessOnly());
+  return paired.map(p => ({ name: p.name, left: l.get(p.name) || null, right: r.get(p.name) || null, status: p.status, diff: null, schemas: null }));
 }
 
+/** Only the drawing of the last call is written: the server is asked first. */
+let drawing = 0;
+
 /** Draws the Files section: every pair of the two selected workspaces, or what to do while fewer than two are selected. */
-export function renderCompare() {
+export async function renderCompare() {
   const [left, right] = session.compareSelection;
   $(ID.COMPARE_EMPTY).classList.toggle(CLS.HIDDEN, !!(left && right));
   $(ID.COMPARE_BODY).classList.toggle(CLS.HIDDEN, !(left && right));
   $(ID.COMPARE_HEADER).classList.toggle(CLS.HIDDEN, !(left && right));
   if (!(left && right)) { $(ID.COMPARE_EMPTY).textContent = t(MSG.COMPARE_SELECT_TWO); return; }
   const ln = workspaceName(left), rn = workspaceName(right);
-  pairs = pairFiles(left, right);
+  const token = ++drawing;
+  const paired = await pairFiles(left, right);
+  if (token !== drawing) return;   // the selection changed while the server compared
+  pairs = paired;
   const count = (s) => pairs.filter(p => p.status === s).length;
   const side = (p) => p.status === STATUS.ONLY_LEFT ? ln : p.status === STATUS.ONLY_RIGHT ? rn : '';
   $(ID.COMPARE_TITLE).textContent = t(MSG.COMPARE_TITLE, ln, rn);
@@ -138,10 +117,13 @@ export async function toggleDetail(row) {
   row.classList.add(CLS.OPEN);
   await ensureModel(pair.left, false);
   await ensureModel(pair.right, false);
+  // the server's two comparisons of the pair, asked once
+  if (!pair.schemas) pair.schemas = await compareSchemas(pair.left.text, pair.right.text);
+  if (!pair.diff) pair.diff = await compareTexts(pair.left.text, pair.right.text, { businessOnly: isBusinessOnly() });
   if (!row.isConnected) return;   // the table was redrawn meanwhile
   const detail = document.createElement('tr');
   detail.className = CLS.COMPARE_DETAIL;
-  detail.innerHTML = '<td colspan="4">' + schemaDiffHtml(pair) + textDiffHtml(lineDiff(pair), folding()) + '</td>';
+  detail.innerHTML = '<td colspan="4">' + schemaDiffHtml(pair.schemas) + textDiffHtml(pair.diff, folding()) + '</td>';
   row.after(detail);
 }
 
@@ -153,9 +135,9 @@ export async function setAllDetails(open) {
   }
 }
 
-function schemaDiffHtml(pair) {
-  if (!pair.left.model || !pair.right.model) return '<p class="' + CLS.META + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</p>';
-  const d = diffModels(pair.left.model, pair.right.model);
+/** What the two schemas declare and link that the other does not, as the server answered (POST /api/compare/schemas). */
+function schemaDiffHtml(d) {
+  if (!d.schemas) return '<p class="' + CLS.META + '">' + esc(t(MSG.FILES_NOT_A_SCHEMA)) + '</p>';
   if (d.same) return '<p class="' + CLS.META + '">' + esc(t(MSG.COMPARE_SAME_MODEL)) + '</p>';
   const [left, right] = session.compareSelection;
   const ln = workspaceName(left), rn = workspaceName(right);

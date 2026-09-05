@@ -324,6 +324,8 @@ export const TOKEN_CLS = { COMMENT: 'c', PI: 'pi', VALUE: 'v', TAG: 't', ATTRIBU
 export const DATA = {
   /** On the root element once the page is wired and first drawn: what a script driving the page waits for. */
   READY: 'ready',
+  /** On the model canvas while the server is drawing its tree: the drawing shown is the one before. */
+  LOADING: 'loading',
   ID: 'id',
   TAB: 'tab',
   KIND: 'kind',

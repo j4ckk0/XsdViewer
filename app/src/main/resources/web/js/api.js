@@ -117,3 +117,24 @@ export async function quitServer() {
   const resp = await request(API.QUIT, { method: HTTP.POST });
   if (!resp.ok) throw new Error(String(resp.status));
 }
+
+const jsonBody = (object) => ({ method: HTTP.POST, headers: { [HTTP.CONTENT_TYPE_HEADER]: HTTP.JSON }, body: JSON.stringify(object) });
+
+/** A POST of JSON answered with JSON; throws Error(message) on a refused request. */
+async function postJson(url, object) {
+  const resp = await request(url, jsonBody(object));
+  const json = await resp.json();
+  if (!resp.ok) throw new Error(json.error || String(resp.status));
+  return json;
+}
+
+/** POST /api/model: the content model tree of a declaration — {files, home, id, expanded} or {..., openAll} (model-requests.js). */
+export const fetchModel = (side) => postJson(API.MODEL, side);
+/** POST /api/compare/declarations: {left, right, counts, links} — the two trees marked, what was found, the links only one side has. */
+export const compareDeclarations = (left, right) => postJson(API.COMPARE_DECLARATIONS, { left, right });
+/** POST /api/compare/texts: {la, lb, ops, onlyMoves} — two texts line by line; options: businessOnly, ignoreSpacing. */
+export const compareTexts = (left, right, options = {}) => postJson(API.COMPARE_TEXTS, Object.assign({ left, right }, options));
+/** POST /api/compare/schemas: what two schemas declare and link that the other does not. */
+export const compareSchemas = (left, right) => postJson(API.COMPARE_SCHEMAS, { left, right });
+/** POST /api/compare/workspaces: {pairs: [{name, status}]} — the files of two workspaces paired by name. */
+export const compareWorkspaces = (left, right, businessOnly) => postJson(API.COMPARE_WORKSPACES, { left, right, businessOnly });

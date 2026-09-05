@@ -77,6 +77,12 @@ export const ZOOM = { STEPS: [0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 3], DEFAULT: 1 };
 /** The views drawn as SVG, which the zoom scales; the text is read at the browser's own size. */
 export const ZOOMABLE_VIEWS = new Set([VIEW.GRAPH, VIEW.MODEL]);
 /** The kinds of particle of a content model (ParticleKind on the server): what a box of the Model view is. */
+/** The marks a compared box carries (the server's ModelDiff): the class the stylesheet colours. */
+export const DIFF = { SAME: 'same', CHANGED: 'changed', REMOVED: 'removed', ADDED: 'added' };
+/** The steps of a line diff (the server's LineDiff): a line on both sides, on the left only, on the right only. */
+export const OP = { EQUAL: '=', DELETE: '-', INSERT: '+' };
+/** The status of a file pair of two compared workspaces (the server's CompareWorkspacesHandler). */
+export const PAIR_STATUS = { SAME: 'same', DIFFERENT: 'different', MOVED: 'moved', ONLY_LEFT: 'only-left', ONLY_RIGHT: 'only-right' };
 export const PARTICLE = { SEQUENCE: 'sequence', CHOICE: 'choice', ALL: 'all', ELEMENT: 'element', GROUP: 'group', ANY: 'any', EXTENDS: 'extends', RESTRICTS: 'restricts' };
 /** The themes (js/theme.js): stored once chosen, stamped on <html> as data-theme. */
 export const THEME = { LIGHT: 'light', DARK: 'dark' };
@@ -97,6 +103,11 @@ export const API = {
   WORKSPACE_SAVE: '/api/workspace/save',
   WORKSPACE_OPEN: '/api/workspace/open',
   VALIDATE: '/api/validate',
+  MODEL: '/api/model',
+  COMPARE_DECLARATIONS: '/api/compare/declarations',
+  COMPARE_TEXTS: '/api/compare/texts',
+  COMPARE_SCHEMAS: '/api/compare/schemas',
+  COMPARE_WORKSPACES: '/api/compare/workspaces',
 };
 export const API_PARAM = { NAME: 'name', BASE: 'base', LOCATION: 'location', STRICT: 'strict', ID: 'id', SCHEMA: 'schema', SCHEMATRON: 'schematron', PHASE: 'phase' };
 /** A validation problem (POST /api/validate): which validation found it, how bad it is (Severity on the server). */

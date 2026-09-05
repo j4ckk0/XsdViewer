@@ -167,6 +167,13 @@ public final class SchemaGraph {
         public Cardinality withMin(int newMin) {
             return new Cardinality(newMin, max);
         }
+
+        /** "1", "0..1", "1..*", "2..6": how the page writes occurrences; the empty string for none (a type link, the root of a model). */
+        public static String text(Cardinality c) {
+            if (c == null) return "";
+            String max = c.max == UNBOUNDED ? "*" : String.valueOf(c.max);
+            return c.min == c.max ? String.valueOf(c.min) : c.min + ".." + max;
+        }
     }
 
 /**

@@ -64,5 +64,13 @@ public final class NodeKind {
             Set.of(ELEMENT, COMPLEX_TYPE, SIMPLE_TYPE, GROUP, ATTRIBUTE_GROUP, ATTRIBUTE);
 
     /** The kinds of named declaration right under wsdl:definitions. */
+    private static final Set<String> WSDL_KINDS = Set.of(SERVICE, PORT_TYPE, OPERATION, BINDING, MESSAGE);
+    private static final Set<String> SCHEMATRON_KINDS = Set.of(PHASE, PATTERN, RULE, ASSERT, REPORT, DIAGNOSTIC);
+
+    /** The family {@code kind} belongs to, or null for an XML Schema object — which a WSDL's inline schemas and a Schematron's targets also are. */
+    public static String familyOf(String kind) {
+        return WSDL_KINDS.contains(kind) ? Family.WSDL : SCHEMATRON_KINDS.contains(kind) ? Family.SCHEMATRON : null;
+    }
+
     public static final Set<String> WSDL_DECLARATIONS = Set.of(MESSAGE, PORT_TYPE, BINDING, SERVICE);
 }

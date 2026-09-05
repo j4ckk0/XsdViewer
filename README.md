@@ -479,7 +479,9 @@ opens on the one the selection is ready for: **Files** when two workspace chips 
 bar, **Objects** otherwise.
 
 **Objects** — two declarations side by side, wherever each of them lives: two versions of the
-same type in two workspaces, or two types that merely resemble one another. This section has the
+same type in two workspaces, or two types that merely resemble one another. The comparing is the
+server's (`POST /api/compare/declarations`, see [architecture.md](architecture.md#http-interface)):
+the page sends the files and draws the answer. This section has the
 **Model / Text / Graph** switch of the top bar, which here draws the two declarations rather than a
 file, and the comparison remembers its own choice: switching there leaves every workspace tab where
 its reader left it. The details panel of a

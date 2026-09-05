@@ -48,6 +48,9 @@ OPEN_V2 = ("const names = ['common.xsd', 'catalog.xsd', 'product.xsd', 'shipping
            "for (const ws of st.session.workspaces) cmp.toggleSelection(ws);"
            "pg.renderPage();")
 
+# the Model view draws once the server has answered: a scene clicking into it waits for the canvas to stop loading
+MODEL_DRAWN = "await new Promise(r => { const c = document.getElementById('modelCanvas'); const tick = () => (c.dataset.loading ? setTimeout(tick, 20) : r()); setTimeout(tick, 20); });"
+
 # the comparison is a place of its own, opened from the bar; it holds two sections
 OPEN_COMPARISON = "document.getElementById('compareBtn').click();"
 DECLARATIONS = OPEN_COMPARISON + "document.querySelector('#comparisonSections [data-section=\"objects\"]').click();"
@@ -163,8 +166,8 @@ SCENES = [
                  'rounded': 'message,message,message,operation,portType'}),   # portType -> operation, its 3 messages, and each message to what it carries: every link has a service end   # the WSDL, purchaseOrder.xsd it imports, ext.xsd that one imports
     dict(name='model-wsdl', file='samples/wsdl/purchaseOrderService.wsdl', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"service:PurchaseOrderService\"]').click();"
-                "document.querySelector('.tab[data-view=\"model\"]').click();"
-                "document.querySelector('#modelCanvas .mhandle').dispatchEvent(new MouseEvent('click', { bubbles: true }));",
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN
+                + "document.querySelector('#modelCanvas .mhandle').dispatchEvent(new MouseEvent('click', { bubbles: true }));" + MODEL_DRAWN,
          checks={'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
                  'words': "[...document.querySelectorAll('#modelCanvas .mbox .mword')].map(t => t.textContent).join('|')",
                  'kinds': "[...document.querySelectorAll('#modelCanvas .mbox .mtype')].map(t => t.textContent).join('|')",
@@ -319,10 +322,10 @@ SCENES = [
          expect={'names': 'Objects|Files', 'twoSelected': 'Files', 'noneSelected': 'Objects'}),
     dict(name='selection-in-panels', file='samples/purchaseOrder.xsd', theme='light',
          # a click in the Model view marks the object in the Files panel and in the object list
-         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
-                "const box = [...document.querySelectorAll('#modelCanvas .mbox.clickable')].find(b => b.dataset.id === 'complexType:USAddress');"
-                "box.dispatchEvent(new MouseEvent('click', { bubbles: true }));"
-                "document.getElementById('toast').classList.add('hidden');",
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();" + MODEL_DRAWN
+                + "const box = [...document.querySelectorAll('#modelCanvas .mbox.clickable')].find(b => b.dataset.id === 'complexType:USAddress');"
+                "box.dispatchEvent(new MouseEvent('click', { bubbles: true }));" + MODEL_DRAWN
+                + "document.getElementById('toast').classList.add('hidden');",
          checks={'files': "[...document.querySelectorAll('#filesContent .obj.selected')].map(e => e.dataset.id).join('|')",
                  'objects': "[...document.querySelectorAll('#nodeList .item.selected')].map(e => e.dataset.id).join('|')",
                  'title': "document.getElementById('modelTitle').textContent"},
@@ -330,8 +333,8 @@ SCENES = [
                  'title': 'complexType USAddress'}),   # the same object marked in both panels, from a click in the drawing
     dict(name='zoom', file='samples/purchaseOrder.xsd', theme='light',
          # the drawn views scale in their panel: the SVG grows, its viewBox does not, the panel scrolls
-         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
-                "const svg = () => document.querySelector('#modelCanvas svg');"
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();" + MODEL_DRAWN
+                + "const svg = () => document.querySelector('#modelCanvas svg');"
                 "const size = () => svg().getAttribute('width') + 'x' + svg().getAttribute('height');"
                 "window.__own = size(); const box = svg().getAttribute('viewBox');"
                 "document.getElementById('zoomIn').click(); document.getElementById('zoomIn').click();"
@@ -351,11 +354,11 @@ SCENES = [
     dict(name='model-back', file='samples/purchaseOrder.xsd', theme='light',
          # a click on a box selects what it refers to; ← Back returns, and neither leaves the Model view
          action="window.__atStart = document.getElementById('modelBackBtn').disabled;"
-                "document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
-                "const box = [...document.querySelectorAll('#modelCanvas .mbox.clickable')].find(b => b.dataset.id === 'complexType:USAddress');"
-                "box.dispatchEvent(new MouseEvent('click', { bubbles: true }));"
-                "window.__after = document.getElementById('modelTitle').textContent + ' | ' + document.querySelector('.tab.active').dataset.view;"
-                "document.getElementById('modelBackBtn').click();",
+                "document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();" + MODEL_DRAWN
+                + "const box = [...document.querySelectorAll('#modelCanvas .mbox.clickable')].find(b => b.dataset.id === 'complexType:USAddress');"
+                "box.dispatchEvent(new MouseEvent('click', { bubbles: true }));" + MODEL_DRAWN
+                + "window.__after = document.getElementById('modelTitle').textContent + ' | ' + document.querySelector('.tab.active').dataset.view;"
+                "document.getElementById('modelBackBtn').click();" + MODEL_DRAWN,
          checks={'atStart': "window.__atStart",
                  'after': "window.__after",
                  'back': "document.getElementById('modelTitle').textContent + ' | ' + document.querySelector('.tab.active').dataset.view",

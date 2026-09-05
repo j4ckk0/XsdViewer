@@ -1,36 +1,38 @@
 /**
  * The Objects section of the comparison: the two declarations {@code comparison.js} holds, drawn
- * side by side the way the comparison's own view asks. Each view is one entry of {@link VIEWS}: what
- * it draws into the two panes, the summary it writes in the header, and whether its legend has a
- * chip for a changed thing (only the content models tell a changed box from a missing one).
+ * side by side the way the comparison's own view asks. The comparing itself is the server's
+ * ({@code POST /api/compare/declarations}, {@code POST /api/compare/texts}): this module asks, keeps
+ * the answer for the pair drawn last, and draws. Each view is one entry of {@link VIEWS}: what it draws
+ * into the two panes, the summary it writes in the header, and whether its legend has a chip for a
+ * changed thing (only the content models tell a changed box from a missing one).
  *
- * - **Model**: their content models, every box marked by {@link markDifferences}; a box holding
- *   something can be put aside, and folds with the box matching it on the other side.
- * - **Text**: the source of each declaration alone, the two aligned line by line by the renderer
- *   of the Files section, on the shape of their lines rather than their spacing.
- * - **Graph**: the neighbourhood of each, drawn by {@link renderGraph}, the links the other side
- *   does not have marked.
+ * - **Model**: their content models, every box marked by the server; a box holding something can be
+ *   put aside, and folds with the box matching it on the other side.
+ * - **Text**: the source of each declaration alone, cut out of its file here, the two aligned line by
+ *   line by the server on the shape of their lines rather than their spacing.
+ * - **Graph**: the neighbourhood of each, drawn by {@link renderGraph}, the links the server says the
+ *   other side does not have marked.
  *
- * Neither file need be open in a tab: a workspace's listed file is indexed on demand, which is also
- * what lets a named type be opened from another file of that same workspace.
+ * Neither file need be open in a tab: the request carries the parsed files of each side's workspace,
+ * which is also what lets a named type be opened from another file of that same workspace.
  */
-import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW, kindOfId, nameOfId } from './constants.js';
+import { compareDeclarations, compareTexts } from './api.js';
+import { DIFF, OP, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW, kindOfId, nameOfId } from './constants.js';
+import { cardinalityText } from './cardinality.js';
 import { textDiffHtml } from './compare.js';
 import { SIDES, comparedPair, foldedBoxes, placeOf } from './comparison.js';
-import { declarationLines, shapeOf } from './declaration-source.js';
+import { declarationLines } from './declaration-source.js';
 import { $, CLS, ID, esc, legendHtml } from './dom.js';
-import { OP, diffLines } from './diff.js';
 import { ensureModel } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
-import { DIFF, markDifferences, same } from './model-diff.js';
-import { buildTree } from './model-tree.js';
+import { libraryKey, sideOf } from './model-requests.js';
 import { modelSvg } from './model-view.js';
-import { linkKey, neighbourhoodKeys } from './schema-diff.js';
 import { session } from './state.js';
 import { workspaceName } from './tabs.js';
+import { toast } from './toast.js';
 import { applyZoom } from './zoom.js';
 
 /** A side in a sentence: the declaration alone. */
@@ -41,6 +43,30 @@ const sideName = (m) => m.fileName + TEXT.LIST_SEPARATOR + workspaceName(m.ws);
 const nodeOf = (mark) => { const place = placeOf(mark); return place ? place.nodes.get(mark.id) : null; };
 
 const absent = () => '<div class="' + CLS.EMPTY + '">' + esc(t(MSG.COMPARE_OBJECT_ABSENT)) + '</div>';
+
+/** The summary of a view that only has sides: what each side alone has, or nothing. */
+const sidesSummary = (found, summaryKey, sameKey) => (found && (found.left || found.right) ? t(summaryKey, found.left, found.right) : t(sameKey));
+
+// ---- the server's comparison of the pair ----
+
+/** What the request carries for a side: the parsed files of its workspace, its file among them, its declaration. */
+const sideOfMark = (m) => sideOf(m.ws, m.entry, m.tab, m.id);
+
+/** What tells two pairs apart, and a pair from itself once more files of a workspace are parsed. */
+const pairKey = (pair) => pair.map(m => [workspaceName(m.ws), m.fileName, m.id, libraryKey(m.ws)].join('|')).join('||');
+
+/**
+ * The server's answer for the pair drawn last — the two trees, every box marked; the counts; the links
+ * only one side has — kept so that folding a box or switching between the models and the graphs asks
+ * nothing again.
+ */
+let compared = null;
+
+async function comparedOf(pair) {
+  const key = pairKey(pair);
+  if (!compared || compared.key !== key) compared = Object.assign({ key }, await compareDeclarations(sideOfMark(pair[0]), sideOfMark(pair[1])));
+  return compared;
+}
 
 // ---- differences only ----
 
@@ -72,18 +98,8 @@ function differing(box) {
 /** The tree as drawn: whole, or its differences under its root when the option is on. */
 const shownTree = (tree) => (!tree || !isDiffOnly() ? tree : differing(tree) || Object.assign({}, tree, { attributes: [], children: [] }));
 
-/** How many keys of {@code these} the other side does not have. */
-const only = (these, others) => [...these].filter(k => !others.has(k)).length;
-
-/** The summary of a view that only has sides: what each side alone has, or nothing. */
-const sidesSummary = (found, summaryKey, sameKey) => (found && (found.left || found.right) ? t(summaryKey, found.left, found.right) : t(sameKey));
-
 // ---- the content models ----
 
-/** The two trees drawn last, so that folding a box redraws them without comparing them again. */
-let drawn = null;
-
-const treeOf = (mark) => { const node = nodeOf(mark); return node ? buildTree(node, placeOf(mark), { openAll: true }) : null; };
 const boxesOf = (box) => (box ? [box, ...[...box.attributes, ...box.children].flatMap(boxesOf)] : []);
 
 function drawModel(canvasId, tree, mark) {
@@ -98,13 +114,11 @@ function drawTrees(trees, pair) {
   drawModel(ID.OBJECT_COMPARE_RIGHT, shownTree(trees[1]), pair[1]);
 }
 
-function drawModels(pair) {
-  const trees = pair.map(treeOf);
-  const counts = markDifferences(trees[0], trees[1]);
-  drawn = trees;
-  drawTrees(trees, pair);
-  return same(counts) ? t(MSG.COMPARE_OBJECT_SAME)
-    : t(MSG.COMPARE_OBJECT_SUMMARY, counts[DIFF.REMOVED], counts[DIFF.ADDED], counts[DIFF.CHANGED]);
+async function drawModels(pair) {
+  const c = await comparedOf(pair);
+  drawTrees([c.left, c.right], pair);
+  const { changed, removed, added } = c.counts;
+  return !changed && !removed && !added ? t(MSG.COMPARE_OBJECT_SAME) : t(MSG.COMPARE_OBJECT_SUMMARY, removed, added, changed);
 }
 
 /** Folds a box, or opens it when it was folded, and redraws the models. */
@@ -116,13 +130,18 @@ export function toggleFolded(key) {
 /** Every box holding something folded, or all of them open. */
 export function foldAll(fold) {
   foldedBoxes().clear();
-  if (fold) for (const tree of drawn || []) for (const box of boxesOf(tree)) if (box.children.length || box.attributes.length) foldedBoxes().add(box.foldKey);
+  if (fold && compared) {
+    for (const tree of [compared.left, compared.right]) for (const box of boxesOf(tree)) if (box.children.length || box.attributes.length) foldedBoxes().add(box.foldKey);
+  }
   redrawModels();
 }
 
 function redrawModels() {
   const pair = comparedPair();
-  if (drawn && pair) { drawTrees(drawn, pair); applyZoom(); }
+  if (compared && pair && compared.key === pairKey(pair)) {
+    drawTrees([compared.left, compared.right], pair);
+    applyZoom();
+  }
 }
 
 // ---- the source ----
@@ -132,33 +151,49 @@ const sourceOf = (place) => (place ? place.text || (place.entry && place.entry.t
 
 const linesOf = (mark) => declarationLines(sourceOf(placeOf(mark)), nodeOf(mark));
 
+/** The lines the server numbered from one, numbered as in their file again. */
+const numbered = (lines, first) => lines.map(l => ({ n: l.n + first - 1, text: l.text }));
+
 /** The two sources in one scrolling area, each line beside the one it matches; what is shown is the source as it is written. */
-function drawText(pair) {
+async function drawText(pair) {
   const [la, lb] = pair.map(linesOf);
-  const ops = la.length && lb.length ? diffLines(la.map(l => shapeOf(l.text)), lb.map(l => shapeOf(l.text))) : null;
-  $(ID.OBJECT_COMPARE_TEXT).innerHTML = ops ? textDiffHtml({ la, lb, ops }, isDiffOnly() ? CONTEXT : null) : absent();
-  const found = ops && { left: ops.filter(o => o.op === OP.DELETE).length, right: ops.filter(o => o.op === OP.INSERT).length };
+  if (!la.length || !lb.length) {
+    $(ID.OBJECT_COMPARE_TEXT).innerHTML = absent();
+    return sidesSummary(null, MSG.OBJECT_COMPARE_TEXT_SUMMARY, MSG.OBJECT_COMPARE_TEXT_SAME);
+  }
+  const join = (lines) => lines.map(l => l.text).join('\n');
+  const r = await compareTexts(join(la), join(lb), { ignoreSpacing: true });
+  $(ID.OBJECT_COMPARE_TEXT).innerHTML = textDiffHtml({ la: numbered(r.la, la[0].n), lb: numbered(r.lb, lb[0].n), ops: r.ops }, isDiffOnly() ? CONTEXT : null);
+  const found = r.ops && { left: r.ops.filter(o => o.op === OP.DELETE).length, right: r.ops.filter(o => o.op === OP.INSERT).length };
   return sidesSummary(found, MSG.OBJECT_COMPARE_TEXT_SUMMARY, MSG.OBJECT_COMPARE_TEXT_SAME);
 }
 
 // ---- the neighbourhoods ----
 
-const neighbourhoodOf = (mark) => { const place = placeOf(mark); return place ? neighbourhoodKeys(place, mark.id) : new Set(); };
+/** Nothing a name, a kind or a label can hold, so the parts of a key cannot run into one another. */
+const KEY_SEPARATOR = '\u0000';
+
+/** A link of a neighbourhood as the server keys it too: its word, the other end's kind and name, its occurrences. */
+const linkKey = (label, kind, name, edge) => [label, kind, name, cardinalityText(edge)].join(KEY_SEPARATOR);
+
+/** The keys of the links the server says one side alone has. */
+const keysOf = (links) => new Set(links.map(l => linkKey(l.label, l.kind, l.name, l)));
 
 /** One side's neighbourhood, the links the other side does not have wearing {@code markClass}. */
-function drawGraph(canvasId, mark, otherLinks, markClass) {
+function drawGraph(canvasId, mark, onlyHere, markClass) {
   const canvas = $(canvasId);
   const place = placeOf(mark);
   if (!place || !place.nodes.get(mark.id)) { canvas.innerHTML = absent(); return; }
   const side = Object.assign({}, place, { selected: mark.id });
-  renderGraph(side, canvas, { toolbar: false, onlyMarked: isDiffOnly(), markOf: (n, e) => (n && !otherLinks.has(linkKey(n, e)) ? markClass : '') });
+  renderGraph(side, canvas, { toolbar: false, onlyMarked: isDiffOnly(), markOf: (n, e) => (n && onlyHere.has(linkKey(e.label, n.kind, n.name, e)) ? markClass : '') });
 }
 
-function drawGraphs(pair) {
-  const links = pair.map(neighbourhoodOf);
-  drawGraph(ID.OBJECT_COMPARE_LEFT, pair[0], links[1], CLS.DELETED);
-  drawGraph(ID.OBJECT_COMPARE_RIGHT, pair[1], links[0], CLS.INSERTED);
-  return sidesSummary({ left: only(links[0], links[1]), right: only(links[1], links[0]) }, MSG.OBJECT_COMPARE_GRAPH_SUMMARY, MSG.OBJECT_COMPARE_GRAPH_SAME);
+async function drawGraphs(pair) {
+  const c = await comparedOf(pair);
+  const onlyLeft = keysOf(c.links.onlyLeft), onlyRight = keysOf(c.links.onlyRight);
+  drawGraph(ID.OBJECT_COMPARE_LEFT, pair[0], onlyLeft, CLS.DELETED);
+  drawGraph(ID.OBJECT_COMPARE_RIGHT, pair[1], onlyRight, CLS.INSERTED);
+  return sidesSummary({ left: onlyLeft.size, right: onlyRight.size }, MSG.OBJECT_COMPARE_GRAPH_SUMMARY, MSG.OBJECT_COMPARE_GRAPH_SAME);
 }
 
 // ---- the section ----
@@ -170,7 +205,7 @@ const VIEWS = {
   [VIEW.GRAPH]: { draw: drawGraphs, changedChip: false, foldable: false, asText: false },
 };
 
-/** Only the drawing of the last call is written: the files may have to be parsed first. */
+/** Only the drawing of the last call is written: the files may have to be parsed, and the server asked. */
 let drawing = 0;
 
 /** Draws the Objects section: the two declarations, or what to do when there are not two. */
@@ -191,8 +226,14 @@ export async function renderObjectCompare() {
   header(pair, view);
   for (const m of pair) if (m.entry && !m.entry.model) await ensureModel(m.entry, false);
   if (token !== drawing) return;   // marked or selected something else while the files were parsed
-  $(ID.OBJECT_COMPARE_SUMMARY).textContent = view.draw(pair);
-  applyZoom();   // the panes hold new drawings, which take the tab's level
+  try {
+    const summary = await view.draw(pair);
+    if (token !== drawing) return;   // ... or while the server compared
+    $(ID.OBJECT_COMPARE_SUMMARY).textContent = summary;
+    applyZoom();   // the panes hold new drawings, which take the tab's level
+  } catch (e) {
+    toast(e.message);
+  }
 }
 
 /** The title, the legend, the pane headings, and the panes arranged for the view: two canvases, or one text area under the two names. */

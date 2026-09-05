@@ -53,6 +53,16 @@ public final class ApiPath {
     public static final String WORKSPACE_OPEN = "/api/workspace/open";
     /** {@code POST ?schema=<path>}, body = an XML document: validates it against that schema file. */
     public static final String VALIDATE = "/api/validate";
+    /** POST: the content model tree of a declaration, from the files of its workspace carried in the body. */
+    public static final String MODEL = "/api/model";
+    /** POST: two declarations compared — their trees marked, and the links only one side has. */
+    public static final String COMPARE_DECLARATIONS = "/api/compare/declarations";
+    /** POST: two texts compared line by line. */
+    public static final String COMPARE_TEXTS = "/api/compare/texts";
+    /** POST: what two schemas declare and link that the other does not. */
+    public static final String COMPARE_SCHEMAS = "/api/compare/schemas";
+    /** POST: the files of two workspaces paired by name, each pair with its status. */
+    public static final String COMPARE_WORKSPACES = "/api/compare/workspaces";
     /** Everything else: the static files of the page. */
     public static final String ROOT = "/";
 

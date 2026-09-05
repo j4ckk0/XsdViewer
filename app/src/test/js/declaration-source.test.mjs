@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { declarationLines, shapeOf } from '../../main/resources/web/js/declaration-source.js';
+import { declarationLines } from '../../main/resources/web/js/declaration-source.js';
 
 const text = ['<xs:schema>', '  <xs:complexType name="T">', '    <xs:sequence/>', '  </xs:complexType>', '  <xs:element name="e"/>', '</xs:schema>'].join('\n');
 
@@ -14,9 +14,4 @@ test('nothing for a node the file does not declare', () => {
   assert.deepEqual(declarationLines(text, { line: 0, endLine: 0 }), []);
   assert.deepEqual(declarationLines(text, { line: 3, endLine: 0 }), [], 'a start without an end is not a span');
   assert.deepEqual(declarationLines(null, { line: 2, endLine: 4 }), []);
-});
-
-test('the shape of a line ignores its depth and its spacing', () => {
-  assert.equal(shapeOf('      <xs:element   name="a"/>'), shapeOf('<xs:element name="a"/>'));
-  assert.notEqual(shapeOf('<xs:element name="a"/>'), shapeOf('<xs:element name="b"/>'));
 });

@@ -113,4 +113,47 @@ public final class JsonKey {
     public static final String OK = "ok";
     /** {@code /api/settings}: stop the server once every page has been closed. */
     public static final String AUTO_STOP = "autoStop";
+
+    // the content model tree ({@code model.Box}) and the line diff ({@code compare.LineDiff}), as the page reads them
+    public static final String TYPE_ID = "typeId";
+    public static final String TYPE_NAME = "typeName";
+    public static final String WORD = "word";
+    public static final String CARD = "card";
+    public static final String EXPANDABLE = "expandable";
+    public static final String EXPANDED = "expanded";
+    public static final String RECURSIVE = "recursive";
+    public static final String ROOT = "root";
+    public static final String DIFF = "diff";
+    public static final String FOLD_KEY = "foldKey";
+    public static final String OP = "op";
+    public static final String A = "a";
+    public static final String B = "b";
+    public static final String MOVED = "moved";
+    public static final String MOVED_TO = "movedTo";
+    public static final String MOVED_FROM = "movedFrom";
+    public static final String N = "n";
+
+    // the model and comparison requests (/api/model, /api/compare/*) and their answers
+    public static final String HOME = "home";
+    public static final String LEFT = "left";
+    public static final String RIGHT = "right";
+    public static final String BUSINESS_ONLY = "businessOnly";
+    public static final String IGNORE_SPACING = "ignoreSpacing";
+    public static final String OPEN_ALL = "openAll";
+    public static final String LA = "la";
+    public static final String LB = "lb";
+    public static final String OPS = "ops";
+    public static final String ONLY_MOVES = "onlyMoves";
+    public static final String COUNTS = "counts";
+    public static final String LINKS = "links";
+    public static final String ONLY_LEFT = "onlyLeft";
+    public static final String ONLY_RIGHT = "onlyRight";
+    public static final String SCHEMAS = "schemas";
+    public static final String SAME = "same";
+    public static final String NODES_ONLY_LEFT = "nodesOnlyLeft";
+    public static final String NODES_ONLY_RIGHT = "nodesOnlyRight";
+    public static final String EDGES_ONLY_LEFT = "edgesOnlyLeft";
+    public static final String EDGES_ONLY_RIGHT = "edgesOnlyRight";
+    public static final String PAIRS = "pairs";
+    public static final String STATUS = "status";
 }

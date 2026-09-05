@@ -13,14 +13,18 @@
  * patterns, they their rules, they their assertions. Such a box is named after what the link leads
  * to, with the link's word above it, and opens the same way.
  *
- * The tree it draws is built by {@link model-tree.js}; the drawing is an SVG, which the PNG and
- * SVG exports serve as they serve the graph.
+ * The tree it draws is the server's ({@code POST /api/model}, {@code model-requests.js} says what the
+ * request carries), asked for again when the selection or the opened boxes change and kept on the tab
+ * meanwhile; the drawing is an SVG, which the PNG and SVG exports serve as they serve the graph.
  */
 import { NODE_KIND, PARTICLE, SVG_NS, TEXT, isSchematron, isWsdl } from './constants.js';
 import { FAMILY, familyOf } from './link-categories.js';
 import { cardinalityText, isOptional } from './cardinality.js';
 import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
-import { EXPAND_ALL_DEPTH, buildTree } from './model-tree.js';
+import { fetchModel } from './api.js';
+import { tabSide, libraryKey } from './model-requests.js';
+import { toast } from './toast.js';
+import { applyZoom } from './zoom.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
@@ -57,22 +61,24 @@ export function initModelView(select) {
   });
 }
 
-/** Every expandable box open, down to EXPAND_ALL_DEPTH levels. */
-function expandAll() {
+/** Every expandable box open, as deep as the server opens them: the paths of the whole tree become the opened ones. */
+async function expandAll() {
   const st = session.active;
-  st.modelExpanded = new Set();
-  for (let depth = 0; depth < EXPAND_ALL_DEPTH; depth++) {
-    const root = st.nodes.get(st.selected);
-    if (!root) return;
-    let added = false;
+  if (!st.model || !st.selected) return;
+  try {
+    const tree = await fetchModel(Object.assign(tabSide(st, st.selected), { openAll: true }));
+    if (session.active !== st) return;
+    st.modelExpanded = new Set();
     const walk = (box) => {
-      if (box.expandable && !box.expanded) { st.modelExpanded.add(box.path); added = true; }
+      if (box.expandable && box.expanded) st.modelExpanded.add(box.path);
+      box.attributes.forEach(walk);
       box.children.forEach(walk);
     };
-    walk(buildTree(root, st));
-    if (!added) break;
+    walk(tree);
+    renderModel();
+  } catch (e) {
+    toast(e.message);
   }
-  renderModel();
 }
 
 function collapseAll() {
@@ -137,14 +143,36 @@ export function modelSvg(tree, label, minHeight = 0, { foldable = false } = {}) 
     + '" role="img" aria-label="' + esc(label) + '">' + links + boxes + '</svg>';
 }
 
-/** Draws the model of the selected node into the canvas. */
+/** What a request depends on, short of the texts: the declaration, the opened boxes, and how many files of the workspace are parsed. */
+const requestKey = (st) => [st.selected, [...st.modelExpanded].sort().join(','), libraryKey(st.workspace)].join('|');
+
+/**
+ * Draws the model of the selected node into the canvas: from the tree kept on the tab when the
+ * request would be the same (a resize, a zoom), else from the server's answer once it comes — unless
+ * the reader has moved on meanwhile.
+ */
 export function renderModel() {
   const st = session.active;
   $(ID.MODEL_BACK_BUTTON).disabled = st.history.length === 0;   // the selection's history, as the graph's Back walks it
   const canvas = $(ID.MODEL_CANVAS);
   if (!st.model || !st.selected) { canvas.innerHTML = ''; return; }
+  const key = requestKey(st);
+  if (st.modelTree && st.modelTree.key === key) { draw(st, st.modelTree.tree); return; }
+  canvas.dataset[DATA.LOADING] = DATA.LOADING;
+  fetchModel(Object.assign(tabSide(st, st.selected), { expanded: [...st.modelExpanded] }))
+    .then(tree => {
+      if (session.active !== st || requestKey(st) !== key) return;
+      st.modelTree = { key, tree };
+      draw(st, tree);
+      applyZoom();   // a new SVG, which takes the tab's level
+    })
+    .catch(e => toast(e.message))
+    .finally(() => { if (requestKey(session.active) === key) delete canvas.dataset[DATA.LOADING]; });
+}
+
+function draw(st, tree) {
+  const canvas = $(ID.MODEL_CANVAS);
   const root = st.nodes.get(st.selected);
-  const tree = buildTree(root, st);
   const label = t(MSG.MODEL_TITLE, kindLabel(root.kind), root.name);
   canvas.innerHTML = modelSvg(tree, label, canvas.clientHeight);
   $(ID.MODEL_TITLE).textContent = label;
