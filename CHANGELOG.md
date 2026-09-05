@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 5.3.2 — 2026-09-05
 
 - **The search text stays when you select a result in another file.** The workspace search is now the workspace's, shared by its tabs, rather than each tab's own — so selecting a match in another file no longer empties the box.
 
