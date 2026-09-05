@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 5.3.1 — 2026-09-05
 
 - The Settings menu opens with the theme, the display choices first and the server option below.
 - **An attribute box writes the type on a second line**, in grey, the way an element box does: `@name` on top at the full width of the box, the type below — so a long name or a long type stays inside the box rather than painting past its edge.
