@@ -63,6 +63,7 @@ export const ID = {
   FILE_NAME: 'fileName',
   BUSY: 'busy',
   BUSY_LABEL: 'busyLabel',
+  BUSY_STOP: 'busyStop',
   EXPORT_BUTTON: 'exportBtn',
   LANGUAGE: 'language',
   TABS: 'tabs',

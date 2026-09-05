@@ -507,7 +507,9 @@ The ⊞ / ⊟ buttons expand or collapse a whole tree at once (the Files panel, 
 the rows of a comparison). Large sets stay light: a folder or a workspace holding more than 10 schemas, or more
 than 10 linked schemas found at once, are only listed (parsed in the background, a few at a time —
 while a search runs before they are all parsed, a last row counts the files it cannot see yet) and a single
-tab is opened; the others open on demand from the panel.
+tab is opened; the others open on demand from the panel. While a folder is being read or its files
+parsed, the busy indicator at the top offers **Stop** — a folder opened by mistake is halted at once,
+the files not yet reached left listed and openable later.
 
 A **workspace is a group of tabs**: the workspace bar, above the tabs, shows one chip per
 workspace (click it to switch to that workspace — the tab you last had there comes back —,

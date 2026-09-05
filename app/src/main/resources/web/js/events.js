@@ -4,6 +4,7 @@ import { $, selector } from './dom.js';
 import { CLS, DATA, ID } from './dom-names.js';
 import { closeAbout, showAbout } from './about.js';
 import { closeGuide, closeShortcuts, showGuide, showShortcuts } from './help.js';
+import { cancelLoading } from './busy.js';
 import { initOptions, rememberOptions, setAllDetails, toggleDetail } from './files-section.js';
 import { clearSelection, toggleSelection } from './workspace-selection.js';
 import { clearMarks, closeComparison, markSide, openComparison, showSection, swapSides } from './comparison-state.js';
@@ -255,6 +256,7 @@ function wireViews() {
   $(ID.ZOOM_IN).addEventListener('click', zoomIn);
   $(ID.ZOOM_OUT).addEventListener('click', zoomOut);
   $(ID.ZOOM_LEVEL).addEventListener('click', zoomReset);
+  $(ID.BUSY_STOP).addEventListener('click', cancelLoading);
   $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
   $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
   window.addEventListener('resize', renderMainView);   // the drawn views are laid out for the room they have

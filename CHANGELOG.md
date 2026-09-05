@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **A Stop button halts a folder that is loading.** While a folder is being read or its files parsed in the background, the busy indicator offers Stop; a folder opened by mistake — a whole drive — is halted at once, the files not yet reached left listed and openable later.
+
 ## 5.2.1 — 2026-09-05
 
 - The GitHub page said the application was for those who "read or write schemas"; it is a viewer, so it now says "read schemas".

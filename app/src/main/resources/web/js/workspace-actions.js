@@ -1,6 +1,6 @@
 /** The File menu on workspaces: new / open / save / close a workspace, and opening a folder as one. */
 import { chooseFolder, openWorkspaceFile, saveWorkspaceFile } from './api.js';
-import { busy } from './busy.js';
+import { beginBusy, busy } from './busy.js';
 import { MAX_AUTO_OPEN, MAX_FOLDER_FILES, TEXT, XSD_FILE_PATTERN } from './constants.js';
 import { ensureTab, parseInBackground } from './file-tabs.js';
 import { registerFile, savableFiles } from './workspace-files.js';
@@ -103,25 +103,35 @@ async function doApplyWorkspace(answer) {
 /** File ▸ Open folder…: the server's folder chooser when it has a display (files come with their location), else the browser's. */
 export async function openFolder() {
   if (!session.dialogs) { $(ID.FOLDER_INPUT).click(); return; }
+  const abort = new AbortController();
   try {
-    const r = await busy(t(MSG.BUSY_READING_FOLDER), chooseFolder());
+    const r = await busy(t(MSG.BUSY_READING_FOLDER), chooseFolder(abort.signal), () => abort.abort());
     if (r.cancelled) return;
     await busy(t(MSG.BUSY_WORKSPACE), openFolderAsWorkspace(r.name || r.folder, r.files, r.truncated));
   } catch (e) {
+    if (abort.signal.aborted) { toast(t(MSG.LOADING_STOPPED)); return; }   // Stop while the server was reading the folder
     toastServerError(e);
   }
 }
 
-/** A folder opened or dropped in the browser: its files feed the library, its .xsd files become a workspace named after it ({@code relOf}: a File's path in the folder). */
-export function openBrowserFolder(files, relOf, folderName) {
-  return busy(t(MSG.BUSY_READING_FOLDER), async () => {
+/** A folder opened or dropped in the browser: its files feed the library, its .xsd files become a workspace named after it ({@code relOf}: a File's path in the folder). Stoppable while it reads the files. */
+export async function openBrowserFolder(files, relOf, folderName) {
+  let cancelled = false;
+  const task = beginBusy(t(MSG.BUSY_READING_FOLDER), () => { cancelled = true; });
+  try {
     addToLibrary(files, relOf);
     const schemas = files.filter(f => XSD_FILE_PATTERN.test(relOf(f))).sort((a, b) => relOf(a).localeCompare(relOf(b)));
     const kept = schemas.slice(0, MAX_FOLDER_FILES);
     const read = [];
-    for (const f of kept) read.push({ name: f.name, path: null, text: await f.text(), rel: normPath(relOf(f)) });   // rel: what links resolve to in the library
+    for (const f of kept) {
+      if (cancelled) break;
+      read.push({ name: f.name, path: null, text: await f.text(), rel: normPath(relOf(f)) });   // rel: what links resolve to in the library
+    }
+    if (cancelled) { toast(t(MSG.LOADING_STOPPED)); return; }
     await openFolderAsWorkspace(folderName, read, schemas.length > kept.length);
-  });
+  } finally {
+    task.end();
+  }
 }
 
 /** A sub-folder of the Files panel opened as its own workspace: the files beneath it, with their text and model already at hand. */

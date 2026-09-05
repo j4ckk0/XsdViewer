@@ -66,9 +66,10 @@ export async function fetchCapabilities() {
 }
 
 /** The JSON answer of a POST, or an Error carrying the server's message. */
-async function post(url, body) {
+async function post(url, body, signal) {
   const init = body === undefined ? { method: HTTP.POST }
     : { method: HTTP.POST, headers: { [HTTP.CONTENT_TYPE_HEADER]: HTTP.JSON }, body: JSON.stringify(body) };
+  if (signal) init.signal = signal;
   const resp = await request(url, init);
   const json = await resp.json();
   if (!resp.ok) throw new Error(json.error || String(resp.status));
@@ -80,9 +81,9 @@ export async function chooseFiles() {
   return (await post(API.CHOOSE)).files;
 }
 
-/** POST /api/choose-folder: {folder, files: [{name, path, text}], truncated} of the folder picked in the server's dialog, or {cancelled}. */
-export async function chooseFolder() {
-  return post(API.CHOOSE_FOLDER);
+/** POST /api/choose-folder: {folder, files: [{name, path, text}], truncated} of the folder picked in the server's dialog, or {cancelled}. The {@code signal} aborts the wait when the user stops the loading. */
+export async function chooseFolder(signal) {
+  return post(API.CHOOSE_FOLDER, undefined, signal);
 }
 
 /** POST /api/workspace/save: writes the workspace where the server's "save as" dialog says ({@code suggested} proposed); {path} or {cancelled}. */

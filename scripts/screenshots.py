@@ -271,6 +271,24 @@ SCENES = [
                  'svgWellFormed': 'true',
                  'pngFiles': 'ProductType-compared-left.png|ProductType-compared-right.png|ProductType-ProductType-compared.png',
                  'pngCount': 3}),
+    # Stop halts a folder being parsed in the background (a large folder opened by mistake): the files not yet reached stay listed, unparsed
+    dict(name='stop-loading', file='samples/purchaseOrder.xsd', theme='light',
+         action="const filler = (i) => '<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"urn:f:' + i + '\"><xs:element name=\"f' + i + '\" type=\"xs:string\"/></xs:schema>';"
+                "const files = []; for (let i = 0; i < 800; i++) files.push(new File([filler(i)], 'filler' + i + '.xsd'));"
+                "const wa = await import('/js/workspace-actions.js');"
+                "await wa.openBrowserFolder(files, f => 'many/' + f.name, 'many');"
+                # the background parse is running: its Stop is offered — stop it before the queue drains
+                "const stop = document.getElementById('busyStop'); let seen = false;"
+                "for (let i = 0; i < 300; i++) { if (!stop.classList.contains('hidden')) { seen = true; break; } await new Promise(r => setTimeout(r, 10)); }"
+                "window.__seen = seen; stop.click();"
+                "await new Promise(r => setTimeout(r, 700));"
+                "const st = await import('/js/state.js'); const ws = st.session.workspaces.slice(-1)[0];"
+                "window.__unparsed = ws.files.filter(f => !f.model && !f.failed).length;",
+         checks={'stopOffered': "String(window.__seen)",
+                 'someLeftUnparsed': "String(window.__unparsed > 0)",
+                 'toast': "document.getElementById('toast').textContent.trim()",
+                 'stopHiddenAfter': "String(document.getElementById('busyStop').classList.contains('hidden'))"},
+         expect={'stopOffered': 'true', 'someLeftUnparsed': 'true', 'toast': 'Loading stopped', 'stopHiddenAfter': 'true'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

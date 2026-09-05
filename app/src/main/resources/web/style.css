@@ -139,6 +139,9 @@ html, body {
 /* the busy indicator: a spinning wheel and what is going on, while a long action runs */
 .busy { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .busy .wheel { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+/* Stop: cancels a folder being read or parsed, beside the wheel */
+.busy-stop { font: inherit; font-size: 11px; color: var(--c-external); background: none; border: 1px solid var(--border); border-radius: 5px; padding: 1px 7px; cursor: pointer; }
+.busy-stop:hover { background: var(--hover); border-color: var(--c-external); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .menubtn, .dropdown button, .tab, #backBtn, #modelBackBtn {

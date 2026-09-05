@@ -48,10 +48,12 @@ export function parseInBackground(ws) {
   chain = chain.then(async () => {
     const queue = ws.files.filter(entry => !entry.model && !entry.failed);
     if (!queue.length) return;
-    const task = beginBusy(t(MSG.BUSY_PARSING, queue.length));
+    // Stop leaves the files not yet reached listed but unparsed, to be opened on demand later
+    let cancelled = false;
+    const task = beginBusy(t(MSG.BUSY_PARSING, queue.length), () => { cancelled = true; });
     let lastRedraw = 0;
     const worker = async () => {
-      for (let entry = queue.shift(); entry; entry = queue.shift()) {
+      for (let entry = queue.shift(); entry && !cancelled; entry = queue.shift()) {
         await ensureModel(entry, false);
         if (Date.now() - lastRedraw >= REDRAW_INTERVAL_MS) { lastRedraw = Date.now(); renderFileList(); task.update(t(MSG.BUSY_PARSING, queue.length)); }
       }
@@ -62,6 +64,7 @@ export function parseInBackground(ws) {
       task.end();
     }
     renderFileList();
+    if (cancelled) toast(t(MSG.LOADING_STOPPED));
   }).catch(() => { /* nothing to report: a file that fails is shown as such */ });
   return chain;
 }
