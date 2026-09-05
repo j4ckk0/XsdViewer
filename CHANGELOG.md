@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- The Settings menu opens with the theme, the display choices first and the server option below.
+
 ## 5.3.0 — 2026-09-05
 
 - **A Stop button halts a folder that is loading.** While a folder is being read or its files parsed in the background, the busy indicator offers Stop; a folder opened by mistake — a whole drive — is halted at once, the files not yet reached left listed and openable later.

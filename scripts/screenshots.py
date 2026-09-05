@@ -321,6 +321,11 @@ SCENES = [
                 "window.__cleared = s.value === '' && getComputedStyle(x).display === 'none';",
          checks={'emptyHidden': "String(window.__emptyHidden)", 'shownWithText': "String(window.__shown)", 'clearsIt': "String(window.__cleared)"},
          expect={'emptyHidden': 'true', 'shownWithText': 'true', 'clearsIt': 'true'}),
+    # the Settings menu: the theme entry first
+    dict(name='settings-order', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.getElementById('settingsMenuBtn').click();",
+         checks={'order': "[...document.querySelectorAll('#settingsMenu > button')].map(b => b.id).join('|')"},
+         expect={'order': 'menuTheme|menuHandles|menuAutoStop'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"
