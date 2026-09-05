@@ -1,40 +1,120 @@
 # XsdViewer – architecture
 
-XsdViewer is a two-tier tool: a small **Java server** that parses XML Schema files into a
-graph model, and a **browser client** that renders that model as an interactive graph and as
-highlighted source text. Everything ships in one jar; the only runtime requirement is a JDK 21.
+XsdViewer is a **library** and an **application built on it**. `xsdviewer-core` reads XML Schema,
+WSDL 1.1 and Schematron files and answers questions about them — what a file declares, what a
+document of a declaration holds, how two of them differ, whether a document is valid. `xsdviewer`
+serves a page that asks those questions over HTTP and draws the answers. Everything ships in one jar;
+the only runtime requirement is a Java 21 runtime.
 
+```mermaid
+flowchart TB
+    subgraph jar["xsdviewer.jar — what a user downloads"]
+        page["<b>the page</b><br/>index.html, style.css, js/ (ES modules), i18n/<br/>draws; asks; interprets no schema itself"]
+        server["<b>the server</b> — org.jtools:xsdviewer<br/>com.sun.net.httpserver: the static files, /api/*,<br/>the native file dialogs, the workspaces"]
+        core["<b>the library</b> — org.jtools:xsdviewer-core<br/>schema · model · compare · json<br/>the JDK and nothing else"]
+    end
+    yours["<b>your program</b><br/>a Maven dependency, or HTTP"]
+    page -- "HTTP, on localhost" --> server
+    server --> core
+    yours -. "org.jtools:xsdviewer-core" .-> core
+    yours -. "POST /api/…" .-> server
 ```
-┌───────────────────────────── browser ──────────────────────────────┐
-│  index.html / style.css / js/*.js (ES modules) / i18n/<lang>.json   │
-│  File ▸ Open / drag-and-drop ──► fetch POST /api/parse ──► model    │
-│  Graph view (SVG ego-graph) · Text view · sidebar · details panel   │
-└──────────────────────────────┬─────────────────────────────────────┘
-                               │ HTTP (localhost)
-┌──────────────────────────────┴─────────────────────────────────────┐
-│  server/         com.sun.net.httpserver – static files + /api/*     │
-│  schema/         XSD text ─► SchemaGraph (DOM walk + SAX line index)│
-│  json/           nodes, edges, imports ─► JSON                      │
-│  Messages        server texts, messages_<lang>.properties           │
-└────────────────────────────────────────────────────────────────────┘
+
+The page holds no knowledge of XML Schema: it draws what the server answers. The same answers are
+what a program of your own gets, through the dependency or through the API — the two doors of
+[README](README.md#xsdviewer), with [`examples/`](examples/README.md) for each.
+
+## What happens when a schema is read
+
+```mermaid
+sequenceDiagram
+    participant U as reader
+    participant P as the page
+    participant S as the server
+    participant C as core
+    U->>P: opens a file (dialog, drop, command line)
+    P->>S: POST /api/parse — the text
+    S->>C: SchemaParser.parse
+    C-->>S: SchemaGraph — declarations, links, content models, lines
+    S-->>P: the graph as JSON
+    P->>P: indexes it, draws the object list
+    U->>P: selects a declaration
+    P->>S: POST /api/model — the workspace's files, which one, which declaration
+    S->>C: ContentTree.build over a Library of those files
+    C-->>S: a tree of boxes
+    S-->>P: the tree as JSON
+    P->>P: draws it as an SVG
 ```
+
+Every call carries what it needs: the server keeps no session, only a cache of parsed texts by their
+hash, so the same files may come back with every click without being parsed again.
+
+## The library
+
+```mermaid
+flowchart LR
+    schema["<b>schema</b><br/>SchemaParser → SchemaGraph<br/>XmlValidator, SchematronValidator<br/>NodeKind, LinkLabel, XsdNames…"]
+    model["<b>model</b><br/>ContentTree → Box<br/>over a Library of files"]
+    compare["<b>compare</b><br/>ModelDiff, TextComparison,<br/>SchemaDiff, WorkspacePairing"]
+    json["<b>json</b><br/>JsonWriter, JsonReader, JsonKey<br/>+ the writers of each answer"]
+    schema --> model --> compare
+    schema --> compare
+    model --> json
+    compare --> json
+    schema --> json
+```
+
+`schema` reads a file; `model` builds the content model of one declaration across the files of a
+`Library`; `compare` answers what differs between two declarations, two texts, two schemas or two
+workspaces; `json` writes any of those as what the page reads. A package's `package-info.java` says
+what it promises and what is internal to it.
+
+## What the page shows
+
+One place at a time, and `js/view-router.js` decides which:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Empty: nothing open
+    Empty --> File: a file is opened
+    File --> File: another tab, another declaration
+    File --> Validation: Help ▸ Validate an XML file…
+    Validation --> File: its tab is closed
+    File --> Comparison: ⇄ Compare
+    Comparison --> File: a workspace chip
+    state File {
+        Model --> Text
+        Text --> Graph
+        Graph --> Model
+    }
+    state Comparison {
+        Objects --> Files
+        Files --> Objects
+    }
+```
+
+The comparison is a place of its own on the workspace bar, not a view of a file: it has no tabs, and
+its Objects section keeps a view of its own, so switching there leaves every tab where its reader
+left it.
 
 Design choices that shape everything else:
 
-- **Parsing on the server, in Java.** The requirement was a Java tool; the browser is only
-  a display. The client never interprets XSD itself.
-- **No runtime dependency.** Both tiers use only what the JDK and the browser provide:
-  `java.xml` and `jdk.httpserver` on one side, vanilla DOM/SVG on the other. There is no
-  build step for the web assets and no framework to upgrade.
-- **The file stays in the browser.** The client sends the schema text to the server and
-  keeps its own copy for the text view; the server holds no state between requests (except
-  the optional file given on the command line and the list of files it has served).
-- **The server knows the disk, the browser does not.** A browser hides where a chosen file
-  is; the server, on the same machine, opens native file dialogs (`java.awt.FileDialog`) for
-  File ▸ Open… and the workspace commands, so that files come with their location, links
-  can be followed relative to it, and a workspace can record it.
-- **Single file, level-1 links.** The model describes one XSD: its global declarations and
-  the direct references between them. Imports/includes are reported, not followed.
+- **The schema is read in Java, never in the browser.** The requirement was a Java tool; the page is
+  a display. What the page draws — the graph, the content model, the marks of a comparison — is
+  computed by the library and sent as JSON.
+- **No runtime dependency.** Both sides use only what the JDK and the browser provide: `java.xml`
+  and `jdk.httpserver` on one, vanilla DOM and SVG on the other. There is no build step for the web
+  assets and no framework to upgrade.
+- **Stateless requests.** A request carries the files it needs; the server holds no session. What it
+  does keep is a cache of parsed texts, and the files it has served (so a link can be followed
+  relative to one).
+- **The server knows the disk, the browser does not.** A browser hides where a chosen file is; the
+  server, on the same machine, opens native file dialogs (`java.awt.FileDialog`) for File ▸ Open…
+  and the workspace commands, so that files come with their location, links can be followed relative
+  to it, and a workspace can record it.
+- **A workspace, not a file.** A file is read with the others it was opened with: an import or a
+  named type is resolved in them, the graph shows who uses what across them, and two workspaces can
+  be compared file by file.
 
 ## Modules
 

@@ -645,6 +645,22 @@ SCENES = [
          checks={'highlighted': "document.querySelectorAll('#text .line.hl').length",
                  'view': "document.querySelector('.tab.active').dataset.view"},
          expect={'highlighted': 1, 'view': 'text'}),
+    dict(name='doc-compare-text', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-text.jpg',
+         action=OPEN_V2 + "const pick = (w, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
+                "pick('v1', 'left'); pick('v2', 'right');"
+                + DECLARATIONS
+                + "await new Promise(r => setTimeout(r, 400));"
+                "document.querySelector('#viewTabs .tab[data-view=\"text\"]').click();"
+                "await new Promise(r => setTimeout(r, 400));"
+                "document.getElementById('toast').classList.add('hidden');",
+         checks={'active': "document.querySelector('#viewTabs .tab.active').textContent",
+                 'rows': "document.querySelectorAll('#objectCompareText .cside:first-child tr').length",
+                 'marked': "document.querySelectorAll('#objectCompareText td.code.del').length"},
+         expect={'active': 'Text', 'rows': 13, 'marked': 4}),
     dict(name='doc-compare-workspaces', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-workspaces.jpg',
          action=OPEN_V2 + FILES
                 # the listed files finish parsing in the background, and their end redraws the table
