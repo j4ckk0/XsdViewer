@@ -132,7 +132,8 @@
         <plugin>
           <groupId>org.sonatype.central</groupId>
           <artifactId>central-publishing-maven-plugin</artifactId>
-          <version>0.7.0</version>
+          <!-- 0.7.0 could not read the field the portal added to its status answer, and threw on a deployment it had just uploaded -->
+          <version>0.11.0</version>
           <extensions>true</extensions>
         </plugin>
         <plugin>

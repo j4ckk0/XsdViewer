@@ -106,3 +106,18 @@ javadoc, signs the three and uploads the bundle to the portal, where it is valid
 released until **Publish** is pressed there (`autoPublish` is off), so a mistake costs nothing.
 The version must not be a SNAPSHOT.
 
+Two things learnt doing it the first time (v5.0.0, 5 September 2026):
+
+- `gpg --send-keys` reports success here while the key never leaves: the key-server ports are
+  filtered. Upload over HTTPS instead — `gpg --armor --export <id> > pub.asc` then
+  `curl --data-urlencode "keytext@pub.asc" https://keyserver.ubuntu.com/pks/add`, which answers with
+  the fingerprint it inserted.
+- A failed build after `Uploaded bundle successfully` does not mean a failed upload: the plugin polls
+  the portal afterwards, and an old one throws on a field the portal has since added. Ask the portal
+  itself rather than trusting the exit code:
+
+      curl -X POST -H "Authorization: Bearer $(printf '%s:%s' "$USER_TOKEN" "$PASSWORD" | base64 -w0)" \
+        "https://central.sonatype.com/api/v1/publisher/status?id=<deploymentId>"
+
+  `deploymentState: VALIDATED` means it is staged and waiting for **Publish**.
+
