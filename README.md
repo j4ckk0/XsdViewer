@@ -9,7 +9,7 @@ document of it holds, how its declarations refer to one another, what changed be
 
 | | |
 |---|---|
-| You read or write schemas | [**1. The application**](#1-the-application) — download it, run it, look |
+| You read schemas | [**1. The application**](#1-the-application) — download it, run it, look |
 | You write programs that read schemas | [**2. The library**](#2-a-library-on-maven-central) — `org.jtools:xsdviewer-core`, and the HTTP API |
 | You want to read or change the code | [**3. The code**](#3-the-open-source-code) and [**4. The architecture**](#4-the-architecture) |
 
