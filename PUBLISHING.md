@@ -83,17 +83,25 @@ that has it:
 
 `core` is meant to be published as `org.jtools:xsdviewer-core`; `app` never is. What it takes, once:
 
-1. **The namespace.** Maven Central hands out a groupId only to who owns it: `org.jtools` needs a
-   DNS TXT record on `jtools.org` carrying the verification key the portal gives, or the groupId
-   becomes `io.github.j4ckk0`, granted at once to the GitHub account. Decide this first: the
-   coordinates in `core/README.md` and every pom follow.
-2. **An account on <https://central.sonatype.com>**, and a *user token* from it, kept as the server
-   `central` in `~/.m2/settings.xml` (`<server><id>central</id><username>…</username><password>…</password></server>`).
-3. **A GPG key** (`gpg --gen-key`), its public part sent to a key server the portal reads
-   (`gpg --keyserver keyserver.ubuntu.com --send-keys <id>`); `maven-gpg-plugin` signs with the
-   default key, or `-Dgpg.keyname=<id>`.
+1. **The namespace `org.jtools`.** Maven Central hands out a groupId only to who owns the domain it
+   reverses, and jtools.org is ours. On <https://central.sonatype.com>, *Namespaces* ▸ *Add
+   Namespace* ▸ `org.jtools`: the portal answers with a verification key, which goes into a **DNS TXT
+   record on `jtools.org`** (name `@`, value the key alone), then *Verify Namespace*. DNS takes
+   minutes to hours to propagate; `dig +short TXT jtools.org` says when the record is visible. Once
+   verified the namespace is ours for good, and every `org.jtools:*` artifact can be published.
+2. **An account on <https://central.sonatype.com>**, and a *user token* from it (*View Account* ▸
+   *Generate User Token*), kept as the server `central` in `~/.m2/settings.xml`:
 
-Then, for a version: `mvn -Ppublish -DskipTests deploy` builds core's jar, its sources and its
+       <settings><servers><server>
+         <id>central</id><username>…</username><password>…</password>
+       </server></servers></settings>
+
+3. **A GPG key** (`gpg --full-generate-key`), its public part sent to a key server the portal reads
+   (`gpg --list-secret-keys --keyid-format=long`, then
+   `gpg --keyserver keyserver.ubuntu.com --send-keys <id>`); `maven-gpg-plugin` signs with the
+   default key, or `-Dgpg.keyname=<id>`. Central refuses an unsigned bundle.
+
+Then, for a version: `mvn -Ppublish -DskipTests -pl core -am deploy` builds core's jar, its sources and its
 javadoc, signs the three and uploads the bundle to the portal, where it is validated. Nothing is
 released until **Publish** is pressed there (`autoPublish` is off), so a mistake costs nothing.
 The version must not be a SNAPSHOT.

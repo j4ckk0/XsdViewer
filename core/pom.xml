@@ -14,5 +14,7 @@
   <packaging>jar</packaging>
 
   <name>XsdViewer core</name>
+  <!-- said here rather than inherited: Maven would otherwise append the module's path to the parent's URL -->
+  <url>https://github.com/j4ckk0/XsdViewer/tree/master/core</url>
   <description>Parses an XML Schema, a WSDL or a Schematron into a graph of its declarations and their links, with the content model of each; validates a document against a schema and a Schematron. The JDK and nothing else.</description>
 </project>
