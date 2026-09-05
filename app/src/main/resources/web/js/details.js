@@ -1,6 +1,6 @@
 /** The right panel, under the schema header (sidebar.js): the selected object, its expression (a Schematron rule's context, an assertion's test), its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
 import { cardinalityText, isOptional } from './cardinality.js';
-import { NODE_KIND, STORAGE_KEY, TEXT, kindOfId, nameOfId } from './constants.js';
+import { NODE_KIND, STORAGE_KEY, TEXT, VIEW, kindOfId, nameOfId } from './constants.js';
 import { SIDE, SIDES, heldBy, sideOf } from './comparison-state.js';
 import { placeAttributes, usersInWorkspace } from './declaration-lookup.js';
 import { $, dataAttr, esc } from './dom.js';
@@ -23,6 +23,7 @@ export function renderDetails() {
   let html = '<h2>' + esc(n.name) + '</h2><span class="' + CLS.BADGE + ' ' + n.kind + '">' + esc(kindLabel(n.kind)) + '</span>';
   html += '<div class="' + CLS.META + '">'
     + (n.line > 0 ? '<a' + dataAttr(DATA.LINE, n.line) + '>' + esc(t(MSG.DETAILS_SHOW_IN_TEXT, n.line)) + '</a>' : esc(t(MSG.DETAILS_NO_DECLARATION)))
+    + viewLink(VIEW.MODEL, MSG.DETAILS_IN_MODEL) + viewLink(VIEW.GRAPH, MSG.DETAILS_IN_GRAPH)
     + '</div>';
   if (n.xpath) html += '<div class="' + CLS.XPATH + '" title="' + esc(t(MSG.DETAILS_XPATH)) + '"><code>' + esc(n.xpath) + '</code></div>';
   if (n.doc) html += '<div class="' + CLS.DOC + '">' + esc(n.doc) + '</div>';
@@ -52,6 +53,12 @@ export function renderDetails() {
  * The Compare group: which side of the comparison holds this declaration, and the comparison itself.
  * An external placeholder is declared in another file, so it has nothing to put on a side.
  */
+/** Between the links of the details' first line. */
+const VIEW_LINK_SEPARATOR = ' · ';
+
+/** A link to the object in one of the two other views: the same object, another question asked of it. */
+const viewLink = (view, key) => VIEW_LINK_SEPARATOR + '<a' + dataAttr(DATA.VIEW, view) + ' title="' + esc(t(MSG.DETAILS_IN_VIEW_TITLE)) + '">' + esc(t(key)) + '</a>';
+
 function renderCompareGroup(n) {
   const st = session.active;
   const shown = !!n && n.kind !== NODE_KIND.EXTERNAL;

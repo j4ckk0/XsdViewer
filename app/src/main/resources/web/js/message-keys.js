@@ -122,6 +122,13 @@ export const MSG = {
   GRAPH_KIND_IN_FILE: 'graph.kindInFile',
 
   DETAILS_SHOW_IN_TEXT: 'details.showInText',
+  DETAILS_IN_MODEL: 'details.inModel',
+  DETAILS_IN_GRAPH: 'details.inGraph',
+  DETAILS_IN_VIEW_TITLE: 'details.inView.title',
+  MODEL_TO_GRAPH_TITLE: 'model.toGraph.title',
+  MODEL_SHARED_TITLE: 'model.shared.title',
+  GRAPH_TO_MODEL_TITLE: 'graph.toModel.title',
+  GRAPH_IN_MODEL_TITLE: 'graph.inModel.title',
   DETAILS_NO_DECLARATION: 'details.noDeclaration',
   DETAILS_LINKS_OUT: 'details.linksOut',
   DETAILS_USED_BY: 'details.usedBy',

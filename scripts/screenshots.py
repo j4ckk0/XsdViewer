@@ -50,6 +50,8 @@ OPEN_V2 = ("const names = ['common.xsd', 'catalog.xsd', 'product.xsd', 'shipping
 
 # the Model view draws once the server has answered: a scene clicking into it waits for the canvas to stop loading
 MODEL_DRAWN = "await new Promise(r => { const c = document.getElementById('modelCanvas'); const tick = () => (c.dataset.loading ? setTimeout(tick, 20) : r()); setTimeout(tick, 20); });"
+# the graph asks for the model of the selection when it is not at hand, and draws itself again once it comes
+GRAPH_DRAWN = "await new Promise(r => { const c = document.getElementById('graphCanvas'); const tick = () => (c.dataset.loading ? setTimeout(tick, 20) : r()); setTimeout(tick, 20); });"
 
 # the comparison is a place of its own, opened from the bar; it holds two sections
 OPEN_COMPARISON = "document.getElementById('compareBtn').click();"
@@ -120,7 +122,53 @@ SCENES = [
                  'legend': "document.querySelectorAll('#modelLegend .row').length + ':' + document.querySelectorAll('#modelLegend .lg').length",
                  'svgButton': "document.getElementById('exportSvgBtn').disabled"},
          expect={'boxes': 11, 'compositors': 2, 'names': 'Items|item|@partNum : SKU|productName|quantity|USPrice|comment|shipDate|ItemExtras',
-                 'handles': 1, 'cards': '0..*|0..1|0..1|0..1', 'legend': '3:23', 'svgButton': False}),   # ItemExtras (a group) opens on demand; comment refers to a global element of a built-in type: nothing inside
+                 'handles': 1, 'cards': '0..*|0..1|0..1|0..1', 'legend': '3:25', 'svgButton': False}),   # ItemExtras (a group) opens on demand; comment refers to a global element of a built-in type: nothing inside
+    # what the graph knows, drawn on the model's boxes: comment is used by two objects; the declared ones carry a handle to the graph
+    dict(name='model-shared', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:Items\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN,
+         checks={'shared': "[...document.querySelectorAll('#modelCanvas .mshared')].map(t => t.closest('.mbox').dataset.id + '=' + t.textContent).join('|')",
+                 'toGraph': "[...document.querySelectorAll('#modelCanvas .mgraph')].map(h => h.closest('.mbox').dataset.id).join('|')",
+                 'sharedTitle': "document.querySelector('#modelCanvas .mbox[data-id=\"element:comment\"] > title').textContent"},
+         expect={'shared': 'element:comment=×3', 'toGraph': 'element:comment|group:ItemExtras',
+                 'sharedTitle': 'element comment — 0..1 — comment — Used by 3 objects: changing it changes them all'}),
+    # the ◎ handle of a box: the graph, centred on what the box stands for
+    dict(name='model-to-graph', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:Items\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN
+                + "document.querySelector('#modelCanvas .mbox[data-id=\"element:comment\"] .mgraph').dispatchEvent(new MouseEvent('click', {bubbles: true}));" + GRAPH_DRAWN,
+         checks={'view': "document.querySelector('#viewTabs .tab.active').dataset.view",
+                 'centre': "document.querySelector('#graphCanvas .node.center').dataset.id",
+                 'nodes': "document.querySelectorAll('#graphCanvas .node').length + ':' + document.querySelectorAll('#graphCanvas .nmodel').length",
+                 'legend': "!!document.querySelector('#graphLegend .handle') && !!document.querySelector('#graphLegend .inmodel')"},
+         expect={'view': 'graph', 'centre': 'element:comment', 'nodes': '5:4', 'legend': True}),
+    # the ▤ handle of a node: its model
+    dict(name='graph-to-model', file='samples/purchaseOrder.xsd', theme='dark',
+         action="document.querySelector('.tab[data-view=\"graph\"]').click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();" + GRAPH_DRAWN
+                + "window.__loadingAfterGraph = 'loading' in document.getElementById('graphCanvas').dataset;"
+                "document.querySelector('#graphCanvas .node[data-id=\"complexType:Items\"] .nmodel').dispatchEvent(new MouseEvent('click', {bubbles: true}));" + MODEL_DRAWN,
+         checks={'view': "document.querySelector('#viewTabs .tab.active').dataset.view",
+                 'root': "document.querySelector('#modelCanvas .mbox.center .mname').textContent",
+                 'loadingAfterGraph': "window.__loadingAfterGraph"},
+         expect={'view': 'model', 'root': 'Items', 'loadingAfterGraph': False}),
+    # the model's footprint on the graph: the type opened in the model is tinted on the map
+    dict(name='graph-footprint', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+                "document.querySelector('.tab[data-view=\"model\"]').click();" + MODEL_DRAWN
+                + "document.querySelector('#modelCanvas .mbox[data-id=\"complexType:Items\"] .mhandle').dispatchEvent(new MouseEvent('click', {bubbles: true}));" + MODEL_DRAWN
+                + "document.querySelector('.tab[data-view=\"graph\"]').click();" + GRAPH_DRAWN,
+         checks={'inModel': "[...document.querySelectorAll('#graphCanvas .node.in-model')].map(g => g.dataset.id).join('|')",
+                 'title': "document.querySelector('#graphCanvas .node.in-model > title').textContent.split('\\n')[1]",
+                 'loading': "'loading' in document.getElementById('graphCanvas').dataset"},
+         expect={'inModel': 'complexType:Items', 'title': 'Opened in the model of the selected object: a document of it goes through this one', 'loading': False}),
+    # the details panel points at the two other views of the object
+    dict(name='details-views', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:Items\"]').click();"
+                "document.querySelector('#detailsContent a[data-view=\"graph\"]').click();" + GRAPH_DRAWN,
+         checks={'links': "[...document.querySelectorAll('#detailsContent .meta a')].map(a => a.textContent).join('|')",
+                 'view': "document.querySelector('#viewTabs .tab.active').dataset.view"},
+         expect={'links': 'line 50 → show in text|model|graph', 'view': 'graph'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

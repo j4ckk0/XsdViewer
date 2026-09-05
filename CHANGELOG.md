@@ -2,6 +2,12 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **The Model and Graph views point at each other.** A model box standing for a declared type, element or group carries a ◎ handle that shows it in the graph, centred on it; a graph node carries a ▤ handle that shows its model. The first line of the details panel links to the three views of the object.
+- **Each view carries a trace of the other's knowledge.** The graph tints the objects the model of the selected object walks through — the types opened in place there —, asking the server for that model when it is not at hand yet; a model box says how many objects of the workspace use what it stands for (×3), which the graph knows from the links into it.
+- The GitHub page is in four parts, each for a narrower reader than the one before: the application, the library on Maven Central, the open-source code, the architecture.
+
 ## 5.0.1 — 2026-09-05
 
 - **The Compare group of the details panel says what each side already holds.** A side button is drawn hollow and dashed in its colour when it holds another object — still a click away, and its tooltip names what would be replaced — beside the filled look of the side holding the object being read, and the plain look of a free one.

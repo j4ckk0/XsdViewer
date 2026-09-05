@@ -4,7 +4,7 @@
  * a derivation from a base type), what uses it on the
  * left, and optionally the targets' own links as a second level on the right (an object expanded once).
  */
-import { COMPOSITOR, ID_SEPARATOR, LINK_LABEL, NODE_KIND, SVG_NS, TEXT, isSchematron, isWsdl } from './constants.js';
+import { COMPOSITOR, ID_SEPARATOR, LINK_LABEL, NODE_KIND, SVG_NS, TEXT, VIEW, isSchematron, isWsdl } from './constants.js';
 import { FAMILY, STRUCTURAL_LINK_LABELS, familyOf, isDerivation, labelFamily, linkFamily } from './link-categories.js';
 import { findInWorkspace, kindsOf, placeAttributes, usersInWorkspace } from './declaration-lookup.js';
 import { isKindShown, isLinkShown, renderGraphFilters } from './graph-filters.js';
@@ -14,6 +14,7 @@ import { CLS, DATA, ID, SVG_ID } from './dom-names.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
+import { cachedTree, modelTree, openedIn } from './model-view.js';
 import { session } from './state.js';
 
 // ---- layout ----
@@ -21,7 +22,9 @@ const NODE_W = 200, NODE_H = 36;
 const ROW = 60, MARGIN = 24, MIN_GAP = 90;
 const SELF_LOOP_HEIGHT = 60, SELF_LOOP_ROOM = 40, SELF_LOOP_SPREAD = 30, SELF_LOOP_CONTROL_SPREAD = 50, SELF_LABEL_LIFT = 45;
 const LABEL_MAX_CHARS = 40, LABEL_CHAR_W = 6.2, LABEL_PAD = 8, LABEL_H = 14, LABEL_RADIUS = 3;
-const NAME_MAX_CHARS_CENTER = 24, NAME_MAX_CHARS = 26, KIND_MAX_CHARS = 30, CAPTION_MAX_CHARS = 28;
+const NAME_MAX_CHARS_CENTER = 22, NAME_MAX_CHARS = 24, KIND_MAX_CHARS = 30, CAPTION_MAX_CHARS = 28;
+/** The handle at the top right of a node, to its model: its side and its glyph. */
+const HANDLE = 14, TO_MODEL_GLYPH = '▤';
 /** Corner radius of a node of a family (a WSDL's service objects, a Schematron's rules): the schema's own objects keep square corners. */
 const FAMILY_NODE_RADIUS = 9;
 /** The mark of the compositor a nested element sits in, before its name in the caption (a sequence, the common case, has none). */
@@ -63,6 +66,21 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
     $(ID.GRAPH_LEGEND).classList.toggle(CLS.SCHEMATRON, family === FAMILY.SCHEMATRON);
     renderGraphFilters(family);
   }
+  // The model's footprint: the objects the model of the selection walks through are tinted here. A file's
+  // own graph asks for that model when it is not at hand yet, and draws itself again once it comes.
+  const own = options.toolbar !== false;
+  let opened = new Set();
+  if (own) {
+    const tree = cachedTree(st);
+    if (tree) { opened = openedIn(tree); delete canvas.dataset[DATA.LOADING]; } else {
+      canvas.dataset[DATA.LOADING] = st.selected;
+      modelTree(st)
+        .then(() => { if (session.active === st && st.view === VIEW.GRAPH && !session.comparison.shown) renderGraph(); })
+        .catch(() => { if (canvas.dataset[DATA.LOADING] === st.selected) delete canvas.dataset[DATA.LOADING]; });
+    }
+  }
+  /** A drawn node, with what the model says of it — whether it walks through any of {@code ids} — and, in a file's own graph, the handle to its model. */
+  const nodeOf = (n, x, y, isCenter, opts, ...ids) => nodeSvg(n, x, y, isCenter, Object.assign({ toModel: own, inModel: ids.some(id => opened.has(id)) }, opts), st);
   const visible = (n) => !!n && isKindShown(n.kind);
   /** A row is drawn when its node is and its link is of a category the Links menu keeps. */
   const shownLink = (n, e, fromKind, toKind) => visible(n) && isLinkShown(e, fromKind, toKind);
@@ -166,12 +184,12 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
     const shown = r.resolved ? r.resolved.n : r.n;
     edges.push(curve(cx + NODE_W / 2, cy, xR1, y, r.edge, linkFamily(center.kind, shown.kind)));
     nodes.push(r.resolved
-      ? nodeSvg(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge, mark: markOf(r.n, r.edge) }, fileKind(r.resolved.n, r.resolved.place)), st)
-      : nodeSvg(r.n, xR1, y - NODE_H / 2, false, { link: r.edge, mark: markOf(r.n, r.edge) }, st));
+      ? nodeOf(r.resolved.n, xR1, y - NODE_H / 2, false, Object.assign({ id: r.n.id, link: r.edge, mark: markOf(r.n, r.edge) }, fileKind(r.resolved.n, r.resolved.place)), r.n.id, r.resolved.n.id)
+      : nodeOf(r.n, xR1, y - NODE_H / 2, false, { link: r.edge, mark: markOf(r.n, r.edge) }, r.n.id));
     r.children.forEach((c, k) => {
       const yc = first + k * ROW;
       edges.push(curve(xR1 + NODE_W, y, xR2, yc, c.edge, linkFamily(shown.kind, c.n.kind)));
-      nodes.push(nodeSvg(c.n, xR2, yc - NODE_H / 2, false, rowOpt(c), st));
+      nodes.push(nodeOf(c.n, xR2, yc - NODE_H / 2, false, rowOpt(c), c.n.id));
     });
     row += spanR(r);
   }
@@ -179,7 +197,7 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
   left.forEach((l, i) => {
     const y = yOf(i, leftRows);
     edges.push(curve(xLeft + NODE_W, y, cx - NODE_W / 2, cy, l.edge, linkFamily(l.n.kind, center.kind)));
-    nodes.push(nodeSvg(l.n, xLeft, y - NODE_H / 2, false, Object.assign(rowOpt(l), { mark: markOf(l.n, l.edge) }), st));
+    nodes.push(nodeOf(l.n, xLeft, y - NODE_H / 2, false, Object.assign(rowOpt(l), { mark: markOf(l.n, l.edge) }), l.n.id));
   });
   // self reference (recursive type)
   if (selfLabels.length) {
@@ -189,7 +207,7 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
       + ' ' + (cx + SELF_LOOP_SPREAD) + ',' + top + '"/>');
     labels.push(textWithBg(cx, top - SELF_LABEL_LIFT, selfLabels.join(TEXT.LIST_SEPARATOR)));
   }
-  nodes.push(nodeSvg(center, cx - NODE_W / 2, cy - NODE_H / 2, true, null, st));
+  nodes.push(nodeOf(center, cx - NODE_W / 2, cy - NODE_H / 2, true, null));
 
   svg += edges.join('') + labels.join('') + nodes.join('') + '</svg>';
   const hadFocus = canvas.contains(document.activeElement);
@@ -256,22 +274,35 @@ function captionSvg(edge) {
 const linkTitle = (edge) => edge.label + (cardinalityText(edge) ? ' ' + cardinalityText(edge) : '')
   + (edge.compositor ? ' (' + edge.compositor + ')' : '');
 
-/** @param opts {id} selected on click, {place} where the node lives when it is another file's (a tab or a listed file), {kindText} replaces the kind, {link} the edge captioned above the node */
+/** A node with a model of its own: a declared object, where a built-in type and an external placeholder have nothing to draw. */
+const hasModel = (n) => n.kind !== NODE_KIND.BUILTIN && n.kind !== NODE_KIND.EXTERNAL;
+
+/** The handle at the top right of a node: its model, what a document of it holds. */
+const toModelSvg = (title) => '<g class="' + CLS.NODE_TO_MODEL + '"><title>' + esc(title) + '</title>'
+  + '<rect x="' + (NODE_W - HANDLE - 4) + '" y="3" width="' + HANDLE + '" height="' + HANDLE + '" rx="2"/>'
+  + '<text x="' + (NODE_W - HANDLE / 2 - 4) + '" y="14" text-anchor="middle">' + TO_MODEL_GLYPH + '</text></g>';
+
+/**
+ * @param opts {id} selected on click, {place} where the node lives when it is another file's (a tab or a listed file), {kindText} replaces the kind,
+ *             {link} the edge captioned above the node, {inModel} the model of the selection walks through it, {toModel} a handle to its own model
+ */
 function nodeSvg(n, x, y, isCenter, opts, st = session.active) {
   const o = opts || {};
   const name = shorten(n.name, isCenter ? NAME_MAX_CHARS_CENTER : NAME_MAX_CHARS);
   const kindText = o.kindText || kindLabel(n.kind);
   const caption = o.link ? captionSvg(o.link) : '';
   const values = n.values || [];   // a declaration that enumerates its values says how many
-  return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + (o.mark ? ' ' + o.mark : '') + '" tabindex="0" role="button" aria-label="' + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + '"' + dataAttr(DATA.ID, o.id || n.id)
+  return '<g class="' + CLS.NODE + ' ' + n.kind + (isCenter ? ' ' + CLS.CENTER : '') + (o.mark ? ' ' + o.mark : '') + (o.inModel ? ' ' + CLS.IN_MODEL : '') + '" tabindex="0" role="button" aria-label="' + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name)) + '"' + dataAttr(DATA.ID, o.id || n.id)
     + placeAttributes(o.place, st.workspace, dataAttr, DATA) + ' transform="translate(' + x + ',' + y + ')">'
     + '<title>' + (o.link ? esc(linkTitle(o.link)) + ' → ' : '') + esc(t(MSG.GRAPH_NODE_TITLE, kindText, n.name))
     + (values.length ? '\n' + esc(t(MSG.GRAPH_VALUES, values.length, values.slice(0, ENUM_VALUES_SHOWN).map(v => v.value).join(TEXT.LIST_SEPARATOR))) : '')
+    + (o.inModel ? '\n' + esc(t(MSG.GRAPH_IN_MODEL_TITLE)) : '')
     + (n.doc ? '\n' + esc(n.doc.slice(0, 200)) : '') + '</title>'
     + caption
     + '<rect width="' + NODE_W + '" height="' + NODE_H + '"' + (familyOf(n.kind) ? ' rx="' + FAMILY_NODE_RADIUS + '"' : '') + '/>'
     + '<text class="' + CLS.NODE_NAME + '" x="10" y="' + (NODE_H / 2 + 1) + '">' + esc(name) + '</text>'
     + (values.length ? '<text class="' + CLS.ENUM + '" x="10" y="' + (NODE_H - 6) + '">' + ENUM_MARK + values.length + '</text>' : '')
     + '<text class="' + CLS.NODE_KIND + '" x="' + (NODE_W - 8) + '" y="' + (NODE_H - 6) + '" text-anchor="end">' + esc(shorten(kindText, KIND_MAX_CHARS)) + '</text>'
+    + (o.toModel && hasModel(n) ? toModelSvg(t(MSG.GRAPH_TO_MODEL_TITLE, t(MSG.GRAPH_NODE_TITLE, kindText, n.name))) : '')
     + '</g>';
 }

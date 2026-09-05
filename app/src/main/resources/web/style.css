@@ -19,6 +19,7 @@
   --edge: #9aa3af;
   --node-hover: #eef2ff;
   --node-center: #f8fafc;
+  --node-in-model: #fff3c4;   /* a node the model walks through */
   --accent-soft: rgba(37, 99, 235, .12);
   --accent-glow: rgba(37, 99, 235, .2);
   /* the source's syntax, the comparison's statuses */
@@ -79,6 +80,7 @@
   --edge: #6b7686;
   --node-hover: #243049;
   --node-center: #202733;
+  --node-in-model: #4a4020;
   --accent-soft: rgba(96, 165, 250, .16);
   --accent-glow: rgba(96, 165, 250, .3);
   --amber: #fbbf24;
@@ -773,7 +775,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 #modelLegend .lg.box.report { border-color: var(--c-report); }
 #modelLegend .lg.box.diagnostic { border-color: var(--c-diagnostic); }
 #modelLegend .lg.arrow .card { font-size: 11px; }
-#modelLegend .lg.arrow .handle { font-weight: 700; font-size: 11px; line-height: 12px; padding: 0 3px; border: 1px solid var(--muted); border-radius: 2px; background: var(--surface-2); }
+#modelLegend .lg.arrow .handle, #graphLegend .lg.arrow .handle { font-weight: 700; font-size: 11px; line-height: 12px; padding: 0 3px; border: 1px solid var(--muted); border-radius: 2px; background: var(--surface-2); }
 #modelCanvas { flex: 1; overflow: auto; }
 #modelCanvas svg { display: block; }
 .mlink { fill: none; stroke: var(--edge); stroke-width: 1.5; }
@@ -868,6 +870,14 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .mhandle rect { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1; }
 .mhandle:hover rect { fill: var(--hover); }
 .mhandle text { font-size: 12px; font-weight: 700; fill: var(--muted); pointer-events: none; }
+/* the handle of a box standing for a declared object: the graph around that object */
+.mgraph { cursor: pointer; }
+.mgraph rect { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1; }
+.mgraph:hover rect { fill: var(--hover); }
+.mgraph text { font-size: 11px; fill: var(--muted); pointer-events: none; }
+/* the graph's count of the objects using what the box stands for, at its top right */
+.mbox .mshared { font-size: 10px; font-weight: 700; fill: var(--c-complexType); }
+#modelLegend .lg.arrow .shared { font-weight: 700; color: var(--c-complexType); }
 
 /* ---- empty state ------------------------------------------------------------------- */
 
@@ -955,6 +965,8 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .node.report rect { stroke: var(--c-report); }
 .node.diagnostic rect { stroke: var(--c-diagnostic); }
 .node.builtin text.name, .node.external text.name { font-style: italic; }
+/* the model's footprint: a node the model of the selected object walks through */
+.node.in-model rect { fill: var(--node-in-model); }
 .node:hover rect { fill: var(--node-hover); }
 .node.center rect { stroke-width: 3; fill: var(--node-center); }
 .node text { font-size: 13px; fill: var(--text); pointer-events: none; }
@@ -986,6 +998,12 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .node .link-name .compositor { font-size: 11px; font-weight: 400; fill: var(--muted); }
 /* the values a declaration enumerates, at the bottom of its node */
 .node text.enum { font-size: 10px; fill: var(--c-simpleType); font-weight: 700; }
+/* the handle at the top right of a node: its model */
+.nmodel { cursor: pointer; }
+.node .nmodel rect { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1; rx: 2; }
+.node .nmodel:hover rect { fill: var(--hover); }
+.node .nmodel text { font-size: 10px; fill: var(--muted); }
+#graphLegend .lg.arrow .inmodel { display: inline-block; width: 16px; height: 10px; border-radius: 3px; background: var(--node-in-model); border: 1px solid var(--edge); }
 .edge.optional { stroke-dasharray: 6 4; }
 
 /* ---- text view --------------------------------------------------------------------- */

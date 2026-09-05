@@ -250,6 +250,10 @@ export const CLS = {
   // graph (SVG)
   NODE: 'node',
   CENTER: 'center',
+  /** On a node the model of the selected object walks through: the model's footprint on the graph. */
+  IN_MODEL: 'in-model',
+  /** The handle at the top right of a node: its model. */
+  NODE_TO_MODEL: 'nmodel',
   EDGE: 'edge',
   EDGE_LABEL: 'edge-label',
   EDGE_LABEL_BG: 'edge-label-bg',
@@ -277,6 +281,10 @@ export const CLS = {
   MODEL_WORD: 'mword',
   MODEL_HANDLE: 'mhandle',
   MODEL_RECURSION: 'mrec',
+  /** The handle of a box standing for a declared object: the graph around that object. */
+  MODEL_TO_GRAPH: 'mgraph',
+  /** At the top right of such a box, how many objects use what it stands for. */
+  MODEL_SHARED: 'mshared',
   CLICKABLE: 'clickable',
   /** On the chip of the comparison: it sits among the workspaces without being one. */
   COMPARISON_CHIP: 'cmpchip',

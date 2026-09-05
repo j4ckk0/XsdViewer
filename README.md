@@ -70,6 +70,9 @@ declarations and links only on one side, then the two sources side by side.
   declarations of the file refer to one another around the selected one: the map of the file, one
   step in each direction. The model walks *through* the types, opening each named type in place,
   where the graph shows the types themselves as neighbours of the declaration that names them.
+  Each points at the other: a box of the model has a **◎** handle to the graph of what it stands
+  for, a node of the graph a **▤** handle to its model; the graph tints what the model walks
+  through, the model counts how many objects share a type.
 - **Workspaces**: a folder or a set of files opened together, their links followed from one file to
   the next, saved as a `.xsdviewer.json` file to reopen later.
 - **Comparison**: two declarations side by side — two versions of a type, or two types that merely
@@ -280,7 +283,10 @@ is a small schema exercising every kind of link.
   link's word above the name of what it leads to, and opens the same way. A legend in the toolbar
   reads on three lines: the kinds of box, the marks of the drawing (the compositors, the dashed
   optional), then what a box tells of itself (its occurrences, its **+** handle, the ↺ of a
-  recursion). Each entry is explained in its tooltip. **⤓ PNG** and **⤓ SVG** export it like the graph.
+  recursion). Each entry is explained in its tooltip. What the graph knows is drawn on the boxes: a
+  box standing for a declared type, element or group carries a **◎** handle that shows it in the
+  graph — what else uses it, what it links to — and, at its top right, **×3** when three objects of
+  the workspace use it: changing it changes them all. **⤓ PNG** and **⤓ SVG** export it like the graph.
 - **Text** – the schema source with line numbers and syntax colouring. The selected
   object's declaration is highlighted; click a highlighted line number to select that
   object.
@@ -295,7 +301,10 @@ is a small schema exercising every kind of link.
   object declared elsewhere shows as what it is there (its real kind, its file) and is expanded
   from there at the second level, and objects of other files that use the centre appear on the
   left, marked with their file; clicking one of them switches to that file's tab, opening it when
-  needed. The details panel lists those users too.
+  needed. The details panel lists those users too. Each node carries a **▤** handle to its model, what
+  a document of it holds; and the nodes the model of the selected object walks through — the types
+  opened in place there — are tinted: the model's footprint on the map. The first line of the
+  details panel points at the three views of the object as well.
   Each link shows its **cardinality** after its name (`items 1..*`, `orderDate 0..1`): the
   `minOccurs`/`maxOccurs` of a nested element or group reference — through the enclosing
   `sequence`/`all`/`choice`, counted from the nearest enclosing element — or the `use` of an

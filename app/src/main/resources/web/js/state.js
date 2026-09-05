@@ -28,6 +28,7 @@ export function newTabState() {
     modelExpanded: new Set(),
     /** The content model tree the server answered last for this tab, with the key of the request it answered: a redraw for the room asks nothing again. */
     modelTree: null,   // the boxes of the Model view opened on demand (their paths in the tree)
+    modelLoading: null,   // the request for that tree while it is on its way ({key, promise}): asked once, whichever views wait for it
     scroll: newScroll(),
   };
 }

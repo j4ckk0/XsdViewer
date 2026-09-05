@@ -339,7 +339,12 @@ function wireSelectionSources() {
     const item = e.target.closest(selector(CLS.ITEM));
     if (item && item.dataset[DATA.ID]) select(item.dataset[DATA.ID]);
   });
-  $(ID.GRAPH_CANVAS).addEventListener('click', (e) => activateNode(e.target.closest(selector(CLS.NODE))));
+  $(ID.GRAPH_CANVAS).addEventListener('click', (e) => {
+    const node = e.target.closest(selector(CLS.NODE));
+    // the node's handle: the same object, seen as the model — once it is selected, in its own file if need be
+    if (e.target.closest(selector(CLS.NODE_TO_MODEL))) activateNode(node).then(() => showView(VIEW.MODEL));
+    else activateNode(node);
+  });
   // the keyboard in the graph: arrows walk the nodes (drawn in reading order), Home is the centre, Enter / Space act as a click
   $(ID.GRAPH_CANVAS).addEventListener('keydown', (e) => {
     const g = e.target.closest(selector(CLS.NODE));
@@ -352,11 +357,11 @@ function wireSelectionSources() {
     else if (e.key === KEY.HOME) { e.preventDefault(); $(ID.GRAPH_CANVAS).querySelector(selector(CLS.NODE) + selector(CLS.CENTER)).focus(); }
   });
   /** What a click (or Enter) on a drawn node does: selects it, jumps to its file, or follows it. */
-  function activateNode(g) {
+  async function activateNode(g) {
     if (!g) return;
     const st = session.active, id = g.dataset[DATA.ID];
     if (g.dataset[DATA.TAB] != null || g.dataset[DATA.FILE] != null) {   // a node of another file
-      jumpToPlace(g.dataset, id);
+      await jumpToPlace(g.dataset, id);
     } else if (id !== st.selected) {
       select(id);
     } else if (st.nodes.get(id).kind === NODE_KIND.EXTERNAL) {
@@ -365,6 +370,8 @@ function wireSelectionSources() {
   }
   $(ID.DETAILS).addEventListener('click', (e) => {
     if (e.target.closest('a[data-' + DATA.LINE + ']')) { showView(VIEW.TEXT); return; }
+    const viewLink = e.target.closest('a[data-' + DATA.VIEW + ']');   // the same object, in the other views
+    if (viewLink) { showView(viewLink.dataset[DATA.VIEW]); return; }
     // one side of the comparison takes the selected declaration, or gives it up when it held it
     const sideButton = e.target.closest(selector(CLS.MARK_BUTTON));
     if (sideButton) {

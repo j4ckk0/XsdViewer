@@ -10,7 +10,7 @@ import { initModelView } from './model-view.js';
 import { select } from './navigation.js';
 import { initPanels } from './panels.js';
 import { renderPage } from './page.js';
-import { renderMainView } from './view-router.js';
+import { renderMainView, showView } from './view-router.js';
 import { startPresence } from './presence.js';
 import { initTheme } from './theme.js';
 import { applySettings, loadSettings } from './settings.js';
@@ -26,7 +26,7 @@ await initLanguageSelector();
 wireEvents();
 initGraphFilters(renderMainView);   // the Links and Types menus redraw the graph they filter
 initPanels(renderMainView);
-initModelView(select);
+initModelView(select, showView);
 renderPage();
 await loadInitialFile();
 document.documentElement.dataset[DATA.READY] = DATA.READY;   // wired, drawn, and the file or workspace given on the command line open: what a script driving the page waits for
