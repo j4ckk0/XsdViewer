@@ -121,7 +121,7 @@ SCENES = [
                  'cards': "[...document.querySelectorAll('#modelCanvas .mbox .card')].map(t => t.textContent).join('|')",
                  'legend': "document.querySelectorAll('#modelLegend .row').length + ':' + document.querySelectorAll('#modelLegend .lg').length",
                  'svgButton': "document.getElementById('exportSvgBtn').disabled"},
-         expect={'boxes': 11, 'compositors': 2, 'names': 'Items|item|@partNum : SKU|productName|quantity|USPrice|comment|shipDate|ItemExtras',
+         expect={'boxes': 11, 'compositors': 2, 'names': 'Items|item|@partNum|productName|quantity|USPrice|comment|shipDate|ItemExtras',
                  'handles': 1, 'cards': '0..*|0..1|0..1|0..1', 'legend': '3:25', 'svgButton': False}),   # ItemExtras (a group) opens on demand; comment refers to a global element of a built-in type: nothing inside
     # what the graph knows, drawn on the model's boxes: comment is used by two objects; the declared ones carry a handle to the graph
     dict(name='model-shared', file='samples/purchaseOrder.xsd', theme='light',
@@ -298,10 +298,11 @@ SCENES = [
                  # a built-in-typed element carries no handle, so its name reaches further before the ellipsis
                  'stringTypedName': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).find(n => n.startsWith('customerLoyalty'))",
                  # the long attribute's @name : type must stay inside its box
-                 'attrLabels': "[...document.querySelectorAll('#modelCanvas .mbox.attribute .mname')].map(t => t.textContent).join('|')",
-                 'attrsFit': "(() => [...document.querySelectorAll('#modelCanvas .mbox.attribute')].every(b => b.querySelector('.mname').getComputedTextLength() <= +b.querySelector('rect').getAttribute('width') - 8))().toString()"},
-         expect={'names': 'InternationalPurchaseOrde…|@purchaseOrderConfirmatio…|@identifier : AnInterna… ?|customerLoyaltyProgramMem…|preferredInternation…|alternativeBillingAd…|consolidatedOrderLin…|estimatedDeliveryDateWith…',
-                 'boxHeight': '40', 'stringTypedName': 'customerLoyaltyProgramMem…', 'attrLabels': '@purchaseOrderConfirmatio…|@identifier : AnInterna… ?', 'attrsFit': 'true'}),
+                 'attrNames': "[...document.querySelectorAll('#modelCanvas .mbox.attribute .mname')].map(t => t.textContent).join('|')",
+                 'attrTypes': "[...document.querySelectorAll('#modelCanvas .mbox.attribute .mtype')].map(t => t.textContent).join('|')",
+                 'attrsFit': "(() => [...document.querySelectorAll('#modelCanvas .mbox.attribute')].every(b => [...b.querySelectorAll('text')].every(x => x.getComputedTextLength() <= +b.querySelector('rect').getAttribute('width') - 8)))().toString()"},
+         expect={'names': 'InternationalPurchaseOrde…|@purchaseOrderConfirmatio…|@identifier ?|customerLoyaltyProgramMem…|preferredInternation…|alternativeBillingAd…|consolidatedOrderLin…|estimatedDeliveryDateWith…',
+                 'boxHeight': '40', 'stringTypedName': 'customerLoyaltyProgramMem…', 'attrNames': '@purchaseOrderConfirmatio…|@identifier ?', 'attrTypes': 'string|AnInternationalStandard…', 'attrsFit': 'true'}),
     # Settings toggle: the cross-view handles (the model's ◎ and the graph's ▤, and the ×N mark) can be hidden
     dict(name='handles-toggle', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:Items\"]').click();"
@@ -336,7 +337,7 @@ SCENES = [
          checks={'base': "document.querySelector('#modelCanvas .mbox.complexType:not(.center) .mword').textContent",
                  'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
                  'folded': "document.querySelectorAll('#modelCanvas .mhandle text').length + ':' + [...document.querySelectorAll('#modelCanvas .mhandle text')].map(t => t.textContent).join('')"},
-         expect={'base': 'extends', 'names': 'InternationalAddress|USAddress|@country : NMTOKEN ?|name|street|city|state|zip|countryName', 'folded': '1:−'}),   # the base type opened: its attribute and its sequence, then the extension's own element
+         expect={'base': 'extends', 'names': 'InternationalAddress|USAddress|@country ?|name|street|city|state|zip|countryName', 'folded': '1:−'}),   # the base type opened: its attribute and its sequence, then the extension's own element
     dict(name='enumeration', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"simpleType:Currency\"]').click();",
          checks={'values': "document.querySelectorAll('#detailsContent .value').length",
@@ -836,8 +837,8 @@ SCENES = [
          expect={'title': 'complexType CatalogType compared with complexType SupplierType',
                  'summary': '17 only on the left, 9 only on the right, 0 changed',
                  'heads': 'complexType CatalogType — catalog.xsd, v1|complexType SupplierType — supplier.xsd, v1',
-                 'left': 'CatalogType|@issued : date|publisher|street|city|postalCode|country|product|@sku : Code|@category : string ?|name|description|price|discount|legacyCode|tag',
-                 'right': 'SupplierType|@code : Code|name|address|street|city|postalCode|country|rating',
+                 'left': 'CatalogType|@issued|publisher|street|city|postalCode|country|product|@sku|@category ?|name|description|price|discount|legacyCode|tag',
+                 'right': 'SupplierType|@code|name|address|street|city|postalCode|country|rating',
                  'marks': '17/9/0/4',   # nothing matches but the two roots and their sequences, the two subjects
                  'svgButton': False, 'svg': 'image/svg+xml|true|true'}),   # one file, both headings, the boxes of both models
     dict(name='doc-compare-view', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-compare-view.jpg',
@@ -859,7 +860,7 @@ SCENES = [
                 "document.getElementById('toast').classList.add('hidden');",
          checks={'names': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].map(t => t.textContent).join('|')",
                  'view': "document.querySelector('.tab.active').dataset.view"},
-         expect={'names': 'ProductType|@sku : Code|@category : string ?|name|description|price|discount|legacyCode|tag',
+         expect={'names': 'ProductType|@sku|@category ?|name|description|price|discount|legacyCode|tag',
                  'view': 'model'}),   # the whole model of a type: its attributes, its sequence, each element with its occurrences and its type
     dict(name='doc-graph', file='samples/compare/v1.xsdviewer.json', theme='light', size=DOC_SIZE, doc='XsdViewer-graph-view.jpg',
          action="document.querySelector('.tab[data-view=\"graph\"]').click();"

@@ -5,7 +5,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 ## Unreleased
 
 - The Settings menu opens with the theme, the display choices first and the server option below.
-- An attribute box no longer paints its `@name : type` past its edge: the label is fitted to the box, a long name or a long type shortened with an ellipsis.
+- **An attribute box writes the type on a second line**, in grey, the way an element box does: `@name` on top at the full width of the box, the type below — so a long name or a long type stays inside the box rather than painting past its edge.
 
 ## 5.3.0 — 2026-09-05
 

@@ -307,13 +307,14 @@ function boxSvg(b, x, y, w, foldable, traces) {
     g += '<rect width="' + w + '" height="' + BOX_H + '" rx="4"/><text class="' + CLS.MODEL_GLYPH + '" x="' + (foldHandle ? (w - HANDLE) / 2 : w / 2) + '" y="' + (BOX_H / 2 + 5) + '" text-anchor="middle">' + compositor + '</text>'
       + (foldHandle ? handleSvg(w, b.foldKey, !b.folded) : '');
   } else if (b.kind === NODE_KIND.ATTRIBUTE) {
-    // @name : type on one line, the whole of it fitted to the box so neither a long name nor a long type paints
-    // past the edge; the optional mark is kept at the end when there is room
-    const mark = optional ? ' ' + OPTIONAL_MARK : '';
-    const nameType = ATTRIBUTE_PREFIX + b.name + (b.typeName ? TYPE_SEPARATOR + b.typeName : '');
-    const fits = Math.floor((w - 2 * PAD) / NAME_CHAR_W);
-    const label = shorten(nameType, Math.max(3, fits - mark.length)) + mark;
-    g += '<rect width="' + w + '" height="' + BOX_H + '" rx="2"/><text class="' + CLS.MODEL_NAME + '" x="' + PAD + '" y="' + (BOX_H / 2 + 4) + '">' + esc(label) + '</text>';
+    // @name on its own line, the type on the line below, as an element draws them — so a long name or a
+    // long type stays inside the box. An attribute carries no handle, so the name has the whole width.
+    const name = ATTRIBUTE_PREFIX + b.name + (optional ? ' ' + OPTIONAL_MARK : '');
+    const type = shorten(b.typeName || '', TYPE_MAX_CHARS);
+    const nameMax = Math.floor((w - 2 * PAD) / NAME_CHAR_W);
+    g += '<rect width="' + w + '" height="' + BOX_H + '" rx="2"/>'
+      + '<text class="' + CLS.MODEL_NAME + '" x="' + PAD + '" y="' + (type ? 17 : BOX_H / 2 + 4) + '">' + esc(shorten(name, nameMax)) + '</text>'
+      + (type ? '<text class="' + CLS.MODEL_TYPE + '" x="' + (w - PAD) + '" y="' + (BOX_H - 9) + '" text-anchor="end">' + esc(type) + '</text>' : '');
   } else {
     // the root, a box of a chain (the link's word) and the boxes standing for something else than an element say what they are above their name
     const word = b.word || (b.root || b.kind === PARTICLE.EXTENDS || b.kind === PARTICLE.RESTRICTS || b.kind === PARTICLE.GROUP || b.kind === PARTICLE.ANY ? kindLabel(b.kind) : '');
