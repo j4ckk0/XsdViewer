@@ -206,6 +206,43 @@ SCENES = [
          checks={'aimedIsSku': "!!document.querySelector('#modelCanvas .mbox.aimed[data-id=\"simpleType:SKU\"]')",
                  'itemsOpened': "document.querySelector('#modelCanvas .mbox[data-id=\"complexType:Items\"] .mhandle text') ? document.querySelector('#modelCanvas .mbox[data-id=\"complexType:Items\"] .mhandle text').textContent : 'no items box'"},
          expect={'aimedIsSku': True, 'itemsOpened': '\u2212'}),
+    # the Help menu: its two dialog openers, its two external links, and About
+    dict(name='help-menu', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.getElementById('helpMenuBtn').click();",
+         checks={'items': "[...document.querySelectorAll('#helpMenu > button, #helpMenu > a')].map(e => e.id).join('|')",
+                 'docsHref': "document.getElementById('menuDocs').getAttribute('href')",
+                 'issueHref': "document.getElementById('menuIssue').getAttribute('href')",
+                 'seps': "document.querySelectorAll('#helpMenu .sep').length"},
+         expect={'items': 'menuGuide|menuShortcuts|menuDocs|menuIssue|menuAbout',
+                 'docsHref': 'https://github.com/j4ckk0/XsdViewer#readme',
+                 'issueHref': 'https://github.com/j4ckk0/XsdViewer/issues', 'seps': 2}),
+    # the user guide: its heading, its sections built from the translated texts, and it closes
+    dict(name='help-guide', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.getElementById('helpMenuBtn').click(); document.getElementById('menuGuide').click();",
+         checks={'open': "String(document.getElementById('guideDialog').open)",
+                 'title': "document.querySelector('#guideDialog h2').textContent",
+                 'sections': "[...document.querySelectorAll('#guideBody h3')].map(h => h.textContent).join('|')",
+                 'paras': "document.querySelectorAll('#guideBody p').length"},
+         expect={'open': 'true', 'title': 'User guide',
+                 'sections': 'The three views of a file|Workspaces|Comparing|Validating a document|Getting around', 'paras': 6}),
+    # the keyboard shortcuts: a row per shortcut, the keystroke then what it does
+    dict(name='help-shortcuts', file='samples/purchaseOrder.xsd', theme='dark',
+         action="document.getElementById('helpMenuBtn').click(); document.getElementById('menuShortcuts').click();",
+         checks={'open': "String(document.getElementById('shortcutsDialog').open)",
+                 'rows': "document.querySelectorAll('#shortcutsBody table.shortcuts tr').length",
+                 'firstKey': "document.querySelector('#shortcutsBody td.keys').textContent",
+                 'back': "[...document.querySelectorAll('#shortcutsBody tr')].find(r => r.querySelector('.keys').textContent.includes('Alt')).cells[1].textContent",
+                 'clickKey': "[...document.querySelectorAll('#shortcutsBody td.keys')].map(c => c.textContent).find(k => k.startsWith('Ctrl + c'))"},
+         expect={'open': 'true', 'rows': 10, 'firstKey': 'Ctrl + O', 'back': 'Back to the declaration selected before', 'clickKey': 'Ctrl + click'}),
+    # the Compare group sits above the declaration details, so it stays in view
+    dict(name='compare-group-above', file='samples/compare/v1.xsdviewer.json', theme='light',
+         action=OPEN_V2
+                + "[...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes('v1')).click();"
+                "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();",
+         checks={'order': "(() => { const kids = [...document.getElementById('details').children].map(c => c.id); return kids.indexOf('compareGroup') < kids.indexOf('detailsContent') ? 'compare-above' : 'compare-below'; })()",
+                 'groupShown': "!document.getElementById('compareGroup').classList.contains('hidden')"},
+         expect={'order': 'compare-above', 'groupShown': True}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

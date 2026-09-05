@@ -3,6 +3,7 @@ import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, P
 import { $, selector } from './dom.js';
 import { CLS, DATA, ID } from './dom-names.js';
 import { closeAbout, showAbout } from './about.js';
+import { closeGuide, closeShortcuts, showGuide, showShortcuts } from './help.js';
 import { initOptions, rememberOptions, setAllDetails, toggleDetail } from './files-section.js';
 import { clearSelection, toggleSelection } from './workspace-selection.js';
 import { clearMarks, closeComparison, markSide, openComparison, showSection, swapSides } from './comparison-state.js';
@@ -68,10 +69,14 @@ function wireSettingsMenu() {
 }
 
 function wireHelpMenu() {
+  $(ID.MENU_GUIDE).addEventListener('click', () => { closeMenus(); showGuide(); });
+  $(ID.MENU_SHORTCUTS).addEventListener('click', () => { closeMenus(); showShortcuts(); });
   $(ID.MENU_ABOUT).addEventListener('click', () => { closeMenus(); showAbout(); });
   $(ID.MENU_VALIDATE).addEventListener('click', () => { closeMenus(); validation.validateFile(); });
   $(ID.MENU_OPEN_ALL).addEventListener('click', () => { closeMenus(); openAllListed(); });
   $(ID.ABOUT_CLOSE).addEventListener('click', closeAbout);
+  $(ID.GUIDE_CLOSE).addEventListener('click', closeGuide);
+  $(ID.SHORTCUTS_CLOSE).addEventListener('click', closeShortcuts);
 }
 
 function wireFileMenu() {

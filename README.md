@@ -472,8 +472,10 @@ the **built-in types** checkbox). Objects referenced but not declared in the fil
 included ones) appear as grey-filled *external* nodes with a red border. Dashed lines are
 reserved for optional links, hollow arrowheads for derivations (`extends`, `restricts`, `is a`).
 
-**Help ▸ About XsdViewer…** shows the version (from the jar's manifest), the Java runtime, the
-log file, the licence and the project page.
+**Help ▸ User guide…** opens a guide to the views, workspaces, the comparison and validation, in the
+page's language; **Keyboard shortcuts…** lists every keystroke; the menu also links to the online
+documentation and to where an issue is reported. **Help ▸ About XsdViewer…** shows the version (from
+the jar's manifest), the Java runtime, the log file, the licence and the project page.
 
 ### Where the files are
 

@@ -201,7 +201,7 @@ html, body {
 
 /* ---- layout ------------------------------------------------------------------------ */
 
-#aboutDialog {
+#aboutDialog, .helpdialog {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 20px 24px;
@@ -217,6 +217,22 @@ html, body {
 #aboutDialog a { color: var(--accent); word-break: break-all; }
 #aboutDialog .actions { margin-top: 14px; text-align: right; }
 #aboutDialog .actions button { border-color: var(--border); }
+/* the user guide and the shortcuts, wider and taller than About, their body scrolling on its own */
+.helpdialog { max-width: 600px; }
+.helpdialog h2 { margin: 0 0 8px; font-size: 18px; }
+.helpdialog .actions { margin-top: 14px; text-align: right; }
+.helpdialog .actions button { border-color: var(--border); }
+#guideBody, #shortcutsBody { max-height: 60vh; overflow: auto; }
+#guideBody p { margin: 6px 0; line-height: 1.5; }
+#guideBody h3 { margin: 14px 0 4px; font-size: 13px; color: var(--accent); }
+/* the shortcuts table: the keystroke left, what it does right */
+table.shortcuts { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.shortcuts td { padding: 4px 8px; vertical-align: top; border-top: 1px solid var(--border); }
+table.shortcuts tr:first-child td { border-top: none; }
+table.shortcuts td.keys { white-space: nowrap; font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; color: var(--text); width: 1%; }
+/* the link entries of a dropdown, boxed and hovered like its buttons */
+.dropdown a { display: block; padding: 5px 10px; border-radius: 6px; white-space: nowrap; text-decoration: none; color: inherit; }
+.dropdown a:hover { background: var(--hover); }
 
 #language {
   font: inherit;
@@ -533,11 +549,11 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 #schemaInfo.collapsed { padding-bottom: 6px; }
 #schemaInfo.collapsed #schemaInfoContent { display: none; }
 
-/* comparing the selected declaration: a group of its own at the foot of the panel, folding like the schema header */
+/* comparing the selected declaration: a group of its own above the declaration details, so it stays in view whatever the details' length; folds like the schema header */
 #compareGroup {
-  margin: 12px -12px -12px;
-  padding: 8px 12px 10px;
-  border-top: 1px solid var(--border);
+  margin: 0 -12px 12px;
+  padding: 0 12px 10px;
+  border-bottom: 1px solid var(--border);
   font-size: 12px;
 }
 #compareGroup.collapsed #compareGroupContent { display: none; }
