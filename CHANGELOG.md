@@ -2,14 +2,11 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 5.2.0 — 2026-09-05
 
 - **The Help menu carries a user guide and the keyboard shortcuts.** Two dialogs, in the page's language: the guide covers the views, workspaces, the comparison, validation and getting around; the shortcuts list every keystroke with what it does. The menu also links to the online documentation and to where an issue is reported.
-- **The Compare group sits above the declaration details** in the details panel, so it stays in view however long the details are.
-
-## Unreleased
-
 - **The compare view exports three pictures**: the left declaration alone, the right alone, and the two side by side as before. PNG and SVG both.
+- **The Compare group sits above the declaration details** in the details panel, so it stays in view however long the details are.
 
 ## 5.1.0 — 2026-09-05
 
