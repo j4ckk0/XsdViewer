@@ -125,6 +125,8 @@ export const MSG = {
   DETAILS_LINKS_OUT: 'details.linksOut',
   DETAILS_USED_BY: 'details.usedBy',
   DETAILS_VALUES: 'details.values',
+  COMPARE_GROUP_COLLAPSE: 'compare.group.collapse',
+  COMPARE_GROUP_EXPAND: 'compare.group.expand',
   DETAILS_COMPARE: 'details.compare',
   DETAILS_COMPARE_HINT: 'details.compare.hint',
   DETAILS_XPATH: 'details.xpath',

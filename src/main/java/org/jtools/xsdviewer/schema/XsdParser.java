@@ -53,9 +53,6 @@ final class XsdParser {
     private final SchemaGraph graph;
     /** What a name stands for, and the links waiting for the end of the file: {@link References}. */
     private final References refs;
-    /** The declarations this file does not write: a built-in, or an object of another schema. */
-    static final Span NOWHERE = new Span(0, 0);
-
     private final Map<String, Span> lines;
     /** The names of the elements and attributes met inside each declaration, by owner id (for the search). */
     private final Map<String, Set<String>> members = new HashMap<>();
@@ -73,7 +70,7 @@ final class XsdParser {
 
     /** Where the declaration of {@code id} is written, or nowhere for a node the file does not declare. */
     private Span spanOf(String id) {
-        return lines.getOrDefault(id, NOWHERE);
+        return lines.getOrDefault(id, Span.NOWHERE);
     }
 
     /** A parser adding to {@code graph}; {@code lines}: the lines each declaration spans, by node id (see {@link DeclarationLineIndex}). */

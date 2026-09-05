@@ -8,8 +8,8 @@ import { MSG } from './message-keys.js';
 const I18N_PATH = '/i18n/';
 const FILE_EXTENSION = '.json';
 /** The languages that have a file, in the order of the drop-list. */
-export const LANGUAGES = ['en', 'fr'];
-export const DEFAULT_LANGUAGE = 'en';
+const LANGUAGES = ['en', 'fr'];
+const DEFAULT_LANGUAGE = 'en';
 const LANGUAGE_PARAM = 'lang';
 
 /** Attributes binding an element to a key (see index.html). */

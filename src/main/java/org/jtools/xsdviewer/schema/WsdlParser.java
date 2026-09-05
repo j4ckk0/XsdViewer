@@ -187,7 +187,7 @@ final class WsdlParser {
     }
 
     private void node(String id, String kind, String name, String ns, Element decl) {
-        Span span = lines.getOrDefault(id, XsdParser.NOWHERE);
+        Span span = lines.getOrDefault(id, Span.NOWHERE);
         graph.nodes.put(id, new SchemaGraph.Node(id, kind, name, ns, span.start(), span.end(), documentation(decl)));
     }
 

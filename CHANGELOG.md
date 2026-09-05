@@ -2,6 +2,12 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 4.11.0 — 2026-09-05
+
+- **Fix: swapping the two sides, or clearing the marks, brought the details panel into the comparison.** That panel belongs to a workspace, and the comparison takes the whole page; drawing its content no longer decides whether it is shown, which is the view's business alone. Ctrl+clicking a workspace chip from the comparison had the same effect, and is fixed with it.
+- **The two sides are a group of their own in the details panel.** **Compare** sits at the foot of the panel and folds like the schema header, holding the hint, **◈ Left side** and **◈ Right side**, and a **⇄ Compare** button opening the comparison without going back to the workspace bar.
+- **Under the hood.** The comparison's state, its selection of workspaces and its drawings are three modules instead of one; what folds and remembers it is one helper for the four places that do; `showView` reads what each place shows from a table; the parser indexes a declaration's lines in one pass. The screenshot scenes run in a third of the time: a scene starts as soon as the page has drawn its file and is photographed as soon as it has reported, rather than after fixed delays — 39 scenes in about 95 s instead of 5 minutes, checking the same things.
+
 ## 4.10.0 — 2026-09-05
 
 - **The comparison draws its two declarations as Model, Text or Graph.** The **Model / Text / Graph** switch of the top bar comes back while the Objects section is read, and acts on the comparison: it keeps a view of its own, so switching there leaves every workspace tab where its reader left it. **Text** shows the source of each declaration alone, from its opening tag to its closing tag, the two aligned line by line with what differs marked — lines matched on their shape rather than their spacing, so the same declaration written at another depth still matches. **Graph** shows the neighbourhood of each, the links the other side does not have marked red on the left and green on the right; a link counts as the same when its name, its target and its cardinality are. The header says what the drawn view found: boxes, lines or links. **⤓ PNG** / **⤓ SVG** save the two drawings as one picture, the text view drawing none.

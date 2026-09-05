@@ -1,12 +1,12 @@
 /**
- * ⤓ PNG and ⤓ SVG of the views that are drawings: the graph, the model, and the two models of the
- * Compare view side by side. Each is cropped to what it holds and carries the page's styles and
+ * ⤓ PNG and ⤓ SVG of the views that are drawings: the graph, the model, and the two drawings of the
+ * comparison side by side. Each is cropped to what it holds and carries the page's styles and
  * background, so the file renders on its own; the PNG is that SVG rasterised.
  * The Text view is not a drawing: {@link text-export.js} paints it.
  */
 import { MIME, SVG_NS, VIEW, nameOfId } from './constants.js';
 import { $, ID } from './dom.js';
-import { comparedPair } from './object-compare.js';
+import { comparedPair } from './comparison.js';
 import { saveBlob } from './file-download.js';
 import { exportTextPng } from './text-export.js';
 import { t } from './i18n.js';
@@ -24,7 +24,7 @@ const FILE_EXTENSION = '.png';
 const SVG_EXTENSION = '.svg';
 const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>\n';
 const TEXT_SUFFIX = '-text', MODEL_SUFFIX = '-model', COMPARE_SUFFIX = '-compared';
-/** The Compare view as one picture: the gap between the two models, and the room the heading of each takes above it. */
+/** The comparison as one picture: the gap between its two drawings, and the room the heading of each takes above it. */
 const COMPARE_GAP = 48, COMPARE_HEAD_H = 26, COMPARE_HEAD_BASELINE = 9;
 const FALLBACK_TEXT = '#000000';
 /** The page's text colour, for the heading written above each model. */
@@ -69,7 +69,7 @@ export function exportSvg() {
   saveSvg(graphSvg(), base + '-' + name + (st.view === VIEW.MODEL ? MODEL_SUFFIX : '') + SVG_EXTENSION);
 }
 
-/** The file the Compare view exports to: the two declarations it draws. */
+/** The file the comparison exports to: the two declarations it draws. */
 function comparedName() {
   const pair = comparedPair();
   return pair ? pair.map(m => nameOfId(m.id).replace(UNSAFE_FILE_CHARS, '_')).join('-') : DEFAULT_BASENAME;

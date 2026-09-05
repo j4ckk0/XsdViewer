@@ -1,6 +1,6 @@
 /**
  * Zooming the drawn views without zooming the browser: the graph, the model and the two models of
- * the Compare view are SVGs, so the zoom scales the picture and leaves its {@code viewBox} alone —
+ * the comparison are SVGs, so the zoom scales the picture and leaves its {@code viewBox} alone —
  * the panel then scrolls a larger drawing, and the text stays as crisp as the vectors.
  *
  * The level belongs to the tab, so two files can be read at different sizes; it is not remembered

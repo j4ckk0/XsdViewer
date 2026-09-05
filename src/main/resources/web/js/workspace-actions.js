@@ -3,7 +3,7 @@ import { chooseFolder, openWorkspaceFile, saveWorkspaceFile } from './api.js';
 import { busy } from './busy.js';
 import { MAX_AUTO_OPEN, MAX_FOLDER_FILES, TEXT, XSD_FILE_PATTERN } from './constants.js';
 import { ensureTab, parseInBackground } from './file-tabs.js';
-import { registerFile, savableFiles, tabOfFile } from './workspace-files.js';
+import { registerFile, savableFiles } from './workspace-files.js';
 import { $, ID } from './dom.js';
 import { addToLibrary, normPath } from './folder-library.js';
 import { plural, t } from './i18n.js';

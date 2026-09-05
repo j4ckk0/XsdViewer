@@ -36,14 +36,14 @@ FIREFOX = os.environ.get('FIREFOX', 'firefox')
 APP_PORT, PROXY_PORT = 8765, 8766
 SIZE = '1500,800'
 DOC_SIZE = '1920,1048'    # the pictures of the README: a window wide enough for the graph's second level
-HOLD_SECONDS = 6          # the load event is held this long: the scene's script runs at 1.5 s (the comparison scene opens a workspace first)
-ACTION_DELAY_MS = 1500
+HOLD_SECONDS = 6          # the longest the load event is held: it is released as soon as the scene has posted its checks
+ACTION_DELAY_MS = 1500    # the longest the scene's script waits for the page to have drawn its file before it runs
 
 # a second workspace, "v2" of the comparison sample, opened as if a folder had been dropped, and both
 # workspaces selected: what the Files section of the comparison compares
 OPEN_V2 = ("const names = ['common.xsd', 'catalog.xsd', 'product.xsd', 'shipping.xsd'];"
            "const files = await Promise.all(names.map(async n => new File([await (await fetch('/__sample/samples/compare/v2/' + n)).text()], n)));"
-           "const wa = await import('/js/workspace-actions.js'), st = await import('/js/state.js'), cmp = await import('/js/compare.js'), pg = await import('/js/page.js');"
+           "const wa = await import('/js/workspace-actions.js'), st = await import('/js/state.js'), cmp = await import('/js/compare-selection.js'), pg = await import('/js/page.js');"
            "await wa.openBrowserFolder(files, f => 'v2/' + f.name, 'v2');"
            "for (const ws of st.session.workspaces) cmp.toggleSelection(ws);"
            "pg.renderPage();")
@@ -246,7 +246,10 @@ SCENES = [
                  'png': "window.__png"},
          expect={'count': '1/7', 'current': 1, 'svgButton': True, 'png': 'image/png/true'}),
     dict(name='listed-files', file='target/screenshots/listed/listed.xsdviewer.json', theme='light', setup='listed',
-         action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:OrderType\"]').click();",
+         # the listed files are parsed in the background: the graph resolves its targets from them once they are
+         action="const st = await import('/js/state.js'); const ws = st.session.active.workspace;"
+                "for (let i = 0; i < 40 && ws.files.some(f => !f.model && !f.failed); i++) await new Promise(r => setTimeout(r, 100));"
+                "document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:OrderType\"]').click();",
          checks={'resolved': "document.querySelectorAll('#graphCanvas .node.complexType, #graphCanvas .node.simpleType').length",
                  'external': "document.querySelectorAll('#graphCanvas .node.external').length",
                  'fromFiles': "[...document.querySelectorAll('#graphCanvas .node .kind')].filter(k => k.textContent.includes('.xsd')).length"},
@@ -257,7 +260,7 @@ SCENES = [
                 "const filler = (i) => '<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"urn:f:' + i + '\"><xs:element name=\"f' + i + '\" type=\"xs:string\"/></xs:schema>';"
                 "for (let i = 0; i < 8; i++) files.push(new File([filler(i)], 'filler' + i + '.xsd'));"
                 "files.push(new File(['<notASchema/>'], 'broken.xsd'));"
-                "const fl = await import('/js/file-list.js'); fl.setFilesCollapsed(true);"   # folded: a search must still reach the other files
+                "const fl = await import('/js/file-list.js'); fl.filesPanel.set(true);"   # folded: a search must still reach the other files
                 "const wa = await import('/js/workspace-actions.js');"
                 "await wa.openBrowserFolder(files, f => 'listed/' + f.name, 'listed');"
                 "const st = await import('/js/state.js');"   # the listed files are parsed in the background: wait for the queue to drain
@@ -351,7 +354,7 @@ SCENES = [
                 "  [...document.querySelectorAll('#workspaces .wsgroup')].find(x => x.textContent.includes(w)).click();"
                 "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
                 "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
                 "pick('v1', 'left'); pick('v2', 'right');"
                 + DECLARATIONS
                 + "await new Promise(r => setTimeout(r, 400));"
@@ -393,7 +396,7 @@ SCENES = [
                 "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
                 "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
                 "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
                 "pick('v1', 'left'); pick('v2', 'right');"
                 + DECLARATIONS
                 + "await new Promise(r => setTimeout(r, 400));"
@@ -423,7 +426,7 @@ SCENES = [
                 "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
                 "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
                 "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
                 "pick('v1', 'left'); pick('v2', 'right');"
                 + DECLARATIONS
                 + "await new Promise(r => setTimeout(r, 400));"
@@ -456,6 +459,26 @@ SCENES = [
                  'onlyLeft': 4, 'onlyRight': 4, 'unmarked': 5,
                  'summary': '4 links only on the left, 4 only on the right', 'chips': 2, 'folds': True,
                  'boxesBack': 22, 'textGone': True, 'foldsBack': False}),
+    dict(name='compare-group', file='samples/purchaseOrder.xsd', theme='light',
+         # the two sides and the comparison itself, a group of their own at the foot of the details panel
+         action="document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();"
+                "const group = () => document.getElementById('compareGroup');"
+                "window.__shown = !group().classList.contains('hidden');"
+                "window.__buttons = [...group().querySelectorAll('button')].map(b => b.textContent).join('|');"
+                "document.getElementById('compareGroupToggle').click();"
+                "window.__folded = group().classList.contains('collapsed');"
+                "document.getElementById('compareGroupToggle').click();"
+                # its Compare button opens the comparison, as the workspace bar's does
+                "document.getElementById('detailsCompareBtn').click();"
+                "await new Promise(r => setTimeout(r, 200));"
+                "window.__chips = document.querySelectorAll('#workspaces .cmpchip').length;"
+                "window.__place = document.querySelectorAll('#comparison:not(.hidden)').length;",
+         checks={'shown': "window.__shown", 'buttons': "window.__buttons", 'folded': "window.__folded",
+                 'chips': "window.__chips", 'place': "window.__place",
+                 'unfolded': "document.getElementById('compareGroup').classList.contains('collapsed')",
+                 'title': "document.querySelector('#compareGroup .panel-head span').textContent"},
+         expect={'shown': True, 'buttons': '▾|◈ Left side|◈ Right side|⇄ Compare', 'folded': True, 'chips': 1, 'place': 1,
+                 'unfolded': False, 'title': 'Compare'}),
     dict(name='compare-sides', file='samples/compare/v1.xsdviewer.json', theme='light',
          # each side is chosen: filling one, taking it off, clearing both, swapping
          action=OPEN_V2 + "const state = await import('/js/state.js');"
@@ -463,7 +486,7 @@ SCENES = [
                 "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
                 "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
                 "  document.querySelector('#nodeList .item[data-id=\"' + id + '\"]').click();"
-                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
                 "pick('v1', 'complexType:ProductType', 'left');"
                 "window.__afterLeft = [!!state.session.compared.left, !!state.session.compared.right].join('/');"
                 "pick('v2', 'complexType:ProductType', 'right');"
@@ -472,31 +495,36 @@ SCENES = [
                 "window.__heads = heads();"
                 "document.getElementById('objectCompareSwap').click();"
                 "window.__swapped = heads();"
+                # the details panel belongs to a workspace: swapping or clearing must not bring it into the comparison
+                "window.__detailsOnSwap = document.getElementById('details').classList.contains('hidden');"
                 "document.getElementById('objectCompareSwap').click();"
                 "document.getElementById('objectCompareClear').click();"
+                "window.__detailsOnClear = document.getElementById('details').classList.contains('hidden');"
                 "window.__cleared = [!!state.session.compared.left, !!state.session.compared.right].join('/');"
                 "window.__hidden = document.getElementById('objectCompareBody').classList.contains('hidden');"
                 # both sides filled again, and one taken off by clicking the side that holds it
                 "pick('v1', 'complexType:ProductType', 'left');"
                 "pick('v2', 'complexType:ProductType', 'right');"
-                "document.querySelector('#detailsContent .cobj-mark.right').click();"
+                "document.querySelector('#compareSides .cobj-mark.right').click();"
                 "window.__takenOff = [!!state.session.compared.left, !!state.session.compared.right].join('/');"
                 + DECLARATIONS + "await new Promise(r => setTimeout(r, 200));"
                 "window.__hiddenAgain = document.getElementById('objectCompareBody').classList.contains('hidden');"
                 "document.getElementById('toast').classList.add('hidden');",
          checks={'afterLeft': "window.__afterLeft", 'heads': "window.__heads", 'swapped': "window.__swapped",
+                 'detailsOnSwap': "window.__detailsOnSwap", 'detailsOnClear': "window.__detailsOnClear",
                  'cleared': "window.__cleared", 'hidden': "window.__hidden",
                  'takenOff': "window.__takenOff", 'hiddenAgain': "window.__hiddenAgain"},
          expect={'afterLeft': 'true/false', 'heads': 'v1|v2', 'swapped': 'v2|v1',
+                 'detailsOnSwap': True, 'detailsOnClear': True,
                  'cleared': 'false/false', 'hidden': True,
                  'takenOff': 'true/false', 'hiddenAgain': True}),   # one side empty: nothing is drawn
     dict(name='compare-two-objects', file='samples/compare/v1.xsdviewer.json', theme='light',
          # two declarations that have nothing to do with one another: different names, different files, one workspace
          action="document.querySelector('#nodeList .item[data-id=\"complexType:CatalogType\"]').click();"
-                "document.querySelector('#detailsContent .cobj-mark.left').click();"
+                "document.querySelector('#compareSides .cobj-mark.left').click();"
                 "[...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('supplier.xsd')).click();"
                 "document.querySelector('#nodeList .item[data-id=\"complexType:SupplierType\"]').click();"
-                "document.querySelector('#detailsContent .cobj-mark.right').click();"
+                "document.querySelector('#compareSides .cobj-mark.right').click();"
                 + DECLARATIONS
                 + "await new Promise(r => setTimeout(r, 400));"
                 "document.getElementById('toast').classList.add('hidden');"
@@ -530,7 +558,7 @@ SCENES = [
                 "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
                 "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
                 "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
-                "  document.querySelector('#detailsContent .cobj-mark.' + side).click(); };"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
                 "pick('v1', 'left'); pick('v2', 'right');"
                 + DECLARATIONS
                 + "await new Promise(r => setTimeout(r, 400));"
@@ -578,6 +606,7 @@ SCENES = [
 class Proxy(http.server.BaseHTTPRequestHandler):
     scene = None
     results = {}
+    reported = threading.Event()   # set when the scene has posted its checks: the page may be photographed
 
     def do_GET(self):
         self.proxy()
@@ -586,13 +615,15 @@ class Proxy(http.server.BaseHTTPRequestHandler):
         if self.path == '/__check':
             body = self.rfile.read(int(self.headers.get('Content-Length') or 0))
             Proxy.results[Proxy.scene['name']] = json.loads(body.decode('utf-8'))
+            Proxy.reported.set()
             self.send_response(204); self.end_headers()
             return
         self.proxy()
 
     def proxy(self):
         if self.path == '/__hold':
-            time.sleep(HOLD_SECONDS); self.send_response(204); self.end_headers()
+            # the page's load event, which Firefox photographs at, waits on this image: released once the checks are in, or at the ceiling
+            Proxy.reported.wait(HOLD_SECONDS); self.send_response(204); self.end_headers()
             return
         if self.path.startswith('/__sample/'):
             self.sample(self.path[len('/__sample/'):])
@@ -630,8 +661,13 @@ class Proxy(http.server.BaseHTTPRequestHandler):
     def tail():
         s = Proxy.scene
         checks = ','.join('%s: (() => { try { return %s; } catch (e) { return "error: " + e.message; } })()' % (json.dumps(k), v) for k, v in s['checks'].items())
-        return ('<script>setTimeout(() => (async () => { %s })().catch(e => console.error(e)).then(() =>'
-                ' setTimeout(() => fetch("/__check", {method: "POST", body: JSON.stringify({%s})}), 300)), %d);</script>'
+        # the script runs once the page has drawn its file (its object list, or a validation tab), at the latest after ACTION_DELAY_MS;
+        # the checks are posted 300 ms after the action, once what it changed has been drawn
+        return ('<script>(() => { const started = Date.now();'
+                ' const ready = () => document.querySelector("#nodeList .item") || document.querySelector("#validation:not(.hidden)");'
+                ' const run = () => (async () => { %s })().catch(e => console.error(e)).then(() =>'
+                ' setTimeout(() => fetch("/__check", {method: "POST", body: JSON.stringify({%s})}), 300));'
+                ' const go = () => (ready() || Date.now() - started > %d ? run() : setTimeout(go, 50)); go(); })();</script>'
                 '<img src="/__hold" style="display:none">' % (s['action'], checks, ACTION_DELAY_MS)).encode()
 
     def log_message(self, *a):
@@ -674,6 +710,7 @@ def shoot(scene, profile):
         if not wait_for(APP_PORT):
             return 'the server did not start'
         Proxy.scene = scene
+        Proxy.reported.clear()
         png = OUT / (scene['name'] + '.png')
         r = subprocess.run([FIREFOX, '--headless', '--no-remote', '--profile', str(profile), '--window-size=' + scene.get('size', SIZE),
                             '--screenshot', str(png), 'http://localhost:%d/' % PROXY_PORT],

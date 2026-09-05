@@ -1,5 +1,6 @@
 /** Workspaces and their tabs: creating, switching, closing, drawing the bars. Callers redraw the page (renderPage) after a switch. A tab shows a file, a comparison (compare.js) or a validation (validate.js). */
 import { WORKSPACE_FILE_SUFFIX } from './constants.js';
+import { clearSelection, isSelected, pruneSelection } from './compare-selection.js';
 import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
 import { renderFileList } from './file-list.js';
 import { t } from './i18n.js';
@@ -38,7 +39,7 @@ function settle(at) {
     }
     if (before === session.tabs.length + session.workspaces.length) break;
   }
-  session.compareSelection = session.compareSelection.filter(ws => session.workspaces.includes(ws));
+  pruneSelection();
   for (const side of ['left', 'right']) {   // a side pointing into a workspace that is gone goes with it
     const mark = session.compared[side];
     if (mark && !session.workspaces.includes(mark.ws)) session.compared[side] = null;
@@ -124,7 +125,7 @@ export function closeAllTabs() {
   session.workspaceCounter = 0;
   const ws = newWorkspaceState(++session.workspaceCounter);
   session.workspaces = [ws];
-  session.compareSelection = [];
+  clearSelection();
   session.tabs = [emptyTabOf(ws, view)];
   session.active = session.tabs[0];
   session.pendingJump = null;
@@ -154,7 +155,7 @@ export function renderNavigation() {
   session.workspaces.forEach((ws, w) => {
     const name = workspaceName(ws);
     chips += '<div class="' + CLS.WORKSPACE_GROUP + (!session.comparison.shown && ws === session.active.workspace ? ' ' + CLS.ACTIVE : '')
-      + (session.compareSelection.includes(ws) ? ' ' + CLS.SELECTED : '') + '"' + dataAttr(DATA.WORKSPACE_INDEX, w) + '>'
+      + (isSelected(ws) ? ' ' + CLS.SELECTED : '') + '"' + dataAttr(DATA.WORKSPACE_INDEX, w) + '>'
       + '<span class="' + CLS.WORKSPACE_NAME + '" title="' + esc((ws.path || name) + '\n' + t(MSG.WORKSPACE_SELECT_HINT)) + '">' + esc(name)
       + '<button class="' + CLS.WORKSPACE_CLOSE + '" type="button" title="' + esc(t(MSG.WORKSPACE_CLOSE, name)) + '">×</button></span></div>';
   });

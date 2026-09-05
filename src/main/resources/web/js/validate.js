@@ -145,7 +145,7 @@ export async function setPhase(phase) {
   await run(session.active);
 }
 
-export const isErrorsOnly = () => $(ID.VALIDATE_ERRORS_ONLY).checked;
+const isErrorsOnly = () => $(ID.VALIDATE_ERRORS_ONLY).checked;
 
 export function initOptions() {
   let on = false;

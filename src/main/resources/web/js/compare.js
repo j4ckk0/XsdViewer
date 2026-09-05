@@ -1,12 +1,12 @@
 /**
- * The Files section of the comparison: two workspaces (selected with Ctrl+click on their chips)
+ * The Files section of the comparison: two workspaces (selected with Ctrl+click on their chips, {@code compare-selection.js})
  * compared folder-style, their files paired by name and marked identical / different / only on one
  * side, a different pair expandable to its schema and line differences.
  */
 import { businessLines } from './business-lines.js';
 import { cardinalityText } from './cardinality.js';
 import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
-import { $, CLS, DATA, ID, dataAttr, esc, legendHtml, selector } from './dom.js';
+import { $, CLS, DATA, ID, dataAttr, esc, legendHtml } from './dom.js';
 import { OP, diffLines, onlyMoves, splitLines } from './diff.js';
 import { plural, t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
@@ -14,11 +14,12 @@ import { MSG } from './message-keys.js';
 import { diffModels } from './schema-diff.js';
 import { session } from './state.js';
 import { ensureModel } from './file-tabs.js';
-import { activateTab, newTab, workspaceName } from './tabs.js';
+import { workspaceName } from './tabs.js';
 
-export const COMPARED_WORKSPACES = 2;
 /** Equal runs longer than FOLD_ABOVE are folded to one line in the text diff, FOLD_KEEP lines kept on each side; with "differences only", one line of context. */
 const FOLD_ABOVE = 6, FOLD_KEEP = 2, CONTEXT_LINES = 1;
+/** How the text diff of two files folds, as the *differences only* option asks. */
+const folding = () => (isDiffOnly() ? { keep: CONTEXT_LINES, above: 2 * CONTEXT_LINES } : { keep: FOLD_KEEP, above: FOLD_ABOVE });
 const STATUS = { SAME: 'same', DIFFERENT: 'different', MOVED: 'moved', ONLY_LEFT: 'only-left', ONLY_RIGHT: 'only-right' };
 const STATUS_TEXT = { [STATUS.SAME]: MSG.COMPARE_SAME, [STATUS.DIFFERENT]: MSG.COMPARE_DIFFERENT, [STATUS.MOVED]: MSG.COMPARE_MOVED, [STATUS.ONLY_LEFT]: MSG.COMPARE_ONLY_IN, [STATUS.ONLY_RIGHT]: MSG.COMPARE_ONLY_IN };
 const LINE_BREAK = /\r\n/g;
@@ -28,9 +29,9 @@ const ARROW = ' → ';
 const OPTIONS = [[ID.COMPARE_BUSINESS_ONLY, STORAGE_KEY.COMPARE_BUSINESS_ONLY, true], [ID.COMPARE_DIFF_ONLY, STORAGE_KEY.COMPARE_DIFF_ONLY, false]];
 
 /** Comments, xs:annotation, the wiring tags (XML declaration, xs:schema, xs:import, xs:include), blank lines and indentation ignored. */
-export const isBusinessOnly = () => $(ID.COMPARE_BUSINESS_ONLY).checked;
+const isBusinessOnly = () => $(ID.COMPARE_BUSINESS_ONLY).checked;
 /** Identical files hidden, identical lines reduced to one line of context. */
-export const isDiffOnly = () => $(ID.COMPARE_DIFF_ONLY).checked;
+const isDiffOnly = () => $(ID.COMPARE_DIFF_ONLY).checked;
 
 export function initOptions() {
   for (const [id, key, fallback] of OPTIONS) {
@@ -70,21 +71,6 @@ function lineDiff(pair) {
 let pairs = [];
 
 const isExpandable = (pair) => pair.status === STATUS.DIFFERENT || pair.status === STATUS.MOVED;
-/** Ctrl+click on a chip: toggles the workspace's selection; the oldest selection gives way to a third. */
-export function toggleSelection(ws) {
-  const sel = session.compareSelection;
-  const i = sel.indexOf(ws);
-  if (i >= 0) sel.splice(i, 1);
-  else { sel.push(ws); if (sel.length > COMPARED_WORKSPACES) sel.shift(); }
-}
-
-export const canCompare = () => session.compareSelection.length === COMPARED_WORKSPACES;
-
-/** Clear: no workspace is selected for the file comparison any more; the caller redraws. */
-export function clearSelection() {
-  session.compareSelection.length = 0;
-}
-
 /** Every file a workspace knows (open in a tab or only listed) by file name; the first one when a name appears twice. */
 function filesOf(ws) {
   const byName = new Map();
@@ -155,7 +141,7 @@ export async function toggleDetail(row) {
   if (!row.isConnected) return;   // the table was redrawn meanwhile
   const detail = document.createElement('tr');
   detail.className = CLS.COMPARE_DETAIL;
-  detail.innerHTML = '<td colspan="4">' + schemaDiffHtml(pair) + textDiffHtml(lineDiff(pair)) + '</td>';
+  detail.innerHTML = '<td colspan="4">' + schemaDiffHtml(pair) + textDiffHtml(lineDiff(pair), folding()) + '</td>';
   row.after(detail);
 }
 
@@ -186,10 +172,11 @@ function schemaDiffHtml(pair) {
  * Side by side, one row per line pair (original line numbers); long identical runs folded; moved blocks in their own colour.
  * One table per side, each scrolling sideways on its own: the rows are one line high on both sides, so they stay aligned.
  *
- * @param diff  {la, lb, ops}: the lines of each side ({n, text}) and the edit script turning one into the other
- * @param fold  whether long identical runs are folded, as two whole files need; a block of a few lines is shown whole
+ * @param diff     {la, lb, ops}: the lines of each side ({n, text}) and the edit script turning one into the other
+ * @param folding  {keep, above}: identical runs longer than {@code above} fold to one line, {@code keep} lines left on each
+ *                 side — what two whole files need; null shows every line, as a block of a few lines wants
  */
-export function textDiffHtml({ la, lb, ops }, fold = true) {
+export function textDiffHtml({ la, lb, ops }, folding) {
   if (!ops) return '<p class="' + CLS.META + '">' + esc(t(MSG.COMPARE_TEXT_TOO_LARGE)) + '</p>';
   const row = (rowCls, lines, i, cls, op) => {
     const moved = op && op.moved;
@@ -197,8 +184,7 @@ export function textDiffHtml({ la, lb, ops }, fold = true) {
     return '<tr class="' + rowCls + '"><td class="' + CLS.LINE_NUMBER + '"' + (note ? ' title="' + esc(note) + '"' : '') + '>' + (i == null ? '' : lines[i].n) + '</td>'
       + '<td class="' + CLS.CODE + (cls ? ' ' + cls : '') + (moved ? ' ' + CLS.MOVED : '') + '">' + esc(i == null ? '' : lines[i].text) + '</td></tr>';
   };
-  const keep = isDiffOnly() ? CONTEXT_LINES : FOLD_KEEP;
-  const foldAbove = fold ? (isDiffOnly() ? 2 * CONTEXT_LINES : FOLD_ABOVE) : Infinity;
+  const keep = folding ? folding.keep : 0, foldAbove = folding ? folding.above : Infinity;
   let left = '', right = '';
   const equal = (op) => { left += row(CLS.EQUAL, la, op.a); right += row(CLS.EQUAL, lb, op.b); };
   let i = 0;

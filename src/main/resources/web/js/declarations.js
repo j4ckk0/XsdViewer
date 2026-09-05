@@ -15,7 +15,7 @@ export function kindsOf(node) {
 }
 
 /** The id a declaration gets in a file that references it without declaring it. */
-export const externalIdOf = (n) =>
+const externalIdOf = (n) =>
   nodeId(n.kind === NODE_KIND.COMPLEX_TYPE || n.kind === NODE_KIND.SIMPLE_TYPE ? TYPE_REFERENCE_KIND : n.kind, n.name);
 
 /** Looks for the declaration of {@code name} (one of {@code kinds}, in namespace {@code ns}) in a place (a tab, or a listed file's place). */
@@ -58,7 +58,7 @@ export function placeOfEntry(entry, ws) {
 const tabPlace = (tab) => ({ tab, model: tab.model, nodes: tab.nodes, outEdges: tab.outEdges, inEdges: tab.inEdges, fileName: tab.fileName });
 
 /** The places of {@code ws} other than the tab {@code skip}: its open tabs, then its parsed files not open in a tab. */
-export function placesOf(ws, skip) {
+function placesOf(ws, skip) {
   const out = [];
   for (const t of tabsOf(ws)) if (t !== skip && t.model) out.push(tabPlace(t));
   for (const entry of ws.files) {

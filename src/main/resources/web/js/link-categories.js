@@ -17,7 +17,7 @@ export const familyOf = (kind) => (WSDL_KINDS.has(kind) ? FAMILY.WSDL : SCHEMATR
 export const linkFamily = (fromKind, toKind) => familyOf(fromKind) || familyOf(toKind);
 
 /** The words that name a link of a family's chain (a port's or a part's name is a name, not one of these). */
-export const FAMILY_LINK_LABELS = {
+const FAMILY_LINK_LABELS = {
   [FAMILY.WSDL]: new Set([LINK_LABEL.OPERATION, LINK_LABEL.INPUT, LINK_LABEL.OUTPUT, LINK_LABEL.FAULT, LINK_LABEL.BINDS]),
   [FAMILY.SCHEMATRON]: new Set([LINK_LABEL.ACTIVE, LINK_LABEL.RULE, LINK_LABEL.IS_A, LINK_LABEL.ASSERT, LINK_LABEL.REPORT, LINK_LABEL.DIAGNOSTIC]),
 };
@@ -36,13 +36,13 @@ export const STRUCTURAL_LINK_LABELS = new Set([
  * declaration contains, its attributes, the type it is, the type it derives from, what it names,
  * and the chain of a WSDL or a Schematron.
  */
-export const LINK_CATEGORY = {
+const LINK_CATEGORY = {
   CONTENT: 'content', ATTRIBUTE: 'attribute', TYPE: 'type', DERIVATION: 'derivation', REFERENCE: 'reference', CHAIN: 'chain',
 };
 export const LINK_CATEGORIES = Object.values(LINK_CATEGORY);
 
 /** Edge labels of a derivation (a type to its base type, a Schematron pattern or rule to the abstract one it builds on): drawn with a hollow arrowhead, as a UML generalisation. */
-export const DERIVATION_LINK_LABELS = new Set([LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.IS_A]);
+const DERIVATION_LINK_LABELS = new Set([LINK_LABEL.EXTENDS, LINK_LABEL.RESTRICTS, LINK_LABEL.IS_A]);
 export const isDerivation = (edge) => DERIVATION_LINK_LABELS.has(edge.label);
 
 /**

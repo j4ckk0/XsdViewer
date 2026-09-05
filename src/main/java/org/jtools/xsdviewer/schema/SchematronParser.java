@@ -105,7 +105,7 @@ final class SchematronParser {
     /** The lines the element spans, or nowhere when the SAX pass did not reach it. */
     private Span span(Element e) {
         Integer rank = ranks.get(e);
-        return rank == null || rank >= lines.size() ? XsdParser.NOWHERE : lines.get(rank);
+        return rank == null || rank >= lines.size() ? Span.NOWHERE : lines.get(rank);
     }
 
     /** A child of the schema (or a fragment's root). */

@@ -289,11 +289,13 @@ is required, since its `jlink` links every runtime (download them together: they
 version). `src/build/runtimes.xml` (Ant, driven by the `dist` profile) does the unpacking, the
 linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
 
-`scripts/screenshots.py` is a visual smoke test: with the jar built and Firefox installed, it opens
-the samples, drives the page (a selection, the text view, two levels, the dark theme), checks a few
-facts on it and saves a screenshot of each scene in `target/screenshots/`. `--only=a,b` runs the
-named scenes; `--docs` runs the five whose shot is published, saving them as JPEG in
-`screenshots/` — the pictures of this file.
+`scripts/screenshots.py` is the test of the page as a whole: with the jar built and Firefox installed,
+it opens the samples, drives the page (a selection, the views, the comparison, the dark theme…),
+checks measured facts on it — counts, texts, positions — and saves a screenshot of each scene in
+`target/screenshots/`. A scene starts as soon as the page has drawn its file and is photographed as
+soon as it has reported, so the whole run of some forty scenes takes about a minute and a half.
+`--only=a,b` runs the named scenes; `--keep-going` runs on past a failure; `--docs` runs the five
+whose shot is published, saving them as JPEG in `screenshots/` — the pictures of this file.
 
 ## What counts as a link
 
@@ -468,9 +470,11 @@ same type in two workspaces, or two types that merely resemble one another. This
 **Model / Text / Graph** switch of the top bar, which here draws the two declarations rather than a
 file, and the comparison remembers its own choice: switching there leaves every workspace tab where
 its reader left it. The details panel of a
-declaration fills one side from its **Compare view** section: **◈ Left side** or **◈ Right side**,
+declaration fills one side from its **Compare** group, at the foot of the panel and folding like the
+schema header: **◈ Left side** or **◈ Right side**,
 chosen, so which side a declaration lands on is never a matter of the order things were picked in;
-the button of the side holding it is coloured, and clicking that side again takes it off. **⇄ Swap**
+the button of the side holding it is coloured, and clicking that side again takes it off. The group's
+own **⇄ Compare** opens the comparison, as the button of the workspace bar does. **⇄ Swap**
 puts each side where the other was, **Clear the marks** empties both, and nothing is drawn while a
 side is empty. The view draws the content model of each, with every box marked: red for what only
 the left one has, green for what only the right one has, blue for a box whose occurrences or type

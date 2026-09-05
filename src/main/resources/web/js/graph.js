@@ -16,7 +16,7 @@ import { MSG } from './message-keys.js';
 import { session } from './state.js';
 
 // ---- layout ----
-export const NODE_W = 200, NODE_H = 36;
+const NODE_W = 200, NODE_H = 36;
 const ROW = 60, MARGIN = 24, MIN_GAP = 90;
 const SELF_LOOP_HEIGHT = 60, SELF_LOOP_ROOM = 40, SELF_LOOP_SPREAD = 30, SELF_LOOP_CONTROL_SPREAD = 50, SELF_LABEL_LIFT = 45;
 const LABEL_MAX_CHARS = 40, LABEL_CHAR_W = 6.2, LABEL_PAD = 8, LABEL_H = 14, LABEL_RADIUS = 3;

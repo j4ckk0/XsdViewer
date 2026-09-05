@@ -27,7 +27,7 @@ export function initTheme() {
 }
 
 /** True while the page is dark. */
-export const isDark = () => document.documentElement.dataset[DATA_THEME] === THEME.DARK;
+const isDark = () => document.documentElement.dataset[DATA_THEME] === THEME.DARK;
 
 /** Settings ▸ Dark theme / Light theme: the other one. */
 export function toggleTheme() {

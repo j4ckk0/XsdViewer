@@ -43,7 +43,7 @@ export async function openFiles(files) {
 }
 
 /** Opens files read by the server ({name, path, text}), the same way. */
-export async function openServerFiles(files) {
+async function openServerFiles(files) {
   await busy(t(MSG.BUSY_OPENING), async () => {
     for (const f of files) await openInFreshTab(f.name, f.text, f.path);
   });
@@ -58,7 +58,7 @@ async function openInFreshTab(name, text, path) {
 }
 
 /** Loads a schema into the active tab, then the schemas it links to (once its location is known). */
-export async function loadText(name, text, path) {
+async function loadText(name, text, path) {
   const tab = session.active;
   if (!(await loadInto(tab, name, text, path))) return;
   renderPage();

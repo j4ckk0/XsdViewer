@@ -4,8 +4,9 @@
  * holds a text, only the objects whose name contains it are listed, in the files holding one (unfolded),
  * and a last row counts the files still being parsed, whose objects are not searchable yet.
  */
-import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT } from './constants.js';
+import { KINDS, NODE_KIND, PATH_SEPARATOR, STORAGE_KEY, TEXT } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { foldable } from './foldable.js';
 import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { matchedBy, matches } from './search.js';
@@ -188,23 +189,8 @@ export function setAllUnfolded(unfolded) {
   renderFileList();
 }
 
-export function setFilesCollapsed(collapsed) {
-  $(ID.FILES).classList.toggle(CLS.COLLAPSED, collapsed);
-  const toggle = $(ID.FILES_TOGGLE);
-  toggle.textContent = collapsed ? EXPAND_GLYPH : COLLAPSE_GLYPH;
-  toggle.title = t(collapsed ? MSG.FILES_EXPAND : MSG.FILES_COLLAPSE);
-  try { localStorage.setItem(STORAGE_KEY.FILES_COLLAPSED, collapsed ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
-}
-
-export const isFilesCollapsed = () => $(ID.FILES).classList.contains(CLS.COLLAPSED);
-
-export function toggleFiles() {
-  setFilesCollapsed(!isFilesCollapsed());
-}
-
-/** Restores the folded state remembered in the browser; unfolded by default. */
-export function initFiles() {
-  let collapsed = false;
-  try { collapsed = localStorage.getItem(STORAGE_KEY.FILES_COLLAPSED) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
-  setFilesCollapsed(collapsed);
-}
+/** The Files panel folds to its title line. */
+export const filesPanel = foldable({
+  element: ID.FILES, toggle: ID.FILES_TOGGLE, storageKey: STORAGE_KEY.FILES_COLLAPSED,
+  titles: { fold: MSG.FILES_COLLAPSE, unfold: MSG.FILES_EXPAND },
+});

@@ -296,6 +296,14 @@
       <div id="schemaInfoContent"></div>
     </div>
     <div id="detailsContent"></div>
+    <!-- comparing the selected declaration: its two sides, and the comparison itself; folds like the schema header -->
+    <div id="compareGroup" class="hidden">
+      <div class="panel-head"><span data-i18n="details.compare">Compare</span><button id="compareGroupToggle" class="panel-toggle" type="button" data-i18n-title="compare.group.collapse">▾</button></div>
+      <div id="compareGroupContent">
+        <div id="compareSides"></div>
+        <button id="detailsCompareBtn" class="menubtn" type="button" data-i18n="compare.button" data-i18n-title="compare.button.title">⇄ Compare</button>
+      </div>
+    </div>
   </aside>
 </div>
 

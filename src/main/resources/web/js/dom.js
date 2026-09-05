@@ -66,7 +66,6 @@ export const ID = {
   NEW_TAB_BUTTON: 'newTabBtn',
   COMPARE_BUTTON: 'compareBtn',
   CLEAR_SELECTION_BUTTON: 'clearSelectionBtn',
-  COMPARE_HINT: 'compareHint',
   TABBAR: 'tabbar',
   VIEW_TABS: 'viewTabs',
   COMPARISON: 'comparison',
@@ -78,7 +77,6 @@ export const ID = {
   COMPARE_TITLE: 'compareTitle',
   COMPARE_SUMMARY: 'compareSummary',
   COMPARE_LEGEND: 'compareLegend',
-  COMPARE_CLOSE: 'compareClose',
   COMPARE_BUSINESS_ONLY: 'businessOnly',
   COMPARE_DIFF_ONLY: 'diffOnly',
   COMPARE_TABLE: 'compareTable',
@@ -147,6 +145,10 @@ export const ID = {
   TEXT_FIND_CLOSE: 'textFindClose',
   DETAILS: 'details',
   DETAILS_CONTENT: 'detailsContent',
+  COMPARE_GROUP: 'compareGroup',
+  COMPARE_GROUP_TOGGLE: 'compareGroupToggle',
+  COMPARE_SIDES: 'compareSides',
+  DETAILS_COMPARE_BUTTON: 'detailsCompareBtn',
   DETAILS_TOGGLE: 'detailsToggle',
   DROP_OVERLAY: 'dropOverlay',
   TOAST: 'toast',
@@ -171,7 +173,6 @@ export const CLS = {
   DOC_TAB: 'dtab',
   DOC_TAB_NAME: 'tname',
   DOC_TAB_CLOSE: 'tclose',
-  COMPARE_TAB: 'ctab',
   WORKSPACE_GROUP: 'wsgroup',
   WORKSPACE_NAME: 'wsname',
   WORKSPACE_CLOSE: 'wsclose',
@@ -182,7 +183,6 @@ export const CLS = {
   COMPARE_NAME: 'cname',
   COMPARE_PATH: 'cpath',
   COMPARE_STATUS: 'cstatus',
-  COMPARE_OPEN: 'copen',
   COMPARE_MODEL: 'cmodel',
   // the validation tab
   VALIDATION_TAB: 'vtab',
@@ -200,7 +200,7 @@ export const CLS = {
   PENDING: 'pending',
   /** In the details panel: opens the comparison of the selected declaration with the other selected workspace. */
   /** In the details panel: marks the selected declaration for comparison. */
-  /** The pair of buttons putting the selected declaration on one side of the Compare view. */
+  /** The pair of buttons putting the selected declaration on one side of the comparison. */
   MARK_BUTTONS: 'cobj-sides',
   MARK_BUTTON: 'cobj-mark',
   /** On that button when this declaration is one of the marked ones. */
@@ -245,7 +245,6 @@ export const CLS = {
   /** Why a searched object is listed when its name does not match (the member or the documentation that does). */
   WHY: 'why',
   /** The rows of the validation dialog. */
-  PROBLEM: 'problem',
   VALID: 'valid',
   INVALID: 'invalid',
   DOT: 'dot',

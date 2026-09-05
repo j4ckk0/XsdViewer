@@ -345,19 +345,6 @@ html, body {
 .crow.open .cname::before { content: "▾ "; }
 .crow.expandable:not(.open) .cname::before { content: "▸ "; color: var(--muted); }
 /* the button opening one file's differences in a tab, after the status of a row that has some */
-.copen {
-  margin-left: 10px;
-  padding: 1px 7px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: normal;
-  color: var(--muted);
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  cursor: pointer;
-}
-.copen:hover { border-color: var(--accent); color: var(--accent); }
 .cdetail td { padding: 8px 12px 14px; background: var(--panel); }
 .cmodel { display: flex; gap: 24px; margin-bottom: 10px; }
 .cmodel > div { flex: 1; min-width: 0; }
@@ -408,7 +395,6 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 .dtab:hover { background: var(--row-hover); }
 .dtab.active { background: var(--bg); border-color: var(--border); color: var(--text); margin-bottom: -1px; height: 29px; }
 .dtab .tname { overflow: hidden; text-overflow: ellipsis; }
-.dtab.ctab .tname::before { content: "⇄ "; color: var(--accent); }
 .dtab.vtab.pending .tname::before { content: "… "; color: var(--muted); }
 .dtab.vtab.valid .tname::before { content: "✓ "; color: var(--green); }
 .dtab.vtab.invalid .tname::before { content: "✗ "; color: var(--diff-del-fg); }
@@ -485,7 +471,7 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
   position: relative;
 }
 #details.collapsed { width: 26px !important; padding: 6px 0; overflow: hidden; }
-#details.collapsed #detailsContent, #details.collapsed #schemaInfo { display: none; }
+#details.collapsed #detailsContent, #details.collapsed #schemaInfo, #details.collapsed #compareGroup { display: none; }
 #detailsToggle { position: absolute; top: 6px; right: 6px; }
 #details.collapsed #detailsToggle { right: 3px; }
 #details h2 { padding-right: 22px; }
@@ -544,6 +530,17 @@ table.diff tr.fold td span { position: sticky; left: 0; padding-left: 24px; }   
 #schemaInfo div { margin-bottom: 2px; }
 #schemaInfo.collapsed { padding-bottom: 6px; }
 #schemaInfo.collapsed #schemaInfoContent { display: none; }
+
+/* comparing the selected declaration: a group of its own at the foot of the panel, folding like the schema header */
+#compareGroup {
+  margin: 12px -12px -12px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+#compareGroup.collapsed #compareGroupContent { display: none; }
+#compareGroup .meta { margin-bottom: 4px; }
+#compareGroup #detailsCompareBtn { margin-top: 8px; border-color: var(--border); }
 .panel-head {
   display: flex;
   justify-content: space-between;

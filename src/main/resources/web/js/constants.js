@@ -145,6 +145,7 @@ export const STORAGE_KEY = {
   DETAILS_WIDTH: 'xsdviewer.detailsWidth',
   DETAILS_COLLAPSED: 'xsdviewer.detailsCollapsed',
   SCHEMA_INFO_COLLAPSED: 'xsdviewer.schemaInfoCollapsed',
+  COMPARE_GROUP_COLLAPSED: 'xsdviewer.compareGroupCollapsed',
   FILES_COLLAPSED: 'xsdviewer.filesCollapsed',
   COMPARE_BUSINESS_ONLY: 'xsdviewer.compareBusinessOnly',
   COMPARE_DIFF_ONLY: 'xsdviewer.compareDiffOnly',

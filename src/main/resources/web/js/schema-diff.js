@@ -1,4 +1,4 @@
-/** What differs between two parsed schemas: the declarations and the links that exist on one side only. */
+/** What differs between two parsed schemas — the declarations and the links on one side only — and the keys telling links apart. */
 import { NODE_KIND } from './constants.js';
 import { cardinalityText } from './cardinality.js';
 
@@ -9,6 +9,17 @@ const declared = (n) => n.kind !== NODE_KIND.BUILTIN && n.kind !== NODE_KIND.EXT
 
 /** Identity of a link, cardinality included: a changed minOccurs shows as one link gone and one added. */
 const edgeKey = (e) => [e.from, e.to, e.label, cardinalityText(e)].join(KEY_SEPARATOR);
+
+/** A link seen from one node, told apart by what it is — its word, the other end's kind and name, its cardinality — rather than by the file it is written in. */
+export const linkKey = (node, edge) => [edge.label, node.kind, node.name, cardinalityText(edge)].join(KEY_SEPARATOR);
+
+/** The keys of the links around a node of a place, both ways: what its side of a comparison holds. */
+export function neighbourhoodKeys(place, id) {
+  const keys = new Set();
+  for (const e of place.outEdges.get(id) || []) { const n = place.nodes.get(e.to); if (n) keys.add(linkKey(n, e)); }
+  for (const e of place.inEdges.get(id) || []) { const n = place.nodes.get(e.from); if (n) keys.add(linkKey(n, e)); }
+  return keys;
+}
 
 /** The declarations and links present in only one of two parsed models: {nodesOnlyLeft, nodesOnlyRight, edgesOnlyLeft, edgesOnlyRight, same}. */
 export function diffModels(left, right) {

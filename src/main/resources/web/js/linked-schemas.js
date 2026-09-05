@@ -10,7 +10,6 @@ import { plural, t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { renderMainView } from './page.js';
 import { resolveLocation } from './schema-loader.js';
-import { session } from './state.js';
 import { renderNavigation } from './tabs.js';
 import { toast } from './toast.js';
 import { fileKeys, isLocated, registerFile } from './workspace-files.js';

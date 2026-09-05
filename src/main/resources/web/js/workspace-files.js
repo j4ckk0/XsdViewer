@@ -1,7 +1,6 @@
 /** The files a workspace knows (workspace.files), open in a tab or only listed: {name, path (on disk), rel (in an opened folder), text, model, failed}. */
 import { LIBRARY_KEY_PREFIX, NAME_KEY_PREFIX } from './constants.js';
 import { session } from './state.js';
-import { activeWorkspace } from './tabs.js';
 
 /** Every identity a file (or the tab showing it) answers to: its path on disk, its path in an opened folder, else its name. */
 export function fileKeys(f) {
@@ -16,7 +15,7 @@ export const hasKey = (f, key) => fileKeys(f).includes(key);
 export const isLocated = (f) => !!(f.path || f.rel);
 
 /** The entry of {@code ws} sharing an identity with {@code file} ({key} or {path, rel, name}), or null. */
-export function findFile(ws, file) {
+function findFile(ws, file) {
   const keys = file.key ? [file.key] : fileKeys(file);
   return ws.files.find(f => fileKeys(f).some(k => keys.includes(k))) || null;
 }
@@ -35,7 +34,7 @@ export function savableFiles(ws) {
 }
 
 /** The files of the active workspace that are listed but not open in a tab. */
-export const listedOnly = () => activeWorkspace().files.filter(entry => !tabOfFile(entry));
+export const listedOnly = () => session.active.workspace.files.filter(entry => !tabOfFile(entry));
 
 export function registerFile(ws, file) {
   let entry = findFile(ws, file);

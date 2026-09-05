@@ -58,7 +58,7 @@ export const session = {
    * {@code view}: how the Objects section draws the two sides, the comparison's own and never a tab's.
    */
   comparison: { open: false, shown: false, section: COMPARE_SECTION.OBJECTS, view: VIEW.MODEL },
-  /** The two declarations its Declarations section draws, one per side; either may be null. */
+  /** The two declarations its Objects section draws, one per side; either may be null. */
   compared: { left: null, right: null },
   /** The boxes it draws folded, by the trail {@code model-diff.js} gives them; kept while the two sides do not change. */
   comparedFolded: new Set(),

@@ -53,39 +53,25 @@ final class DeclarationLineIndex {
     }
 
     /** The lines a declaration spans: where its start tag opens and where its end tag closes (the same line when it is self-closed). */
-    record Span(int start, int end) {}
+    record Span(int start, int end) {
+        /** The span of a node the file does not declare: a built-in, or an object of another schema. */
+        static final Span NOWHERE = new Span(0, 0);
+    }
 
     private DeclarationLineIndex() {}
 
+    /** The lines each declaration spans, by node id: {@code idOf} says which tags declare one, the first tag of an id keeping it. */
     static Map<String, Span> build(String text, DeclarationId idOf) throws Exception {
-        int[] lineStarts = lineStarts(text);
         Map<String, Span> result = new HashMap<>();
-
-        SecureXmlFactories.newSaxParser().parse(new InputSource(new StringReader(text)), new DefaultHandler() {
-            private Locator locator;
-            private final List<Tag> path = new ArrayList<>();
-            /** The declaration each depth opened, so the matching end tag closes the right one; null where a tag declares nothing. */
-            private final List<String> open = new ArrayList<>();
-
-            @Override
-            public void setDocumentLocator(Locator l) { locator = l; }
-
-            @Override
-            public void startElement(String uri, String localName, String qName, Attributes attrs) {
-                path.add(new Tag(uri, localName, attrs.getValue(XsdVocabulary.ATTR_NAME)));
-                String id = idOf.of(path);
-                boolean first = id != null && locator != null && !result.containsKey(id);
-                if (first) result.put(id, new Span(startTagLine(text, lineStarts, locator), 0));
-                open.add(first ? id : null);
-            }
-
-            @Override
-            public void endElement(String uri, String localName, String qName) {
-                path.remove(path.size() - 1);
-                String id = open.remove(open.size() - 1);
-                // the locator points just past the '>' of the end tag, which is where the declaration stops
-                if (id != null && locator != null) result.put(id, new Span(result.get(id).start(), locator.getLineNumber()));
-            }
+        List<String> ids = new ArrayList<>();   // the id each element declares, by rank; null for a tag declaring nothing
+        walk(text, (path, rank) -> {
+            String id = idOf.of(path);
+            boolean first = id != null && !result.containsKey(id);
+            ids.add(first ? id : null);
+            if (first) result.put(id, Span.NOWHERE);   // claimed now, its span written once its end tag is read
+        }, (rank, span) -> {
+            String id = ids.get(rank);
+            if (id != null) result.put(id, span);
         });
         return result;
     }
@@ -96,29 +82,56 @@ final class DeclarationLineIndex {
      * same in its DOM walk as here.
      */
     static List<Span> elementSpans(String text) throws Exception {
-        int[] lineStarts = lineStarts(text);
         List<Span> result = new ArrayList<>();
+        walk(text, (path, rank) -> result.add(Span.NOWHERE), result::set);
+        return result;
+    }
+
+    /** What the walk tells of an element when its start tag is read: the path of open tags (the root first) and its rank in document order. */
+    @FunctionalInterface
+    private interface OnStart {
+        void element(List<Tag> path, int rank);
+    }
+
+    /** What the walk tells of an element once its end tag is read: its rank and the lines it spans. */
+    @FunctionalInterface
+    private interface OnEnd {
+        void element(int rank, Span span);
+    }
+
+    /**
+     * One SAX pass over the text: every element is announced when it opens, with the path of tags
+     * above it, and once more when it closes, with the lines it spans. The locator points after the
+     * start tag, so the '<' is looked for backwards (a tag spread over several lines gets its
+     * first); after the end tag it points past its '>', which is the line the declaration stops on.
+     */
+    private static void walk(String text, OnStart onStart, OnEnd onEnd) throws Exception {
+        int[] lineStarts = lineStarts(text);
         SecureXmlFactories.newSaxParser().parse(new InputSource(new StringReader(text)), new DefaultHandler() {
             private Locator locator;
-            /** The rank of each element still open, its end tag not read yet. */
-            private final List<Integer> open = new ArrayList<>();
+            private final List<Tag> path = new ArrayList<>();
+            /** The rank and start line of each element still open. */
+            private final List<int[]> open = new ArrayList<>();
+            private int count = 0;
 
             @Override
             public void setDocumentLocator(Locator l) { locator = l; }
 
             @Override
             public void startElement(String uri, String localName, String qName, Attributes attrs) {
-                open.add(result.size());
-                result.add(new Span(locator == null ? 0 : startTagLine(text, lineStarts, locator), 0));
+                path.add(new Tag(uri, localName, attrs.getValue(XsdVocabulary.ATTR_NAME)));
+                int rank = count++;
+                open.add(new int[] { rank, locator == null ? 0 : startTagLine(text, lineStarts, locator) });
+                onStart.element(path, rank);
             }
 
             @Override
             public void endElement(String uri, String localName, String qName) {
-                int rank = open.remove(open.size() - 1);
-                if (locator != null) result.set(rank, new Span(result.get(rank).start(), locator.getLineNumber()));
+                path.remove(path.size() - 1);
+                int[] element = open.remove(open.size() - 1);
+                onEnd.element(element[0], new Span(element[1], locator == null ? 0 : locator.getLineNumber()));
             }
         });
-        return result;
     }
 
     /** A place in the text, 1-based. */

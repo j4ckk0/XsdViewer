@@ -2,12 +2,14 @@
 import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, PATH_SEPARATOR, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW } from './constants.js';
 import { $, CLS, DATA, ID, selector } from './dom.js';
 import { closeAbout, showAbout } from './about.js';
-import { clearSelection, initOptions, rememberOptions, setAllDetails, toggleDetail, toggleSelection } from './compare.js';
-import { clearMarks, closeComparison, foldAll, markSide, openComparison, showSection, swapSides, toggleFolded } from './object-compare.js';
+import { initOptions, rememberOptions, setAllDetails, toggleDetail } from './compare.js';
+import { clearSelection, toggleSelection } from './compare-selection.js';
+import { clearMarks, closeComparison, markSide, openComparison, showSection, swapSides } from './comparison.js';
+import { foldAll, toggleFolded } from './object-compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
-import { initDetails, renderDetails, toggleDetails } from './details.js';
-import { fileListClick, initFiles, isFilesCollapsed, renderFileList, setAllUnfolded, setFilesCollapsed, toggleFiles } from './file-list.js';
+import { compareGroup, detailsPanel, renderDetails } from './details.js';
+import { fileListClick, filesPanel, renderFileList, setAllUnfolded } from './file-list.js';
 import { ensureTab } from './file-tabs.js';
 import { renderGraph } from './graph.js';
 import { filesOfEntries } from './folder-library.js';
@@ -15,9 +17,7 @@ import { followExternal, goBack, jumpTo, select } from './navigation.js';
 import { renderComparison, renderComparedObjects, renderMainView, renderPage, showView } from './page.js';
 import { zoomIn, zoomOut, zoomReset } from './zoom.js';
 import { exportPng, exportSvg } from './png-export.js';
-import { initSchemaInfo, renderNodeList, setAllGroupsExpanded, toggleGroup, toggleSchemaInfo } from './sidebar.js';
-import { t } from './i18n.js';
-import { MSG } from './message-keys.js';
+import { renderNodeList, schemaInfo, setAllGroupsExpanded, toggleGroup } from './sidebar.js';
 import { session } from './state.js';
 import { clearFind, findStep, focusFind, refreshFind } from './text-find.js';
 import { toggleTheme } from './theme.js';
@@ -36,6 +36,8 @@ export function wireEvents() {
   wireKeyboard();
   wireDragAndDrop();
   wireViews();
+  wirePanels();
+  wireComparison();
   wireSearch();
   wireSelectionSources();
 }
@@ -233,6 +235,7 @@ function wireDragAndDrop() {
   });
 }
 
+/** The views of a file: the Model / Text / Graph tabs, the graph's second level, the Back buttons, the zoom, the exports. */
 function wireViews() {
   document.querySelectorAll(selector(CLS.VIEW_TAB)).forEach(b => b.addEventListener('click', () => showView(b.dataset[DATA.VIEW])));
   try { $(ID.TWO_LEVELS).checked = localStorage.getItem(STORAGE_KEY.TWO_LEVELS) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
@@ -245,19 +248,21 @@ function wireViews() {
   $(ID.ZOOM_IN).addEventListener('click', zoomIn);
   $(ID.ZOOM_OUT).addEventListener('click', zoomOut);
   $(ID.ZOOM_LEVEL).addEventListener('click', zoomReset);
-  initDetails();
-  $(ID.DETAILS_TOGGLE).addEventListener('click', toggleDetails);
-  initSchemaInfo();
-  $(ID.SCHEMA_INFO_TOGGLE).addEventListener('click', toggleSchemaInfo);
-  initFiles();
-  $(ID.FILES_TOGGLE).addEventListener('click', toggleFiles);
-  // expand all / collapse all, on each tree
+  $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
+  $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
+  window.addEventListener('resize', renderMainView);   // the drawn views are laid out for the room they have
+}
+
+/** The side panels: what folds, the expand / collapse pairs of each tree, and the Files panel's clicks. */
+function wirePanels() {
+  for (const [part, toggle] of [[detailsPanel, ID.DETAILS_TOGGLE], [schemaInfo, ID.SCHEMA_INFO_TOGGLE], [compareGroup, ID.COMPARE_GROUP_TOGGLE], [filesPanel, ID.FILES_TOGGLE]]) {
+    part.init();
+    $(toggle).addEventListener('click', part.toggle);
+  }
   $(ID.FILES_EXPAND_ALL).addEventListener('click', () => setAllUnfolded(true));
   $(ID.FILES_COLLAPSE_ALL).addEventListener('click', () => setAllUnfolded(false));
   $(ID.OBJECTS_EXPAND_ALL).addEventListener('click', () => setAllGroupsExpanded(true));
   $(ID.OBJECTS_COLLAPSE_ALL).addEventListener('click', () => setAllGroupsExpanded(false));
-  $(ID.COMPARE_EXPAND_ALL).addEventListener('click', () => setAllDetails(true));
-  $(ID.COMPARE_COLLAPSE_ALL).addEventListener('click', () => setAllDetails(false));
   $(ID.FILES_CONTENT).addEventListener('click', async (e) => {   // the Files panel: a file or an object shows its tab, opened when needed
     const hit = fileListClick(e.target);
     if (!hit) return;
@@ -267,8 +272,14 @@ function wireViews() {
     if (activateTab(tab)) renderPage();
     if (hit.id) select(hit.id);
   });
-  $(ID.EXPORT_BUTTON).addEventListener('click', exportPng);
-  $(ID.EXPORT_SVG_BUTTON).addEventListener('click', exportSvg);
+}
+
+/** The comparison's own controls: the ⇄ Compare of the details panel, and in its Objects section the sides, the folds of the two models. */
+function wireComparison() {
+  // the same comparison the workspace bar's button opens: the place, from the panel of a declaration
+  $(ID.DETAILS_COMPARE_BUTTON).addEventListener('click', () => { openComparison(); renderPage(); });
+  $(ID.COMPARE_EXPAND_ALL).addEventListener('click', () => setAllDetails(true));
+  $(ID.COMPARE_COLLAPSE_ALL).addEventListener('click', () => setAllDetails(false));
   $(ID.OBJECT_COMPARE_CLEAR).addEventListener('click', () => { clearMarks(); renderDetails(); renderComparedObjects(); });
   $(ID.OBJECT_COMPARE_SWAP).addEventListener('click', () => { swapSides(); renderDetails(); renderComparedObjects(); });
   $(ID.OBJECT_COMPARE_EXPAND_ALL).addEventListener('click', () => foldAll(false));
@@ -280,7 +291,6 @@ function wireViews() {
       if (handle) toggleFolded(handle.dataset[DATA.PATH]);
     });
   }
-  window.addEventListener('resize', renderMainView);
 }
 
 function wireSearch() {
@@ -289,7 +299,7 @@ function wireSearch() {
     const had = !!session.active.filter;
     session.active.filter = value.trim();
     // a search reaches every file of the workspace: the Files panel opens for it, since that is where the other files answer
-    if (!had && session.active.filter && isFilesCollapsed()) setFilesCollapsed(false);
+    if (!had && session.active.filter && filesPanel.isFolded()) filesPanel.set(false);   // a search unfolds the Files panel it searches
     if (session.active.model) renderNodeList();
     renderFileList();
   };
@@ -351,7 +361,7 @@ function wireSelectionSources() {
   }
   $(ID.DETAILS).addEventListener('click', (e) => {
     if (e.target.closest('a[data-' + DATA.LINE + ']')) { showView(VIEW.TEXT); return; }
-    // one side of the Compare view takes the selected declaration, or gives it up when it held it
+    // one side of the comparison takes the selected declaration, or gives it up when it held it
     const sideButton = e.target.closest(selector(CLS.MARK_BUTTON));
     if (sideButton) {
       const st = session.active;

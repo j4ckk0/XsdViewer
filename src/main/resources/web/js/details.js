@@ -1,36 +1,28 @@
 /** The right panel, under the schema header (sidebar.js): the selected object, its expression (a Schematron rule's context, an assertion's test), its documentation, the values it enumerates, its links out and the objects using it. Collapsible to a strip. */
 import { cardinalityText, isOptional } from './cardinality.js';
-import { NODE_KIND, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
-import { SIDE, SIDES, sideOf } from './object-compare.js';
+import { NODE_KIND, STORAGE_KEY } from './constants.js';
+import { SIDE, SIDES, sideOf } from './comparison.js';
 import { placeAttributes, usersInWorkspace } from './declarations.js';
 import { $, CLS, DATA, ID, dataAttr, esc } from './dom.js';
+import { GLYPHS, foldable } from './foldable.js';
 import { updateSplitters } from './panels.js';
 import { t } from './i18n.js';
 import { kindLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
 
+/**
+ * Draws what the panel holds. Whether the panel is shown belongs to {@link showView}: it is a panel
+ * of a workspace, so the comparison and a validation, which take the whole page, do without it.
+ */
 export function renderDetails() {
   const st = session.active;
-  const panel = $(ID.DETAILS);
-  if (!st.selected) { $(ID.DETAILS_CONTENT).innerHTML = ''; panel.classList.remove(CLS.HIDDEN); return; }
+  if (!st.selected) { $(ID.DETAILS_CONTENT).innerHTML = ''; renderCompareGroup(null); return; }
   const n = st.nodes.get(st.selected);
   let html = '<h2>' + esc(n.name) + '</h2><span class="' + CLS.BADGE + ' ' + n.kind + '">' + esc(kindLabel(n.kind)) + '</span>';
   html += '<div class="' + CLS.META + '">'
     + (n.line > 0 ? '<a' + dataAttr(DATA.LINE, n.line) + '>' + esc(t(MSG.DETAILS_SHOW_IN_TEXT, n.line)) + '</a>' : esc(t(MSG.DETAILS_NO_DECLARATION)))
     + '</div>';
-  // a section of its own, so that the two buttons say what they are for: the sides of the Compare view
-  if (n.kind !== NODE_KIND.EXTERNAL) {
-    const on = sideOf(st, n.id);
-    const label = { [SIDE.LEFT]: MSG.OBJECT_MARK_LEFT, [SIDE.RIGHT]: MSG.OBJECT_MARK_RIGHT };
-    const sideName = { [SIDE.LEFT]: MSG.OBJECT_SIDE_LEFT, [SIDE.RIGHT]: MSG.OBJECT_SIDE_RIGHT };
-    html += '<h3>' + esc(t(MSG.DETAILS_COMPARE)) + '</h3>'
-      + '<div class="' + CLS.META + '">' + esc(t(MSG.DETAILS_COMPARE_HINT)) + '</div>'
-      + '<div class="' + CLS.MARK_BUTTONS + '">' + SIDES.map(side =>
-        '<button class="' + CLS.MARK_BUTTON + ' ' + side + (on === side ? ' ' + CLS.MARKED : '') + '" type="button"'
-        + dataAttr(DATA.SIDE, side) + ' title="' + esc(t(on === side ? MSG.OBJECT_MARK_OFF_TITLE : MSG.OBJECT_MARK_TITLE, t(sideName[side]))) + '">'
-        + esc(t(label[side])) + '</button>').join('') + '</div>';
-  }
   if (n.xpath) html += '<div class="' + CLS.XPATH + '" title="' + esc(t(MSG.DETAILS_XPATH)) + '"><code>' + esc(n.xpath) + '</code></div>';
   if (n.doc) html += '<div class="' + CLS.DOC + '">' + esc(n.doc) + '</div>';
   if (n.values && n.values.length) {
@@ -52,33 +44,39 @@ export function renderDetails() {
     ? inn.map(e => linkHtml(e, st.nodes.get(e.from))).join('') + elsewhere.map(u => linkHtml(u.e, u.n, u.place)).join('')
     : none;
   $(ID.DETAILS_CONTENT).innerHTML = html;
-  panel.classList.remove(CLS.HIDDEN);
+  renderCompareGroup(n);
 }
 
-const COLLAPSE_GLYPH = '»', EXPAND_GLYPH = '«';
-
-/** Collapses the panel to a strip (or expands it back); remembered across sessions. */
-export function setDetailsCollapsed(collapsed) {
-  $(ID.DETAILS).classList.toggle(CLS.COLLAPSED, collapsed);
-  const toggle = $(ID.DETAILS_TOGGLE);
-  toggle.textContent = collapsed ? EXPAND_GLYPH : COLLAPSE_GLYPH;
-  toggle.title = t(collapsed ? MSG.DETAILS_EXPAND : MSG.DETAILS_COLLAPSE);
-  updateSplitters();
-  try { localStorage.setItem(STORAGE_KEY.DETAILS_COLLAPSED, collapsed ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
+/**
+ * The Compare group: which side of the comparison holds this declaration, and the comparison itself.
+ * An external placeholder is declared in another file, so it has nothing to put on a side.
+ */
+function renderCompareGroup(n) {
+  const st = session.active;
+  const shown = !!n && n.kind !== NODE_KIND.EXTERNAL;
+  $(ID.COMPARE_GROUP).classList.toggle(CLS.HIDDEN, !shown);
+  if (!shown) { $(ID.COMPARE_SIDES).innerHTML = ''; return; }
+  const on = sideOf(st, n.id);
+  const label = { [SIDE.LEFT]: MSG.OBJECT_MARK_LEFT, [SIDE.RIGHT]: MSG.OBJECT_MARK_RIGHT };
+  const sideName = { [SIDE.LEFT]: MSG.OBJECT_SIDE_LEFT, [SIDE.RIGHT]: MSG.OBJECT_SIDE_RIGHT };
+  $(ID.COMPARE_SIDES).innerHTML = '<div class="' + CLS.META + '">' + esc(t(MSG.DETAILS_COMPARE_HINT)) + '</div>'
+    + '<div class="' + CLS.MARK_BUTTONS + '">' + SIDES.map(side =>
+      '<button class="' + CLS.MARK_BUTTON + ' ' + side + (on === side ? ' ' + CLS.MARKED : '') + '" type="button"'
+      + dataAttr(DATA.SIDE, side) + ' title="' + esc(t(on === side ? MSG.OBJECT_MARK_OFF_TITLE : MSG.OBJECT_MARK_TITLE, t(sideName[side]))) + '">'
+      + esc(t(label[side])) + '</button>').join('') + '</div>';
 }
 
-export const isDetailsCollapsed = () => $(ID.DETAILS).classList.contains(CLS.COLLAPSED);
+/** The Compare group folds to its title line; unfolded until the user folds it once. */
+export const compareGroup = foldable({
+  element: ID.COMPARE_GROUP, toggle: ID.COMPARE_GROUP_TOGGLE, storageKey: STORAGE_KEY.COMPARE_GROUP_COLLAPSED,
+  titles: { fold: MSG.COMPARE_GROUP_COLLAPSE, unfold: MSG.COMPARE_GROUP_EXPAND },
+});
 
-export function toggleDetails() {
-  setDetailsCollapsed(!isDetailsCollapsed());
-}
-
-/** Restores the collapsed state remembered in the browser. */
-export function initDetails() {
-  let collapsed = false;
-  try { collapsed = localStorage.getItem(STORAGE_KEY.DETAILS_COLLAPSED) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
-  setDetailsCollapsed(collapsed);
-}
+/** The panel folds to a strip at the side; the splitter beside it follows. */
+export const detailsPanel = foldable({
+  element: ID.DETAILS, toggle: ID.DETAILS_TOGGLE, storageKey: STORAGE_KEY.DETAILS_COLLAPSED,
+  titles: { fold: MSG.DETAILS_COLLAPSE, unfold: MSG.DETAILS_EXPAND }, glyphs: GLYPHS.PANEL, onChange: updateSplitters,
+});
 
 /** One link row: its label, its cardinality when it has one, and the node at the other end (with its file when it is another file's); optional links are marked. */
 function linkHtml(edge, target, place = null) {

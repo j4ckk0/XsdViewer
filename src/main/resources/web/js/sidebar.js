@@ -1,6 +1,7 @@
 /** The searchable list of objects by kind (left panel) and the schema header (namespace, imports, counts) at the top of the details panel (right). */
-import { KINDS, NODE_KIND, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';
+import { KINDS, NODE_KIND, STORAGE_KEY } from './constants.js';
 import { $, CLS, DATA, ID, dataAttr, esc, selector } from './dom.js';
+import { foldable } from './foldable.js';
 import { t } from './i18n.js';
 import { groupLabel } from './kind-labels.js';
 import { MSG } from './message-keys.js';
@@ -19,32 +20,11 @@ export function renderSchemaInfo() {
   $(ID.SCHEMA_INFO_CONTENT).innerHTML = html;
 }
 
-const COLLAPSE_GLYPH = '▾', EXPAND_GLYPH = '▸';
-
-/** Folds the schema header (namespace, imports, counts) to its title line, or unfolds it; remembered across sessions. */
-export function setSchemaInfoCollapsed(collapsed) {
-  $(ID.SCHEMA_INFO).classList.toggle(CLS.COLLAPSED, collapsed);
-  const toggle = $(ID.SCHEMA_INFO_TOGGLE);
-  toggle.textContent = collapsed ? EXPAND_GLYPH : COLLAPSE_GLYPH;
-  toggle.title = t(collapsed ? MSG.INFO_EXPAND : MSG.INFO_COLLAPSE);
-  try { localStorage.setItem(STORAGE_KEY.SCHEMA_INFO_COLLAPSED, collapsed ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
-}
-
-export const isSchemaInfoCollapsed = () => $(ID.SCHEMA_INFO).classList.contains(CLS.COLLAPSED);
-
-export function toggleSchemaInfo() {
-  setSchemaInfoCollapsed(!isSchemaInfoCollapsed());
-}
-
-/** Restores the folded state remembered in the browser; folded until the user unfolds it once. */
-export function initSchemaInfo() {
-  let collapsed = true;
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY.SCHEMA_INFO_COLLAPSED);
-    if (stored !== null) collapsed = stored === STORAGE_TRUE;
-  } catch (e) { /* storage unavailable */ }
-  setSchemaInfoCollapsed(collapsed);
-}
+/** The schema header (namespace, imports, counts) folds to its title line; folded until the user unfolds it once. */
+export const schemaInfo = foldable({
+  element: ID.SCHEMA_INFO, toggle: ID.SCHEMA_INFO_TOGGLE, storageKey: STORAGE_KEY.SCHEMA_INFO_COLLAPSED,
+  titles: { fold: MSG.INFO_COLLAPSE, unfold: MSG.INFO_EXPAND }, defaultFolded: true,
+});
 
 export function renderNodeList() {
   const st = session.active;
