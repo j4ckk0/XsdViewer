@@ -14,7 +14,7 @@
  * Neither file need be open in a tab: a workspace's listed file is indexed on demand, which is also
  * what lets a named type be opened from another file of that same workspace.
  */
-import { TEXT, VIEW, kindOfId, nameOfId } from './constants.js';
+import { STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE, TEXT, VIEW, kindOfId, nameOfId } from './constants.js';
 import { textDiffHtml } from './compare.js';
 import { SIDES, comparedPair, foldedBoxes, placeOf } from './comparison.js';
 import { declarationLines, shapeOf } from './declaration-source.js';
@@ -42,6 +42,36 @@ const nodeOf = (mark) => { const place = placeOf(mark); return place ? place.nod
 
 const absent = () => '<div class="' + CLS.EMPTY + '">' + esc(t(MSG.COMPARE_OBJECT_ABSENT)) + '</div>';
 
+// ---- differences only ----
+
+/** The option of the section, remembered across sessions: only what differs is drawn, in whichever view. */
+const isDiffOnly = () => $(ID.OBJECT_COMPARE_DIFF_ONLY).checked;
+
+export function initDiffOnly() {
+  try { $(ID.OBJECT_COMPARE_DIFF_ONLY).checked = localStorage.getItem(STORAGE_KEY.OBJECT_COMPARE_DIFF_ONLY) === STORAGE_TRUE; } catch (e) { /* storage unavailable */ }
+}
+
+export function rememberDiffOnly() {
+  try { localStorage.setItem(STORAGE_KEY.OBJECT_COMPARE_DIFF_ONLY, isDiffOnly() ? STORAGE_TRUE : STORAGE_FALSE); } catch (e) { /* storage unavailable */ }
+}
+
+/** With differences only, the text keeps one line of context around a change, as the Files section does. */
+const CONTEXT = { keep: 1, above: 2 };
+
+/**
+ * What "differences only" keeps of a tree: the boxes that differ and those on the way to one, as
+ * copies so the tree itself stays whole for the folds and the next redraw. Null when nothing differs.
+ */
+function differing(box) {
+  const attributes = box.attributes.map(differing).filter(Boolean);
+  const children = box.children.map(differing).filter(Boolean);
+  if (box.diff === DIFF.SAME && !attributes.length && !children.length) return null;
+  return Object.assign({}, box, { attributes, children });
+}
+
+/** The tree as drawn: whole, or its differences under its root when the option is on. */
+const shownTree = (tree) => (!tree || !isDiffOnly() ? tree : differing(tree) || Object.assign({}, tree, { attributes: [], children: [] }));
+
 /** How many keys of {@code these} the other side does not have. */
 const only = (these, others) => [...these].filter(k => !others.has(k)).length;
 
@@ -64,8 +94,8 @@ function drawModel(canvasId, tree, mark) {
 /** Draws the two trees as they stand, the folded boxes shown as leaves. */
 function drawTrees(trees, pair) {
   for (const tree of trees) for (const box of boxesOf(tree)) box.folded = foldedBoxes().has(box.foldKey);
-  drawModel(ID.OBJECT_COMPARE_LEFT, trees[0], pair[0]);
-  drawModel(ID.OBJECT_COMPARE_RIGHT, trees[1], pair[1]);
+  drawModel(ID.OBJECT_COMPARE_LEFT, shownTree(trees[0]), pair[0]);
+  drawModel(ID.OBJECT_COMPARE_RIGHT, shownTree(trees[1]), pair[1]);
 }
 
 function drawModels(pair) {
@@ -106,7 +136,7 @@ const linesOf = (mark) => declarationLines(sourceOf(placeOf(mark)), nodeOf(mark)
 function drawText(pair) {
   const [la, lb] = pair.map(linesOf);
   const ops = la.length && lb.length ? diffLines(la.map(l => shapeOf(l.text)), lb.map(l => shapeOf(l.text))) : null;
-  $(ID.OBJECT_COMPARE_TEXT).innerHTML = ops ? textDiffHtml({ la, lb, ops }, null) : absent();
+  $(ID.OBJECT_COMPARE_TEXT).innerHTML = ops ? textDiffHtml({ la, lb, ops }, isDiffOnly() ? CONTEXT : null) : absent();
   const found = ops && { left: ops.filter(o => o.op === OP.DELETE).length, right: ops.filter(o => o.op === OP.INSERT).length };
   return sidesSummary(found, MSG.OBJECT_COMPARE_TEXT_SUMMARY, MSG.OBJECT_COMPARE_TEXT_SAME);
 }
@@ -121,7 +151,7 @@ function drawGraph(canvasId, mark, otherLinks, markClass) {
   const place = placeOf(mark);
   if (!place || !place.nodes.get(mark.id)) { canvas.innerHTML = absent(); return; }
   const side = Object.assign({}, place, { selected: mark.id });
-  renderGraph(side, canvas, { toolbar: false, markOf: (n, e) => (n && !otherLinks.has(linkKey(n, e)) ? markClass : '') });
+  renderGraph(side, canvas, { toolbar: false, onlyMarked: isDiffOnly(), markOf: (n, e) => (n && !otherLinks.has(linkKey(n, e)) ? markClass : '') });
 }
 
 function drawGraphs(pair) {

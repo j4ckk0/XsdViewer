@@ -2,6 +2,11 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 4.12.0 — 2026-09-05
+
+- **Differences only in the Objects section.** A checkbox in its header, remembered across sessions, keeps what differs in whichever view is shown: in the models the boxes that differ and those on the way to one, in the text the changed lines with one line of context, in the graphs the links only one side has.
+- **`--verbose` on the command line.** The log then tells each request the page makes and each schema parsed (its size, its declarations, its links), besides what happens to the server and what fails. The usage line, the launchers and the README say so.
+
 ## 4.11.0 — 2026-09-05
 
 - **Fix: swapping the two sides, or clearing the marks, brought the details panel into the comparison.** That panel belongs to a workspace, and the comparison takes the whole page; drawing its content no longer decides whether it is shown, which is the view's business alone. Ctrl+clicking a workspace chip from the comparison had the same effect, and is fixed with it.

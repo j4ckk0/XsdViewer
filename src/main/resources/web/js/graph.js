@@ -45,7 +45,8 @@ const shorten = (s, max) => (s.length > max ? s.slice(0, max - 1) + ELLIPSIS : s
  * @param st       the place read: its nodes, its link indexes, its workspace and its selection
  * @param canvas   where the SVG goes, and whose size the layout is spread over
  * @param options  {@code toolbar}: false where the graph has no toolbar of its own (the comparison);
- *                 {@code markOf(node, edge)}: the class marking a row, for a graph drawn beside another
+ *                 {@code markOf(node, edge)}: the class marking a row, for a graph drawn beside another;
+ *                 {@code onlyMarked}: the rows {@code markOf} leaves unmarked are not drawn
  */
 export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), options = {}) {
   if (!st || !st.selected) { canvas.innerHTML = ''; return; }
@@ -87,6 +88,11 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
     for (const e of u.edges) if (shownLink(u.n, e, u.n.kind, center.kind)) left.push(link(u.n, e, u.place));
   }
   right.sort(byName); left.sort(byName);
+  if (options.onlyMarked) {   // differences only: what both sides have is left out
+    const marked = (row) => !!markOf(row.n, row.edge);
+    right.splice(0, right.length, ...right.filter(marked));
+    left.splice(0, left.length, ...left.filter(marked));
+  }
   // An external target declared elsewhere in the workspace shows as what it is there (its kind, its file).
   for (const r of right) {
     if (r.n.kind !== NODE_KIND.EXTERNAL) continue;

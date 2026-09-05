@@ -325,6 +325,7 @@
   "objectCompare.textSame": "Les deux sont écrites de la même façon",
   "objectCompare.graphSummary": "{0} liens seulement à gauche, {1} seulement à droite",
   "objectCompare.graphSame": "Les mêmes liens des deux côtés",
+  "objectCompare.diffOnly.title": "Ne montrer que ce qui diffère : dans les modèles les boîtes qui diffèrent et celles qui y mènent, dans le texte les lignes modifiées avec une ligne de contexte, dans les graphes les liens qu'un seul côté a",
   "objectCompare.oneMarked": "Un côté est rempli. Remplissez l'autre depuis le panneau de détails d'une déclaration (◈ Gauche ou ◈ Droite).",
   "objectCompare.clear": "Effacer les marques",
   "objectCompare.clear.title": "Plus rien de marqué pour la comparaison",

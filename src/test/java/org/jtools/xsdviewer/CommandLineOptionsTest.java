@@ -41,15 +41,17 @@ class CommandLineOptionsTest {
         assertFalse(o.keepAlive());
         assertTrue(o.stopWhenNoPage());
         assertFalse(o.help());
+        assertFalse(o.verbose());
         assertNull(o.initialFile());
     }
 
     @Test
     void allOptions() {
-        CommandLineOptions o = CommandLineOptions.parse(new String[] { "--port", "9090", "--host", "0.0.0.0", "--no-browser", "a.xsd" });
+        CommandLineOptions o = CommandLineOptions.parse(new String[] { "--port", "9090", "--host", "0.0.0.0", "--no-browser", "--verbose", "a.xsd" });
         assertEquals("0.0.0.0", o.host());
         assertEquals(9090, o.port());
         assertFalse(o.openBrowser());
+        assertTrue(o.verbose());
         assertEquals(Path.of("a.xsd"), o.initialFile());
     }
 

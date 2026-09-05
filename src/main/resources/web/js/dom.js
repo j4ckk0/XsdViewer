@@ -92,6 +92,7 @@ export const ID = {
   OBJECT_COMPARE_EMPTY: 'objectCompareEmpty',
   OBJECT_COMPARE_BODY: 'objectCompareBody',
   OBJECT_COMPARE_FOLDS: 'objectCompareFolds',
+  OBJECT_COMPARE_DIFF_ONLY: 'objectCompareDiffOnly',
   OBJECT_COMPARE_TEXT: 'objectCompareText',
   OBJECT_COMPARE_LEFT: 'objectCompareLeft',
   OBJECT_COMPARE_RIGHT: 'objectCompareRight',

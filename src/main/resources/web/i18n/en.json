@@ -325,6 +325,7 @@
   "objectCompare.textSame": "The two are written the same way",
   "objectCompare.graphSummary": "{0} links only on the left, {1} only on the right",
   "objectCompare.graphSame": "The same links on both sides",
+  "objectCompare.diffOnly.title": "Show only what differs: in the models the boxes that differ and those on the way to one, in the text the changed lines with one line of context, in the graphs the links only one side has",
   "objectCompare.oneMarked": "One side is filled. Fill the other one from the details panel of a declaration (◈ Left or ◈ Right).",
   "objectCompare.clear": "Clear the marks",
   "objectCompare.clear.title": "Nothing marked for comparison any more",

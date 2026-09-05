@@ -25,6 +25,10 @@ import java.io.IOException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.jtools.xsdviewer.schema.SchemaParser;
+import org.jtools.xsdviewer.Log;
+import org.jtools.xsdviewer.MessageKey;
+import org.jtools.xsdviewer.Messages;
+import org.jtools.xsdviewer.schema.SchemaGraph;
 
 /** {@code POST /api/parse}, body = the text of a schema file (XSD, WSDL or Schematron): answers the JSON graph, or 400 with the parse error. */
 final class ParseSchemaHandler implements HttpHandler {
@@ -34,7 +38,9 @@ final class ParseSchemaHandler implements HttpHandler {
         if (!HttpResponses.requirePost(ex)) return;
         String text = HttpResponses.readBody(ex);
         try {
-            HttpResponses.json(ex, HttpStatus.OK, SchemaParser.parse(text).toJson());
+            SchemaGraph graph = SchemaParser.parse(text);
+            Log.debug(Messages.get(MessageKey.PARSED, text.length(), graph.nodes.size(), graph.edges.size()));
+            HttpResponses.json(ex, HttpStatus.OK, graph.toJson());
         } catch (Exception e) {
             HttpResponses.error(ex, HttpStatus.BAD_REQUEST, e.getMessage() == null ? e.toString() : e.getMessage());
         }

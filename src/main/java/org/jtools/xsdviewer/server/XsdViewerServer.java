@@ -85,6 +85,7 @@ public final class XsdViewerServer {
     private static HttpHandler localized(HttpHandler handler) {
         return ex -> {
             Messages.setRequestLocale(Messages.localeOf(ex.getRequestHeaders().getFirst(ACCEPT_LANGUAGE_HEADER)));
+            Log.debug(Messages.get(MessageKey.REQUEST, ex.getRequestMethod(), ex.getRequestURI()));
             try {
                 handler.handle(ex);
             } catch (Exception | Error e) {

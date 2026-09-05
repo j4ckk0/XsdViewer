@@ -479,6 +479,43 @@ SCENES = [
                  'title': "document.querySelector('#compareGroup .panel-head span').textContent"},
          expect={'shown': True, 'buttons': '▾|◈ Left side|◈ Right side|⇄ Compare', 'folded': True, 'chips': 1, 'place': 1,
                  'unfolded': False, 'title': 'Compare'}),
+    dict(name='compare-diff-only', file='samples/compare/v1.xsdviewer.json', theme='light',
+         # differences only, in the three views: the boxes on the way to a difference, the changed lines with context, the marked links
+         action=OPEN_V2 + DECLARATIONS
+                + "const pick = (w, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
+                "pick('v1', 'left'); pick('v2', 'right');"
+                + DECLARATIONS
+                + "await new Promise(r => setTimeout(r, 400));"
+                "document.getElementById('toast').classList.add('hidden');"
+                "const view = (v) => document.querySelector('#viewTabs .tab[data-view=\"' + v + '\"]').click();"
+                "const count = (sel) => document.querySelectorAll(sel).length;"
+                "const option = document.getElementById('objectCompareDiffOnly');"
+                "const set = async (on) => { option.checked = on; option.dispatchEvent(new Event('change')); await new Promise(r => setTimeout(r, 300)); };"
+                "window.__allBoxes = count('#objectCompareBody .mbox');"
+                "await set(true);"
+                "window.__diffBoxes = count('#objectCompareBody .mbox');"
+                "window.__sameBoxes = count('#objectCompareBody .mbox.same');"
+                "view('text'); await new Promise(r => setTimeout(r, 300));"
+                "window.__textRows = count('#objectCompareText .cside:first-child tr');"
+                "window.__textFolds = count('#objectCompareText .cside:first-child tr.fold');"
+                "view('graph'); await new Promise(r => setTimeout(r, 300));"
+                "window.__graphNodes = count('#objectCompareLeft .node');"
+                "await set(false);"
+                "window.__graphNodesAll = count('#objectCompareLeft .node');"
+                "view('model'); await new Promise(r => setTimeout(r, 300));",
+         checks={'allBoxes': "window.__allBoxes", 'diffBoxes': "window.__diffBoxes", 'sameBoxes': "window.__sameBoxes",
+                 'textRows': "window.__textRows", 'textFolds': "window.__textFolds",
+                 'graphNodes': "window.__graphNodes", 'graphNodesAll': "window.__graphNodesAll",
+                 'boxesBack': "document.querySelectorAll('#objectCompareBody .mbox').length",
+                 'remembered': "localStorage.getItem('xsdviewer.objectCompareDiffOnly')"},
+         # of 22 boxes 14 remain, the 4 "same" ones being the two roots and their sequences, on the way to a difference;
+         # lines 13-16 fold to one row with a line of context on each side; the left graph keeps its centre and the 4 marked links
+         expect={'allBoxes': 22, 'diffBoxes': 14, 'sameBoxes': 4, 'textRows': 12, 'textFolds': 1,
+                 'graphNodes': 5, 'graphNodesAll': 10, 'boxesBack': 22, 'remembered': '0'}),
     dict(name='compare-sides', file='samples/compare/v1.xsdviewer.json', theme='light',
          # each side is chosen: filling one, taking it off, clearing both, swapping
          action=OPEN_V2 + "const state = await import('/js/state.js');"

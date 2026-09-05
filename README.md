@@ -171,8 +171,8 @@ java -jar target/xsdviewer.jar
 The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
 
 ```
-scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [file.xsd]   # Linux/macOS
-scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [file.xsd]   # Windows
+scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS
+scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Windows
 ```
 
 Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
@@ -194,6 +194,10 @@ Chrome's and Edge's *Memory Saver* may *discard* a background tab after a long i
 is indistinguishable from closing it — the visible tab is never discarded; if the tool lives in
 a background tab for hours, add `127.0.0.1` to *Settings ▸ Performance ▸ Always keep these sites
 active*, or use `--keep-alive`.
+
+The log goes to the console and to `xsdviewer.0.log` in the temporary directory (its path is in
+*Help ▸ About*): what happens to the server and what fails. `--verbose` adds every request and
+every parse, for following what the page asks of the server.
 
 ## Installing Java 21
 
@@ -482,7 +486,9 @@ changed, and a summary counting them. The boxes are matched by what each one is 
 it sits, so an element inserted on one side does not mark everything below it as different; named
 types are opened on both sides, so a change deep inside one is seen. Any box holding something
 carries a handle that puts it aside, and folding one folds the box matching it on the other side;
-**⊞** / **⊟** open and fold them all. **⤓ PNG** / **⤓ SVG** save the two drawings as one picture.
+**⊞** / **⊟** open and fold them all. **Differences only** (remembered) keeps what differs in
+whichever view is shown: in the models the boxes that differ and those on the way to one, in the text
+the changed lines with one line of context, in the graphs the links only one side has. **⤓ PNG** / **⤓ SVG** save the two drawings as one picture.
 
 In **Text**, each side shows the source of its declaration alone — from its opening tag to its
 closing tag, with the line numbers it has in its file — the two aligned line by line and what differs

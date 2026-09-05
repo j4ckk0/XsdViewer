@@ -34,7 +34,11 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-/** The tool's log: what happens and what fails, on the console and in a rotating file of the temporary directory (a launcher without console still leaves a trace). */
+/**
+ * The tool's log: what happens and what fails, on the console and in a rotating file of the temporary
+ * directory (a launcher without console still leaves a trace). Two levels: what happens to the server
+ * and what fails, always; each request and each parse besides, when {@link #setVerbose verbose}.
+ */
 public final class Log {
 
     private static final String NAME = "xsdviewer";
@@ -74,6 +78,22 @@ public final class Log {
             }
         });
         LOGGER.addHandler(handler);
+    }
+
+    /** Verbose: the {@code FINE} records — a request, a parse — reach the console and the file too; otherwise {@code INFO} and up. */
+    public static void setVerbose(boolean verbose) {
+        Level level = verbose ? Level.FINE : Level.INFO;
+        LOGGER.setLevel(level);
+        for (Handler h : LOGGER.getHandlers()) h.setLevel(level);
+    }
+
+    public static boolean isVerbose() {
+        return LOGGER.getLevel().intValue() <= Level.FINE.intValue();
+    }
+
+    /** What a developer following the tool wants to see: written only when verbose. */
+    public static void debug(String message) {
+        LOGGER.fine(message);
     }
 
     /** The log file, or null when none could be opened. */

@@ -37,6 +37,9 @@ public final class MessageKey {
     public static final String SERVER_QUIT_REQUESTED = "server.quitRequested";
     public static final String SERVER_NO_PAGE_LEFT = "server.noPageLeft";
     public static final String LOG_FILE = "server.logFile";
+    /** Verbose only: a request received, a schema parsed. */
+    public static final String REQUEST = "server.request";
+    public static final String PARSED = "server.parsed";
     public static final String LOG_FILE_UNAVAILABLE = "server.logFileUnavailable";
     public static final String REQUEST_FAILED = "server.requestFailed";
 

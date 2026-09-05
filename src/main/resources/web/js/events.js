@@ -5,7 +5,7 @@ import { closeAbout, showAbout } from './about.js';
 import { initOptions, rememberOptions, setAllDetails, toggleDetail } from './compare.js';
 import { clearSelection, toggleSelection } from './compare-selection.js';
 import { clearMarks, closeComparison, markSide, openComparison, showSection, swapSides } from './comparison.js';
-import { foldAll, toggleFolded } from './object-compare.js';
+import { foldAll, initDiffOnly, rememberDiffOnly, toggleFolded } from './object-compare.js';
 import { closeAll, closeFile, openFiles, openSchemas, quit } from './file-actions.js';
 import { closeActiveWorkspace, openAllListed, openBrowserFolder, openEntriesAsWorkspace, openFolder, openWorkspace, saveWorkspace, startWorkspace } from './workspace-actions.js';
 import { compareGroup, detailsPanel, renderDetails } from './details.js';
@@ -282,6 +282,8 @@ function wireComparison() {
   $(ID.COMPARE_COLLAPSE_ALL).addEventListener('click', () => setAllDetails(false));
   $(ID.OBJECT_COMPARE_CLEAR).addEventListener('click', () => { clearMarks(); renderDetails(); renderComparedObjects(); });
   $(ID.OBJECT_COMPARE_SWAP).addEventListener('click', () => { swapSides(); renderDetails(); renderComparedObjects(); });
+  initDiffOnly();
+  $(ID.OBJECT_COMPARE_DIFF_ONLY).addEventListener('change', () => { rememberDiffOnly(); renderComparedObjects(); });
   $(ID.OBJECT_COMPARE_EXPAND_ALL).addEventListener('click', () => foldAll(false));
   $(ID.OBJECT_COMPARE_COLLAPSE_ALL).addEventListener('click', () => foldAll(true));
   // a handle in either model folds its box, and the box matching it on the other side
