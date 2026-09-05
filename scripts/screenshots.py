@@ -300,9 +300,10 @@ SCENES = [
                  # the long attribute's @name : type must stay inside its box
                  'attrNames': "[...document.querySelectorAll('#modelCanvas .mbox.attribute .mname')].map(t => t.textContent).join('|')",
                  'attrTypes': "[...document.querySelectorAll('#modelCanvas .mbox.attribute .mtype')].map(t => t.textContent).join('|')",
-                 'attrsFit': "(() => [...document.querySelectorAll('#modelCanvas .mbox.attribute')].every(b => [...b.querySelectorAll('text')].every(x => x.getComputedTextLength() <= +b.querySelector('rect').getAttribute('width') - 8)))().toString()"},
-         expect={'names': 'InternationalPurchaseOrde…|@purchaseOrderConfirmatio…|@identifier ?|customerLoyaltyProgramMem…|preferredInternation…|alternativeBillingAd…|consolidatedOrderLin…|estimatedDeliveryDateWith…',
-                 'boxHeight': '40', 'stringTypedName': 'customerLoyaltyProgramMem…', 'attrNames': '@purchaseOrderConfirmatio…|@identifier ?', 'attrTypes': 'string|AnInternationalStandard…', 'attrsFit': 'true'}),
+                 'attrsFit': "(() => [...document.querySelectorAll('#modelCanvas .mbox.attribute')].every(b => [...b.querySelectorAll('text')].every(x => x.getComputedTextLength() <= +b.querySelector('rect').getAttribute('width') - 8)))().toString()",
+                 'overflow': "[...document.querySelectorAll('#modelCanvas .mbox .mname')].filter(t => { const b = t.closest('.mbox').getBoundingClientRect(); return t.getBoundingClientRect().right > b.right - 2; }).map(t => t.textContent).join('|') || 'none'"},
+         expect={'names': 'InternationalPurchaseOr…|@purchaseOrderConfirmat…|@identifier ?|customerLoyaltyProgramM…|preferredInternati…|alternativeBilling…|consolidatedOrderL…|estimatedDeliveryDateWi…',
+                 'boxHeight': '40', 'stringTypedName': 'customerLoyaltyProgramM…', 'attrNames': '@purchaseOrderConfirmat…|@identifier ?', 'attrTypes': 'string|AnInternationalStandard…', 'attrsFit': 'true', 'overflow': 'none'}),
     # Settings toggle: the cross-view handles (the model's ◎ and the graph's ▤, and the ×N mark) can be hidden
     dict(name='handles-toggle', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:Items\"]').click();"
@@ -448,7 +449,7 @@ SCENES = [
                  'rounded': "[...document.querySelectorAll('#modelCanvas .mbox')].filter(g => g.querySelector('rect').getAttribute('rx') === '9').length",
                  'legend': "getComputedStyle(document.querySelector('#modelLegend .lg.box.service')).display !== 'none'",
                  'empty': "!document.getElementById('modelEmpty').classList.contains('hidden')"},
-         expect={'names': 'PurchaseOrderService|PurchaseOrderPortType|submitPurchaseOrder|getOrderStatus',
+         expect={'names': 'PurchaseOrderService|PurchaseOrderPortT…|submitPurchaseOrder|getOrderStatus',
                  'words': 'service|PurchaseOrderPort|operation|operation',
                  'kinds': 'portType',
                  'rounded': 4, 'legend': True, 'empty': False}),   # the service, its port to the portType, and that one opened on its two operations (whose word is already their kind, said once)

@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- Fix: a long declaration name whose letters are wide (e.g. `customerLoyaltyProgram…`) had its ellipsis paint just past the box edge; the width a name is fitted to is now measured more conservatively, so the ellipsis stays inside.
+
 ## 5.4.1 — 2026-09-05
 
 - Fix: opening a file or object from the Files tree while in the Graph (or Text) view kept the view being read, instead of dropping to the Model view of the file moved to.

@@ -41,7 +41,7 @@ const HANDLE = 14;
 const FAMILY_RADIUS = 9;
 const NAME_MAX_CHARS = 26, TYPE_MAX_CHARS = 24;
 /** Room in a box: its padding, the gap between two texts of one line, and the width of a character of the name (13px) and of the small words (10px). */
-const PAD = 8, TEXT_GAP = 6, NAME_CHAR_W = 6.5, WORD_CHAR_W = 5.2;
+const PAD = 8, TEXT_GAP = 6, NAME_CHAR_W = 7, WORD_CHAR_W = 5.2;
 const ELLIPSIS = '…';
 const COMPOSITOR_GLYPH = { [PARTICLE.SEQUENCE]: '···', [PARTICLE.CHOICE]: '◇', [PARTICLE.ALL]: '○' };
 const EXPAND_GLYPH = '+', COLLAPSE_GLYPH = '−', RECURSION_GLYPH = '↺';
