@@ -344,6 +344,12 @@ SCENES = [
                  'jumpedToAnotherFile': "String(window.__had && window.__after !== window.__before)",
                  'selectedSomething': "String(!!window.__sel)"},
          expect={'boxKept': 'ss', 'jumpedToAnotherFile': 'true', 'selectedSomething': 'true'}),
+    # the Settings entries line up on one indent (each has the checkmark column, the theme's kept empty)
+    dict(name='settings-look', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.getElementById('settingsMenuBtn').click();",
+         checks={'labelsAligned': "(() => { const xs = [...document.querySelectorAll('#settingsMenu > button')].map(b => Math.round([...b.querySelectorAll('span')].filter(x => !x.classList.contains('check'))[0].getBoundingClientRect().left)); return String(xs.every(x => x === xs[0])); })()",
+                 'order': "[...document.querySelectorAll('#settingsMenu > *')].map(e => e.tagName === 'DIV' ? '—' : e.id).join('|')"},
+         expect={'labelsAligned': 'true', 'order': 'menuTheme|menuHandles|—|menuAutoStop'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"
