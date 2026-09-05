@@ -53,7 +53,7 @@ const sidesSummary = (found, summaryKey, sameKey) => (found && (found.left || fo
 /** What the request carries for a side: the parsed files of its workspace, its file among them, its declaration. */
 const sideOfMark = (m) => sideOf(m.ws, m.entry, m.tab, m.id);
 
-/** What tells two pairs apart, and a pair from itself once more files of a workspace are parsed. */
+/** What tells two pairs apart, and a pair from itself once its workspace holds other files or other content. */
 const pairKey = (pair) => pair.map(m => [workspaceName(m.ws), m.fileName, m.id, libraryKey(m.ws)].join('|')).join('||');
 
 /**

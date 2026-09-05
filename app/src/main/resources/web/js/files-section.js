@@ -1,7 +1,11 @@
 /**
- * The Files section of the comparison, a view: two workspaces (selected with Ctrl+click on their chips, {@code workspace-selection.js})
- * compared folder-style, their files paired by name and marked identical / different / only on one
- * side, a different pair expandable to its schema and line differences.
+ * The Files section of the comparison, a view: two workspaces — selected with Ctrl+click on their
+ * chips ({@code workspace-selection.js}) — compared folder-style. The server pairs their files by
+ * name and says of each pair whether it is identical, differs, differs only by moved blocks, or is on
+ * one side alone ({@code POST /api/compare/workspaces}); a differing pair opens in place on what the
+ * two schemas declare and link that the other does not ({@code POST /api/compare/schemas}) and on
+ * their sources line by line ({@code POST /api/compare/texts}). This module asks, keeps each pair's
+ * answers while the table stands, and draws.
  */
 import { cardinalityText } from './cardinality.js';
 import { OP, PAIR_STATUS, STORAGE_FALSE, STORAGE_KEY, STORAGE_TRUE } from './constants.js';

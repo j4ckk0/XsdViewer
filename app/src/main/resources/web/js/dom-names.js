@@ -196,9 +196,7 @@ export const CLS = {
   VALIDATE_LINE: 'vline',
   VALIDATE_NONE: 'vnone',
   PENDING: 'pending',
-  /** In the details panel: opens the comparison of the selected declaration with the other selected workspace. */
-  /** In the details panel: marks the selected declaration for comparison. */
-  /** The pair of buttons putting the selected declaration on one side of the comparison. */
+  /** In the details panel: the pair of buttons putting the selected declaration on one side of the comparison. */
   MARK_BUTTONS: 'cobj-sides',
   MARK_BUTTON: 'cobj-mark',
   /** On that button when this declaration is one of the marked ones. */

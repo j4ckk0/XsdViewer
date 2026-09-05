@@ -156,12 +156,12 @@ restricted to `xs:enumeration` values), the values with their own documentation.
 
 ![Graph view](screenshots/XsdViewer-graph-view.jpg)
 
-**Compare view** — two declarations side by side, wherever each of them lives. Here `ProductType`
+**Comparing two declarations** — side by side, wherever each of them lives. Here `ProductType`
 of `v1` against the one of `v2`, marked one after the other: `legacyCode` is only in `v1` (red),
 `weight` only in `v2` (green, its own type opened), and `@category`, `description` and `tag`
 changed their occurrences (blue). The two need not share a name, a file or a workspace.
 
-![Compare view](screenshots/XsdViewer-compare-view.jpg)
+![Comparing two declarations](screenshots/XsdViewer-compare-view.jpg)
 
 **Comparing two workspaces** — `v1` against `v2` of the same schema set: file by file, the
 declarations and links only on one side, then the two sources side by side.

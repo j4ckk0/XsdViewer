@@ -88,7 +88,7 @@ export function showView(view) {
   if (place === PLACE.FILE && view === VIEW.TEXT) highlightTextLine(true);
 }
 
-/** Draws the comparison: the section being read, and the chip's state on the bar. */
+/** Draws whichever of the comparison's two sections is being read; nothing while the comparison is not the place shown. */
 export function renderComparison() {
   if (!session.comparison.shown) return;
   if (session.comparison.section === COMPARE_SECTION.OBJECTS) renderObjectCompare();

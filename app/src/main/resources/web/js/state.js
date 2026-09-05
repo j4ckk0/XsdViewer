@@ -62,7 +62,7 @@ export const session = {
   comparison: { open: false, shown: false, section: COMPARE_SECTION.OBJECTS, view: VIEW.MODEL },
   /** The two declarations its Objects section draws, one per side; either may be null. */
   compared: { left: null, right: null },
-  /** The boxes it draws folded, by the trail {@code model-diff.js} gives them; kept while the two sides do not change. */
+  /** The boxes it draws folded, by the trail the server gives each pair of matched boxes; kept while the two sides do not change. */
   comparedFolded: new Set(),
   /** Set when a link to an external declaration could not be resolved: checked whenever a file gets loaded. */
   pendingJump: null,

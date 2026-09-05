@@ -1,4 +1,8 @@
-/** The calls to the XsdViewer server (paths: constants.js API, handlers: the server package). */
+/**
+ * Every call the page makes to the server, one function per endpoint: the paths are in
+ * {@code constants.js} (API), the handlers in the server's {@code server} package. A call carries the
+ * page's language, so the server answers its errors and its generated text in it.
+ */
 import { API, API_PARAM, HTTP } from './constants.js';
 import { language } from './i18n.js';
 
