@@ -1,28 +1,68 @@
 # XsdViewer
 
 [![build](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml/badge.svg)](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/org.jtools/xsdviewer-core?label=xsdviewer-core)](https://central.sonatype.com/artifact/org.jtools/xsdviewer-core)
 
-XML Schema (`.xsd`) files explored in the browser — and the WSDL 1.1 (`.wsdl`) services built on
-such schemas, and the Schematron (`.sch`) rules written over them. Two ways in, depending on who you are:
+**See what a schema says.** XsdViewer draws an XML Schema the way you think about it: what a
+document of it holds, how its declarations refer to one another, what changed between two versions
+— in your browser, from one file you download. It reads WSDL services and Schematron rules the same way.
 
 | | |
 |---|---|
-| **You read schemas.** XsdViewer is an application: download a [release](https://github.com/j4ckk0/XsdViewer/releases) for Windows, Linux or macOS (nothing to install, a Java runtime is inside) or the jar for a machine that has Java 21, run it, and the page opens in your browser. The rest of this file is for you: the [screenshots](#screenshots), the [views](#what-it-does), the [workspaces](#workspaces), the [comparison](#comparing), the [validation](#validation). |
-| **You write programs.** XsdViewer is also a library and an API: **`org.jtools:xsdviewer-core`** parses a schema into a graph of its declarations, builds the content model of any of them, compares two, validates a document — Java 21, the JDK and nothing else ([core/README.md](core/README.md)); and the server's **HTTP API** does the same for any program, stateless, one call at a time ([architecture.md](architecture.md#http-interface)). Start with [`examples/`](examples/README.md): four Java programs and five JavaScript ones, run against the [samples](samples/README.md), built with every release. |
+| You read or write schemas | [**1. The application**](#1-the-application) — download it, run it, look |
+| You write programs that read schemas | [**2. The library**](#2-a-library-on-maven-central) — `org.jtools:xsdviewer-core`, and the HTTP API |
+| You want to read or change the code | [**3. The code**](#3-the-open-source-code) and [**4. The architecture**](#4-the-architecture) |
 
-```mermaid
-flowchart LR
-    you["you read schemas"] --> app
-    dev["you write programs"] -. "org.jtools:xsdviewer-core" .-> core
-    dev -. "POST /api/…" .-> app
-    subgraph jar["xsdviewer.jar — one download, a Java 21 runtime inside"]
-        app["<b>the page and the server</b><br/>three views, workspaces,<br/>comparison, validation"] --> core["<b>xsdviewer-core</b><br/>reads XSD, WSDL, Schematron<br/>the JDK and nothing else"]
-    end
-```
+## 1. The application
 
-## What it does
+[**Download the latest release**](https://github.com/j4ckk0/XsdViewer/releases/latest) for Windows,
+Linux or macOS — nothing to install, a Java runtime is inside —, unpack it anywhere, start the
+launcher: the page opens in your browser. Drop a schema on it.
 
-A Java server parses the files and serves a web page. What it does, in one screen:
+### Screenshots
+
+**Model view** — `ProductType` of `product.xsd`: what a document of it holds. Its attributes
+first (`@sku : Code`, `@category` optional, marked `?`), then its sequence and the elements it
+holds, each with its type in the corner and its occurrences below, dashed when optional. A named
+type, a global element or a base type carries a **+** handle that opens its own content in place,
+taken from its declaration wherever it lives — so a model can be read across files.
+
+![Model view](screenshots/XsdViewer-model-view.jpg)
+
+**Text view** — the source of `catalog.xsd`, the selected object's declaration highlighted;
+clicking a line number selects that object, and Ctrl+F searches the text.
+
+![Text view](screenshots/XsdViewer-xml-view.jpg)
+
+**Graph view** — the other question: not what a document holds, but how the declarations refer to
+one another. `CatalogType` in the centre, what it links to on the right (two levels: `publisher`
+is an `Address` from `common.xsd`, expanded from its own tab), what uses it on the left;
+cardinalities after each link, optional links dashed. The details panel on the right lists the
+links and the documentation — and, for an enumeration (a simpleType, an element or an attribute
+restricted to `xs:enumeration` values), the values with their own documentation.
+
+![Graph view](screenshots/XsdViewer-graph-view.jpg)
+
+**Comparing two declarations** — side by side, wherever each of them lives. Here `ProductType`
+of `v1` against the one of `v2`, marked one after the other: `legacyCode` is only in `v1` (red),
+`weight` only in `v2` (green, its own type opened), and `@category`, `description` and `tag`
+changed their occurrences (blue). The two need not share a name, a file or a workspace.
+
+![Comparing two declarations](screenshots/XsdViewer-compare-view.jpg)
+
+**The same two declarations as text** — the Objects section draws its pair the way its own
+**Model / Text / Graph** switch asks. Here their source alone, cut out of each file and kept at its
+own line numbers, the four differing lines marked. **Graph** shows instead the neighbourhood of each,
+the links only one side has marked; **Differences only** keeps, in whichever view, just what differs.
+
+![Comparing two declarations as text](screenshots/XsdViewer-compare-text.jpg)
+
+**Comparing two workspaces** — `v1` against `v2` of the same schema set: file by file, the
+declarations and links only on one side, then the two sources side by side.
+
+![Comparing two workspaces](screenshots/XsdViewer-compare-workspaces.jpg)
+
+### Main features
 
 - **Three views of a file**, each answering a different question. **Model** says what a document of
   the selected declaration holds — its shape, as an XSD editor draws it; this is the view a tab
@@ -36,8 +76,194 @@ A Java server parses the files and serves a web page. What it does, in one scree
   resemble one another — as models, as text or as graphs, what differs marked; or two workspaces
   file by file.
 - **Validation** of an XML document against the schema and the Schematron of the workspace.
+- **Export and zoom**: any drawing saved as PNG or SVG — the comparison as one picture of both sides —
+  and a zoom of its own per tab.
+- **Nothing leaves your machine.** The server runs on your computer and the browser talks to it there;
+  remote `schemaLocation`s are never fetched.
+- **Dark or light theme, English or French**, remembered by the browser.
 
-The [screenshots](#screenshots) below show each; the sections that follow say how they work.
+### Running it
+
+Each archive holds a launcher taking the same options; the jar is for a machine that already has Java 21:
+
+| Archive | Launcher |
+|---|---|
+| `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled runtime, no console window at all. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
+| `releases/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
+| `releases/xsdviewer-<version>-macos.tar.gz` | `xsdviewer.sh` — Apple silicon; a downloaded archive is quarantined by macOS, so once: `xattr -dr com.apple.quarantine xsdviewer-<version>` |
+| `releases/xsdviewer-<version>.jar` | for a machine that has [Java 21](#installing-java-21): `java -jar xsdviewer-<version>.jar` |
+
+When started without a console (the Windows launcher, a double-clicked jar), a start-up
+failure such as a port already in use is shown in a dialog instead of being lost.
+
+```
+XsdViewer.exe / xsdviewer.sh [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd | workspace.xsdviewer.json]
+```
+
+Passing a file opens it at start-up; `samples/purchaseOrder.xsd` of this repository is a small schema
+exercising every kind of link, `samples/compare/` two versions of a schema set to compare.
+
+**The server stops by itself** 15 seconds after the last page showing it has been closed —
+no orphan process left behind when you close the browser (*File ▸ Quit* stops it at once).
+Each page holds a connection open for its whole life; the server only counts a page gone when
+that connection breaks, so an idle page, even for hours and even in a background tab, keeps
+the server up; a reload, a browser restart or a laptop waking up reconnect within the grace.
+**Settings ▸ Stop the server when the last page is closed** switches it off (and on again)
+from the page — the choice is kept for the next runs (in the user's Java preferences) — for a
+server you open pages on now and then, or that other computers reach (`--host 0.0.0.0`).
+On the command line, `--keep-alive` turns it off for a run, and `--no-browser` implies it (you
+start it without a page and will open one later). **Settings ▸ Dark theme** / **Light theme** flips the
+page's colours (the system's light or dark setting, followed as it changes, until you choose);
+the browser remembers it, and the PNG export takes the page's background. One caveat:
+Chrome's and Edge's *Memory Saver* may *discard* a background tab after a long idle time, which
+is indistinguishable from closing it — the visible tab is never discarded; if the tool lives in
+a background tab for hours, add `127.0.0.1` to *Settings ▸ Performance ▸ Always keep these sites
+active*, or use `--keep-alive`.
+
+The log goes to the console and to `xsdviewer.0.log` in the temporary directory (its path is in
+*Help ▸ About*): what happens to the server and what fails. `--verbose` adds every request and
+every parse, for following what the page asks of the server.
+
+<a name="installing-java-21"></a>
+<details>
+<summary><b>Installing Java 21</b> — only to run the jar, the archives need nothing</summary>
+
+Only needed to run the jar (`xsdviewer-<version>.jar`) or to build from source ([part 3](#3-the-open-source-code)). The Windows
+zip and the Linux tarball bring their own JRE: unpack them anywhere and start the launcher,
+nothing to install.
+
+**What to get.** A *JRE* is enough to run the jar; a *JDK* is needed to build. Eclipse Temurin
+is the free, vendor-neutral build used here: <https://adoptium.net/temurin/releases/?version=21>
+— pick your OS and architecture, version 21 (LTS). Any other OpenJDK 21 (Microsoft, Amazon
+Corretto, Oracle, your distribution's package) works the same.
+
+**Windows.** Either the `.msi` installer — tick *Add to PATH* and *Set JAVA_HOME variable* in
+the *Custom Setup* screen — or the `.zip`: unzip it into a folder without spaces, e.g.
+`C:\Java\jdk-21`, then either add `C:\Java\jdk-21\bin` to the `Path` of your user
+(*Settings ▸ System ▸ About ▸ Advanced system settings ▸ Environment Variables*, log off and on
+again), or call it with its full path, no PATH change needed:
+
+```bat
+"C:\Java\jdk-21\bin\java" -jar xsdviewer-<version>.jar
+```
+
+**Linux.** Your distribution's package is the simplest — `sudo apt install openjdk-21-jre`
+(Debian/Ubuntu; `openjdk-21-jdk` to build), `sudo dnf install java-21-openjdk` (Fedora/RHEL) —
+otherwise the Temurin `.tar.gz`: unpack it under `/opt` (system-wide) or `~/java` (your user
+only) and either put its `bin` on the PATH in `~/.profile` or `~/.bashrc`,
+
+```bash
+sudo tar xzf OpenJDK21U-jre_x64_linux_hotspot_*.tar.gz -C /opt   # → /opt/jdk-21.0.12.1+1-jre (name varies with the version)
+export PATH=/opt/jdk-21.0.12.1+1-jre/bin:$PATH                     # in ~/.profile to make it permanent
+```
+
+or call it with its full path: `/opt/jdk-21.0.12.1+1-jre/bin/java -jar xsdviewer-<version>.jar`.
+
+**macOS.** The Temurin `.pkg` installer, or `brew install --cask temurin@21`.
+
+**Check.** A new terminal, then:
+
+```
+java -version
+openjdk version "21.0.12" ...
+```
+
+If it reports another major version, an older Java is first on the PATH: run the jar with the
+full path of the Java 21 `java` as above (under an older Java the jar fails at once with
+`UnsupportedClassVersionError … class file version 65.0`, which means exactly that). To build,
+Maven uses the JDK of `JAVA_HOME` when it is set, the `java` of the PATH otherwise.
+
+**For packaging only** (`scripts/package.sh`), the JRE *archives* are not installed but copied
+as they are into `jre/` — see [Packaging](#packaging).
+
+</details>
+
+## 2. A library on Maven Central
+
+The reading, the models, the comparison and the validation are a library of their own,
+**`org.jtools:xsdviewer-core`** — Java 21, the JDK and nothing else, the Java module
+`org.jtools.xsdviewer.core`:
+
+```xml
+<dependency>
+  <groupId>org.jtools</groupId>
+  <artifactId>xsdviewer-core</artifactId>
+  <version>5.0.0</version>
+</dependency>
+```
+
+What a program gets from it:
+
+- **A schema read into a graph.** `SchemaParser.parse(text)` gives a `SchemaGraph`: one node per
+  global declaration — elements, types, groups, attributes; a WSDL's services, ports, operations,
+  messages; a Schematron's phases, patterns, rules, assertions —, one edge per link with its word and
+  its cardinality. Each node knows the lines it is written on and its content model, the particles
+  and attributes an editor would draw. `toJson()` writes the graph.
+- **The content model of a declaration.** `ContentTree.build(…)` gives a tree of `Box`: what a
+  document of the declaration holds, the named types opened in place from wherever they are declared
+  among the files of a `Library` — what the Model view draws. `BoxJsonWriter` writes it.
+- **Two declarations compared.** `ModelDiff` marks, box by box, what only one side has and what
+  changed its type or occurrences; `SchemaDiff` the nodes and links of the two neighbourhoods;
+  `TextComparison` aligns the two sources line by line (`LineDiff`, moved blocks recognised), with
+  `BusinessLines` dropping what does not define a schema; `WorkspacePairing` pairs the files of two
+  sets by name and says which differ.
+- **A document validated.** `XmlValidator` runs the JDK's validator with the problems located;
+  `SchematronValidator` runs the phases, patterns, rules and assertions — abstract patterns and rules,
+  `let`, `include`, diagnostics — and says what it could not evaluate rather than skipping it.
+- **Messages in English or French**, from `Messages`; `SchemaException` is the one checked exception.
+
+[core/README.md](core/README.md) shows the calls. [`examples/`](examples/README.md) holds four Java
+programs — read a schema, the model of a declaration, compare two, validate a document — run against
+the [samples](samples/README.md) and built with every release, so they cannot go stale.
+
+**The same over HTTP.** The application's server answers the same questions to any program, in any
+language, stateless — the texts travel in the request, the answer is JSON:
+
+| `POST` | Answers |
+|---|---|
+| `/api/model` | the content model of a declaration among the files sent |
+| `/api/compare/declarations` | two declarations compared: both models marked, the counts, the links only one side has |
+| `/api/compare/texts` | two texts aligned line by line, moves recognised |
+| `/api/compare/schemas` | two schemas' declarations and links, what only one side has |
+| `/api/compare/workspaces` | two sets of files paired by name, each pair's status |
+
+Start it with `xsdviewer.sh --no-browser` and call it; [`examples/api/`](examples/README.md) has five
+JavaScript programs doing so, [architecture.md](architecture.md#http-interface) the request and answer
+of each.
+
+## 3. The open-source code
+
+XsdViewer is a Java 21 server serving a page written in plain JavaScript — no framework, no runtime
+dependency — over the library above. This part says what the code does, feature by feature, for
+whoever reads it or changes it; [part 4](#4-the-architecture) says how it is built. Apache 2.0.
+
+### Building and running from source
+
+Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)).
+
+```bash
+scripts/run.sh                # builds app/target/xsdviewer.jar if needed, then starts the tool
+scripts\run.bat               # same, on Windows
+```
+
+To only build the jar (`scripts/build.sh` / `scripts\build.bat`, i.e. `mvn package`), or by hand:
+
+```bash
+mvn package
+java -jar app/target/xsdviewer.jar
+```
+
+The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
+
+```
+scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS
+scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Windows
+```
+
+Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
+is a small schema exercising every kind of link.
+
+### The three views
 
 - **Model** – the content model of the selected declaration as XSD editors draw it: a tree, left
   to right, of its sequences, choices and alls (a box each, with their occurrences), the elements
@@ -82,6 +308,8 @@ The [screenshots](#screenshots) below show each; the sections that follow say ho
   centre, Enter or Space acts as a click. **File ▸ Open all listed files** opens in tabs the files
   a large folder left listed only.
 
+### Files, tabs, search and panels
+
 Files are opened with **File ▸ Open…** (Ctrl+O) or by dropping them anywhere in the window.
 Each file lives in its own **tab** (tab bar under the top bar; **+** or File ▸ New tab
 opens an empty one, × or a middle click closes one); every tab keeps its own view,
@@ -106,6 +334,11 @@ The drawn views — graph, model, comparison — carry a **zoom** at the bottom 
 (**−**, the level, **+**; a click on the level returns to the drawing's own size): it scales the
 picture and lets the panel scroll it, so the browser's own zoom, which would shrink the panels
 too, is left alone. The level belongs to the tab, so two files can be read at different sizes. **File ▸ Quit** stops the server and closes the page.
+
+The page is shown in the language chosen in the drop-list at the right of the top bar
+(remembered by the browser; initially the machine's language when a `web/i18n/<language>.json`
+exists, English otherwise; `?lang=fr` forces one). The server answers the page in that language
+too; only its console messages follow the JVM locale.
 
 ### Validation
 
@@ -139,202 +372,7 @@ when its path is known, the schemas always), *Another XML document…* keeps the
 every rule of `samples/schematron/purchaseOrder.sch`; its header comment says what to change to
 see the rules fire.
 
-## Screenshots
-
-The pictures below are shot from the shipped comparison sample (`samples/compare/`) by
-`scripts/screenshots.py --docs`, so they are redone with the tool itself at each release.
-
-**Model view** — `ProductType` of `product.xsd`: what a document of it holds. Its attributes
-first (`@sku : Code`, `@category` optional, marked `?`), then its sequence and the elements it
-holds, each with its type in the corner and its occurrences below, dashed when optional. A named
-type, a global element or a base type carries a **+** handle that opens its own content in place,
-taken from its declaration wherever it lives — so a model can be read across files.
-
-![Model view](screenshots/XsdViewer-model-view.jpg)
-
-**Text view** — the source of `catalog.xsd`, the selected object's declaration highlighted;
-clicking a line number selects that object, and Ctrl+F searches the text.
-
-![Text view](screenshots/XsdViewer-xml-view.jpg)
-
-**Graph view** — the other question: not what a document holds, but how the declarations refer to
-one another. `CatalogType` in the centre, what it links to on the right (two levels: `publisher`
-is an `Address` from `common.xsd`, expanded from its own tab), what uses it on the left;
-cardinalities after each link, optional links dashed. The details panel on the right lists the
-links and the documentation — and, for an enumeration (a simpleType, an element or an attribute
-restricted to `xs:enumeration` values), the values with their own documentation.
-
-![Graph view](screenshots/XsdViewer-graph-view.jpg)
-
-**Comparing two declarations** — side by side, wherever each of them lives. Here `ProductType`
-of `v1` against the one of `v2`, marked one after the other: `legacyCode` is only in `v1` (red),
-`weight` only in `v2` (green, its own type opened), and `@category`, `description` and `tag`
-changed their occurrences (blue). The two need not share a name, a file or a workspace.
-
-![Comparing two declarations](screenshots/XsdViewer-compare-view.jpg)
-
-**The same two declarations as text** — the Objects section draws its pair the way its own
-**Model / Text / Graph** switch asks. Here their source alone, cut out of each file and kept at its
-own line numbers, the four differing lines marked. **Graph** shows instead the neighbourhood of each,
-the links only one side has marked; **Differences only** keeps, in whichever view, just what differs.
-
-![Comparing two declarations as text](screenshots/XsdViewer-compare-text.jpg)
-
-**Comparing two workspaces** — `v1` against `v2` of the same schema set: file by file, the
-declarations and links only on one side, then the two sources side by side.
-
-![Comparing two workspaces](screenshots/XsdViewer-compare-workspaces.jpg)
-
-## Build and run
-
-Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)).
-
-```bash
-scripts/run.sh                # builds app/target/xsdviewer.jar if needed, then starts the tool
-scripts\run.bat               # same, on Windows
-```
-
-To only build the jar (`scripts/build.sh` / `scripts\build.bat`, i.e. `mvn package`), or by hand:
-
-```bash
-mvn package
-java -jar app/target/xsdviewer.jar
-```
-
-The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
-
-```
-scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS
-scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Windows
-```
-
-Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
-is a small schema exercising every kind of link.
-
-**The server stops by itself** 15 seconds after the last page showing it has been closed —
-no orphan process left behind when you close the browser (*File ▸ Quit* stops it at once).
-Each page holds a connection open for its whole life; the server only counts a page gone when
-that connection breaks, so an idle page, even for hours and even in a background tab, keeps
-the server up; a reload, a browser restart or a laptop waking up reconnect within the grace.
-**Settings ▸ Stop the server when the last page is closed** switches it off (and on again)
-from the page — the choice is kept for the next runs (in the user's Java preferences) — for a
-server you open pages on now and then, or that other computers reach (`--host 0.0.0.0`).
-On the command line, `--keep-alive` turns it off for a run, and `--no-browser` implies it (you
-start it without a page and will open one later). **Settings ▸ Dark theme** / **Light theme** flips the
-page's colours (the system's light or dark setting, followed as it changes, until you choose);
-the browser remembers it, and the PNG export takes the page's background. One caveat:
-Chrome's and Edge's *Memory Saver* may *discard* a background tab after a long idle time, which
-is indistinguishable from closing it — the visible tab is never discarded; if the tool lives in
-a background tab for hours, add `127.0.0.1` to *Settings ▸ Performance ▸ Always keep these sites
-active*, or use `--keep-alive`.
-
-The log goes to the console and to `xsdviewer.0.log` in the temporary directory (its path is in
-*Help ▸ About*): what happens to the server and what fails. `--verbose` adds every request and
-every parse, for following what the page asks of the server.
-
-## Installing Java 21
-
-Only needed to run the jar (`xsdviewer-<version>.jar`) or to build from source. The Windows
-zip and the Linux tarball bring their own JRE: unpack them anywhere and start the launcher,
-nothing to install.
-
-**What to get.** A *JRE* is enough to run the jar; a *JDK* is needed to build. Eclipse Temurin
-is the free, vendor-neutral build used here: <https://adoptium.net/temurin/releases/?version=21>
-— pick your OS and architecture, version 21 (LTS). Any other OpenJDK 21 (Microsoft, Amazon
-Corretto, Oracle, your distribution's package) works the same.
-
-**Windows.** Either the `.msi` installer — tick *Add to PATH* and *Set JAVA_HOME variable* in
-the *Custom Setup* screen — or the `.zip`: unzip it into a folder without spaces, e.g.
-`C:\Java\jdk-21`, then either add `C:\Java\jdk-21\bin` to the `Path` of your user
-(*Settings ▸ System ▸ About ▸ Advanced system settings ▸ Environment Variables*, log off and on
-again), or call it with its full path, no PATH change needed:
-
-```bat
-"C:\Java\jdk-21\bin\java" -jar xsdviewer-3.6.1.jar
-```
-
-**Linux.** Your distribution's package is the simplest — `sudo apt install openjdk-21-jre`
-(Debian/Ubuntu; `openjdk-21-jdk` to build), `sudo dnf install java-21-openjdk` (Fedora/RHEL) —
-otherwise the Temurin `.tar.gz`: unpack it under `/opt` (system-wide) or `~/java` (your user
-only) and either put its `bin` on the PATH in `~/.profile` or `~/.bashrc`,
-
-```bash
-sudo tar xzf OpenJDK21U-jre_x64_linux_hotspot_*.tar.gz -C /opt   # → /opt/jdk-21.0.12.1+1-jre (name varies with the version)
-export PATH=/opt/jdk-21.0.12.1+1-jre/bin:$PATH                     # in ~/.profile to make it permanent
-```
-
-or call it with its full path: `/opt/jdk-21.0.12.1+1-jre/bin/java -jar xsdviewer-3.6.1.jar`.
-
-**macOS.** The Temurin `.pkg` installer, or `brew install --cask temurin@21`.
-
-**Check.** A new terminal, then:
-
-```
-java -version
-openjdk version "21.0.12" ...
-```
-
-If it reports another major version, an older Java is first on the PATH: run the jar with the
-full path of the Java 21 `java` as above (under an older Java the jar fails at once with
-`UnsupportedClassVersionError … class file version 65.0`, which means exactly that). To build,
-Maven uses the JDK of `JAVA_HOME` when it is set, the `java` of the PATH otherwise.
-
-**For packaging only** (`scripts/package.sh`), the JRE *archives* are not installed but copied
-as they are into `jre/` — see [Packaging](#packaging).
-
-## Packaging
-
-```bash
-scripts/package.sh            # or scripts\package.bat on Windows; runs: mvn package -Pdist
-```
-
-builds self-contained distributions that need no Java installed, each with a **trimmed runtime**
-made with `jlink` from a Temurin JDK 21 — the modules the tool needs, about a third of a full JRE
-(Eclipse Temurin, redistributed under the GPLv2 with Classpath Exception; its notices stay in
-`jre/legal`) — and a launcher taking the same options as above (the archives of previous builds,
-whatever their version, are deleted from `releases/` first):
-
-| Archive | Launcher |
-|---|---|
-| `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled runtime, no console window at all. The exe is built with launch4j from any OS. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
-| `releases/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
-| `releases/xsdviewer-<version>-macos.tar.gz` | `xsdviewer.sh` — Apple silicon; a downloaded archive is quarantined by macOS, so once: `xattr -dr com.apple.quarantine xsdviewer-<version>` |
-| `releases/xsdviewer-<version>.jar` | copy of `app/target/xsdviewer.jar`, for people who have [Java 21](#installing-java-21): `java -jar xsdviewer-<version>.jar` |
-
-When started without a console (the Windows launcher, a double-clicked jar), a start-up
-failure such as a port already in use is shown in a dialog instead of being lost.
-
-A pushed tag `v<version>` makes GitHub Actions build and publish the release (`release.yml`: the
-runtimes, the archives, the notes from `CHANGELOG.md`'s section for that version, the checksums).
-By hand, `scripts/release.sh <version>` does the same from `releases/` (`--dry-run` prints the
-notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` or
-`~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
-
-The JDKs are not tracked in git: before packaging, download the Temurin **JDK** 21 archives
-(a JDK, for its `jmods`; a JRE has none) from <https://adoptium.net/temurin/releases/> and put
-them in `jre/` at the root of the project:
-
-```
-jre/
-├── OpenJDK21U-jdk_x64_windows_hotspot_<version>.zip
-├── OpenJDK21U-jdk_x64_linux_hotspot_<version>.tar.gz
-└── OpenJDK21U-jdk_aarch64_mac_hotspot_<version>.tar.gz
-```
-
-Only the platforms whose archive is there are built; the archive of the machine doing the build
-is required, since its `jlink` links every runtime (download them together: they must be the same
-version). `src/build/runtimes.xml` (Ant, driven by the `dist` profile) does the unpacking, the
-linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
-
-`scripts/screenshots.py` is the test of the page as a whole: with the jar built and Firefox installed,
-it opens the samples, drives the page (a selection, the views, the comparison, the dark theme…),
-checks measured facts on it — counts, texts, positions — and saves a screenshot of each scene in
-`target/screenshots/`. A scene starts as soon as the page has drawn its file and is photographed as
-soon as it has reported, so the whole run of some forty scenes takes about a minute and a half.
-`--only=a,b` runs the named scenes; `--keep-going` runs on past a failure; `--docs` runs the five
-whose shot is published, saving them as JPEG in `screenshots/` — the pictures of this file.
-
-## What counts as a link
+### What counts as a link
 
 For each global declaration, the links attributed to it are collected from its whole
 content (anonymous nested types included):
@@ -427,15 +465,7 @@ reserved for optional links, hollow arrowheads for derivations (`extends`, `rest
 **Help ▸ About XsdViewer…** shows the version (from the jar's manifest), the Java runtime, the
 log file, the licence and the project page.
 
-## Logs
-
-The server logs what it does and what fails on its console and in `xsdviewer.0.log` in the
-system's temporary directory (`/tmp` on Linux, `%TEMP%` on Windows; two rotating files of
-1 MB — the path is shown in Help ▸ About and printed at start-up). A request that fails is
-logged with its stack trace and answered to the page as an error message, so a problem shows
-both in the page (toast) and in the log.
-
-## Where the files are
+### Where the files are
 
 A browser never tells a page where a chosen file sits on disk, but the server runs on the same
 machine: **File ▸ Open…** (Ctrl+O) therefore goes through the server's own file dialog — the
@@ -560,7 +590,7 @@ section with nothing to compare until two are selected again. To try it: `script
 then File ▸ Open workspace… `samples/compare/v2.xsdviewer.json` (what differs is listed in
 `samples/compare/README.md`).
 
-## Following links into other files
+### Following links into other files
 
 Selecting an external node looks for its declaration, without asking whenever the file
 can be found:
@@ -585,41 +615,110 @@ Remote `schemaLocation`s (`http://…`) are never fetched. `samples/import/` is 
 schema split over four files to try this with: `scripts/run.sh samples/import/order.xsd`,
 or start the tool from the project folder and open `order.xsd` from the browser.
 
-## Layout
+### Logs
 
-Two Maven modules under one parent pom. **`core`** is a library — `org.jtools:xsdviewer-core`, the JDK
-and nothing else — and **`app`** is the tool, whose jar embeds it:
+The server logs what it does and what fails on its console and in `xsdviewer.0.log` in the
+system's temporary directory (`/tmp` on Linux, `%TEMP%` on Windows; two rotating files of
+1 MB — the path is shown in Help ▸ About and printed at start-up). A request that fails is
+logged with its stack trace and answered to the page as an error message, so a problem shows
+both in the page (toast) and in the log.
+
+### Packaging
+
+```bash
+scripts/package.sh            # or scripts\package.bat on Windows; runs: mvn package -Pdist
+```
+
+builds self-contained distributions that need no Java installed, each with a **trimmed runtime**
+made with `jlink` from a Temurin JDK 21 — the modules the tool needs, about a third of a full JRE
+(Eclipse Temurin, redistributed under the GPLv2 with Classpath Exception; its notices stay in
+`jre/legal`) — and a launcher taking the same options as above (the archives of previous builds,
+whatever their version, are deleted from `releases/` first).
+
+The archives and their launchers are described in [Running it](#running-it) above.
+
+A pushed tag `v<version>` makes GitHub Actions build and publish the release (`release.yml`: the
+runtimes, the archives, the notes from `CHANGELOG.md`'s section for that version, the checksums).
+By hand, `scripts/release.sh <version>` does the same from `releases/` (`--dry-run` prints the
+notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` or
+`~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
+
+The JDKs are not tracked in git: before packaging, download the Temurin **JDK** 21 archives
+(a JDK, for its `jmods`; a JRE has none) from <https://adoptium.net/temurin/releases/> and put
+them in `jre/` at the root of the project:
+
+```
+jre/
+├── OpenJDK21U-jdk_x64_windows_hotspot_<version>.zip
+├── OpenJDK21U-jdk_x64_linux_hotspot_<version>.tar.gz
+└── OpenJDK21U-jdk_aarch64_mac_hotspot_<version>.tar.gz
+```
+
+Only the platforms whose archive is there are built; the archive of the machine doing the build
+is required, since its `jlink` links every runtime (download them together: they must be the same
+version). `src/build/runtimes.xml` (Ant, driven by the `dist` profile) does the unpacking, the
+linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
+
+### Tests
+
+`mvn package` runs the tests of the three modules: `core`'s parsers, models, comparison and JSON
+against `samples/`; `app`'s server, workspaces, command line, log, translations and the page's
+contract, plus the page's pure modules under Node's test runner when Node is found; and each
+program of `examples`.
+
+`scripts/screenshots.py` is the test of the page as a whole: with the jar built and Firefox installed,
+it opens the samples, drives the page (a selection, the views, the comparison, the dark theme…),
+checks measured facts on it — counts, texts, positions — and saves a screenshot of each scene in
+`target/screenshots/`. A scene starts as soon as the page has drawn its file and is photographed as
+soon as it has reported, so the whole run of some forty scenes takes about a minute and a half.
+`--only=a,b` runs the named scenes; `--keep-going` runs on past a failure; `--docs` runs the five
+whose shot is published, saving them as JPEG in `screenshots/` — the pictures of this file.
+
+## 4. The architecture
+
+```mermaid
+flowchart LR
+    you["you read schemas"] --> app
+    dev["you write programs"] -. "org.jtools:xsdviewer-core" .-> core
+    dev -. "POST /api/…" .-> app
+    subgraph jar["xsdviewer.jar — one download, a Java 21 runtime inside"]
+        app["<b>the page and the server</b><br/>three views, workspaces,<br/>comparison, validation"] --> core["<b>xsdviewer-core</b><br/>reads XSD, WSDL, Schematron<br/>the JDK and nothing else"]
+    end
+```
+
+Three Maven modules under one parent pom. **`core`** is the library — `org.jtools:xsdviewer-core`,
+the JDK and nothing else —, **`app`** is the tool, whose jar embeds it, and **`examples`** shows a
+developer how the two are used:
 
 ```
 core/src/main/java/org/jtools/xsdviewer/
   schema/                SchemaParser (the text of an XSD, a WSDL or a Schematron -> SchemaGraph), XsdParser,
-                         WsdlParser, SchematronParser, DeclarationLineIndex, SchemaGraphJsonWriter,
-                         SchematronValidator, NodeKind / LinkLabel / *Vocabulary constants
+                         WsdlParser, SchematronParser, ContentModelBuilder, DeclarationLineIndex, SchemaGraphJsonWriter,
+                         XmlValidator, SchematronValidator, NodeKind / LinkLabel / ParticleKind / Family constants,
+                         XsdNames / WsdlNames / SchematronNames (the words of the languages read)
+  model/                 ContentTree (a declaration -> its tree of Box, across the files of a Library), Box, BoxJsonWriter
+  compare/               LineDiff, BusinessLines, TextComparison, SchemaDiff, ModelDiff, WorkspacePairing, CompareJsonWriter
   json/                  JsonWriter, JsonReader, JsonStrings, JsonKey
   Messages (+ MessageKey)  the texts of the parsers' and the server's messages, English and French
 core/src/main/resources/org/jtools/xsdviewer/   messages.properties, messages_fr.properties
-core/src/test/java/       parser, validator and JSON tests (against samples/)
+core/src/test/java/       parser, model, comparison, validator and JSON tests (against samples/)
 app/src/main/java/org/jtools/xsdviewer/
   XsdViewerApplication   entry point: command line, server start-up, browser
-  CommandLineOptions, BrowserLauncher, Log, UserSettings
-  server/                XsdViewerServer (JDK com.sun.net.httpserver) + one handler per path,
-                         XmlValidator, FileDialogs (native dialog; kdialog / zenity on Linux)
+  CommandLineOptions, BrowserLauncher, Log, UserSettings, BuildInfo
+  server/                XsdViewerServer (JDK com.sun.net.httpserver) + one handler per path (ApiPath),
+                         FileDialogs (native dialog; kdialog / zenity on Linux), ParsedSchemas (the parse cache)
   workspace/             Workspace (the *.xsdviewer.json format)
 app/src/main/resources/web/   index.html, style.css, js/ (ES modules, one per concern), i18n/en.json, i18n/fr.json – the client, no framework
 app/src/test/java/        server, workspace, command line, log and translation tests; the page's contract
 app/src/test/js/          the tests of the page's pure modules (Node's test runner, run from Maven when Node is found)
 app/src/dist/, app/src/build/   the launchers of the distributions and the Ant file building them (dist profile)
+examples/src/main/java/   four programs over the library; examples/api/ five over the HTTP API; a test runs the Java ones
 samples/                  one sample per thing the tool does: see samples/README.md
 ```
 
-The page is shown in the language chosen in the drop-list at the right of the top bar
-(remembered by the browser; initially the machine's language when a `web/i18n/<language>.json`
-exists, English otherwise; `?lang=fr` forces one). The server answers the page in that language
-too; only its console messages follow the JVM locale.
-
-No runtime dependency: the jar only needs a Java 21 runtime.
-
-See [architecture.md](architecture.md) for the modules, the data flow and the libraries used.
+[architecture.md](architecture.md) draws it — what happens when a schema is read, what the page shows
+and asks of the server, the modules of each side — and details the HTTP interface, the JSON model,
+the libraries and tooling, and the extension points.
 
 ## Licence
 
