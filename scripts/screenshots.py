@@ -55,6 +55,22 @@ FILES = OPEN_COMPARISON + "document.querySelector('#comparisonSections [data-sec
 
 # name, file, theme, the script run on the page (may use the page's DOM and await), the checks (an expression per check name)
 SCENES = [
+    dict(name='first-launch', file=None, theme='light',
+         # nothing open: the page says what to do, and About says what a bug report needs
+         action="document.getElementById('helpMenuBtn').click(); document.getElementById('menuAbout').click();"
+                "await new Promise(r => setTimeout(r, 200));"
+                "const caps = await (await fetch('/api/capabilities')).json();"
+                "window.__aboutVersion = document.getElementById('aboutVersion').textContent.includes(caps.version);"
+                "window.__aboutLog = document.getElementById('aboutLog').textContent.length > 0;"
+                "window.__aboutJava = document.getElementById('aboutJava').textContent.includes(caps.javaVersion);",
+         checks={'empty': "!document.getElementById('empty').classList.contains('hidden')",
+                 'title': "document.querySelector('#empty h2, #empty h1, #empty .title, #empty [data-i18n=\"empty.title\"]').textContent",
+                 'sidebar': "!document.getElementById('sidebar').classList.contains('hidden')",
+                 'details': "document.getElementById('details').classList.contains('hidden')",
+                 'aboutOpen': "document.getElementById('aboutDialog').open",
+                 'aboutVersion': "window.__aboutVersion", 'aboutJava': "window.__aboutJava", 'aboutLog': "window.__aboutLog"},
+         expect={'empty': True, 'title': 'Open a schema', 'sidebar': True, 'details': True,
+                 'aboutOpen': True, 'aboutVersion': True, 'aboutJava': True, 'aboutLog': True}),
     dict(name='graph-light', file='samples/purchaseOrder.xsd', theme='light',
          action="document.querySelector('.tab[data-view=\"graph\"]').click();document.querySelector('#nodeList .item[data-id=\"complexType:PurchaseOrderType\"]').click();",
          checks={'title': "document.getElementById('graphTitle').textContent",
@@ -698,10 +714,10 @@ class Proxy(http.server.BaseHTTPRequestHandler):
     def tail():
         s = Proxy.scene
         checks = ','.join('%s: (() => { try { return %s; } catch (e) { return "error: " + e.message; } })()' % (json.dumps(k), v) for k, v in s['checks'].items())
-        # the script runs once the page has drawn its file (its object list, or a validation tab), at the latest after ACTION_DELAY_MS;
+        # the script runs once the page says it is ready (data-ready on the root: wired, drawn, the start-up file or workspace open) and shows its object list, a validation tab or the empty state — at the latest after ACTION_DELAY_MS;
         # the checks are posted 300 ms after the action, once what it changed has been drawn
         return ('<script>(() => { const started = Date.now();'
-                ' const ready = () => document.querySelector("#nodeList .item") || document.querySelector("#validation:not(.hidden)");'
+                ' const ready = () => document.documentElement.dataset.ready && (document.querySelector("#nodeList .item") || document.querySelector("#validation:not(.hidden)") || document.querySelector("#empty:not(.hidden)"));'
                 ' const run = () => (async () => { %s })().catch(e => console.error(e)).then(() =>'
                 ' setTimeout(() => fetch("/__check", {method: "POST", body: JSON.stringify({%s})}), 300));'
                 ' const go = () => (ready() || Date.now() - started > %d ? run() : setTimeout(go, 50)); go(); })();</script>'
@@ -741,7 +757,9 @@ def wait_for(port, seconds=15):
 def shoot(scene, profile):
     if scene.get('setup'):
         SETUPS[scene['setup']]()
-    app = subprocess.Popen(['java', '-jar', str(JAR), '--no-browser', '--keep-alive', '--port', str(APP_PORT), str(ROOT / scene['file'])],
+    # a scene without a file is the first launch: nothing open, the page saying what to do
+    initial = [str(ROOT / scene['file'])] if scene.get('file') else []
+    app = subprocess.Popen(['java', '-jar', str(JAR), '--no-browser', '--keep-alive', '--port', str(APP_PORT)] + initial,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         if not wait_for(APP_PORT):

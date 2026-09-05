@@ -1,5 +1,6 @@
 /** Start-up of the page: texts, event wiring, first drawing, and the file given on the command line. */
 import { wireEvents } from './events.js';
+import { DATA } from './dom.js';
 import { applyCapabilities, loadCapabilities } from './capabilities.js';
 import { loadInitialFile } from './file-actions.js';
 import { initI18n } from './i18n.js';
@@ -26,4 +27,5 @@ initGraphFilters(renderMainView);   // the Links and Types menus redraw the grap
 initPanels(renderMainView);
 initModelView(select);
 renderPage();
-loadInitialFile();
+await loadInitialFile();
+document.documentElement.dataset[DATA.READY] = DATA.READY;   // wired, drawn, and the file or workspace given on the command line open: what a script driving the page waits for

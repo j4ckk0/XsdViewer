@@ -2,16 +2,25 @@
 
 [![build](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml/badge.svg)](https://github.com/j4ckk0/XsdViewer/actions/workflows/build.yml)
 
-A small tool to explore an XML Schema (`.xsd`) file in the browser — and the WSDL 1.1
-(`.wsdl`) services built on such schemas, and the Schematron (`.sch`) rules written over them.
+A small tool to explore XML Schema (`.xsd`) files in the browser — and the WSDL 1.1 (`.wsdl`)
+services built on such schemas, and the Schematron (`.sch`) rules written over them.
 
-A Java server parses the schema and serves a web page offering three views of the file, each
-answering a different question. **Model** says what a document of the selected declaration holds:
-its shape, as an XSD editor draws it — this is the view a tab opens on. **Text** is the source
-itself, where that declaration is written. **Graph** says how the declarations of the file refer to
-one another around the selected one: not what a document holds, but the map of the file, one step
-in each direction. So the model walks *through* the types, opening each named type in place, where
-the graph shows the types themselves as neighbours of the declaration that names them.
+A Java server parses the files and serves a web page. What it does, in one screen:
+
+- **Three views of a file**, each answering a different question. **Model** says what a document of
+  the selected declaration holds — its shape, as an XSD editor draws it; this is the view a tab
+  opens on. **Text** is the source itself, where that declaration is written. **Graph** says how the
+  declarations of the file refer to one another around the selected one: the map of the file, one
+  step in each direction. The model walks *through* the types, opening each named type in place,
+  where the graph shows the types themselves as neighbours of the declaration that names them.
+- **Workspaces**: a folder or a set of files opened together, their links followed from one file to
+  the next, saved as a `.xsdviewer.json` file to reopen later.
+- **Comparison**: two declarations side by side — two versions of a type, or two types that merely
+  resemble one another — as models, as text or as graphs, what differs marked; or two workspaces
+  file by file.
+- **Validation** of an XML document against the schema and the Schematron of the workspace.
+
+The [screenshots](#screenshots) below show each; the sections that follow say how they work.
 
 - **Model** – the content model of the selected declaration as XSD editors draw it: a tree, left
   to right, of its sequences, choices and alls (a box each, with their occurrences), the elements

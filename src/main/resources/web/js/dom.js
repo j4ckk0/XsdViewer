@@ -322,6 +322,8 @@ export const TOKEN_CLS = { COMMENT: 'c', PI: 'pi', VALUE: 'v', TAG: 't', ATTRIBU
 
 /** data-* attribute names (without the "data-" prefix, as in element.dataset). */
 export const DATA = {
+  /** On the root element once the page is wired and first drawn: what a script driving the page waits for. */
+  READY: 'ready',
   ID: 'id',
   TAB: 'tab',
   KIND: 'kind',

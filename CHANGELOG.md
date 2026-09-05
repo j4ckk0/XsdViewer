@@ -2,6 +2,11 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 4.13.0 — 2026-09-05
+
+- **The first screen.** The README opens on what the tool does today — three views, workspaces, comparison, validation — and its five pictures are redone; `samples/README.md` says what each sample is for, and the one whose name had doubled its suffix is gone. With nothing open the page says *Open a schema* and how — an XSD, a WSDL, a Schematron, a folder, or a drop — and *About* describes the tool as it is.
+- **Under the hood.** The page marks itself ready once it is wired and its start-up file or workspace is open (`data-ready` on the root), which is what the screenshot scenes now wait for; one of them is the first launch, with nothing open.
+
 ## 4.12.0 — 2026-09-05
 
 - **Differences only in the Objects section.** A checkbox in its header, remembered across sessions, keeps what differs in whichever view is shown: in the models the boxes that differ and those on the way to one, in the text the changed lines with one line of context, in the graphs the links only one side has.
