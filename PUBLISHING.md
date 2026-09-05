@@ -63,6 +63,22 @@ Followed for v2.6.0, v2.7.1 (30 August 2026) , v2.8.0, v3.0.0, v3.1.0, v3.2.0, v
 
 Token for the API (the SSH key only serves `git push`): a **fine-grained** personal access token with *Repository access* = **Only select repositories → XsdViewer** — the default *Public repositories (read-only)* greys out the permissions and every write answers `403 Resource not accessible` — and *Contents: Read and write* (releases); *Administration: Read and write* is also needed to change the description or topics. Short expiry, revoke it afterwards. Kept in `~/.config/github/xsdviewer-release-token` (mode 600, outside the repository) for `scripts/release.sh` to read, or given as `$GITHUB_TOKEN`.
 
+## 6b. The repository's own page
+
+The description and the topics are what GitHub search and the repository's header show, and they are
+not in any file: they live on the repository itself. Changing them needs a token with
+*Administration: Read and write* — the release token has *Contents* only, and answers `403 Resource
+not accessible by personal access token`. Set them by hand (the ✏️ beside **About**), or with a token
+that has it:
+
+    description: Explore XML Schema, WSDL and Schematron files in the browser: what a document of a
+    declaration holds, its source, the graph of its links; workspaces, comparison of two declarations
+    or two workspaces, validation. Also a Java library (org.jtools:xsdviewer-core) and an HTTP API.
+    Self-contained packages, no Java install needed.
+
+    topics: xml, xsd, xml-schema, wsdl, schematron, viewer, graph, visualization, java,
+    java-library, api, developer-tools, web-application, validation, maven
+
 ## 7. The library on Maven Central
 
 `core` is meant to be published as `org.jtools:xsdviewer-core`; `app` never is. What it takes, once:
