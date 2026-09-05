@@ -1,7 +1,7 @@
 # Publishing XsdViewer on GitHub
 
 What a public repository needs, what this repository already has, and the steps to publish.
-Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>; current release [v5.2.0](https://github.com/j4ckk0/XsdViewer/releases/tag/v5.2.0) (first one: v2.5.0).
+Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 August 2026**: <https://github.com/j4ckk0/XsdViewer>; current release [v5.2.1](https://github.com/j4ckk0/XsdViewer/releases/tag/v5.2.1) (first one: v2.5.0).
 
 ## 1. Required
 
