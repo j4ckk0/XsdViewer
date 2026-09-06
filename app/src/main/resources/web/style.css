@@ -225,6 +225,7 @@ html, body {
 /* the user guide and the shortcuts, wider and taller than About, their body scrolling on its own */
 .helpdialog { max-width: 600px; }
 .helpdialog h2 { margin: 0 0 8px; font-size: 18px; }
+.helpdialog .muted { color: var(--muted); font-size: 12px; }
 .helpdialog .actions { margin-top: 14px; text-align: right; }
 .helpdialog .actions button { border-color: var(--border); }
 #guideBody, #shortcutsBody { max-height: 60vh; overflow: auto; }
