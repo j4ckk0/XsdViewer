@@ -1,7 +1,7 @@
 /**
- * Help ▸ User guide and Help ▸ Keyboard shortcuts: two modal dialogs whose content is built here from
- * the translated texts, so the guide reads in the page's language. The keystrokes themselves stay
- * literal (Ctrl, Alt, the arrows); only what each does is translated.
+ * The Help menu's modal dialogs, their content built here from the translated texts so each reads in
+ * the page's language: the user guide, the keyboard shortcuts, the API access, the licence and the
+ * embedded runtime. The keystrokes and the API paths stay literal; only what each does is translated.
  */
 import { API_DOC_URL, EXAMPLES_URL, LICENSE_URL, OPENJDK_URL, PROJECT_LICENSE_URL, TEMURIN_URL } from './constants.js';
 import { $ } from './dom.js';

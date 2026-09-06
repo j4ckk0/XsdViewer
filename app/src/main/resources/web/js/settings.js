@@ -1,4 +1,4 @@
-/** The Settings menu: the server's automatic stop (GET / POST /api/settings), kept by the server from one run to the next. */
+/** The Settings menu's server settings (GET / POST /api/settings), kept by the server from one run to the next: the automatic stop, and the port a dialog sets for the next start. */
 import { fetchSettings, saveSettings } from './api.js';
 import { $ } from './dom.js';
 import { CLS, ID } from './dom-names.js';

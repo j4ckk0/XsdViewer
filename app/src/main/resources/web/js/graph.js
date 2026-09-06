@@ -168,8 +168,8 @@ export function renderGraph(st = session.active, canvas = $(ID.GRAPH_CANVAS), op
   const rowOpt = (row) => Object.assign({ link: row.edge }, row.place ? { place: row.place } : {}, row.place ? fileKind(row.n, row.place) : {});
 
   let svg = '<svg xmlns="' + SVG_NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">'
-    // markerUnits="userSpaceOnUse" fixes each arrowhead at a constant size: a heavier relation line no longer
-    // enlarges its head, so the hollow derivation triangle still meets the box across the gap the line reserves for it
+    // markerUnits="userSpaceOnUse" fixes each arrowhead at a constant size, independent of the line's stroke
+    // width, so the hollow derivation triangle meets the box across the gap the line reserves for it
     + '<defs><marker id="' + SVG_ID.ARROW + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto-start-reverse">'
     + '<path class="' + CLS.ARROW_HEAD + '" d="M0,0 L10,5 L0,10 z"/></marker>'
     // a derivation: a hollow triangle, larger, as a UML generalisation
