@@ -125,7 +125,9 @@ active*, or use `--keep-alive`.
 
 The log goes to the console and to `xsdviewer.0.log` in the temporary directory (its path is in
 *Help ▸ About*): what happens to the server and what fails. `--verbose` adds every request and
-every parse, for following what the page asks of the server.
+every parse, for following what the page asks of the server. Both are also set from the
+`xsdviewer.ini` file beside the launcher: `verbose=true`, and `log.folder=` for another folder
+or `none` for the console only.
 
 <a name="installing-java-21"></a>
 <details>
@@ -270,7 +272,9 @@ The server listens on <http://127.0.0.1:8091/> and opens it in the default brows
 default rather than the crowded 8080. Three ways to change it, in order of precedence: `--port N` on
 the command line; **Settings ▸ Server port…** in the page (kept for the next start); or a `port=` line
 in an `xsdviewer.ini` file beside the launcher — the way to configure the double-clicked `XsdViewer.exe`,
-which takes no command line. `host=` sets the bind address the same ways.
+which takes no command line. `host=` sets the bind address the same ways. The file also holds the log
+settings: `verbose=true` for the detail `--verbose` gives, `log.folder=` for the folder of the log
+files, or `none` to keep the log on the console.
 
 ```
 scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS

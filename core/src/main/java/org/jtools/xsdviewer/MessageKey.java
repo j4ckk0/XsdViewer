@@ -29,6 +29,8 @@ public final class MessageKey {
     public static final String USAGE = "cli.usage";
     public static final String OPTION_VALUE_EXPECTED = "cli.optionValueExpected";
     public static final String INVALID_PORT = "cli.invalidPort";
+    /** A setting of {@code xsdviewer.ini} with a value that is not one of its accepted ones. */
+    public static final String INVALID_SETTING = "cli.invalidSetting";
     public static final String NOT_A_FILE = "cli.notAFile";
     public static final String CANNOT_START = "cli.cannotStart";
 

@@ -21,6 +21,9 @@ package org.jtools.xsdviewer;
  */
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,10 +47,26 @@ class ConfigFileTest {
     }
 
     @Test
+    void readsTheLogSettings(@TempDir Path dir) throws IOException {
+        ConfigFile c = ConfigFile.read(ini(dir, "verbose=TRUE\nlog.folder=" + dir.resolve("logs") + "\n"));
+        assertTrue(c.verbose());
+        assertEquals(dir.resolve("logs"), c.logFolder());
+
+        assertNull(ConfigFile.read(ini(dir, "log.folder=none\n")).logFolder());   // "none": the console alone
+    }
+
+    @Test
     void unsetKeysKeepTheBuiltInDefaults(@TempDir Path dir) throws IOException {
         ConfigFile c = ConfigFile.read(ini(dir, "port=9000\n"));
         assertEquals(CommandLineOptions.DEFAULT_HOST, c.host());   // host not set: the default
         assertEquals(9000, c.port());
+        assertFalse(c.verbose());
+        assertEquals(Log.defaultFolder(), c.logFolder());
+    }
+
+    @Test
+    void aBadVerboseKeepsTheDefault(@TempDir Path dir) throws IOException {
+        assertFalse(ConfigFile.read(ini(dir, "verbose=yes\n")).verbose());
     }
 
     @Test
@@ -59,12 +78,15 @@ class ConfigFileTest {
     @Test
     void theCommandLineOverridesTheFile() {
         // the file's values are the parse defaults; --port on the command line wins over them
-        CommandLineOptions fromFileOnly = CommandLineOptions.parse(new String[0], "0.0.0.0", 9091);
+        CommandLineOptions fromFileOnly = CommandLineOptions.parse(new String[0], "0.0.0.0", 9091, true);
         assertEquals("0.0.0.0", fromFileOnly.host());
         assertEquals(9091, fromFileOnly.port());
+        assertTrue(fromFileOnly.verbose());
 
-        CommandLineOptions overridden = CommandLineOptions.parse(new String[] { "--port", "9090" }, "0.0.0.0", 9091);
+        CommandLineOptions overridden = CommandLineOptions.parse(new String[] { "--port", "9090" }, "0.0.0.0", 9091, false);
         assertEquals(9090, overridden.port());
         assertEquals("0.0.0.0", overridden.host());   // host not on the command line: the file's value stands
+        assertFalse(overridden.verbose());
+        assertTrue(CommandLineOptions.parse(new String[] { "--verbose" }, "0.0.0.0", 9091, false).verbose());
     }
 }

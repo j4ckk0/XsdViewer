@@ -46,12 +46,13 @@ public final class XsdViewerApplication {
     private XsdViewerApplication() {}
 
     public static void main(String[] args) throws Exception {
+        ConfigFile config;
         CommandLineOptions options;
         try {
-            ConfigFile config = ConfigFile.load();   // xsdviewer.ini: the host and port defaults, so the double-clicked launcher can be configured
+            config = ConfigFile.load();   // xsdviewer.ini: the host, port and log defaults, so the double-clicked launcher can be configured
             int chosen = UserSettings.port();   // the Settings menu's choice, over the file's port; --port on the command line still wins over both
             int startPort = chosen != UserSettings.PORT_UNSET ? chosen : config.port();
-            options = CommandLineOptions.parse(args, config.host(), startPort);
+            options = CommandLineOptions.parse(args, config.host(), startPort, config.verbose());
             Log.setVerbose(options.verbose());
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());
@@ -68,6 +69,7 @@ public final class XsdViewerApplication {
             System.exit(EXIT_BAD_FILE);
             return;
         }
+        Log.openFile(config.logFolder());   // from here on the log leaves a trace, launcher without console included
 
         XsdViewerServer server;
         try {

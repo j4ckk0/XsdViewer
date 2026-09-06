@@ -27,22 +27,29 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * The optional {@code xsdviewer.ini} read at start-up, so the host and the port can be set without a
- * command line — for the double-clicked launcher, which passes none. The file is looked for in the
- * working directory (where the launcher runs), then beside the jar; a {@code key=value} line per
- * setting, a line starting with {@code #} or {@code ;} a comment. Command-line options override it.
+ * The optional {@code xsdviewer.ini} read at start-up, so the host, the port and the log can be set
+ * without a command line — for the double-clicked launcher, which passes none. The file is looked
+ * for in the working directory (where the launcher runs), then beside the jar; a {@code key=value}
+ * line per setting, a line starting with {@code #} or {@code ;} a comment. Command-line options
+ * override it.
  */
 public final class ConfigFile {
 
     public static final String NAME = "xsdviewer.ini";
-    public static final String KEY_HOST = "host", KEY_PORT = "port";
+    public static final String KEY_HOST = "host", KEY_PORT = "port", KEY_VERBOSE = "verbose", KEY_LOG_FOLDER = "log.folder";
+    /** The {@code log.folder} value that keeps the log on the console only. */
+    public static final String NO_LOG_FOLDER = "none";
 
     private final String host;
     private final int port;
+    private final boolean verbose;
+    private final Path logFolder;
 
-    private ConfigFile(String host, int port) {
+    private ConfigFile(String host, int port, boolean verbose, Path logFolder) {
         this.host = host;
         this.port = port;
+        this.verbose = verbose;
+        this.logFolder = logFolder;
     }
 
     public String host() {
@@ -53,6 +60,16 @@ public final class ConfigFile {
         return port;
     }
 
+    /** Whether the log tells each request and each parse, as {@code --verbose} does. */
+    public boolean verbose() {
+        return verbose;
+    }
+
+    /** The folder of the log files, or null when the file says {@code none}: the console alone. */
+    public Path logFolder() {
+        return logFolder;
+    }
+
     /** The configuration found near the running program, the built-in defaults where the file is absent or a key unset. */
     public static ConfigFile load() {
         Path file = locate();
@@ -61,13 +78,15 @@ public final class ConfigFile {
 
     /** The built-in defaults, when no file overrides them. */
     public static ConfigFile defaults() {
-        return new ConfigFile(CommandLineOptions.DEFAULT_HOST, CommandLineOptions.DEFAULT_PORT);
+        return new ConfigFile(CommandLineOptions.DEFAULT_HOST, CommandLineOptions.DEFAULT_PORT, false, Log.defaultFolder());
     }
 
-    /** The configuration read from {@code file}: the built-in defaults for every key it does not set. */
+    /** The configuration read from {@code file}: the built-in defaults for every key it does not set or sets to a bad value. */
     public static ConfigFile read(Path file) {
         String host = CommandLineOptions.DEFAULT_HOST;
         int port = CommandLineOptions.DEFAULT_PORT;
+        boolean verbose = false;
+        Path logFolder = Log.defaultFolder();
         for (String line : lines(file)) {
             String setting = line.strip();
             if (setting.isEmpty() || setting.startsWith("#") || setting.startsWith(";")) {
@@ -85,11 +104,19 @@ public final class ConfigFile {
                 try {
                     port = Integer.parseInt(value);
                 } catch (NumberFormatException e) {
-                    Log.warn(Messages.get(MessageKey.INVALID_PORT, value));   // a bad port in the file: warn and keep the default
+                    Log.warn(Messages.get(MessageKey.INVALID_PORT, value));   // a bad value in the file: warn and keep the default
                 }
+            } else if (key.equals(KEY_VERBOSE)) {
+                if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
+                    verbose = Boolean.parseBoolean(value);
+                } else {
+                    Log.warn(Messages.get(MessageKey.INVALID_SETTING, key, value));
+                }
+            } else if (key.equals(KEY_LOG_FOLDER)) {
+                logFolder = value.equalsIgnoreCase(NO_LOG_FOLDER) ? null : Path.of(value);
             }
         }
-        return new ConfigFile(host, port);
+        return new ConfigFile(host, port, verbose, logFolder);
     }
 
     /** The file in the working directory, else beside the jar, else null. */

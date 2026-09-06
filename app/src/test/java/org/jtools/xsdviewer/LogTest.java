@@ -22,8 +22,12 @@ package org.jtools.xsdviewer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -33,6 +37,7 @@ import java.util.logging.Logger;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class LogTest {
 
@@ -47,6 +52,19 @@ class LogTest {
     void quiet() {
         Logger.getLogger("xsdviewer").removeHandler(catching);
         Log.setVerbose(false);
+        Log.openFile(null);
+    }
+
+    @Test
+    void theFileIsWrittenInTheChosenFolder(@TempDir Path dir) throws IOException {
+        Path folder = dir.resolve("logs");   // not created beforehand: openFile creates it
+        Log.openFile(folder);
+        assertEquals(folder.resolve("xsdviewer.0.log"), Log.file());
+        Log.info("traced");
+        assertTrue(Files.readString(Log.file()).contains("traced"));
+
+        Log.openFile(null);   // the console alone
+        assertNull(Log.file());
     }
 
     @Test

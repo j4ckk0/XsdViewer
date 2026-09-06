@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **The log is configured from `xsdviewer.ini` too.** `verbose=true` gives the detail of `--verbose` without a command line, and `log.folder=` sets the folder of the log files (`xsdviewer.0.log` and `xsdviewer.1.log`) or, with `none`, keeps the log on the console only. The command line still overrides the file.
+
 ## 5.5.1 — 2026-09-06
 
 - Documentation and code comments brought up to date (the configurable port, the `ConfigFile`, the Help dialogs). The application is unchanged from 5.5.0.

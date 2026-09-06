@@ -23,6 +23,7 @@ package org.jtools.xsdviewer;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,34 +36,64 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
- * The tool's log: what happens and what fails, on the console and in a rotating file of the temporary
- * directory (a launcher without console still leaves a trace). Two levels: what happens to the server
- * and what fails, always; each request and each parse besides, when {@link #setVerbose verbose}.
+ * The tool's log: what happens and what fails, on the console and, once {@link #openFile a folder is
+ * chosen}, in a pair of rotating files there (a launcher without console still leaves a trace). Two
+ * levels: what happens to the server and what fails, always; each request and each parse besides,
+ * when {@link #setVerbose verbose}. Both are set at start-up from {@code xsdviewer.ini} and the
+ * command line; until then the console alone receives the records.
  */
 public final class Log {
 
     private static final String NAME = "xsdviewer";
-    private static final String FILE_PATTERN = "%t/xsdviewer.%g.log";
+    /** The rotating files: {@code %g} is the generation, 0 the one being written. */
+    private static final String FILE_PATTERN = "xsdviewer.%g.log";
+    private static final String CURRENT_FILE = "xsdviewer.0.log";
     private static final int FILE_LIMIT = 1_000_000, FILE_COUNT = 2;
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private static final Logger LOGGER = Logger.getLogger(NAME);
+    private static FileHandler fileHandler;
     private static Path file;
 
     static {
         LOGGER.setUseParentHandlers(false);
         LOGGER.setLevel(Level.INFO);
         addHandler(new ConsoleHandler());
+    }
+
+    private Log() {}
+
+    /** Where the files go unless {@code xsdviewer.ini} says otherwise: the temporary directory. */
+    public static Path defaultFolder() {
+        return Path.of(System.getProperty("java.io.tmpdir"));
+    }
+
+    /**
+     * Writes the log to {@code xsdviewer.0.log} in {@code folder} (created if needed) besides the
+     * console; null closes the file and keeps the console alone. A folder that cannot be written
+     * is reported on the console and the log goes on without a file.
+     */
+    public static synchronized void openFile(Path folder) {
+        if (fileHandler != null) {
+            LOGGER.removeHandler(fileHandler);
+            fileHandler.close();
+            fileHandler = null;
+            file = null;
+        }
+        if (folder == null) {
+            return;
+        }
         try {
-            FileHandler handler = new FileHandler(FILE_PATTERN, FILE_LIMIT, FILE_COUNT, true);
-            addHandler(handler);
-            file = Path.of(System.getProperty("java.io.tmpdir"), "xsdviewer.0.log");
+            Files.createDirectories(folder);
+            String pattern = folder.toString().replace("%", "%%") + "/" + FILE_PATTERN;   // "%" is FileHandler's escape, "/" its separator on every platform
+            fileHandler = new FileHandler(pattern, FILE_LIMIT, FILE_COUNT, true);
+            fileHandler.setLevel(LOGGER.getLevel());
+            addHandler(fileHandler);
+            file = folder.toAbsolutePath().resolve(CURRENT_FILE);   // absolute: the About dialog shows it
         } catch (IOException | SecurityException e) {
             LOGGER.warning(Messages.get(MessageKey.LOG_FILE_UNAVAILABLE, e.getMessage()));
         }
     }
-
-    private Log() {}
 
     private static void addHandler(Handler handler) {
         handler.setFormatter(new Formatter() {
@@ -96,7 +127,7 @@ public final class Log {
         LOGGER.fine(message);
     }
 
-    /** The log file, or null when none could be opened. */
+    /** The file being written, or null when there is none: not {@link #openFile opened} yet, disabled, or unwritable. */
     public static Path file() {
         return file;
     }
