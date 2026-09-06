@@ -2,7 +2,7 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 5.7.0 — 2026-09-06
 
 - **The comparison's Text view exports too.** ⤓ PNG and ⤓ SVG were disabled there; they now save the three pictures the two other views save — each declaration's source alone, then the two side by side — the lines rebuilt in SVG with their numbers, the colours of the deleted, inserted and moved lines, and the folds.
 
