@@ -213,7 +213,7 @@ SCENES = [
                  'docsHref': "document.getElementById('menuDocs').getAttribute('href')",
                  'issueHref': "document.getElementById('menuIssue').getAttribute('href')",
                  'seps': "document.querySelectorAll('#helpMenu .sep').length"},
-         expect={'items': 'menuGuide|menuShortcuts|menuDocs|menuIssue|menuLicence|menuRuntime|menuAbout',
+         expect={'items': 'menuGuide|menuShortcuts|menuApi|menuDocs|menuIssue|menuLicence|menuRuntime|menuAbout',
                  'docsHref': 'https://github.com/j4ckk0/XsdViewer#readme',
                  'issueHref': 'https://github.com/j4ckk0/XsdViewer/issues', 'seps': 3}),
     # the user guide: its heading, its sections built from the translated texts, and it closes
@@ -330,7 +330,7 @@ SCENES = [
     dict(name='settings-order', file='samples/purchaseOrder.xsd', theme='light',
          action="document.getElementById('settingsMenuBtn').click();",
          checks={'order': "[...document.querySelectorAll('#settingsMenu > button')].map(b => b.id).join('|')"},
-         expect={'order': 'menuTheme|menuHandles|menuAutoStop'}),
+         expect={'order': 'menuTheme|menuHandles|menuAutoStop|menuPort'}),
     # the search text is the workspace's, so selecting a result in another file keeps it in the box
     dict(name='search-kept', file='samples/import/order.xsd', theme='light',
          action="const st = await import('/js/state.js'); const ws = st.session.active.workspace;"
@@ -350,7 +350,7 @@ SCENES = [
          action="document.getElementById('settingsMenuBtn').click();",
          checks={'labelsAligned': "(() => { const xs = [...document.querySelectorAll('#settingsMenu > button')].map(b => Math.round([...b.querySelectorAll('span')].filter(x => !x.classList.contains('check'))[0].getBoundingClientRect().left)); return String(xs.every(x => x === xs[0])); })()",
                  'order': "[...document.querySelectorAll('#settingsMenu > *')].map(e => e.tagName === 'DIV' ? '—' : e.id).join('|')"},
-         expect={'labelsAligned': 'true', 'order': 'menuTheme|menuHandles|—|menuAutoStop'}),
+         expect={'labelsAligned': 'true', 'order': 'menuTheme|menuHandles|—|menuAutoStop|menuPort'}),
     # with a search entered and the field focused, Up/Down walk the Files tree and Enter opens the row
     dict(name='search-arrows', file='samples/purchaseOrder.xsd', theme='light',
          action="const s = document.getElementById('search'); s.focus(); s.value = 'a'; s.dispatchEvent(new Event('input', {bubbles: true}));"
@@ -412,9 +412,30 @@ SCENES = [
          checks={'items': "window.__items",
                  'licence': "String(window.__licenceOpen) + '|' + window.__licenceTitle + '|' + window.__licenceLinks",
                  'runtime': "String(window.__runtimeOpen) + '|' + String(window.__runtimeText) + '|' + window.__runtimeLinks"},
-         expect={'items': 'menuGuide|menuShortcuts|menuDocs|menuIssue|menuLicence|menuRuntime|menuAbout',
+         expect={'items': 'menuGuide|menuShortcuts|menuApi|menuDocs|menuIssue|menuLicence|menuRuntime|menuAbout',
                  'licence': 'true|Licence|https://www.apache.org/licenses/LICENSE-2.0 https://github.com/j4ckk0/XsdViewer/blob/master/LICENSE',
                  'runtime': 'true|true|https://adoptium.net/temurin/releases/?version=21 https://github.com/openjdk/jdk21u'}),
+    # the API access entry: a dialog listing the five endpoints and linking to the reference and examples
+    dict(name='help-api', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.getElementById('helpMenuBtn').click(); document.getElementById('menuApi').click();",
+         checks={'open': "String(document.getElementById('apiDialog').open)",
+                 'endpoints': "[...document.querySelectorAll('#apiBody table.shortcuts td.keys')].map(t => t.textContent).join('|')",
+                 'links': "[...document.querySelectorAll('#apiBody a')].map(a => a.getAttribute('href')).join(' ')"},
+         expect={'open': 'true',
+                 'endpoints': 'POST /api/model|POST /api/compare/declarations|POST /api/compare/texts|POST /api/compare/schemas|POST /api/compare/workspaces',
+                 'links': 'https://github.com/j4ckk0/XsdViewer/blob/master/architecture.md#http-interface https://github.com/j4ckk0/XsdViewer/tree/master/examples'}),
+    # the Settings port dialog: opens prefilled/empty, and rejects a nonsense port
+    dict(name='settings-port', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.getElementById('settingsMenuBtn').click(); document.getElementById('menuPort').click();"
+                "window.__open = document.getElementById('portDialog').open;"
+                "window.__placeholder = document.getElementById('portInput').placeholder;"
+                "document.getElementById('portInput').value = '99999'; document.getElementById('portSave').click();"
+                # the invalid-port toast is set synchronously by savePort, before any background toast
+                "window.__toast = document.getElementById('toast').textContent.trim();"
+                "window.__stillOpen = document.getElementById('portDialog').open;",
+         checks={'open': "String(window.__open)", 'hasPlaceholder': "String(window.__placeholder.length > 0)",
+                 'rejected': "String(window.__stillOpen)", 'toast': "window.__toast"},
+         expect={'open': 'true', 'hasPlaceholder': 'true', 'rejected': 'true', 'toast': 'The port must be a whole number between 1 and 65535.'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

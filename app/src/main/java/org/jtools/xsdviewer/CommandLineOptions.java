@@ -48,8 +48,18 @@ public record CommandLineOptions(String host, int port, boolean openBrowser, boo
 
     /** @throws IllegalArgumentException when an option lacks its value or the port is not a number */
     public static CommandLineOptions parse(String[] args) {
-        String host = DEFAULT_HOST;
-        int port = DEFAULT_PORT;
+        return parse(args, DEFAULT_HOST, DEFAULT_PORT);
+    }
+
+    /**
+     * Parses {@code args} over the given starting host and port — those of {@link ConfigFile}, so that
+     * {@code xsdviewer.ini} sets the defaults and a command-line option still overrides them.
+     *
+     * @throws IllegalArgumentException when an option lacks its value or the port is not a number
+     */
+    public static CommandLineOptions parse(String[] args, String defaultHost, int defaultPort) {
+        String host = defaultHost;
+        int port = defaultPort;
         boolean openBrowser = true, keepAlive = false, help = false, verbose = false;
         Path initialFile = null;
         for (int i = 0; i < args.length; i++) {

@@ -37,6 +37,7 @@
       <button id="menuHandles" type="button" data-i18n-title="menu.handles.title"><span class="check">✓</span><span data-i18n="menu.handles">Model ⇄ graph handles</span></button>
       <div class="sep"></div>
       <button id="menuAutoStop" type="button" data-i18n-title="menu.autoStop.title"><span class="check">✓</span><span data-i18n="menu.autoStop">Stop the server when the last page is closed</span></button>
+      <button id="menuPort" type="button" data-i18n-title="menu.port.title"><span class="check"></span><span data-i18n="menu.port">Server port…</span></button>
     </div>
   </div>
   <div class="menu">
@@ -44,6 +45,7 @@
     <div id="helpMenu" class="dropdown hidden">
       <button id="menuGuide" type="button" data-i18n="menu.guide">User guide…</button>
       <button id="menuShortcuts" type="button" data-i18n="menu.shortcuts">Keyboard shortcuts…</button>
+      <button id="menuApi" type="button" data-i18n="menu.api">API access…</button>
       <div class="sep"></div>
       <a id="menuDocs" href="https://github.com/j4ckk0/XsdViewer#readme" target="_blank" rel="noopener" data-i18n="menu.docs">Online documentation ↗</a>
       <a id="menuIssue" href="https://github.com/j4ckk0/XsdViewer/issues" target="_blank" rel="noopener" data-i18n="menu.issue">Report an issue ↗</a>
@@ -355,6 +357,20 @@
   <h2 data-i18n="legal.runtime.title">Embedded Java runtime</h2>
   <div id="runtimeBody"></div>
   <div class="actions"><button id="runtimeClose" type="button" class="menubtn" data-i18n="help.close">Close</button></div>
+</dialog>
+
+<dialog id="apiDialog" class="helpdialog">
+  <h2 data-i18n="api.title">API access</h2>
+  <div id="apiBody"></div>
+  <div class="actions"><button id="apiClose" type="button" class="menubtn" data-i18n="help.close">Close</button></div>
+</dialog>
+
+<dialog id="portDialog" class="helpdialog">
+  <h2 data-i18n="port.title">Server port</h2>
+  <p data-i18n="port.intro">The port the server listens on. A change takes effect the next time XsdViewer starts.</p>
+  <p><label data-i18n="port.label">Port</label> <input id="portInput" type="number" min="1" max="65535" step="1"></p>
+  <p class="muted" data-i18n="port.default">Leave it empty to use the default (8091).</p>
+  <div class="actions"><button id="portCancel" type="button" class="menubtn" data-i18n="help.cancel">Cancel</button><button id="portSave" type="button" class="menubtn" data-i18n="help.save">Save</button></div>
 </dialog>
 
 <div id="dropOverlay" class="hidden"><div data-i18n="drop.hint">Drop the XSD file to open it</div></div>

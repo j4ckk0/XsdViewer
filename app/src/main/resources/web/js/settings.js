@@ -6,12 +6,18 @@ import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { toast, toastServerError } from './toast.js';
 
+/** 0 means no chosen port: the default stands. */
+const PORT_UNSET = 0;
+
 let autoStop = true;
+let port = PORT_UNSET;   // the port chosen from the menu for the next start (0 = the default)
 
 /** Asks the server; nothing is applied yet (the texts are not loaded when this runs). */
 export async function loadSettings() {
   try {
-    autoStop = (await fetchSettings()).autoStop !== false;
+    const s = await fetchSettings();
+    autoStop = s.autoStop !== false;
+    port = Number(s.port) || PORT_UNSET;
   } catch (e) { /* server unreachable: the menu shows the default */ }
 }
 
@@ -29,4 +35,33 @@ export async function toggleAutoStop() {
   }
   applySettings();
   toast(t(autoStop ? MSG.SETTINGS_AUTO_STOP_ON : MSG.SETTINGS_AUTO_STOP_OFF));
+}
+
+/** Settings ▸ Server port…: a small dialog to set the port used at the next start; empty clears it back to the default. */
+export function showPortDialog() {
+  const input = $(ID.PORT_INPUT);
+  input.value = port === PORT_UNSET ? '' : String(port);
+  input.placeholder = location.port || '';   // the port in use now, as a hint
+  $(ID.PORT_DIALOG).showModal();
+  input.focus();
+}
+
+export const closePortDialog = () => $(ID.PORT_DIALOG).close();
+
+/** Saves the port typed in the dialog (empty = back to the default); the server keeps it for the next start. */
+export async function savePort() {
+  const text = $(ID.PORT_INPUT).value.trim();
+  let chosen = PORT_UNSET;
+  if (text) {
+    chosen = Number(text);
+    if (!Number.isInteger(chosen) || chosen < 1 || chosen > 65535) { toast(t(MSG.PORT_INVALID)); return; }
+  }
+  try {
+    port = Number((await saveSettings({ port: chosen })).port) || PORT_UNSET;
+  } catch (e) {
+    toastServerError(e);
+    return;
+  }
+  closePortDialog();
+  toast(port === PORT_UNSET ? t(MSG.SETTINGS_PORT_CLEARED) : t(MSG.SETTINGS_PORT_SET, port));
 }

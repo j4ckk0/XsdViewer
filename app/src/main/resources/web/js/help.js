@@ -3,7 +3,7 @@
  * the translated texts, so the guide reads in the page's language. The keystrokes themselves stay
  * literal (Ctrl, Alt, the arrows); only what each does is translated.
  */
-import { LICENSE_URL, OPENJDK_URL, PROJECT_LICENSE_URL, TEMURIN_URL } from './constants.js';
+import { API_DOC_URL, EXAMPLES_URL, LICENSE_URL, OPENJDK_URL, PROJECT_LICENSE_URL, TEMURIN_URL } from './constants.js';
 import { $ } from './dom.js';
 import { ID } from './dom-names.js';
 import { t } from './i18n.js';
@@ -104,6 +104,35 @@ export function showRuntime() {
   });
   $(ID.RUNTIME_DIALOG).showModal();
 }
+
+/** One endpoint row: the POST path (literal) and what it answers (translated). */
+const API_ENDPOINTS = [
+  ['POST /api/model', MSG.API_MODEL],
+  ['POST /api/compare/declarations', MSG.API_COMPARE_DECLARATIONS],
+  ['POST /api/compare/texts', MSG.API_COMPARE_TEXTS],
+  ['POST /api/compare/schemas', MSG.API_COMPARE_SCHEMAS],
+  ['POST /api/compare/workspaces', MSG.API_COMPARE_WORKSPACES],
+];
+
+export function showApi() {
+  fill($(ID.API_BODY), (body) => {
+    paragraph(body, t(MSG.API_INTRO));
+    const h = document.createElement('h3'); h.textContent = t(MSG.API_ENDPOINTS); body.appendChild(h);
+    const table = document.createElement('table'); table.className = 'shortcuts';
+    for (const [path, what] of API_ENDPOINTS) {
+      const row = table.insertRow();
+      const p = row.insertCell(); p.className = 'keys'; p.textContent = path;
+      row.insertCell().textContent = t(what);
+    }
+    body.appendChild(table);
+    paragraph(body, t(MSG.API_MORE));
+    link(body, t(MSG.API_REFERENCE), API_DOC_URL);
+    link(body, t(MSG.API_EXAMPLES), EXAMPLES_URL);
+  });
+  $(ID.API_DIALOG).showModal();
+}
+
+export const closeApi = () => $(ID.API_DIALOG).close();
 
 export const closeLicence = () => $(ID.LICENCE_DIALOG).close();
 export const closeRuntime = () => $(ID.RUNTIME_DIALOG).close();

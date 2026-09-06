@@ -3,7 +3,7 @@ import { DATA_TRANSFER_FILES, DROP_EFFECT_COPY, KEY, MIDDLE_BUTTON, NODE_KIND, P
 import { $, selector } from './dom.js';
 import { CLS, DATA, ID } from './dom-names.js';
 import { closeAbout, showAbout } from './about.js';
-import { closeGuide, closeLicence, closeRuntime, closeShortcuts, showGuide, showLicence, showRuntime, showShortcuts } from './help.js';
+import { closeApi, closeGuide, closeLicence, closeRuntime, closeShortcuts, showApi, showGuide, showLicence, showRuntime, showShortcuts } from './help.js';
 import { cancelLoading } from './busy.js';
 import { toggleCrossViewHandles } from './view-options.js';
 import { initOptions, rememberOptions, setAllDetails, toggleDetail } from './files-section.js';
@@ -29,7 +29,7 @@ import { toggleTheme } from './theme.js';
 import * as validation from './validate.js';
 import { toast } from './toast.js';
 import { activateTab, closeTab, closeWorkspace, newTab, renderNavigation, tabToShow } from './tabs.js';
-import { toggleAutoStop } from './settings.js';
+import { closePortDialog, savePort, showPortDialog, toggleAutoStop } from './settings.js';
 
 
 export function wireEvents() {
@@ -67,6 +67,9 @@ function wireMenus() {
 
 function wireSettingsMenu() {
   $(ID.MENU_AUTO_STOP).addEventListener('click', () => { closeMenus(); toggleAutoStop(); });
+  $(ID.MENU_PORT).addEventListener('click', () => { closeMenus(); showPortDialog(); });
+  $(ID.PORT_SAVE).addEventListener('click', savePort);
+  $(ID.PORT_CANCEL).addEventListener('click', closePortDialog);
   $(ID.MENU_THEME).addEventListener('click', () => { closeMenus(); toggleTheme(); });
   $(ID.MENU_HANDLES).addEventListener('click', () => { closeMenus(); toggleCrossViewHandles(); renderMainView(); });
 }
@@ -74,6 +77,7 @@ function wireSettingsMenu() {
 function wireHelpMenu() {
   $(ID.MENU_GUIDE).addEventListener('click', () => { closeMenus(); showGuide(); });
   $(ID.MENU_SHORTCUTS).addEventListener('click', () => { closeMenus(); showShortcuts(); });
+  $(ID.MENU_API).addEventListener('click', () => { closeMenus(); showApi(); });
   $(ID.MENU_LICENCE).addEventListener('click', () => { closeMenus(); showLicence(); });
   $(ID.MENU_RUNTIME).addEventListener('click', () => { closeMenus(); showRuntime(); });
   $(ID.MENU_ABOUT).addEventListener('click', () => { closeMenus(); showAbout(); });
@@ -82,6 +86,7 @@ function wireHelpMenu() {
   $(ID.ABOUT_CLOSE).addEventListener('click', closeAbout);
   $(ID.GUIDE_CLOSE).addEventListener('click', closeGuide);
   $(ID.SHORTCUTS_CLOSE).addEventListener('click', closeShortcuts);
+  $(ID.API_CLOSE).addEventListener('click', closeApi);
   $(ID.LICENCE_CLOSE).addEventListener('click', closeLicence);
   $(ID.RUNTIME_CLOSE).addEventListener('click', closeRuntime);
 }

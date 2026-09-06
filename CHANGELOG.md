@@ -6,6 +6,11 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 - **The default server port is 8091**, not 8080, which many HTTP servers already take. Set another with `--port N` as before.
 
+## Unreleased
+
+- **The server port is set from an `xsdviewer.ini` file, or from the Settings menu.** The default is 8091. A file beside the launcher (`port=…`, `host=…`) configures the double-clicked launcher, which passes no command line; **Settings ▸ Server port…** does the same from the page, kept for the next start; `--port` still overrides both. A sample `xsdviewer.ini` ships in the packages.
+- **Help ▸ API access…** describes the HTTP API in the app: the five endpoints, how to start the server without a page, and links to the reference and the example programs.
+
 ## 5.4.4 — 2026-09-06
 
 - **The Help menu shows the legal terms in the app**: a *Licence* entry for XsdViewer's own Apache 2.0 licence, and an *Embedded Java runtime* entry explaining the bundled runtime's GPLv2-with-Classpath-Exception terms, where its notices live, and where its source is — each with links.

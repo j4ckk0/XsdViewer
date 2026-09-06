@@ -48,7 +48,10 @@ public final class XsdViewerApplication {
     public static void main(String[] args) throws Exception {
         CommandLineOptions options;
         try {
-            options = CommandLineOptions.parse(args);
+            ConfigFile config = ConfigFile.load();   // xsdviewer.ini: the host and port defaults, so the double-clicked launcher can be configured
+            int chosen = UserSettings.port();   // the Settings menu's choice, over the file's port; --port on the command line still wins over both
+            int startPort = chosen != UserSettings.PORT_UNSET ? chosen : config.port();
+            options = CommandLineOptions.parse(args, config.host(), startPort);
             Log.setVerbose(options.verbose());
         } catch (IllegalArgumentException e) {
             System.err.println(e.getMessage());

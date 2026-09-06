@@ -113,6 +113,7 @@ public final class JsonKey {
     public static final String OK = "ok";
     /** {@code /api/settings}: stop the server once every page has been closed. */
     public static final String AUTO_STOP = "autoStop";
+    public static final String PORT = "port";
 
     // the content model tree ({@code model.Box}) and the line diff ({@code compare.LineDiff}), as the page reads them
     public static final String TYPE_ID = "typeId";

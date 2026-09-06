@@ -127,14 +127,19 @@ class XsdViewerServerTest {
 
     @Test
     void settingsAreAnsweredAppliedAndKept() throws Exception {
-        assertEquals("{\"autoStop\":false}", get("/api/settings").body());        // started with stopWhenNoPage = false
+        assertEquals("{\"autoStop\":false,\"port\":0}", get("/api/settings").body());        // started with stopWhenNoPage = false, no port chosen
         HttpResponse<String> on = post("/api/settings", "{\"autoStop\": true}");
         assertEquals(200, on.statusCode());
-        assertEquals("{\"autoStop\":true}", on.body());
+        assertEquals("{\"autoStop\":true,\"port\":0}", on.body());
         assertTrue(UserSettings.autoStop(), "kept in the preferences");
-        assertEquals("{\"autoStop\":true}", get("/api/settings").body());
+        assertEquals("{\"autoStop\":true,\"port\":0}", get("/api/settings").body());
         assertEquals(400, post("/api/settings", "{\"autoStop\": \"yes\"}").statusCode());
         assertEquals(400, post("/api/settings", "nonsense").statusCode());
+        // the port is kept for the next start and answered back; a nonsense port is refused
+        assertEquals("{\"autoStop\":true,\"port\":9090}", post("/api/settings", "{\"port\": 9090}").body());
+        assertEquals(9090, UserSettings.port());
+        assertEquals(400, post("/api/settings", "{\"port\": 99999}").statusCode());
+        assertEquals("{\"autoStop\":true,\"port\":0}", post("/api/settings", "{\"port\": 0}").body());   // 0 clears it
         post("/api/settings", "{\"autoStop\": false}");
         assertFalse(UserSettings.autoStop());
     }

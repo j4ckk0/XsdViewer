@@ -35,6 +35,9 @@ public final class UserSettings {
     static final String DEFAULT_NODE = "org/jtools/xsdviewer";
     static final String AUTO_STOP = "autoStop";
     static final boolean AUTO_STOP_DEFAULT = true;
+    static final String PORT = "port";
+    /** 0 means unset: the port then comes from xsdviewer.ini or the built-in default. */
+    public static final int PORT_UNSET = 0;
 
     private UserSettings() {}
 
@@ -49,5 +52,15 @@ public final class UserSettings {
 
     public static void setAutoStop(boolean autoStop) {
         node().putBoolean(AUTO_STOP, autoStop);
+    }
+
+    /** The port chosen from the Settings menu, or {@link #PORT_UNSET} when none was: the default stands then. */
+    public static int port() {
+        return node().getInt(PORT, PORT_UNSET);
+    }
+
+    /** Keeps a port chosen from the Settings menu; {@link #PORT_UNSET} clears it back to the default. */
+    public static void setPort(int port) {
+        node().putInt(PORT, port);
     }
 }

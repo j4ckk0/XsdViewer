@@ -266,8 +266,11 @@ mvn package
 java -jar app/target/xsdviewer.jar
 ```
 
-The server listens on <http://127.0.0.1:8091/> and opens it in the default browser. Change the port
-with `--port N` (see the options below); it is 8091 by default rather than the crowded 8080.
+The server listens on <http://127.0.0.1:8091/> and opens it in the default browser. It is 8091 by
+default rather than the crowded 8080. Three ways to change it, in order of precedence: `--port N` on
+the command line; **Settings ▸ Server port…** in the page (kept for the next start); or a `port=` line
+in an `xsdviewer.ini` file beside the launcher — the way to configure the double-clicked `XsdViewer.exe`,
+which takes no command line. `host=` sets the bind address the same ways.
 
 ```
 scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS
