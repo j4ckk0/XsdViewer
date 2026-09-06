@@ -754,7 +754,8 @@ the libraries and tooling, and the extension points.
 
 ## Licence
 
-Apache License 2.0 — see [LICENSE](LICENSE). Copyright 2026 jtools.org.
-`samples/purchaseOrder.xsd` is adapted from the W3C *XML Schema Part 0: Primer* example
-(W3C Document License). The distributions bundle an Eclipse Temurin JRE (GPLv2 with
-Classpath Exception).
+Apache License 2.0 — see [LICENSE](LICENSE); [NOTICE](NOTICE) records the third-party terms.
+Copyright 2026 jtools.org. `samples/purchaseOrder.xsd` is adapted from the W3C *XML Schema Part 0:
+Primer* example (W3C Document License). The self-contained distributions bundle an Eclipse Temurin
+runtime (GPLv2 with the Classpath Exception), whose own licence and notices are in the distribution's
+`jre/legal/` directory; each archive carries `LICENSE` and `NOTICE` at its root.

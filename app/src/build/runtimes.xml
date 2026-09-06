@@ -64,10 +64,10 @@
     <mkdir dir="${dist.directory}"/>
     <delete dir="${work}"/>
     <!-- the text files with the line endings of each platform -->
-    <copy todir="${work}/crlf"><fileset dir="${basedir.root}" includes="README.md,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.bat"/></copy>
-    <fixcrlf srcdir="${work}/crlf" eol="crlf" includes="**/*.md,**/*.xsd,**/*.wsdl,**/*.json,**/*.bat"/>
-    <copy todir="${work}/lf"><fileset dir="${basedir.root}" includes="README.md,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.sh"/></copy>
-    <fixcrlf srcdir="${work}/lf" eol="lf" includes="**/*.md,**/*.xsd,**/*.wsdl,**/*.json,**/*.sh"/>
+    <copy todir="${work}/crlf"><fileset dir="${basedir.root}" includes="README.md,LICENSE,NOTICE,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.bat"/></copy>
+    <fixcrlf srcdir="${work}/crlf" eol="crlf" includes="**/*.md,**/*.xsd,**/*.wsdl,**/*.json,**/*.bat,LICENSE,NOTICE"/>
+    <copy todir="${work}/lf"><fileset dir="${basedir.root}" includes="README.md,LICENSE,NOTICE,samples/**"/><fileset dir="${basedir.project}/src/dist" includes="xsdviewer.sh"/></copy>
+    <fixcrlf srcdir="${work}/lf" eol="lf" includes="**/*.md,**/*.xsd,**/*.wsdl,**/*.json,**/*.sh,LICENSE,NOTICE"/>
   </target>
 
   <target name="dist-windows" if="jdk.windows" depends="detect,prepare-dist">
@@ -76,6 +76,8 @@
       <zipfileset file="${exe}" fullpath="${dist.name}/XsdViewer.exe"/>
       <zipfileset file="${work}/crlf/xsdviewer.bat" fullpath="${dist.name}/xsdviewer.bat"/>
       <zipfileset file="${work}/crlf/README.md" fullpath="${dist.name}/README.md"/>
+      <zipfileset file="${work}/crlf/LICENSE" fullpath="${dist.name}/LICENSE"/>
+      <zipfileset file="${work}/crlf/NOTICE" fullpath="${dist.name}/NOTICE"/>
       <zipfileset dir="${work}/crlf/samples" prefix="${dist.name}/samples"/>
       <zipfileset dir="${jre.unpacked}/windows" prefix="${dist.name}/jre"/>
     </zip>
@@ -89,6 +91,8 @@
         <tarfileset file="${jar}" fullpath="${dist.name}/xsdviewer.jar" filemode="644"/>
         <tarfileset file="${work}/lf/xsdviewer.sh" fullpath="${dist.name}/xsdviewer.sh" filemode="755"/>
         <tarfileset file="${work}/lf/README.md" fullpath="${dist.name}/README.md" filemode="644"/>
+        <tarfileset file="${work}/lf/LICENSE" fullpath="${dist.name}/LICENSE" filemode="644"/>
+        <tarfileset file="${work}/lf/NOTICE" fullpath="${dist.name}/NOTICE" filemode="644"/>
         <tarfileset dir="${work}/lf/samples" prefix="${dist.name}/samples" filemode="644" dirmode="755"/>
         <tarfileset dir="${jre.unpacked}/@{os}" prefix="${dist.name}/jre" filemode="755" dirmode="755" includes="bin/**,lib/jspawnhelper,lib/jexec"/>
         <tarfileset dir="${jre.unpacked}/@{os}" prefix="${dist.name}/jre" filemode="644" dirmode="755" excludes="bin/**,lib/jspawnhelper,lib/jexec"/>

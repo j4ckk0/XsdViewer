@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- The self-contained distributions now carry the application's `LICENSE` (Apache 2.0) and a `NOTICE` at their root, beside the bundled runtime's own notices in `jre/legal/` — so a recipient has, in the archive, the terms of both the tool and the embedded Java runtime.
+
 ## 5.4.3 — 2026-09-06
 
 - The library **`org.jtools:xsdviewer-core`** is published to Maven Central; the page documents it — the coordinates, a Gradle line, and a version badge that tracks the latest. The application is unchanged from 5.4.2.

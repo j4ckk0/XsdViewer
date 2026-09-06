@@ -1,0 +1,37 @@
+XsdViewer
+Copyright 2026 jtools.org
+
+This product is licensed under the Apache License, Version 2.0. The full text is in
+the LICENSE file beside this one.
+
+
+Embedded Java runtime
+=====================
+
+The self-contained distributions — the Windows, Linux and macOS archives — bundle a
+trimmed OpenJDK runtime, built with jlink from an Eclipse Temurin JDK 21. The plain
+xsdviewer-<version>.jar carries no runtime and is not concerned by this section.
+
+Eclipse Temurin (OpenJDK) is licensed under the GNU General Public License, version 2,
+with the Classpath Exception (GPLv2 + CPE). The Classpath Exception is what permits
+distributing XsdViewer together with this runtime without affecting the licence of
+XsdViewer's own code.
+
+The runtime's own licence and notices travel with it, in the jre/legal/ directory of
+each distribution:
+  - jre/legal/java.base/LICENSE              the GNU General Public License, version 2
+  - jre/legal/java.base/ASSEMBLY_EXCEPTION   the Classpath Exception
+  - jre/legal/java.base/ADDITIONAL_LICENSE_INFO
+  - jre/legal/<module>/*                     the per-component notices of each linked module
+The exact runtime build is recorded in jre/release.
+
+Source code for the OpenJDK runtime is available from:
+  - Eclipse Temurin:  https://adoptium.net/temurin/releases/?version=21
+  - OpenJDK project:  https://github.com/openjdk/jdk21u
+
+
+Sample files
+============
+
+samples/purchaseOrder.xsd is adapted from the W3C "XML Schema Part 0: Primer" example,
+used under the W3C Document License.
