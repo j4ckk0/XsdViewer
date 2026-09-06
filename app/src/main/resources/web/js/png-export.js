@@ -2,7 +2,8 @@
  * ⤓ PNG and ⤓ SVG of the views that are drawings: the graph, the model, and the two drawings of the
  * comparison side by side. Each is cropped to what it holds and carries the page's styles and
  * background, so the file renders on its own; the PNG is that SVG rasterised.
- * The Text view is not a drawing: {@link text-export.js} paints it.
+ * A file's Text view is not a drawing: {@link text-export.js} paints it; the comparison's text is
+ * rebuilt in SVG by {@link text-diff-picture.js}, so that it exports like the two other views.
  */
 import { MIME, SVG_NS, VIEW, nameOfId } from './constants.js';
 import { $, selector } from './dom.js';
@@ -10,6 +11,7 @@ import { CLS, ID } from './dom-names.js';
 import { comparedPair } from './comparison-state.js';
 import { saveBlob, saveCanvas } from './file-download.js';
 import { exportTextPng } from './text-export.js';
+import { textDiffPicture } from './text-diff-picture.js';
 import { t } from './i18n.js';
 import { MSG } from './message-keys.js';
 import { session } from './state.js';
@@ -82,14 +84,14 @@ function comparedName() {
   return pair ? pair.map(sideName).join('-') : DEFAULT_BASENAME;
 }
 
-/** The panes of the comparison: the left, the right, each a canvas and the heading naming it. */
-const LEFT_PANE = [ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME];
-const RIGHT_PANE = [ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME];
+/** The panes of the comparison: the left, the right, each a canvas, the heading naming it, and its rank among the sides of the text. */
+const LEFT_PANE = [ID.OBJECT_COMPARE_LEFT, ID.OBJECT_COMPARE_LEFT_NAME, 0];
+const RIGHT_PANE = [ID.OBJECT_COMPARE_RIGHT, ID.OBJECT_COMPARE_RIGHT_NAME, 1];
 
 /**
  * The three pictures the compare view exports, each with its file name (extension {@code ext}): the
  * left declaration alone, the right alone, then the two side by side as before. A picture is left
- * out when its pane draws nothing (the text view, or a side not yet marked).
+ * out when its pane draws nothing (a side not yet marked, a text the server could not compare).
  */
 function comparePictures(ext) {
   const pair = comparedPair();
@@ -102,17 +104,28 @@ function comparePictures(ext) {
 }
 
 /**
- * The given panes of the comparison as one picture — the content models, or the neighbourhoods: each
- * cropped to what it draws, side by side when there are two, under the heading its pane carries, so
- * the image says which side is which. Null when any asked pane draws nothing (the text view, or a
- * side not yet marked).
+ * What a pane of the comparison shows, as a piece of picture: {@code {nodes, extent}}, the SVG nodes to
+ * copy and the box they cover — the canvas's drawing (a content model, a neighbourhood), or, in the
+ * text view, that side's lines rebuilt in SVG. Null when the pane shows nothing.
+ */
+function paneDrawing(canvas, rank) {
+  if (session.comparison.view === VIEW.TEXT) return textDiffPicture(rank);
+  const src = $(canvas).querySelector(SVG_TAG);
+  return src ? { nodes: [...src.childNodes].map(n => n.cloneNode(true)), extent: src.getBBox() } : null;
+}
+
+/**
+ * The given panes of the comparison as one picture — the content models, the neighbourhoods, or the
+ * sources: each cropped to what it draws, side by side when there are two, under the heading its
+ * pane carries, so the image says which side is which. Null when any asked pane shows nothing (a
+ * side not yet marked, a text the server could not compare).
  */
 function compareSvg(panes) {
   const sides = panes
-    .map(([canvas, head]) => ({ src: $(canvas).querySelector(SVG_TAG), head: $(head).textContent }));
-  if (sides.some(side => !side.src)) return null;
+    .map(([canvas, head, rank]) => ({ drawing: paneDrawing(canvas, rank), head: $(head).textContent }));
+  if (sides.some(side => !side.drawing)) return null;
   for (const side of sides) {
-    const bb = side.src.getBBox();
+    const bb = side.drawing.extent;
     side.x = Math.floor(bb.x - GRAPH_MARGIN); side.y = Math.floor(bb.y - GRAPH_MARGIN);
     side.w = Math.ceil(bb.width + 2 * GRAPH_MARGIN); side.h = Math.ceil(bb.height + 2 * GRAPH_MARGIN);
   }
@@ -127,7 +140,7 @@ function compareSvg(panes) {
   for (const side of sides) {
     const g = document.createElementNS(SVG_NS, SVG_GROUP_TAG);
     g.setAttribute('transform', 'translate(' + (dx - side.x) + ',' + (COMPARE_HEAD_H - side.y) + ')');
-    for (const child of side.src.childNodes) g.append(child.cloneNode(true));
+    g.append(...side.drawing.nodes);
     const label = document.createElementNS(SVG_NS, SVG_TEXT_TAG);
     label.setAttribute('x', dx + GRAPH_MARGIN); label.setAttribute('y', COMPARE_HEAD_H - COMPARE_HEAD_BASELINE);
     label.setAttribute('fill', textColour()); label.setAttribute('font-weight', '600');

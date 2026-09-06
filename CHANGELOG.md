@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+- **The comparison's Text view exports too.** ⤓ PNG and ⤓ SVG were disabled there; they now save the three pictures the two other views save — each declaration's source alone, then the two side by side — the lines rebuilt in SVG with their numbers, the colours of the deleted, inserted and moved lines, and the folds.
+
 ## 5.6.0 — 2026-09-06
 
 - **The log is configured from `xsdviewer.ini` too.** `verbose=true` gives the detail of `--verbose` without a command line, and `log.folder=` sets the folder of the log files (`xsdviewer.0.log` and `xsdviewer.1.log`) or, with `none`, keeps the log on the console only. The command line still overrides the file.

@@ -80,9 +80,11 @@ export function showView(view) {
   show(ID.TEXT, place === PLACE.FILE && view === VIEW.TEXT);
   show(ID.TEXT_FIND, place === PLACE.FILE && view === VIEW.TEXT);
   show(ID.ZOOM_CONTROLS, drawing);
-  // a file's text exports as a picture painted by text-export.js, but has no SVG; the comparison's text draws nothing
-  $(ID.EXPORT_BUTTON).disabled = !(drawing || (place === PLACE.FILE && view === VIEW.TEXT));
-  $(ID.EXPORT_SVG_BUTTON).disabled = !drawing;
+  // a file's text exports as a picture painted by text-export.js, but has no SVG; the comparison's text is rebuilt in SVG for both exports
+  const fileText = place === PLACE.FILE && view === VIEW.TEXT;
+  const comparedText = place === PLACE.COMPARISON_OBJECTS && view === VIEW.TEXT && !!comparedPair();
+  $(ID.EXPORT_BUTTON).disabled = !(drawing || fileText || comparedText);
+  $(ID.EXPORT_SVG_BUTTON).disabled = !(drawing || comparedText);
   updateSplitters();
   $(ID.MENU_VALIDATE).disabled = !canValidate();
   $(ID.MENU_OPEN_ALL).disabled = place !== PLACE.FILE && place !== PLACE.EMPTY || !listedOnly().length;

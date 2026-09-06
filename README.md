@@ -359,7 +359,7 @@ last row rather than left silently out of the results; **File ▸ Validate an XM
 document against the shown schema, in a tab of its own (see *Validation* below). The **left panel and the details panel are resizable**: drag the thin grip along their inner edge (a
 double-click restores the default width, the arrow keys move it when it has the focus); the widths
 are remembered by the browser. **⤓ PNG** in the top bar saves the current view as a PNG image,
-**⤓ SVG** it as a vector image (for documents) unless it is the text. Both take what the view
+**⤓ SVG** it as a vector image (for documents) unless it is a file's text. Both take what the view
 draws whole, not the part on screen. In the *Compare* view they save three pictures: the left
 declaration alone, the right alone, and the two side by side as before, each under the heading naming
 its declaration, its file and its workspace. In the Text view, a
@@ -595,7 +595,7 @@ types are opened on both sides, so a change deep inside one is seen. Any box hol
 carries a handle that puts it aside, and folding one folds the box matching it on the other side;
 **⊞** / **⊟** open and fold them all. **Differences only** (remembered) keeps what differs in
 whichever view is shown: in the models the boxes that differ and those on the way to one, in the text
-the changed lines with one line of context, in the graphs the links only one side has. **⤓ PNG** / **⤓ SVG** save three pictures: each declaration alone, then the two side by side.
+the changed lines with one line of context, in the graphs the links only one side has. **⤓ PNG** / **⤓ SVG** save three pictures in each of the three views: each declaration alone, then the two side by side.
 
 In **Text**, each side shows the source of its declaration alone — from its opening tag to its
 closing tag, with the line numbers it has in its file — the two aligned line by line and what differs

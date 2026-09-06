@@ -753,6 +753,38 @@ SCENES = [
          expect={'viewTabs': False, 'active': 'Text', 'summary': '4 lines only on the left, 4 only on the right', 'chips': 2, 'sides': 2, 'rows': 13, 'deleted': 4, 'inserted': 4,
                  'firstLine': '13', 'folds': True,
                  'heads': 'complexType ProductType — product.xsd, v1|complexType ProductType — product.xsd, v2'}),
+    dict(name='compare-text-export', file='samples/compare/v1.xsdviewer.json', theme='light',
+         # ⤓ SVG and ⤓ PNG in the comparison's Text view: the sources rebuilt in SVG, three pictures each, caught before they reach the disk
+         action=OPEN_V2 + DECLARATIONS
+                + "const pick = (w, side) => {"
+                "  [...document.querySelectorAll('#workspaces .wsgroup:not(.cmpchip)')].find(x => x.textContent.includes(w)).click();"
+                "  [...document.querySelectorAll('#tabs .dtab')].find(t => t.textContent.includes('product.xsd')).click();"
+                "  document.querySelector('#nodeList .item[data-id=\"complexType:ProductType\"]').click();"
+                "  document.querySelector('#compareSides .cobj-mark.' + side).click(); };"
+                "pick('v1', 'left'); pick('v2', 'right');"
+                + DECLARATIONS
+                + "await new Promise(r => setTimeout(r, 400));"
+                "document.getElementById('toast').classList.add('hidden');"
+                "document.querySelector('#viewTabs .tab[data-view=\"text\"]').click(); await new Promise(r => setTimeout(r, 400));"
+                "window.__buttons = [document.getElementById('exportBtn').disabled, document.getElementById('exportSvgBtn').disabled].join('/');"
+                "window.__blobs = []; const makeUrl = URL.createObjectURL.bind(URL); URL.createObjectURL = (b) => { window.__blobs.push(b); return makeUrl(b); };"
+                "HTMLAnchorElement.prototype.click = function () { window.__downloads = (window.__downloads || []).concat(this.download); };"
+                "document.getElementById('exportSvgBtn').click(); await new Promise(r => setTimeout(r, 300));"
+                "window.__svgs = await Promise.all(window.__blobs.map(b => b.text()));"
+                "document.getElementById('exportBtn').click(); await new Promise(r => setTimeout(r, 1500));",
+         checks={'buttons': "window.__buttons",
+                 'downloads': "(window.__downloads || []).slice().sort().join('|')",
+                 'wellFormed': "window.__svgs.map(s => new DOMParser().parseFromString(s, 'image/svg+xml').querySelector('parsererror') ? 'broken' : 'ok').join('|')",
+                 'headings': "window.__svgs.map(s => (s.match(/product\\.xsd, v[12]/g) || []).length).join('|')",
+                 'lines': "window.__svgs.map(s => new DOMParser().parseFromString(s, 'image/svg+xml').querySelectorAll('text').length > 10).join('|')",
+                 'indent': "window.__svgs[0].includes('xml:space=\"preserve\"') && window.__svgs[0].includes('>    &lt;xs:')",
+                 'colours': "new Set([...new DOMParser().parseFromString(window.__svgs[2], 'image/svg+xml').querySelectorAll('rect')].map(r => r.getAttribute('fill'))).size > 2",
+                 'pngBlobs': "window.__blobs.filter(b => b.type === 'image/png').length"},
+         # both buttons enabled; three SVGs then three PNGs, named as in the other views; each side's heading once, both in the third; the
+         # indentation kept; the background, the rule and the changed lines' colours in the picture
+         expect={'buttons': 'false/false',
+                 'downloads': 'ProductType-ProductType-compared.png|ProductType-ProductType-compared.svg|ProductType-compared-left.png|ProductType-compared-left.svg|ProductType-compared-right.png|ProductType-compared-right.svg',
+                 'wellFormed': 'ok|ok|ok', 'headings': '1|1|2', 'lines': 'true|true|true', 'indent': True, 'colours': True, 'pngBlobs': 3}),
     dict(name='compare-graph', file='samples/compare/v1.xsdviewer.json', theme='light',
          # the comparison shows the neighbourhood of each declaration, the links only one side has marked
          action=OPEN_V2 + DECLARATIONS
