@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 5.4.3 — 2026-09-06
+
+- The library **`org.jtools:xsdviewer-core`** is published to Maven Central; the page documents it — the coordinates, a Gradle line, and a version badge that tracks the latest. The application is unchanged from 5.4.2.
+
 ## 5.4.2 — 2026-09-05
 
 - Fix: a long declaration name whose letters are wide (e.g. `customerLoyaltyProgram…`) had its ellipsis paint just past the box edge; the width a name is fitted to is now measured more conservatively, so the ellipsis stays inside.
