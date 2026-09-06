@@ -102,7 +102,7 @@ public final class XsdViewerServer {
         };
     }
 
-    /** The address of the page, e.g. {@code http://127.0.0.1:8080/}. */
+    /** The address of the page, e.g. {@code http://127.0.0.1:8091/}. */
     public String url() {
         return url;
     }

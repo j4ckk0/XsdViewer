@@ -266,7 +266,8 @@ mvn package
 java -jar app/target/xsdviewer.jar
 ```
 
-The server listens on <http://127.0.0.1:8080/> and opens it in the default browser.
+The server listens on <http://127.0.0.1:8091/> and opens it in the default browser. Change the port
+with `--port N` (see the options below); it is 8091 by default rather than the crowded 8080.
 
 ```
 scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS

@@ -44,7 +44,7 @@ public record CommandLineOptions(String host, int port, boolean openBrowser, boo
     public static final String OPTION_HELP_SHORT = "-h";
 
     public static final String DEFAULT_HOST = "127.0.0.1";
-    public static final int DEFAULT_PORT = 8080;
+    public static final int DEFAULT_PORT = 8091;
 
     /** @throws IllegalArgumentException when an option lacks its value or the port is not a number */
     public static CommandLineOptions parse(String[] args) {
