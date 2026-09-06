@@ -48,6 +48,9 @@
       <a id="menuDocs" href="https://github.com/j4ckk0/XsdViewer#readme" target="_blank" rel="noopener" data-i18n="menu.docs">Online documentation ↗</a>
       <a id="menuIssue" href="https://github.com/j4ckk0/XsdViewer/issues" target="_blank" rel="noopener" data-i18n="menu.issue">Report an issue ↗</a>
       <div class="sep"></div>
+      <button id="menuLicence" type="button" data-i18n="menu.licence">Licence…</button>
+      <button id="menuRuntime" type="button" data-i18n="menu.runtime">Embedded Java runtime…</button>
+      <div class="sep"></div>
       <button id="menuAbout" type="button" data-i18n="menu.about">About XsdViewer…</button>
     </div>
   </div>
@@ -340,6 +343,18 @@
   <h2 data-i18n="shortcuts.title">Keyboard shortcuts</h2>
   <div id="shortcutsBody"></div>
   <div class="actions"><button id="shortcutsClose" type="button" class="menubtn" data-i18n="help.close">Close</button></div>
+</dialog>
+
+<dialog id="licenceDialog" class="helpdialog">
+  <h2 data-i18n="legal.licence.title">Licence</h2>
+  <div id="licenceBody"></div>
+  <div class="actions"><button id="licenceClose" type="button" class="menubtn" data-i18n="help.close">Close</button></div>
+</dialog>
+
+<dialog id="runtimeDialog" class="helpdialog">
+  <h2 data-i18n="legal.runtime.title">Embedded Java runtime</h2>
+  <div id="runtimeBody"></div>
+  <div class="actions"><button id="runtimeClose" type="button" class="menubtn" data-i18n="help.close">Close</button></div>
 </dialog>
 
 <div id="dropOverlay" class="hidden"><div data-i18n="drop.hint">Drop the XSD file to open it</div></div>

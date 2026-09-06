@@ -3,6 +3,9 @@
 export const APP_NAME = 'XsdViewer';
 export const PROJECT_URL = 'https://github.com/j4ckk0/XsdViewer';
 export const LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
+export const PROJECT_LICENSE_URL = 'https://github.com/j4ckk0/XsdViewer/blob/master/LICENSE';
+export const TEMURIN_URL = 'https://adoptium.net/temurin/releases/?version=21';
+export const OPENJDK_URL = 'https://github.com/openjdk/jdk21u';
 
 /** Kinds of node of the schema graph (see NodeKind on the server): those of a WSDL, of a Schematron, of an XML Schema. */
 export const NODE_KIND = {

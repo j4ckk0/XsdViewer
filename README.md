@@ -492,7 +492,9 @@ word bold in that colour, so it stands out from the elements a declaration merel
 
 **Help ▸ User guide…** opens a guide to the views, workspaces, the comparison and validation, in the
 page's language; **Keyboard shortcuts…** lists every keystroke; the menu also links to the online
-documentation and to where an issue is reported. **Help ▸ About XsdViewer…** shows the version (from
+documentation and to where an issue is reported. **Help ▸ Licence…** and **Embedded Java runtime…** show the terms in the app: the Apache 2.0 licence of
+XsdViewer, and the GPLv2-with-Classpath-Exception runtime the packages bundle with links to its source.
+**Help ▸ About XsdViewer…** shows the version (from
 the jar's manifest), the Java runtime, the log file, the licence and the project page.
 
 ### Where the files are

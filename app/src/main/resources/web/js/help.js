@@ -3,6 +3,7 @@
  * the translated texts, so the guide reads in the page's language. The keystrokes themselves stay
  * literal (Ctrl, Alt, the arrows); only what each does is translated.
  */
+import { LICENSE_URL, OPENJDK_URL, PROJECT_LICENSE_URL, TEMURIN_URL } from './constants.js';
 import { $ } from './dom.js';
 import { ID } from './dom-names.js';
 import { t } from './i18n.js';
@@ -74,6 +75,38 @@ export function showShortcuts() {
   });
   $(ID.SHORTCUTS_DIALOG).showModal();
 }
+
+/** Adds a link paragraph (opens in a new tab) to {@code parent}. */
+function link(parent, text, href) {
+  const p = document.createElement('p');
+  const a = document.createElement('a');
+  a.href = href; a.target = '_blank'; a.rel = 'noopener'; a.textContent = text;
+  p.appendChild(a); parent.appendChild(p);
+}
+
+export function showLicence() {
+  fill($(ID.LICENCE_BODY), (body) => {
+    paragraph(body, t(MSG.LEGAL_LICENCE_INTRO));
+    link(body, t(MSG.LEGAL_LICENCE_FULL), LICENSE_URL);
+    link(body, t(MSG.LEGAL_LICENCE_FILE), PROJECT_LICENSE_URL);
+    paragraph(body, t(MSG.LEGAL_COPYRIGHT), true);
+  });
+  $(ID.LICENCE_DIALOG).showModal();
+}
+
+export function showRuntime() {
+  fill($(ID.RUNTIME_BODY), (body) => {
+    paragraph(body, t(MSG.LEGAL_RUNTIME_WHAT));
+    paragraph(body, t(MSG.LEGAL_RUNTIME_CPE));
+    paragraph(body, t(MSG.LEGAL_RUNTIME_NOTICES), true);
+    link(body, t(MSG.LEGAL_RUNTIME_TEMURIN), TEMURIN_URL);
+    link(body, t(MSG.LEGAL_RUNTIME_OPENJDK), OPENJDK_URL);
+  });
+  $(ID.RUNTIME_DIALOG).showModal();
+}
+
+export const closeLicence = () => $(ID.LICENCE_DIALOG).close();
+export const closeRuntime = () => $(ID.RUNTIME_DIALOG).close();
 
 export const closeGuide = () => $(ID.GUIDE_DIALOG).close();
 export const closeShortcuts = () => $(ID.SHORTCUTS_DIALOG).close();

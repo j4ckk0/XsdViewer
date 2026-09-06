@@ -213,9 +213,9 @@ SCENES = [
                  'docsHref': "document.getElementById('menuDocs').getAttribute('href')",
                  'issueHref': "document.getElementById('menuIssue').getAttribute('href')",
                  'seps': "document.querySelectorAll('#helpMenu .sep').length"},
-         expect={'items': 'menuGuide|menuShortcuts|menuDocs|menuIssue|menuAbout',
+         expect={'items': 'menuGuide|menuShortcuts|menuDocs|menuIssue|menuLicence|menuRuntime|menuAbout',
                  'docsHref': 'https://github.com/j4ckk0/XsdViewer#readme',
-                 'issueHref': 'https://github.com/j4ckk0/XsdViewer/issues', 'seps': 2}),
+                 'issueHref': 'https://github.com/j4ckk0/XsdViewer/issues', 'seps': 3}),
     # the user guide: its heading, its sections built from the translated texts, and it closes
     dict(name='help-guide', file='samples/purchaseOrder.xsd', theme='light',
          action="document.getElementById('helpMenuBtn').click(); document.getElementById('menuGuide').click();",
@@ -396,6 +396,25 @@ SCENES = [
                 "window.__file = st.session.active.fileName;",
          checks={'before': "window.__before", 'after': "window.__after", 'movedToAnotherFile': "String(window.__had && window.__file !== 'order.xsd')"},
          expect={'before': 'graph', 'after': 'graph', 'movedToAnotherFile': 'true'}),
+    # the Help menu's legal entries: the licence and the embedded runtime, each a dialog with links
+    dict(name='help-legal', file='samples/purchaseOrder.xsd', theme='light',
+         action="document.getElementById('helpMenuBtn').click();"
+                "window.__items = [...document.querySelectorAll('#helpMenu > button, #helpMenu > a')].map(e => e.id).join('|');"
+                "document.getElementById('menuLicence').click();"
+                "window.__licenceOpen = document.getElementById('licenceDialog').open;"
+                "window.__licenceTitle = document.querySelector('#licenceDialog h2').textContent;"
+                "window.__licenceLinks = [...document.querySelectorAll('#licenceBody a')].map(a => a.getAttribute('href')).join(' ');"
+                "document.getElementById('licenceClose').click();"
+                "document.getElementById('helpMenuBtn').click(); document.getElementById('menuRuntime').click();"
+                "window.__runtimeOpen = document.getElementById('runtimeDialog').open;"
+                "window.__runtimeLinks = [...document.querySelectorAll('#runtimeBody a')].map(a => a.getAttribute('href')).join(' ');"
+                "window.__runtimeText = document.getElementById('runtimeBody').textContent.includes('Classpath Exception');",
+         checks={'items': "window.__items",
+                 'licence': "String(window.__licenceOpen) + '|' + window.__licenceTitle + '|' + window.__licenceLinks",
+                 'runtime': "String(window.__runtimeOpen) + '|' + String(window.__runtimeText) + '|' + window.__runtimeLinks"},
+         expect={'items': 'menuGuide|menuShortcuts|menuDocs|menuIssue|menuLicence|menuRuntime|menuAbout',
+                 'licence': 'true|Licence|https://www.apache.org/licenses/LICENSE-2.0 https://github.com/j4ckk0/XsdViewer/blob/master/LICENSE',
+                 'runtime': 'true|true|https://adoptium.net/temurin/releases/?version=21 https://github.com/openjdk/jdk21u'}),
     dict(name='model-expanded', file='samples/purchaseOrder.xsd', theme='dark',
          action="document.querySelector('#nodeList .item[data-id=\"complexType:InternationalAddress\"]').click();"
                 "document.querySelector('.tab[data-view=\"model\"]').click();"

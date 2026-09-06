@@ -4,6 +4,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
+- **The Help menu shows the legal terms in the app**: a *Licence* entry for XsdViewer's own Apache 2.0 licence, and an *Embedded Java runtime* entry explaining the bundled runtime's GPLv2-with-Classpath-Exception terms, where its notices live, and where its source is — each with links.
 - The self-contained distributions now carry the application's `LICENSE` (Apache 2.0) and a `NOTICE` at their root, beside the bundled runtime's own notices in `jre/legal/` — so a recipient has, in the archive, the terms of both the tool and the embedded Java runtime.
 
 ## 5.4.3 — 2026-09-06
