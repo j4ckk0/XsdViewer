@@ -195,6 +195,16 @@ The reading, the models, the comparison and the validation are a library of thei
 </dependency>
 ```
 
+or, with Gradle:
+
+```groovy
+implementation 'org.jtools:xsdviewer-core:5.4.2'
+```
+
+It is [on Maven Central](https://central.sonatype.com/artifact/org.jtools/xsdviewer-core), current
+version **5.4.2** (the badge at the top of this page tracks the latest). It has no dependency of its
+own beyond a Java 21 runtime.
+
 What a program gets from it:
 
 - **A schema read into a graph.** `SchemaParser.parse(text)` gives a `SchemaGraph`: one node per
