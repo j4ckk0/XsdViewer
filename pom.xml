@@ -6,7 +6,7 @@
 
   <groupId>org.jtools</groupId>
   <artifactId>xsdviewer-parent</artifactId>
-  <version>5.4.3</version>
+  <version>5.4.4</version>
   <packaging>pom</packaging>
 
   <name>XsdViewer build</name>
