@@ -15,3 +15,6 @@ target/
 
 # workspaces saved from the GUI while testing (the shipped ones live in samples/compare/)
 /samples/*.xsdviewer.json
+
+# bytecode Python writes beside scripts/screenshots.py when it runs
+__pycache__/
