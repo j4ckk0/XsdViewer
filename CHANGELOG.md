@@ -2,6 +2,10 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 5.5.1 — 2026-09-06
+
+- Documentation and code comments brought up to date (the configurable port, the `ConfigFile`, the Help dialogs). The application is unchanged from 5.5.0.
+
 ## 5.5.0 — 2026-09-06
 
 - **The default server port is 8091**, not the crowded 8080, and it is configurable without a command line. A `port=` (and `host=`) line in an `xsdviewer.ini` file beside the launcher sets it — the way to configure the double-clicked `XsdViewer.exe`, which takes no command line; **Settings ▸ Server port…** sets it from the page, kept for the next start; `--port N` still overrides both. A sample `xsdviewer.ini` ships in the packages.
