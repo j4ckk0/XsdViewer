@@ -26,20 +26,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.jtools.framework.desktop.FileDialogs;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.workspace.Workspace;
 
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
+
 /** {@code POST /api/workspace/open}: the native "open" dialog for a workspace file, answered with its schemas. 409 without a display. */
-final class OpenWorkspaceHandler implements HttpHandler {
+final class OpenWorkspaceRoute implements WebServer.Route {
 
     private final ServedSchemaFiles files;
 
-    OpenWorkspaceHandler(ServedSchemaFiles files) {
+    OpenWorkspaceRoute(ServedSchemaFiles files) {
         this.files = files;
     }
 
@@ -49,23 +52,16 @@ final class OpenWorkspaceHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
-        if (!HttpResponses.requirePost(ex)) return;
-        if (!FileDialogs.available()) {
-            HttpResponses.error(ex, HttpStatus.CONFLICT, Messages.get(MessageKey.NO_DISPLAY));
-            return;
-        }
+    public Object answer(Exchange ex) throws IOException {
+        if (!FileDialogs.available()) throw new WebServer.Refusal(HttpStatus.CONFLICT, Messages.get(MessageKey.NO_DISPLAY));
         List<Path> chosen = FileDialogs.chooseFilesToOpen(Messages.get(MessageKey.DIALOG_OPEN_WORKSPACE), false, workspaceFilter());
-        if (chosen.isEmpty()) {
-            HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.CANCELLED, true));
-            return;
-        }
+        if (chosen.isEmpty()) return Json.raw(JsonWriter.object(JsonKey.CANCELLED, true));
         Path file = chosen.get(0);
         try {
             Workspace ws = Workspace.fromJson(Files.readString(file, StandardCharsets.UTF_8), file);
-            HttpResponses.json(ex, HttpStatus.OK, WorkspaceResponse.json(ws, file, files));
+            return Json.raw(WorkspaceResponse.json(ws, file, files));
         } catch (IllegalArgumentException e) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, e.getMessage());
+            throw new WebServer.Refusal(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 }

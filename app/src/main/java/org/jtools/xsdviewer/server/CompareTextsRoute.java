@@ -28,8 +28,9 @@ import org.jtools.xsdviewer.compare.TextComparison;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
 
 /**
  * {@code POST /api/compare/texts}, body {@code {"left": text, "right": text, "businessOnly": bool,
@@ -38,16 +39,15 @@ import com.sun.net.httpserver.HttpHandler;
  * each side with their number in the original text, the edit script (null when the texts are too
  * different to align), and whether the two differ only by moved blocks.
  */
-final class CompareTextsHandler implements HttpHandler {
+final class CompareTextsRoute implements WebServer.Route {
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
+    public Object answer(Exchange ex) throws IOException {
         Map<String, Object> request = JsonRequest.of(ex);
-        if (request == null) return;
         TextComparison.Result r = TextComparison.of(RequestBody.text(request, JsonKey.LEFT), RequestBody.text(request, JsonKey.RIGHT),
                 RequestBody.flag(request, JsonKey.BUSINESS_ONLY), RequestBody.flag(request, JsonKey.IGNORE_SPACING));
         JsonWriter w = new JsonWriter();
         CompareJsonWriter.texts(w, r);
-        HttpResponses.json(ex, HttpStatus.OK, w.toString());
+        return Json.raw(w.toString());
     }
 }

@@ -28,8 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.jtools.framework.desktop.FileDialogs;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.json.JsonKey;
@@ -37,39 +36,35 @@ import org.jtools.xsdviewer.json.JsonReader;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.workspace.Workspace;
 
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
+
 /** {@code POST /api/workspace/save}: writes the workspace the page describes where the native "save as" dialog says (its own file proposed). 409 without a display. */
-final class SaveWorkspaceHandler implements HttpHandler {
+final class SaveWorkspaceRoute implements WebServer.Route {
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
-        if (!HttpResponses.requirePost(ex)) return;
-        if (!FileDialogs.available()) {
-            HttpResponses.error(ex, HttpStatus.CONFLICT, Messages.get(MessageKey.NO_DISPLAY));
-            return;
-        }
+    public Object answer(Exchange ex) throws IOException {
+        if (!FileDialogs.available()) throw new WebServer.Refusal(HttpStatus.CONFLICT, Messages.get(MessageKey.NO_DISPLAY));
         Workspace ws;
         Path suggested;
         try {
-            Map<String, Object> body = JsonReader.asObject(JsonReader.parse(HttpResponses.readBody(ex)));
+            Map<String, Object> body = JsonReader.asObject(JsonReader.parse(ex.text()));
             ws = fromRequest(body);
             String s = body == null ? null : JsonReader.asString(body.get(JsonKey.PATH));
             suggested = s == null || s.isEmpty() ? null : Path.of(s).toAbsolutePath().normalize();
         } catch (IllegalArgumentException e) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, e.getMessage());
-            return;
+            throw new WebServer.Refusal(HttpStatus.BAD_REQUEST, e.getMessage());
         }
         Path dir = suggested != null ? suggested.getParent() : ws.files().isEmpty() ? null : ws.files().get(0).getParent();
         String name = suggested != null ? suggested.getFileName().toString() : Workspace.DEFAULT_FILE_NAME;
-        Path target = FileDialogs.chooseFileToSave(Messages.get(MessageKey.DIALOG_SAVE_WORKSPACE), dir, name, OpenWorkspaceHandler.workspaceFilter());
-        if (target == null) {
-            HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.CANCELLED, true));
-            return;
-        }
+        Path target = FileDialogs.chooseFileToSave(Messages.get(MessageKey.DIALOG_SAVE_WORKSPACE), dir, name, OpenWorkspaceRoute.workspaceFilter());
+        if (target == null) return Json.raw(JsonWriter.object(JsonKey.CANCELLED, true));
         if (!target.getFileName().toString().endsWith(Workspace.FILE_SUFFIX)) {
             target = target.resolveSibling(target.getFileName() + Workspace.FILE_SUFFIX);
         }
         Files.writeString(target, ws.toJson(target), StandardCharsets.UTF_8);
-        HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.PATH, target.toString()));
+        return Json.raw(JsonWriter.object(JsonKey.PATH, target.toString()));
     }
 
     /** The workspace described by the request body: absolute paths, as the page got them from the server. */

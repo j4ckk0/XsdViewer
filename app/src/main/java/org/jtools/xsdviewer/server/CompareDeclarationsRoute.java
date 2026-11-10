@@ -37,8 +37,9 @@ import org.jtools.xsdviewer.model.ContentTree;
 import org.jtools.xsdviewer.schema.SchemaGraph.Node;
 import org.jtools.xsdviewer.server.RequestBody.Side;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
 
 /**
  * {@code POST /api/compare/declarations}, body {@code {"left": side, "right": side}} where a side is
@@ -48,12 +49,11 @@ import com.sun.net.httpserver.HttpHandler;
  * marked ({@link ModelDiff}); a tree is null when its side declares nothing; and, for the graph view,
  * the links of each declaration's neighbourhood the other side does not have ({@link SchemaDiff}).
  */
-final class CompareDeclarationsHandler implements HttpHandler {
+final class CompareDeclarationsRoute implements WebServer.Route {
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
+    public Object answer(Exchange ex) throws IOException {
         Map<String, Object> request = JsonRequest.of(ex);
-        if (request == null) return;
         Side left = RequestBody.side(JsonReader.asObject(request.get(JsonKey.LEFT)));
         Side right = RequestBody.side(JsonReader.asObject(request.get(JsonKey.RIGHT)));
         Box l = tree(left), r = tree(right);
@@ -63,7 +63,7 @@ final class CompareDeclarationsHandler implements HttpHandler {
         BoxJsonWriter.write(w.name(JsonKey.RIGHT), r);
         CompareJsonWriter.counts(w.name(JsonKey.COUNTS), counts);
         CompareJsonWriter.links(w.name(JsonKey.LINKS), neighbourhood(left), neighbourhood(right));
-        HttpResponses.json(ex, HttpStatus.OK, w.endObject().toString());
+        return Json.raw(w.endObject().toString());
     }
 
     /** The whole tree of a side's declaration, or null when the side has none: the comparison then marks the other side wholly. */

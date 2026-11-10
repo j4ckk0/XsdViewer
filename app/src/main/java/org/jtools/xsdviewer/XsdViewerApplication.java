@@ -20,79 +20,48 @@ package org.jtools.xsdviewer;
  * #L%
  */
 
-import java.awt.GraphicsEnvironment;
-import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.JOptionPane;
-
-import org.jtools.xsdviewer.server.XsdViewerServer;
+import org.jtools.framework.desktop.FileDialogs;
+import org.jtools.framework.launcher.WebApp;
+import org.jtools.xsdviewer.json.JsonKey;
+import org.jtools.xsdviewer.server.XsdViewerApi;
 
 /**
- * Entry point: reads the command line, starts the {@link XsdViewerServer} and opens the browser.
+ * Entry point: JToolsFramework's {@link WebApp} — the command line, {@code xsdviewer.ini}, the Settings menu, the log,
+ * the browser, the stop once the last page is closed — serving XsdViewer's routes ({@link XsdViewerApi}).
  *
  * <pre>
  *   java -jar xsdviewer.jar [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]
  * </pre>
+ *
+ * {@code --help} lists every option.
  */
 public final class XsdViewerApplication {
 
     public static final String APP_NAME = "XsdViewer";
-
-    private static final int EXIT_BAD_FILE = 1;
-    private static final int EXIT_BAD_USAGE = 2;
-    private static final int EXIT_CANNOT_START = 3;
+    /** The program's id: its jar, {@code xsdviewer.ini}, its folder {@code ~/.xsdviewer}, its preferences. */
+    public static final String ID = "xsdviewer";
+    /** The system property naming another node for the user's settings: the tests', which never touch the user's own. */
+    public static final String PREFERENCES_PROPERTY = ID + ".preferences";
+    /** The port when neither the command line, the Settings menu nor {@code xsdviewer.ini} names one. */
+    static final int DEFAULT_PORT = 8091;
+    private static final String PAGE_ROOT = "web";
+    private static final String FILE_OPERAND = "[file.xsd]", FILE_OPERAND_HELP = "the schema, or the workspace (*.xsdviewer.json), to open";
 
     private XsdViewerApplication() {}
 
-    public static void main(String[] args) throws Exception {
-        ConfigFile config;
-        CommandLineOptions options;
-        try {
-            config = ConfigFile.load();   // xsdviewer.ini: the host, port and log defaults, so the double-clicked launcher can be configured
-            int chosen = UserSettings.port();   // the Settings menu's choice, over the file's port; --port on the command line still wins over both
-            int startPort = chosen != UserSettings.PORT_UNSET ? chosen : config.port();
-            options = CommandLineOptions.parse(args, config.host(), startPort, config.verbose());
-            Log.setVerbose(options.verbose());
-        } catch (IllegalArgumentException e) {
-            System.err.println(e.getMessage());
-            System.err.println(Messages.get(MessageKey.USAGE));
-            System.exit(EXIT_BAD_USAGE);
-            return;
-        }
-        if (options.help()) {
-            System.out.println(Messages.get(MessageKey.USAGE));
-            return;
-        }
-        if (options.initialFile() != null && !Files.isRegularFile(options.initialFile())) {
-            System.err.println(Messages.get(MessageKey.NOT_A_FILE, options.initialFile()));
-            System.exit(EXIT_BAD_FILE);
-            return;
-        }
-        Log.openFile(config.logFolder());   // from here on the log leaves a trace, launcher without console included
-
-        XsdViewerServer server;
-        try {
-            server = XsdViewerServer.start(options.host(), options.port(), options.initialFile(), options.stopWhenNoPage() && UserSettings.autoStop());
-        } catch (IOException e) {
-            String message = Messages.get(MessageKey.CANNOT_START, options.host(), String.valueOf(options.port()), e.getMessage());
-            Log.warn(message, e);
-            reportWithoutConsole(message);
-            System.exit(EXIT_CANNOT_START);
-            return;
-        }
-        Log.info(Messages.get(MessageKey.SERVER_LISTENING, server.url()));
-        if (Log.file() != null) Log.info(Messages.get(MessageKey.LOG_FILE, Log.file()));
-        if (options.openBrowser()) BrowserLauncher.open(server.url());
+    public static void main(String[] args) {
+        program().launch(args);
     }
 
-    /** Started without a console (javaw, a double-clicked launcher): the message would be lost, so show it in a dialog. */
-    private static void reportWithoutConsole(String message) {
-        if (System.console() != null || GraphicsEnvironment.isHeadless()) return;
-        try {
-            JOptionPane.showMessageDialog(null, message, APP_NAME, JOptionPane.ERROR_MESSAGE);
-        } catch (Exception ignored) {
-            // no usable display after all: the message went to stderr
-        }
+    /** The program: what {@link #main} launches, and what the tests start ({@code program().start("--port", "0")}). */
+    public static WebApp program() {
+        AtomicReference<Path> initialFile = new AtomicReference<>();
+        return WebApp.named(APP_NAME).id(ID).defaultPort(DEFAULT_PORT).pageRoot(PAGE_ROOT)
+                .fileOperand(FILE_OPERAND, FILE_OPERAND_HELP, initialFile::set)
+                .aboutFields(about -> about.put(JsonKey.DIALOGS, FileDialogs.available()))
+                .routes(server -> XsdViewerApi.routes(server, initialFile::get));
     }
 }

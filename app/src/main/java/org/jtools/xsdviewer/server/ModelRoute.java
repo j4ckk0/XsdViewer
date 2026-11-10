@@ -33,8 +33,9 @@ import org.jtools.xsdviewer.model.ContentTree;
 import org.jtools.xsdviewer.schema.SchemaGraph.Node;
 import org.jtools.xsdviewer.server.RequestBody.Side;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
 
 /**
  * {@code POST /api/model}, body {@code {"files": [{"name", "text"}...], "home": n, "id": "...",
@@ -43,21 +44,17 @@ import com.sun.net.httpserver.HttpHandler;
  * uses read from the other files. Answers the tree as JSON, or {@code 400} when the home file is not a
  * schema or declares no such id.
  */
-final class ModelHandler implements HttpHandler {
+final class ModelRoute implements WebServer.Route {
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
+    public Object answer(Exchange ex) throws IOException {
         Map<String, Object> request = JsonRequest.of(ex);
-        if (request == null) return;
         Side side = RequestBody.side(request);
         Node root = side.home() != null ? side.home().node(side.id()) : null;
-        if (root == null) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.DECLARATION_EXPECTED, side.id()));
-            return;
-        }
+        if (root == null) throw new WebServer.Refusal(HttpStatus.BAD_REQUEST, Messages.get(MessageKey.DECLARATION_EXPECTED, side.id()));
         Box tree = ContentTree.build(root, side.home(), side.library(), RequestBody.expanded(request), RequestBody.flag(request, JsonKey.OPEN_ALL));
         JsonWriter w = new JsonWriter();
         BoxJsonWriter.write(w, tree);
-        HttpResponses.json(ex, HttpStatus.OK, w.toString());
+        return Json.raw(w.toString());
     }
 }

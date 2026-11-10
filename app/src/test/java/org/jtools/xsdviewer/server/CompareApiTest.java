@@ -36,7 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.prefs.Preferences;
 
-import org.jtools.xsdviewer.UserSettings;
+import org.jtools.framework.server.WebServer;
+import org.jtools.xsdviewer.XsdViewerApplication;
 import org.jtools.xsdviewer.json.JsonReader;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.junit.jupiter.api.AfterAll;
@@ -49,7 +50,7 @@ import org.junit.jupiter.api.Test;
  */
 class CompareApiTest {
 
-    private static XsdViewerServer server;
+    private static WebServer server;
     private static final HttpClient client = HttpClient.newHttpClient();
     private static final String TEST_PREFERENCES = "org/jtools/xsdviewer/test-compare";
     private static final Path V1 = Path.of("samples/compare/v1"), V2 = Path.of("samples/compare/v2");
@@ -58,15 +59,16 @@ class CompareApiTest {
 
     @BeforeAll
     static void start() throws Exception {
-        System.setProperty(UserSettings.NODE_PROPERTY, TEST_PREFERENCES);
-        server = XsdViewerServer.start("127.0.0.1", 0, null, false);
+        System.setProperty(XsdViewerApplication.PREFERENCES_PROPERTY, TEST_PREFERENCES);
+        // as the program starts, no .ini read, no log, no browser, no exit; --keep-alive: no stop when no page is left
+        server = XsdViewerApplication.program().start("--port", "0", "--keep-alive");
     }
 
     @AfterAll
     static void stop() throws Exception {
-        server.stop();
+        server.close();
         Preferences.userRoot().node(TEST_PREFERENCES).removeNode();
-        System.clearProperty(UserSettings.NODE_PROPERTY);
+        System.clearProperty(XsdViewerApplication.PREFERENCES_PROPERTY);
     }
 
     private static HttpResponse<String> post(String path, String body) throws Exception {

@@ -34,7 +34,9 @@ import java.io.InputStream;
 
 import java.util.prefs.Preferences;
 
-import org.jtools.xsdviewer.UserSettings;
+import org.jtools.framework.launcher.UserSettings;
+import org.jtools.framework.server.WebServer;
+import org.jtools.xsdviewer.XsdViewerApplication;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -42,7 +44,7 @@ import org.junit.jupiter.api.Test;
 /** The HTTP interface end to end, on an ephemeral port, with the sample schema as initial file. */
 class XsdViewerServerTest {
 
-    private static XsdViewerServer server;
+    private static WebServer server;
     private static final HttpClient client = HttpClient.newHttpClient();
 
     /** The settings the test changes go to a preferences node of their own, removed afterwards. */
@@ -50,15 +52,16 @@ class XsdViewerServerTest {
 
     @BeforeAll
     static void start() throws Exception {
-        System.setProperty(UserSettings.NODE_PROPERTY, TEST_PREFERENCES);
-        server = XsdViewerServer.start("127.0.0.1", 0, Path.of("samples/purchaseOrder.xsd"), false);
+        System.setProperty(XsdViewerApplication.PREFERENCES_PROPERTY, TEST_PREFERENCES);
+        // as the program starts, no .ini read, no log, no browser, no exit; --keep-alive: no stop when no page is left
+        server = XsdViewerApplication.program().start("--port", "0", "--keep-alive", "samples/purchaseOrder.xsd");
     }
 
     @AfterAll
     static void stop() throws Exception {
-        server.stop();
+        server.close();
         Preferences.userRoot().node(TEST_PREFERENCES).removeNode();
-        System.clearProperty(UserSettings.NODE_PROPERTY);
+        System.clearProperty(XsdViewerApplication.PREFERENCES_PROPERTY);
     }
 
     private static HttpResponse<String> get(String path) throws Exception {
@@ -77,7 +80,7 @@ class XsdViewerServerTest {
         assertTrue(page.headers().firstValue("Content-Type").orElse("").startsWith("text/html"));
         assertTrue(page.body().contains("js/app.js"));
         assertEquals("text/javascript; charset=utf-8", get("/js/app.js").headers().firstValue("Content-Type").orElse(""));
-        assertEquals("application/json", get("/i18n/en.json").headers().firstValue("Content-Type").orElse(""));
+        assertEquals("application/json; charset=utf-8", get("/i18n/en.json").headers().firstValue("Content-Type").orElse(""));
         assertEquals(404, get("/nope.js").statusCode());
     }
 
@@ -103,9 +106,9 @@ class XsdViewerServerTest {
         HttpResponse<String> initial = get("/api/initial");
         assertEquals(200, initial.statusCode());
         assertTrue(initial.body().startsWith("{\"name\":\"purchaseOrder.xsd\""));
-        HttpResponse<String> caps = get("/api/capabilities");
-        assertEquals(200, caps.statusCode());
-        assertTrue(caps.body().contains("\"dialogs\":") && caps.body().contains("\"version\":"), caps.body());
+        HttpResponse<String> about = get("/api/about");   // JToolsFramework's, with XsdViewer's "dialogs"
+        assertEquals(200, about.statusCode());
+        assertTrue(about.body().contains("\"dialogs\":") && about.body().contains("\"version\":"), about.body());
     }
 
     @Test
@@ -114,34 +117,43 @@ class XsdViewerServerTest {
         HttpResponse<InputStream> alive = client.send(HttpRequest.newBuilder(URI.create(server.url() + "api/alive?id=t1")).GET().build(),
                 HttpResponse.BodyHandlers.ofInputStream());
         assertEquals(200, alive.statusCode());
-        assertEquals(AliveHandler.CONTENT_TYPE, alive.headers().firstValue("Content-Type").orElse(""));
+        assertEquals("text/event-stream", alive.headers().firstValue("Content-Type").orElse(""));
         try (InputStream in = alive.body()) {
             byte[] first = in.readNBytes(8);      // the first ping arrives at once
             assertEquals(": ping\n\n", new String(first, java.nio.charset.StandardCharsets.UTF_8));
         }
         HttpResponse<String> bye = post("/api/bye?id=t1", "");
-        assertEquals(200, bye.statusCode());
-        assertEquals("{\"ok\":true}", bye.body());
+        assertEquals(204, bye.statusCode(), "nothing to answer a beacon");
+        assertEquals("", bye.body());
         assertEquals(405, get("/api/bye?id=t1").statusCode());
+    }
+
+    /** The settings' answer: whether the program stops once its last page is closed, the port kept for the next start, and JToolsFramework's default and current ports. */
+    private static String settings(boolean autoStop, int port) {
+        return "{\"autoStop\":" + autoStop + ",\"port\":" + port + ",\"defaultPort\":8091,\"currentPort\":" + server.port() + "}";
+    }
+
+    private static UserSettings userSettings() {
+        return UserSettings.of(XsdViewerApplication.ID);
     }
 
     @Test
     void settingsAreAnsweredAppliedAndKept() throws Exception {
-        assertEquals("{\"autoStop\":false,\"port\":0}", get("/api/settings").body());        // started with stopWhenNoPage = false, no port chosen
+        assertEquals(settings(false, 0), get("/api/settings").body());        // started with stopWhenNoPage = false, no port chosen
         HttpResponse<String> on = post("/api/settings", "{\"autoStop\": true}");
         assertEquals(200, on.statusCode());
-        assertEquals("{\"autoStop\":true,\"port\":0}", on.body());
-        assertTrue(UserSettings.autoStop(), "kept in the preferences");
-        assertEquals("{\"autoStop\":true,\"port\":0}", get("/api/settings").body());
+        assertEquals(settings(true, 0), on.body());
+        assertTrue(userSettings().autoStop(), "kept in the preferences");
+        assertEquals(settings(true, 0), get("/api/settings").body());
         assertEquals(400, post("/api/settings", "{\"autoStop\": \"yes\"}").statusCode());
         assertEquals(400, post("/api/settings", "nonsense").statusCode());
         // the port is kept for the next start and answered back; a nonsense port is refused
-        assertEquals("{\"autoStop\":true,\"port\":9090}", post("/api/settings", "{\"port\": 9090}").body());
-        assertEquals(9090, UserSettings.port());
+        assertEquals(settings(true, 9090), post("/api/settings", "{\"port\": 9090}").body());
+        assertEquals(9090, userSettings().port().orElse(0));
         assertEquals(400, post("/api/settings", "{\"port\": 99999}").statusCode());
-        assertEquals("{\"autoStop\":true,\"port\":0}", post("/api/settings", "{\"port\": 0}").body());   // 0 clears it
+        assertEquals(settings(true, 0), post("/api/settings", "{\"port\": 0}").body());   // 0 clears it
         post("/api/settings", "{\"autoStop\": false}");
-        assertFalse(UserSettings.autoStop());
+        assertFalse(userSettings().autoStop());
     }
 
     @Test

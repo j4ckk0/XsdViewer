@@ -59,9 +59,9 @@ export async function openLocation(basePath, location, strict = false) {
   return await resp.json();
 }
 
-/** GET /api/capabilities: {dialogs} — what the server can do for the page. */
+/** GET /api/about: {name, version, javaVersion, language, logFile, dialogs} — what the program is and can do for the page. */
 export async function fetchCapabilities() {
-  const resp = await request(API.CAPABILITIES);
+  const resp = await request(API.ABOUT);
   return resp.ok ? await resp.json() : {};
 }
 

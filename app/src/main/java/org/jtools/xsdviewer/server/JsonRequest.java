@@ -27,24 +27,22 @@ import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.json.JsonReader;
 
-import com.sun.net.httpserver.HttpExchange;
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
 
 /**
- * The opening every handler of a JSON request shares: the method checked, the body read and parsed,
- * a malformed body answered as {@code 400} rather than a dropped connection. Null when the request
- * has already been answered, which the handler takes as its cue to stop.
+ * The opening every route of a JSON request shares: the body parsed by core's reader, a malformed one refused with
+ * {@code 400} and where it went wrong.
  */
 final class JsonRequest {
 
     private JsonRequest() {}
 
-    static Map<String, Object> of(HttpExchange ex) throws IOException {
-        if (!HttpResponses.requirePost(ex)) return null;
+    static Map<String, Object> of(Exchange ex) throws IOException {
         try {
-            return JsonReader.asObject(JsonReader.parse(HttpResponses.readBody(ex)));
+            return JsonReader.asObject(JsonReader.parse(ex.text()));
         } catch (IllegalArgumentException e) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.INVALID_JSON, e.getMessage()));
-            return null;
+            throw new WebServer.Refusal(HttpStatus.BAD_REQUEST, Messages.get(MessageKey.INVALID_JSON, e.getMessage()));
         }
     }
 }

@@ -26,48 +26,41 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
+
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
 
 /**
  * {@code GET /api/open?base=&location=}: the schema an xs:import / xs:include points to, resolved
  * against the referencing file's directory — then, unless {@code strict}, the other served
  * directories and the working directory. Remote locations are refused: the tool never goes on the network.
  */
-final class OpenSchemaLocationHandler implements HttpHandler {
+final class OpenSchemaLocationRoute implements WebServer.Route {
 
     private static final String REMOTE_LOCATION_MARK = "://";
 
     private final ServedSchemaFiles files;
 
-    OpenSchemaLocationHandler(ServedSchemaFiles files) {
+    OpenSchemaLocationRoute(ServedSchemaFiles files) {
         this.files = files;
     }
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
-        QueryString q = QueryString.of(ex);
-        String base = q.get(ApiPath.PARAM_BASE), location = q.get(ApiPath.PARAM_LOCATION);
-        if (location.isEmpty()) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.LOCATION_EXPECTED));
-            return;
-        }
+    public Object answer(Exchange ex) throws IOException {
+        String base = ex.query(ApiPath.PARAM_BASE, ""), location = ex.query(ApiPath.PARAM_LOCATION, "");
+        if (location.isEmpty()) throw new WebServer.Refusal(HttpStatus.BAD_REQUEST, Messages.get(MessageKey.LOCATION_EXPECTED));
         if (location.contains(REMOTE_LOCATION_MARK)) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.REMOTE_LOCATION_NOT_SUPPORTED, location));
-            return;
+            throw new WebServer.Refusal(HttpStatus.BAD_REQUEST, Messages.get(MessageKey.REMOTE_LOCATION_NOT_SUPPORTED, location));
         }
         String rel = location.replace('\\', '/');
-        boolean strict = ApiPath.TRUE.equals(q.get(ApiPath.PARAM_STRICT));
+        boolean strict = ApiPath.TRUE.equals(ex.query(ApiPath.PARAM_STRICT, ""));
         for (Path dir : searchDirectories(base, strict)) {
             Path target = dir.resolve(rel).normalize();
-            if (Files.isRegularFile(target)) {
-                files.send(ex, target);
-                return;
-            }
+            if (Files.isRegularFile(target)) return files.answer(target);
         }
-        HttpResponses.error(ex, HttpStatus.NOT_FOUND, Messages.get(MessageKey.FILE_NOT_FOUND, location));
+        throw new WebServer.Refusal(HttpStatus.NOT_FOUND, Messages.get(MessageKey.FILE_NOT_FOUND, location));
     }
 
     private List<Path> searchDirectories(String base, boolean strict) {

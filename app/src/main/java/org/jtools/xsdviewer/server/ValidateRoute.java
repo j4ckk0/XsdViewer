@@ -25,17 +25,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.schema.SchemaException;
 import org.jtools.xsdviewer.schema.SchematronValidator;
-import org.jtools.xsdviewer.schema.XmlValidator;
 import org.jtools.xsdviewer.schema.Severity;
+import org.jtools.xsdviewer.schema.XmlValidator;
 import org.xml.sax.SAXParseException;
+
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
 
 /**
  * {@code POST /api/validate?schema=<xsd path>&schematron=<sch path>&phase=<id>}, body = an XML
@@ -45,7 +47,7 @@ import org.xml.sax.SAXParseException;
  * [{source, severity, line, column, message, location?, assertion?, rule?, pattern?, test?}],
  * truncated, phases?, phase?, checked?}}, or 400 when a schema cannot be compiled.
  */
-final class ValidateHandler implements HttpHandler {
+final class ValidateRoute implements WebServer.Route {
 
     /** The {@code source} of a problem: which validation found it. */
     static final String SOURCE_XSD = "xsd", SOURCE_SCHEMATRON = "schematron";
@@ -53,34 +55,27 @@ final class ValidateHandler implements HttpHandler {
 
     private final ServedSchemaFiles files;
 
-    ValidateHandler(ServedSchemaFiles files) {
+    ValidateRoute(ServedSchemaFiles files) {
         this.files = files;
     }
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
-        if (!HttpResponses.requirePost(ex)) return;
-        QueryString q = QueryString.of(ex);
-        for (String p : new String[] { q.get(ApiPath.PARAM_SCHEMA), q.get(ApiPath.PARAM_SCHEMATRON) }) {
-            if (!p.isEmpty() && served(p) == null) {
-                HttpResponses.error(ex, HttpStatus.NOT_FOUND, Messages.get(MessageKey.FILE_NOT_FOUND, p));
-                return;
-            }
+    public Object answer(Exchange ex) throws IOException {
+        String schema = ex.query(ApiPath.PARAM_SCHEMA, ""), schematron = ex.query(ApiPath.PARAM_SCHEMATRON, "");
+        for (String p : new String[] { schema, schematron }) {
+            if (!p.isEmpty() && served(p) == null) throw new WebServer.Refusal(HttpStatus.NOT_FOUND, Messages.get(MessageKey.FILE_NOT_FOUND, p));
         }
-        Path xsd = served(q.get(ApiPath.PARAM_SCHEMA));
-        Path sch = served(q.get(ApiPath.PARAM_SCHEMATRON));
-        if (xsd == null && sch == null) {
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.SCHEMA_EXPECTED));
-            return;
-        }
-        String xml = HttpResponses.readBody(ex);
+        Path xsd = served(schema);
+        Path sch = served(schematron);
+        if (xsd == null && sch == null) throw new WebServer.Refusal(HttpStatus.BAD_REQUEST, Messages.get(MessageKey.SCHEMA_EXPECTED));
+        String xml = ex.text();
         XmlValidator.Result xsdResult = null;
         SchematronValidator.Result schResult = null;
         try {
             if (xsd != null) xsdResult = XmlValidator.validate(xsd, xml);
             if (sch != null) {
                 try {
-                    schResult = SchematronValidator.validate(sch, xml, q.get(ApiPath.PARAM_PHASE));
+                    schResult = SchematronValidator.validate(sch, xml, ex.query(ApiPath.PARAM_PHASE, ""));
                 } catch (SAXParseException e) {
                     // not well-formed: one problem at the place, as the XSD validator reports it
                     schResult = new SchematronValidator.Result(false, List.of(new SchematronValidator.Problem(
@@ -88,8 +83,7 @@ final class ValidateHandler implements HttpHandler {
                 }
             }
         } catch (SchemaException e) {   // the XSD cannot be compiled, the Schematron is not one or not XML, the phase is unknown, an XPath engine failure
-            HttpResponses.error(ex, HttpStatus.BAD_REQUEST, Messages.get(MessageKey.SCHEMA_NOT_COMPILED, e.getMessage()));
-            return;
+            throw new WebServer.Refusal(HttpStatus.BAD_REQUEST, Messages.get(MessageKey.SCHEMA_NOT_COMPILED, e.getMessage()));
         }
         boolean valid = (xsdResult == null || xsdResult.valid()) && (schResult == null || schResult.valid());
         boolean truncated = (xsdResult != null && xsdResult.truncated()) || (schResult != null && schResult.truncated());
@@ -119,7 +113,7 @@ final class ValidateHandler implements HttpHandler {
             for (String phase : schResult.phases()) w.value(phase);
             w.endArray().property(JsonKey.PHASE, schResult.phase()).property(JsonKey.CHECKED, schResult.checked());
         }
-        HttpResponses.json(ex, HttpStatus.OK, w.endObject().toString());
+        return Json.raw(w.endObject().toString());
     }
 
     private static void optional(JsonWriter w, String key, String value) {

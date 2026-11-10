@@ -28,23 +28,23 @@ import org.jtools.xsdviewer.compare.WorkspacePairing;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
 
 /**
  * {@code POST /api/compare/workspaces}, body {@code {"left": [{"name", "text"}...], "right": [...],
  * "businessOnly": bool}}: the files of two workspaces paired by name, each pair with its status
  * ({@link WorkspacePairing}). Answers {@code {"pairs": [{"name", "status"}...]}}, the names sorted.
  */
-final class CompareWorkspacesHandler implements HttpHandler {
+final class CompareWorkspacesRoute implements WebServer.Route {
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
+    public Object answer(Exchange ex) throws IOException {
         Map<String, Object> request = JsonRequest.of(ex);
-        if (request == null) return;
         JsonWriter w = new JsonWriter();
         CompareJsonWriter.pairs(w, WorkspacePairing.of(RequestBody.byName(request.get(JsonKey.LEFT)), RequestBody.byName(request.get(JsonKey.RIGHT)),
                 RequestBody.flag(request, JsonKey.BUSINESS_ONLY)));
-        HttpResponses.json(ex, HttpStatus.OK, w.toString());
+        return Json.raw(w.toString());
     }
 }

@@ -21,41 +21,39 @@ package org.jtools.xsdviewer.server;
  */
 
 import java.io.IOException;
-import java.nio.file.Path;
-
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.function.Supplier;
 
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.workspace.Workspace;
 
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
+
 /** {@code GET /api/initial}: the file given on the command line — a schema, or a workspace with its schemas — so that the page opens it at start-up. */
-final class InitialFileHandler implements HttpHandler {
+final class InitialFileRoute implements WebServer.Route {
 
     private final ServedSchemaFiles files;
-    private final Path initialFile;
+    /** The command line's file, known once the command line is read: after the routes are made. */
+    private final Supplier<Path> initialFile;
 
-    InitialFileHandler(ServedSchemaFiles files, Path initialFile) {
+    InitialFileRoute(ServedSchemaFiles files, Supplier<Path> initialFile) {
         this.files = files;
         this.initialFile = initialFile;
     }
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
-        if (initialFile == null) {
-            HttpResponses.error(ex, HttpStatus.NOT_FOUND, Messages.get(MessageKey.NO_INITIAL_FILE));
-            return;
+    public Object answer(Exchange ex) throws IOException {
+        Path file = initialFile.get();
+        if (file == null) throw new WebServer.Refusal(HttpStatus.NOT_FOUND, Messages.get(MessageKey.NO_INITIAL_FILE));
+        if (file.getFileName().toString().endsWith(Workspace.FILE_SUFFIX)) {
+            String text = Files.readString(file, StandardCharsets.UTF_8);
+            if (Workspace.looksLikeWorkspace(text)) return Json.raw(WorkspaceResponse.json(Workspace.fromJson(text, file), file, files));
         }
-        if (initialFile.getFileName().toString().endsWith(Workspace.FILE_SUFFIX)) {
-            String text = Files.readString(initialFile, StandardCharsets.UTF_8);
-            if (Workspace.looksLikeWorkspace(text)) {
-                HttpResponses.json(ex, HttpStatus.OK, WorkspaceResponse.json(Workspace.fromJson(text, initialFile), initialFile, files));
-                return;
-            }
-        }
-        files.send(ex, initialFile);
+        return files.answer(file);
     }
 }

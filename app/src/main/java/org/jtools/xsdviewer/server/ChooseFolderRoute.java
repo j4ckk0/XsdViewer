@@ -23,34 +23,30 @@ package org.jtools.xsdviewer.server;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.jtools.framework.desktop.FileDialogs;
 import org.jtools.xsdviewer.MessageKey;
 import org.jtools.xsdviewer.Messages;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
+
 /** {@code POST /api/choose-folder}: the native folder chooser, answering the schemas of the folder and its sub-folders. 409 without a display. */
-final class ChooseFolderHandler implements HttpHandler {
+final class ChooseFolderRoute implements WebServer.Route {
 
     private final ServedSchemaFiles files;
 
-    ChooseFolderHandler(ServedSchemaFiles files) {
+    ChooseFolderRoute(ServedSchemaFiles files) {
         this.files = files;
     }
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
-        if (!HttpResponses.requirePost(ex)) return;
-        if (!FileDialogs.available()) {
-            HttpResponses.error(ex, HttpStatus.CONFLICT, Messages.get(MessageKey.NO_DISPLAY));
-            return;
-        }
+    public Object answer(Exchange ex) throws IOException {
+        if (!FileDialogs.available()) throw new WebServer.Refusal(HttpStatus.CONFLICT, Messages.get(MessageKey.NO_DISPLAY));
         Path folder = FileDialogs.chooseFolder(Messages.get(MessageKey.DIALOG_OPEN_FOLDER));
-        if (folder == null) {
-            HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.CANCELLED, true));
-            return;
-        }
+        if (folder == null) return Json.raw(JsonWriter.object(JsonKey.CANCELLED, true));
         SchemaFolder.Listing listing = SchemaFolder.list(folder);
         JsonWriter w = new JsonWriter(4096).beginObject()
                 .property(JsonKey.FOLDER, folder.toString())
@@ -58,6 +54,6 @@ final class ChooseFolderHandler implements HttpHandler {
         w.name(JsonKey.FILES).beginArray();
         for (Path p : listing.files()) files.writeFile(w, p);
         w.endArray().property(JsonKey.TRUNCATED, listing.truncated());
-        HttpResponses.json(ex, HttpStatus.OK, w.endObject().toString());
+        return Json.raw(w.endObject().toString());
     }
 }

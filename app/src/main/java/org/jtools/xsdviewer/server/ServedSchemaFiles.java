@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.sun.net.httpserver.HttpExchange;
+import org.jtools.framework.support.Json;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.json.JsonWriter;
 
@@ -54,11 +54,11 @@ final class ServedSchemaFiles {
         return dirs;
     }
 
-    /** Answers {@code {name, path, text}} for a schema file and remembers it. */
-    void send(HttpExchange ex, Path file) throws IOException {
+    /** {@code {name, path, text}} of a schema file, a route's answer; the file is remembered. */
+    Json.Raw answer(Path file) throws IOException {
         JsonWriter w = new JsonWriter(4096);
         writeFile(w, file);
-        HttpResponses.json(ex, HttpStatus.OK, w.toString());
+        return Json.raw(w.toString());
     }
 
     /** Writes {@code {name, path, text}} of a schema file into {@code w} and remembers the file. */

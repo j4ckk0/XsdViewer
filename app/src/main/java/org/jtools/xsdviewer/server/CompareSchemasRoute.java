@@ -30,8 +30,9 @@ import org.jtools.xsdviewer.json.JsonWriter;
 import org.jtools.xsdviewer.schema.SchemaException;
 import org.jtools.xsdviewer.schema.SchemaGraph;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.jtools.framework.server.Exchange;
+import org.jtools.framework.server.WebServer;
+import org.jtools.framework.support.Json;
 
 /**
  * {@code POST /api/compare/schemas}, body {@code {"left": text, "right": text}}: what the two schemas
@@ -40,22 +41,20 @@ import com.sun.net.httpserver.HttpHandler;
  * {@code {"schemas": false}} when either text is not a schema — the comparison then has only the
  * lines to say.
  */
-final class CompareSchemasHandler implements HttpHandler {
+final class CompareSchemasRoute implements WebServer.Route {
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
+    public Object answer(Exchange ex) throws IOException {
         Map<String, Object> request = JsonRequest.of(ex);
-        if (request == null) return;
         SchemaGraph left, right;
         try {
             left = ParsedSchemas.of(RequestBody.text(request, JsonKey.LEFT));
             right = ParsedSchemas.of(RequestBody.text(request, JsonKey.RIGHT));
         } catch (SchemaException e) {
-            HttpResponses.json(ex, HttpStatus.OK, JsonWriter.object(JsonKey.SCHEMAS, false));
-            return;
+            return Json.raw(JsonWriter.object(JsonKey.SCHEMAS, false));
         }
         JsonWriter w = new JsonWriter();
         CompareJsonWriter.schemas(w, SchemaDiff.of(left, right));
-        HttpResponses.json(ex, HttpStatus.OK, w.toString());
+        return Json.raw(w.toString());
     }
 }

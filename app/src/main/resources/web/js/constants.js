@@ -102,7 +102,7 @@ export const API = {
   ALIVE: '/api/alive',
   BYE: '/api/bye',
   SETTINGS: '/api/settings',
-  CAPABILITIES: '/api/capabilities',
+  ABOUT: '/api/about',
   CHOOSE: '/api/choose',
   CHOOSE_FOLDER: '/api/choose-folder',
   WORKSPACE_SAVE: '/api/workspace/save',

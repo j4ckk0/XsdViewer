@@ -20,7 +20,10 @@ package org.jtools.xsdviewer.server;
  * #L%
  */
 
-/** The HTTP paths served by {@link XsdViewerServer} (mirrored by the client). */
+import org.jtools.framework.launcher.WebApp;
+import org.jtools.framework.server.WebServer;
+
+/** The HTTP paths the page calls (mirrored by its {@code js/constants.js}): XsdViewer's routes ({@link XsdViewerApi}) and JToolsFramework's. */
 public final class ApiPath {
 
     private ApiPath() {}
@@ -33,16 +36,16 @@ public final class ApiPath {
     public static final String OPEN = "/api/open";
     /** {@code POST ?name=} + text: where a file opened in the browser is on disk. */
     public static final String LOCATE = "/api/locate";
-    /** {@code POST}: stop the server. */
-    public static final String QUIT = "/api/quit";
-    /** {@code GET ?id=}: a page is open — an event stream held for the page's whole life. */
-    public static final String ALIVE = "/api/alive";
-    /** {@code POST ?id=}: a page is closing. */
-    public static final String BYE = "/api/bye";
-    /** {@code GET}: the settings ({@code {"autoStop": bool}}); {@code POST} the same shape to change them. */
-    public static final String SETTINGS = "/api/settings";
-    /** {@code GET}: what the server can do for the page ({@code {"dialogs": bool}}). */
-    public static final String CAPABILITIES = "/api/capabilities";
+    /** {@code POST}: stop the program (JToolsFramework's). */
+    public static final String QUIT = WebApp.QUIT;
+    /** {@code GET ?id=}: a page is open — an event stream held for the page's whole life (JToolsFramework's). */
+    public static final String ALIVE = WebServer.ALIVE;
+    /** {@code POST ?id=}: a page is closing (JToolsFramework's). */
+    public static final String BYE = WebServer.BYE;
+    /** {@code GET}: the settings, {@code {"autoStop", "port", "defaultPort", "currentPort"}}; {@code POST} {@code autoStop} or {@code port} to change them (JToolsFramework's). */
+    public static final String SETTINGS = WebApp.SETTINGS;
+    /** {@code GET}: what the program is and can do, {@code {"name", "version", "javaVersion", "language", "logFile", "dialogs"}} (JToolsFramework's, {@code dialogs} XsdViewer's). */
+    public static final String ABOUT = WebApp.ABOUT;
     /** {@code POST}: native "open files" dialog, answers the chosen schemas. */
     public static final String CHOOSE = "/api/choose";
     /** {@code POST}: native folder chooser, answers the schemas of the folder and its sub-folders. */
@@ -71,7 +74,7 @@ public final class ApiPath {
     public static final String PARAM_LOCATION = "location";
     public static final String PARAM_NAME = "name";
     /** {@code /api/alive}, {@code /api/bye}: the page's own random id. */
-    public static final String PARAM_ID = "id";
+    public static final String PARAM_ID = WebServer.PARAM_PAGE;
     /** {@code /api/open}: resolve only against the directory of {@code base}. */
     public static final String PARAM_STRICT = "strict";
     public static final String PARAM_SCHEMA = "schema";

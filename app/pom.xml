@@ -21,6 +21,16 @@
       <groupId>org.jtools</groupId>
       <artifactId>xsdviewer-core</artifactId>
     </dependency>
+    <!-- JToolsFramework: the program around the server (the command line, the settings, the log, the stop once the
+         last page has gone), the server itself, and the native file dialogs -->
+    <dependency>
+      <groupId>org.jtools.framework</groupId>
+      <artifactId>jtools-launcher</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jtools.framework</groupId>
+      <artifactId>jtools-desktop</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
