@@ -4,6 +4,16 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <!-- The build's conventions — Java 21, JUnit 5, the plugins' versions, the tests run from the root, the Apache
+       header on every Java source, the Maven Central profile (publish) — are JToolsFramework's jtools-parent; this
+       pom says what is XsdViewer's own: its coordinates, its modules, what Maven Central shows of it. -->
+  <parent>
+    <groupId>org.jtools.framework</groupId>
+    <artifactId>jtools-parent</artifactId>
+    <version>1.1.0</version>
+    <relativePath/>
+  </parent>
+
   <groupId>org.jtools</groupId>
   <artifactId>xsdviewer-parent</artifactId>
   <version>5.7.0</version>
@@ -59,11 +69,6 @@
     <module>examples</module>
   </modules>
 
-  <properties>
-    <maven.compiler.release>21</maven.compiler.release>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -71,174 +76,22 @@
         <artifactId>xsdviewer-core</artifactId>
         <version>${project.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter</artifactId>
-        <version>5.8.2</version>
-        <scope>test</scope>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-    </dependency>
-  </dependencies>
-
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.13.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.2.5</version>
-          <configuration>
-            <!-- the tests read the samples and the page from the root of the repository, whichever module they belong to -->
-            <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <version>3.6.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>3.3.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.6.3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-gpg-plugin</artifactId>
-          <version>3.2.4</version>
-        </plugin>
-        <plugin>
-          <groupId>org.sonatype.central</groupId>
-          <artifactId>central-publishing-maven-plugin</artifactId>
-          <!-- 0.7.0 could not read the field the portal added to its status answer, and threw on a deployment it had just uploaded -->
-          <version>0.11.0</version>
-          <extensions>true</extensions>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>license-maven-plugin</artifactId>
-          <version>2.4.0</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
     <plugins>
-      <!-- Apache 2.0 header at the top of every Java source of every module (same convention as the jtools projects) -->
+      <!-- the Apache 2.0 header at the top of every Java source of every module (jtools-parent configures it) -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>license-maven-plugin</artifactId>
-        <configuration>
-          <verbose>false</verbose>
-          <licenseName>apache_v2</licenseName>
-          <organizationName>jtools.org</organizationName>
-          <inceptionYear>2026</inceptionYear>
-          <canUpdateCopyright>true</canUpdateCopyright>
-        </configuration>
-        <executions>
-          <execution>
-            <id>add-license-headers</id>
-            <phase>process-sources</phase>
-            <goals>
-              <goal>update-file-header</goal>
-            </goals>
-            <configuration>
-              <includes>
-                <include>**/*.java</include>
-              </includes>
-              <roots>
-                <root>src/main/java</root>
-                <root>src/test</root>
-              </roots>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
 
-  <profiles>
-    <!--
-      mvn -Ppublish deploy
-      Publishes the library (core; app skips) on Maven Central through the Central Portal: the jar
-      with its sources and javadoc, each signed. Needs the portal's token as the server "central" in
-      ~/.m2/settings.xml and a GPG key whose public part is on a key server (PUBLISHING.md, section 7).
-      The upload is validated but not released until it is published from the portal.
-    -->
-    <profile>
-      <id>publish</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>sources</id>
-                <goals>
-                  <goal>jar-no-fork</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <configuration>
-              <doclint>all,-missing</doclint>
-            </configuration>
-            <executions>
-              <execution>
-                <id>javadoc</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>sign</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.sonatype.central</groupId>
-            <artifactId>central-publishing-maven-plugin</artifactId>
-            <configuration>
-              <publishingServerId>central</publishingServerId>
-              <autoPublish>false</autoPublish>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+  <!--
+    mvn -Ppublish deploy: jtools-parent's profile publish — the library (core) on Maven Central through the Central
+    Portal, the jar with its sources and javadoc, each signed; app and examples keep themselves off it
+    (skipPublishing). PUBLISHING.md, section 7, says what it takes.
+  -->
 </project>
