@@ -48,7 +48,7 @@ Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 
    git push -u github master
    git tag -a v2.5.0 -m "2.5.0" && git push github v2.5.0
    ```
-   `master` now tracks `github/master`. The existing `origin` (the bare repository on the NAS) still holds the history from before the rewrite: the next `git push origin` needs `--force`.
+   `master` now tracks `github/master`.
 6. ~~Release, description, topics~~ — done (30 August 2026) through the REST API: release *XsdViewer 2.5.0* from `v2.5.0` with the three artefacts of `scripts/linux/package.sh` and the SHA-256 checksums in the notes; description, website and topics as in section 2.
 7. ~~Check the repository page as a stranger would~~ — done: licence detected (Apache-2.0), README rendered, release assets downloadable anonymously (jar checksum verified), Actions green.
 
