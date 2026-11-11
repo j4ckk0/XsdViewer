@@ -12,11 +12,11 @@ if not exist jtools.conf (
   echo no jtools.conf in %CD%: not a project of JToolsFramework's >&2
   exit /b 1
 )
-set "APP_ID="
-set "APP_NAME="
-set "APP_MODULE=app"
-set "BUILD_GOALS=clean package"
-for /f "usebackq eol=# tokens=1* delims==" %%a in ("jtools.conf") do set "%%a=%%b"
+rem what the environment sets already wins, as it does for scripts\windows\jtools.bat: the scripts that call this
+rem one have a setlocal of their own, so that nothing set here outlives them in the prompt
+for /f "usebackq eol=# tokens=1* delims==" %%a in ("jtools.conf") do if not defined %%a set "%%a=%%b"
+if not defined APP_MODULE set "APP_MODULE=app"
+if not defined BUILD_GOALS set "BUILD_GOALS=clean package"
 
 set "EXT=%CD%\external"
 call :missing

@@ -6,6 +6,7 @@ rem
 rem   scripts\windows\build.bat
 rem   scripts\windows\build.bat -DskipTests        extra arguments are passed to mvn
 rem
+setlocal
 cd /d "%~dp0..\.."
 rem (the project root)
 call "%~dp0externals.bat" || exit /b 1

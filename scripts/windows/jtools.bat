@@ -9,7 +9,7 @@ rem then unpacked into external\jtools-devkit-VERSION (outside a project: %USERP
 rem another). Needs curl, tar and certutil: Windows 10 and later have them.
 setlocal EnableExtensions DisableDelayedExpansion
 rem what `new` makes outside a project when JTOOLS_VERSION says nothing: this file's own version (scripts/check-versions.sh)
-set "JTOOLS_DEFAULT_VERSION=1.4.2"
+set "JTOOLS_DEFAULT_VERSION=1.5.0"
 set "CENTRAL=https://repo1.maven.org/maven2/org/jtools/framework/jtools-devkit"
 rem this script's folder, read before any shift: shift moves %0 too
 set "HERE=%~dp0"

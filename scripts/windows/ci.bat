@@ -6,6 +6,7 @@ rem their package-lock.json has them (npm ci); then scripts\windows\ci.local.bat
 rem
 rem   scripts\windows\ci.bat
 rem
+setlocal
 cd /d "%~dp0..\.."
 rem (the project root)
 call "%~dp0externals.bat" || exit /b 1

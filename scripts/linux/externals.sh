@@ -14,14 +14,15 @@
 #
 ext="$PWD/external"
 
-# jtools.conf: KEY=VALUE lines, # comments; a value is the rest of its line, spaces included
-APP_ID= APP_NAME= APP_MODULE=app BUILD_GOALS="clean package"
+# jtools.conf: KEY=VALUE lines, # comments; a value is the rest of its line, spaces included. What the environment
+# sets already wins, as it does for scripts/linux/jtools: BUILD_GOALS=verify scripts/linux/build.sh
 [ -f jtools.conf ] || { echo "no jtools.conf in $PWD: not a project of JToolsFramework's" >&2; exit 1; }
 while IFS='=' read -r key value; do
   key=${key%$'\r'} value=${value%$'\r'}   # a file written on Windows (CRLF) reads the same
   case "$key" in ''|\#*) continue ;; esac
-  printf -v "$key" '%s' "$value"
+  [ -n "${!key:-}" ] || printf -v "$key" '%s' "$value"
 done < jtools.conf
+APP_ID=${APP_ID:-} APP_NAME=${APP_NAME:-} APP_MODULE=${APP_MODULE:-app} BUILD_GOALS=${BUILD_GOALS:-clean package}
 
 # The computer the project is developed on — Linux, or Windows through Git Bash — and its tools' launchers.
 case "$(uname -s)" in
