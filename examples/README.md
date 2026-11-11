@@ -35,7 +35,7 @@ files' texts — so each program is the whole story. `xsdviewer.mjs` is the five
 Start the server, then run them from the root:
 
 ```sh
-scripts/run.sh --no-browser --keep-alive        # or java -jar app/target/xsdviewer.jar --no-browser --keep-alive
+scripts/linux/run.sh --no-browser --keep-alive        # or java -jar app/target/xsdviewer.jar --no-browser --keep-alive
 node examples/api/parse.mjs samples/purchaseOrder.xsd
 node examples/api/model.mjs complexType:PurchaseOrderType samples/purchaseOrder.xsd samples/ext.xsd
 node examples/api/compare-declarations.mjs complexType:ProductType samples/compare/v1 samples/compare/v2

@@ -1,7 +1,7 @@
 /**
  * Calling the XsdViewer server from JavaScript (Node 18 or later, or a browser page): the five
  * calls of its API, each stateless — the request carries the files' texts, the server keeps nothing.
- * The server is a local tool: scripts/run.sh --no-browser --keep-alive starts it on 127.0.0.1:8080;
+ * The server is a local tool: scripts/linux/run.sh --no-browser --keep-alive starts it on 127.0.0.1:8080;
  * XSDVIEWER_URL points these programs at another address.
  */
 import { readFile, readdir } from 'node:fs/promises';

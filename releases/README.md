@@ -1,6 +1,6 @@
 # releases/
 
-Output of `scripts/package.sh` (`mvn package -Pdist`): the self-contained distributions
+Output of `scripts/linux/package.sh` (`mvn package -Pdist`): the self-contained distributions
 and a copy of the jar, ready to attach to a GitHub Release.
 
 ```

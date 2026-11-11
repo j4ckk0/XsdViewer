@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+#
+# JToolsFramework's devkit, at the version jtools.conf names (JTOOLS_VERSION): the one file of scripts/linux/ the devkit never
+# refreshes — it fetches the devkit and runs what is asked of it. The Maven Wrapper's pattern (doc/DEVKIT.md).
+#
+#   scripts/linux/jtools sync            the managed files (scripts/linux/*, scripts/windows/*, .githooks/pre-push, .gitattributes) refreshed at
+#                                  JTOOLS_VERSION; what else differs said, not changed (the pom's framework version,
+#                                  the externals' versions)
+#   scripts/linux/jtools sync --check    the same, changing nothing; exit 1 when anything differs (a project's CI)
+#   scripts/linux/jtools version         the devkit this project names, and where it was found
+#   scripts/linux/jtools new <Name> …    a new project, from anywhere — outside a project too (doc/GETTING-STARTED.md):
+#                                  [--dir DIR] [--id ID] [--port N] [--bare DIR] [--no-git] [--no-build]
+#
+# Where the devkit comes from, in this order:
+#   JTOOLS_HOME     a clone of JToolsFramework (jtools.conf or the environment): its working tree, as it is
+#   ~/.m2           the local Maven repository (M2_REPO says another): what scripts/install-locally.sh, or Maven, put there
+#   MIRROR          <MIRROR>/jtools-devkit-<version>.jar, its authentication with it (MIRROR_TOKEN, MIRROR_USER…),
+#                   from the environment, externals.local.conf or externals.conf — setup's own keys
+#   Maven Central   https://repo1.maven.org/maven2/…
+# A download is checked against the .sha1 beside it before anything is unpacked. The devkit is unpacked into
+# external/jtools-devkit-<version>/ (outside a project: ~/.cache/jtools/; JTOOLS_CACHE says another folder), and
+# unpacked again when ~/.m2 holds a newer jar. Needs curl and unzip.
+#
+set -euo pipefail
+
+# what `new` makes outside a project when JTOOLS_VERSION says nothing: this file's own version (scripts/check-versions.sh)
+JTOOLS_DEFAULT_VERSION=1.4.2
+CENTRAL=https://repo1.maven.org/maven2/org/jtools/framework/jtools-devkit
+
+die() { echo "jtools: $*" >&2; exit 1; }
+usage() { sed -n '6,13p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+help() { sed -n '6,13p' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
+
+# a command known before anything is fetched: --help, or a typing error, costs no download
+case "${1:-}" in
+  sync|version|new) ;;
+  -h|--help) help ;;
+  '') usage ;;
+  *) echo "jtools: no command $1" >&2; usage ;;
+esac
+
+here=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
+project=
+# a project's own copy, in its scripts/linux/ (not the one installed in ~/.local/bin)
+case "$here" in */scripts/linux) [ -f "$here/../../jtools.conf" ] && project=$(cd "$here/../.." && pwd) ;; esac
+
+# KEY=VALUE files, # comments: what is set already (the environment, then the files read before) wins
+read_conf() {
+  [ -f "$1" ] || return 0
+  while IFS='=' read -r key value; do
+    key=${key%$'\r'} value=${value%$'\r'}   # a file written on Windows (CRLF) reads the same
+    case "$key" in ''|\#*) continue ;; esac
+    [ -n "${!key:-}" ] || printf -v "$key" '%s' "$value"
+  done < "$1"
+}
+if [ -n "$project" ]; then
+  read_conf "$project/jtools.conf"
+  read_conf "$project/externals.local.conf"
+  read_conf "$project/externals.conf"
+fi
+version=${JTOOLS_VERSION:-$JTOOLS_DEFAULT_VERSION}
+
+# ---- the devkit: $devkit (the files a project carries), $starter (new-project.sh and the template), $from ----
+if [ -n "${JTOOLS_HOME:-}" ]; then
+  home=$JTOOLS_HOME
+  case "$home" in /*) ;; *) home="${project:-$PWD}/$home" ;; esac
+  [ -d "$home/devkit" ] && [ -d "$home/starter" ] || die "JTOOLS_HOME=$JTOOLS_HOME: not a clone of JToolsFramework (no devkit/ nor starter/ there)"
+  home=$(cd "$home" && pwd)
+  devkit=$home/devkit starter=$home/starter from="$home (JTOOLS_HOME, its working tree)"
+else
+  cache=${JTOOLS_CACHE:-}
+  [ -n "$cache" ] || { [ -n "$project" ] && cache=$project/external; } || true
+  cache=${cache:-${XDG_CACHE_HOME:-$HOME/.cache}/jtools}
+  devkit=$cache/jtools-devkit-$version starter=$cache/jtools-devkit-$version/starter
+  name=jtools-devkit-$version.jar
+  m2=${M2_REPO:-$HOME/.m2/repository}/org/jtools/framework/jtools-devkit/$version/$name
+  if [ ! -f "$devkit/version" ] || { [ -f "$m2" ] && [ "$m2" -nt "$devkit/version" ]; }; then
+    command -v unzip >/dev/null || die "unzip not found: install it, then run scripts/linux/jtools again"
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    if [ -f "$m2" ]; then
+      cp "$m2" "$tmp/$name"
+      from=$m2
+    else
+      command -v curl >/dev/null || die "curl not found: install it, then run scripts/linux/jtools again"
+      auth=()
+      src=$CENTRAL/$version/$name
+      if [ -n "${MIRROR:-}" ]; then
+        src=${MIRROR%/}/$name
+        if [ -n "${MIRROR_TOKEN:-}" ]; then auth=(-H "${MIRROR_TOKEN_HEADER:-Authorization: Bearer} $MIRROR_TOKEN"); fi
+        if [ -n "${MIRROR_USER:-}" ]; then auth+=(-u "$MIRROR_USER:${MIRROR_PASSWORD:-}"); fi
+      fi
+      echo "== downloading $name from ${src%/*}/" >&2
+      curl -fsSL ${auth[@]+"${auth[@]}"} -o "$tmp/$name" "$src" || die "download failed: $src (JTOOLS_VERSION=$version: is there such a version?)"
+      curl -fsSL ${auth[@]+"${auth[@]}"} -o "$tmp/$name.sha1" "$src.sha1" || die "no checksum beside it: $src.sha1"
+      expected=$(tr -d ' \r\n' < "$tmp/$name.sha1" | cut -c1-40)
+      actual=$(sha1sum "$tmp/$name" | cut -c1-40)
+      [ "$expected" = "$actual" ] || die "$src: its SHA-1 is $actual, the .sha1 beside it says $expected — not unpacked"
+      from=$src
+    fi
+    unzip -q "$tmp/$name" 'jtools-devkit/*' -d "$tmp/unpacked" || die "$name: no jtools-devkit/ inside"
+    # a jar keeps no file modes: the scripts get theirs back
+    find "$tmp/unpacked/jtools-devkit" -type f \( -name '*.sh' -o -name jtools -o -path '*/.githooks/*' \) -exec chmod +x {} +
+    mkdir -p "$cache"
+    rm -rf "$devkit"
+    mv "$tmp/unpacked/jtools-devkit" "$devkit"
+  else
+    from="$devkit (unpacked before)"
+  fi
+fi
+
+devkit_version() {
+  if [ -f "$devkit/version" ]; then cat "$devkit/version"
+  else sed -n 's:.*<jtools.version>\(.*\)</jtools.version>.*:\1:p' "$devkit/../conventions/parent/pom.xml"; fi
+}
+
+case "${1:-}" in
+  sync)
+    shift
+    [ -n "$project" ] || die "sync refreshes a project: run the scripts/linux/jtools inside it"
+    exec bash "$devkit/jtools-sync.sh" "$project" "$@" ;;
+  version)
+    echo "jtools-devkit $(devkit_version), from $from"
+    [ -n "$project" ] && [ -z "${JTOOLS_HOME:-}" ] && echo "(jtools.conf names $version)"
+    exit 0 ;;
+  new)
+    shift
+    exec bash "$starter/new-project.sh" "$@" ;;
+esac

@@ -9,7 +9,7 @@
 #   scripts/release.sh --body <version> [<whats-new.md>]     # prints the notes alone (the release workflow uses them)
 #
 # Before: bump the version in pom.xml (the project's <version> only), write the version's section in
-# CHANGELOG.md, commit, tag vX.Y.Z, push the tag, run scripts/package.sh (see PUBLISHING.md,
+# CHANGELOG.md, commit, tag vX.Y.Z, push the tag, run scripts/linux/package.sh (see PUBLISHING.md,
 # section 5). The notes hold the "What's new" part only (Markdown, a bullet list); the script adds
 # the intro, the downloads table and the SHA-256 checksums. The release workflow on GitHub does the
 # same on a pushed tag: this script is the way by hand.
@@ -45,10 +45,10 @@ else
 fi
 for tool in curl python3 sha256sum git; do command -v "$tool" >/dev/null || { echo "$tool not found in PATH" >&2; exit 1; }; done
 
-# What is attached: the four archives of scripts/package.sh, for this version.
+# What is attached: the four archives of scripts/linux/package.sh, for this version.
 jar=xsdviewer-$version.jar; zip=xsdviewer-$version-windows.zip; tgz=xsdviewer-$version-linux.tar.gz; mac=xsdviewer-$version-macos.tar.gz
 for f in "$jar" "$zip" "$tgz" "$mac"; do
-  [ -f "releases/$f" ] || { echo "releases/$f missing - run scripts/package.sh after the version bump" >&2; exit 1; }
+  [ -f "releases/$f" ] || { echo "releases/$f missing - run scripts/linux/package.sh after the version bump" >&2; exit 1; }
 done
 grep -q "<version>$version</version>" pom.xml || { echo "pom.xml is not at version $version" >&2; exit 1; }
 git rev-parse -q --verify "refs/tags/$tag" >/dev/null || { echo "tag $tag does not exist - git tag -a $tag -m \"$version\"" >&2; exit 1; }
@@ -57,7 +57,7 @@ if ! $dry && ! git ls-remote --exit-code --tags github "refs/tags/$tag" >/dev/nu
 fi
 
 # The bundled runtime's version, from the image's release file (JAVA_VERSION="25.0.5").
-jre_version=$(grep -h '^JAVA_VERSION=' app/target/jre/*/release 2>/dev/null | head -1 | cut -d'"' -f2)
+jre_version=$(grep -h '^JAVA_VERSION=' app/target/runtime/*/release 2>/dev/null | head -1 | cut -d'"' -f2)
 [ -n "$jre_version" ] || jre_version=25
 
 body=$(

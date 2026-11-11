@@ -449,19 +449,17 @@ Build and test:
 | maven-source-plugin, maven-javadoc-plugin, maven-gpg-plugin, central-publishing-maven-plugin | 3.3.1, 3.6.3, 3.2.4, 0.11.0 | jtools-parent's `publish` profile only: the library's sources and javadoc jars, their signatures, and the upload to Maven Central's portal (PUBLISHING.md §7); `app` skips the publication |
 | maven-jar-plugin | 3.4.1 | the implementation entries About shows |
 | maven-surefire-plugin | 3.2.5 | runs the tests, from the root of the repository (`maven.multiModuleProjectDirectory`, pinned by the `.mvn/` directory) |
-| JUnit Jupiter | 5.12.2 (test scope) | `XsdParserTest`, `WsdlParserTest`, `SchematronParserTest`, `SchematronValidatorTest` and `SchemaGraphJsonWriterTest` (against the samples), `PageContractTest` (the vocabulary shared with `js/constants.js`: node kinds, link labels, API paths), `JavaScriptTestsTest` (runs `src/test/js/*.test.mjs` — the page's pure modules: diff, business lines, cardinalities, schema diff… — under Node when it is installed, skipped otherwise; the CI installs it), and `scripts/screenshots.py` (a visual smoke test with headless Firefox: the samples opened in the built jar, a few facts checked on the page, one screenshot per scene; the scenes carrying a `doc` name are the README's pictures, written as JPEG in `screenshots/` by `--docs`; `--only=a,b` runs named scenes, and a duplicate scene name is refused, a name being a file name and a result key), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` and `CompareApiTest` (the HTTP interface on an ephemeral port, the program started as `main` would start it); the command line, the `.ini`, the log, the presence and the file dialogs are tested in JToolsFramework |
-| `scripts/run.sh` / `scripts\run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
+| JUnit Jupiter | 5.12.2 (test scope) | `XsdParserTest`, `WsdlParserTest`, `SchematronParserTest`, `SchematronValidatorTest` and `SchemaGraphJsonWriterTest` (against the samples), `PageContractTest` (the vocabulary shared with `js/constants.js`: node kinds, link labels, API paths), `JavaScriptTestsTest` (runs `src/test/js/*.test.mjs` — the page's pure modules: diff, business lines, cardinalities, schema diff… — under Node when it is found — `external/node`, which the devkit's scripts put first in the PATH —, skipped otherwise; the CI installs it), and `scripts/screenshots.py` (a visual smoke test with headless Firefox: the samples opened in the built jar, a few facts checked on the page, one screenshot per scene; the scenes carrying a `doc` name are the README's pictures, written as JPEG in `screenshots/` by `--docs`; `--only=a,b` runs named scenes, and a duplicate scene name is refused, a name being a file name and a result key), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` and `CompareApiTest` (the HTTP interface on an ephemeral port, the program started as `main` would start it); the command line, the `.ini`, the log, the presence and the file dialogs are tested in JToolsFramework |
+| `scripts/linux/*.sh` / `scripts\windows\*.bat` | JToolsFramework 1.4.2's devkit | `setup` (the externals of `externals.conf` into `external/`), `build` (`mvn clean package`), `ci` (the same quietly; the pre-push hook), `run` (rebuilds the jar when a file is newer, then runs it), `stop`, `package` (`mvn clean package -Pdist`), `jtools sync` (the scripts brought in line with the devkit `jtools.conf` names) |
 | `xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions (JToolsFramework's `jtools-dist`); on Windows the `.bat` runs in a console, `XsdViewer.exe` without one |
 | launch4j-maven-plugin | 2.7.0 | jtools-parent's `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
-| `scripts/build.sh` / `scripts\build.bat` | – | `mvn package` |
-| `scripts/package.sh` / `scripts\package.bat` | – | `mvn package -Pdist`, after checking the JDK archives are present |
 | maven-clean-plugin | 3.4.0 | `dist` profile only (in `app`): empties `releases/` at the root of the previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` / `-macos.tar.gz` / `.jar` before the build |
-| maven-antrun-plugin | 3.1.0 | `dist` profile only: runs JToolsFramework's `jtools-dist/build.xml`, which finds the modules the jar needs (jdeps), unpacks the JDK archives of `jre/` (root), links a runtime per platform with the jlink of this machine's own archive, and packs the archives into `releases/` with the jar, the launchers, `xsdviewer.ini`, `samples/`, `README.md`, `LICENSE` and `NOTICE`; then `app` copies the jar alone beside them |
+| maven-antrun-plugin | 3.1.0 | `dist` profile only: runs JToolsFramework's `jtools-dist/build.xml`, which finds the modules the jar needs (jdeps), links a runtime per platform from the jmods of `external/` with the jlink of this machine's JDK archive there, and packs the archives into `releases/` with the jar, the launchers, `xsdviewer.ini`, `samples/`, `README.md`, `LICENSE` and `NOTICE`; then `app` copies the jar alone beside them |
 
 `mvn package -Pdist` produces `releases/xsdviewer-<version>-windows.zip`,
-`-linux.tar.gz`, `-macos.tar.gz` and `.jar` (git-ignored directory). The JDK archives under `jre/` (a build input, kept out
-of `src/`) are git-ignored (downloaded by hand, see README); a platform whose archive is missing is not built. The archives
-set the executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's `untar` drops.
+`-linux.tar.gz`, `-macos.tar.gz` and `.jar` (git-ignored directory). The jmods under `external/` (a build input, kept out
+of `src/`, git-ignored) are `scripts/linux/setup.sh`'s, from `externals.conf`; a platform whose jmods are missing is not
+built. The archives set the executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's `untar` drops.
 
 ## Repository layout
 
@@ -489,9 +487,10 @@ XsdViewer/
 │   └── src/test/js/                      the tests of the page's pure modules
 ├── examples/                     org.jtools:xsdviewer-examples — programs on the library (src/main/java, run by ExamplesTest) and JavaScript programs on the API (api/*.mjs), on samples/
 ├── .github/workflows/            build.yml (mvn package on JDK 25, the jar kept as artefact), release.yml (a pushed tag → the release)
-├── scripts/                      run, build, package, release, screenshots.py, changelog-section.py
+├── scripts/                      linux/ and windows/: JToolsFramework's devkit scripts and jtools; release.sh, screenshots.py, changelog-section.py
+├── jtools.conf, externals.conf   what the devkit's scripts know of XsdViewer; the externals' versions
 ├── README.md, architecture.md, CHANGELOG.md, PUBLISHING.md
-├── jre/                          JDK archives the dist profile links runtimes from (git-ignored, downloaded by hand or by the workflow)
+├── external/                     the externals setup deploys: JDK, Maven, Node.js, the jmods the runtimes are linked from (git-ignored)
 ├── releases/                     output of the dist profile: zip, tar.gz, jar (git-ignored, README only)
 ├── screenshots/                  the five pictures of the README, written by scripts/screenshots.py --docs
 └── samples/                      one sample per thing the tool does (samples/README.md)
@@ -504,8 +503,8 @@ XsdViewer/
   automatically when the file's location is known, workspaces to reopen a set). A merged
   single graph would need the parser to take several texts keyed by target namespace.
 - **Packaging**: JToolsFramework's `jtools-dist/build.xml` (Ant, called by jtools-parent's `dist`
-  profile) unpacks the Temurin JDK archives of `jre/`, links a trimmed runtime per platform with
-  `jlink` and packs the archives; `.github/workflows/release.yml` runs it on a pushed tag and publishes the release.
+  profile) links a trimmed runtime per platform with `jlink`, from the Temurin jmods of `external/`, and
+  packs the archives; `.github/workflows/release.yml` runs it on a pushed tag and publishes the release.
 - **More link kinds** are a new `case` in `XsdParser.collect()` plus a `LinkLabel`; the
   client needs nothing (labels are free text). **More node kinds** (as the WSDL or Schematron ones) need
   their `NodeKind`, a colour (light and dark), a legend chip and the `kind.` / `group.` texts on the page.

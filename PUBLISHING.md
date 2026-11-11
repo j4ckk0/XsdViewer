@@ -32,7 +32,7 @@ Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 
 
 ## 3. What not to publish
 
-- `jre/*` (JRE archives, ~50 MB each) and anything under `target/` — already git-ignored.
+- `external/` (the JDK, Maven, Node.js and jmods setup deploys) and anything under `target/` — already git-ignored.
 - Workspace files (`*.xsdviewer.json`) and screenshots from real, non-public schemas.
 - Local scripts pointing at your own machines (the NAS push script is outside the repository: keep it that way).
 
@@ -49,16 +49,16 @@ Checked against the tree at version 2.6.0 (August 2026). **Published on 29–30 
    git tag -a v2.5.0 -m "2.5.0" && git push github v2.5.0
    ```
    `master` now tracks `github/master`. The existing `origin` (the bare repository on the NAS) still holds the history from before the rewrite: the next `git push origin` needs `--force`.
-6. ~~Release, description, topics~~ — done (30 August 2026) through the REST API: release *XsdViewer 2.5.0* from `v2.5.0` with the three artefacts of `scripts/package.sh` and the SHA-256 checksums in the notes; description, website and topics as in section 2.
+6. ~~Release, description, topics~~ — done (30 August 2026) through the REST API: release *XsdViewer 2.5.0* from `v2.5.0` with the three artefacts of `scripts/linux/package.sh` and the SHA-256 checksums in the notes; description, website and topics as in section 2.
 7. ~~Check the repository page as a stranger would~~ — done: licence detected (Apache-2.0), README rendered, release assets downloadable anonymously (jar checksum verified), Actions green.
 
 ## 5. Next release
 
-Followed for v2.6.0, v2.7.1 (30 August 2026) , v2.8.0, v3.0.0, v3.1.0, v3.2.0, v3.3.0 and v3.3.1 (2 September 2026), and v4.0.0, v4.0.1, v4.1.0, v4.2.0, v4.3.0, v4.4.0, v4.5.0, v4.6.0, v4.7.0, v4.8.0 (4 September 2026) and v4.9.0, v4.10.0, v4.11.0, v4.12.0, v4.13.0, v5.0.0 and v5.0.1 (5 September 2026): version bump, tag, `scripts/package.sh`, release through the API — about ten minutes. The parent's `<version>` is what `release.yml` checks against the tag; a plugin in the `dist` profile may carry the same number (launch4j was 2.7.0).
+Followed for v2.6.0, v2.7.1 (30 August 2026) , v2.8.0, v3.0.0, v3.1.0, v3.2.0, v3.3.0 and v3.3.1 (2 September 2026), and v4.0.0, v4.0.1, v4.1.0, v4.2.0, v4.3.0, v4.4.0, v4.5.0, v4.6.0, v4.7.0, v4.8.0 (4 September 2026) and v4.9.0, v4.10.0, v4.11.0, v4.12.0, v4.13.0, v5.0.0 and v5.0.1 (5 September 2026): version bump, tag, `scripts/linux/package.sh`, release through the API — about ten minutes. The parent's `<version>` is what `release.yml` checks against the tag; a plugin in the `dist` profile may carry the same number (launch4j was 2.7.0).
 
 1. Turn the *Unreleased* section of `CHANGELOG.md` into `## X.Y.Z — date` (the release notes come from it), bump the version of the three poms at once — `mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false` (the parent's `<version>` and the two modules' `<parent>` blocks) —, commit `Version X.Y.Z`, `git tag -a vX.Y.Z -m "X.Y.Z"`, `git push github master vX.Y.Z`.
-2. The `release` workflow (`.github/workflows/release.yml`) does the rest on the pushed tag: it downloads the Temurin JDKs, runs `mvn package -Pdist` (jlink runtimes for Windows, Linux and macOS), and creates the Release from the changelog section with the archives and their checksums. Check the Actions run, then the release page.
-3. By hand instead (the workflow failed, or offline): `scripts/package.sh` with the JDK archives in `jre/`, then `scripts/release.sh X.Y.Z` (`--dry-run` to read the notes first, `--draft` to check the page before publishing).
+2. The `release` workflow (`.github/workflows/release.yml`) does the rest on the pushed tag: it runs `scripts/linux/setup.sh` (the externals `externals.conf` names, the jmods with them), then `scripts/linux/package.sh` (jlink runtimes for Windows, Linux and macOS), and creates the Release from the changelog section with the archives and their checksums. Check the Actions run, then the release page.
+3. By hand instead (the workflow failed, or offline): `scripts/linux/setup.sh` once, `scripts/linux/package.sh`, then `scripts/release.sh X.Y.Z` (`--dry-run` to read the notes first, `--draft` to check the page before publishing).
 4. Update the "current release" line at the top of this file.
 
 Token for the API (the SSH key only serves `git push`): a **fine-grained** personal access token with *Repository access* = **Only select repositories → XsdViewer** — the default *Public repositories (read-only)* greys out the permissions and every write answers `403 Resource not accessible` — and *Contents: Read and write* (releases); *Administration: Read and write* is also needed to change the description or topics. Short expiry, revoke it afterwards. Kept in `~/.config/github/xsdviewer-release-token` (mode 600, outside the repository) for `scripts/release.sh` to read, or given as `$GITHUB_TOKEN`.

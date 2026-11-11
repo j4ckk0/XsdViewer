@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Managed by JToolsFramework's devkit (jtools sync refreshes it): change it in its devkit/, not here.
+#
+# Runs the CI (a clean build with every test) before every push; the push is refused when it fails.
+# Enable once with: git config core.hooksPath .githooks
+# Skip once with:   git push --no-verify
+#
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+echo "pre-push: running scripts/linux/ci.sh (skip with --no-verify)"
+exec scripts/linux/ci.sh

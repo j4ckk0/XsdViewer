@@ -24,8 +24,6 @@
     <jtools.app.mainClass>org.jtools.xsdviewer.XsdViewerApplication</jtools.app.mainClass>
     <jtools.app.port>8091</jtools.app.port>
     <jtools.app.windowsVersion>5.7.0.0</jtools.app.windowsVersion>
-    <!-- the Temurin JDKs the runtimes are linked from, under their own names (README: Packaging; release.yml) -->
-    <jtools.jdk.archives>${maven.multiModuleProjectDirectory}/jre</jtools.jdk.archives>
     <!-- the distributions carry the samples beside the program -->
     <jtools.dist.include>samples/**</jtools.dist.include>
   </properties>
@@ -63,8 +61,8 @@
 
   <profiles>
     <!--
-      mvn package -Pdist (scripts/package.sh): jtools-parent's distributions — a runtime jlink trims to what the jar
-      needs, per platform whose Temurin JDK is in jre/, and the archives —, plus what XsdViewer's release publishes
+      mvn package -Pdist (scripts/linux/package.sh): jtools-parent's distributions — a runtime jlink trims to what the
+      jar needs, per platform whose jmods are in external/, and the archives —, plus what XsdViewer's release publishes
       beside them and keeps alone in releases/:
         releases/xsdviewer-<version>-windows.zip    XsdViewer.exe (no console), xsdviewer.bat
         releases/xsdviewer-<version>-linux.tar.gz   xsdviewer.sh

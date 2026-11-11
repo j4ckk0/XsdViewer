@@ -183,8 +183,8 @@ full path of the Java 25 `java` as above (under an older Java the jar fails at o
 `UnsupportedClassVersionError … class file version 69.0`, which means exactly that). To build,
 Maven uses the JDK of `JAVA_HOME` when it is set, the `java` of the PATH otherwise.
 
-**For packaging only** (`scripts/package.sh`), the JRE *archives* are not installed but copied
-as they are into `jre/` — see [Packaging](#packaging).
+**To build or package it**, nothing needs installing: `scripts/linux/setup.sh` puts a JDK, Maven, Node.js and the
+jmods into the project's `external/` — see [Building and running from source](#building-and-running-from-source).
 
 </details>
 
@@ -261,17 +261,24 @@ whoever reads it or changes it; [part 4](#4-the-architecture) says how it is bui
 
 ### Building and running from source
 
-Requires a JDK 25 and Maven (see [Installing Java 25](#installing-java-25)), and JToolsFramework 1.4.1,
-the parent pom and libraries the build resolves from Maven Central — until it is published there, from its
-[delivery](https://github.com/j4ckk0/JToolsFramework/releases/tag/v1.4.1) (`install.sh --no-project` puts it in
+The development environment is [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.4.2's devkit: its
+scripts, in `scripts/linux/` and `scripts\windows\`, take everything the build needs from `external/`, which
+`setup` fills from `externals.conf` — a JDK 25, Maven, Node.js (the page's tests), and the jmods the distributions'
+runtimes are linked from; nothing is taken from the machine. The framework's parent pom and libraries come from
+Maven Central — until they are published there, from its
+[delivery](https://github.com/j4ckk0/JToolsFramework/releases/tag/v1.4.2) (`install.sh --no-project` puts them in
 `~/.m2`), or from a clone of it (`scripts/install-locally.sh`).
 
 ```bash
-scripts/run.sh                # builds app/target/xsdviewer.jar if needed, then starts the tool
-scripts\run.bat               # same, on Windows
+scripts/linux/setup.sh        # once: the externals into external/ (scripts\windows\setup.bat on Windows)
+scripts/linux/run.sh          # builds app/target/xsdviewer.jar if needed, then starts the tool
+scripts/linux/build.sh        # the build alone, every test: mvn clean package
+scripts/linux/ci.sh           # the same quietly; the pre-push hook runs it (git config core.hooksPath .githooks)
+scripts/linux/jtools sync     # the scripts brought in line with the devkit jtools.conf names
 ```
 
-To only build the jar (`scripts/build.sh` / `scripts\build.bat`, i.e. `mvn package`), or by hand:
+Each has its `.bat` twin in `scripts\windows\`. By hand, with a JDK 25 and Maven of your own (see
+[Installing Java 25](#installing-java-25)):
 
 ```bash
 mvn package
@@ -287,8 +294,8 @@ ways. The file also holds the log settings: `log.level=FINE` for the detail `--v
 `log.folder=` for the folder of the log files, or `none` to keep the log on the console.
 
 ```
-scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS
-scripts\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Windows
+scripts/linux/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS
+scripts\windows\run.bat  [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Windows
 ```
 
 Passing a file on the command line opens it at start-up. `samples/purchaseOrder.xsd`
@@ -572,7 +579,7 @@ them comparable, later). The File menu:
   is proposed; the workspace takes the name of the file.
 - **Close workspace** — the active workspace and its tabs; **Close all tabs** closes every workspace.
 
-A workspace file can also be given on the command line: `scripts/run.sh samples/all.xsdviewer.json`.
+A workspace file can also be given on the command line: `scripts/linux/run.sh samples/all.xsdviewer.json`.
 Opening and saving need the server's dialogs, i.e. a display.
 
 ### Comparing
@@ -638,7 +645,7 @@ the XML declaration, the `xs:schema`, `xs:import` and `xs:include` tags, blank l
 indentation — both for the status and in the line comparison, which keeps the original line
 numbers. Each side of the line comparison scrolls sideways on its own when a line is long. **Differences only** hides the identical files and reduces a file's
 comparison to its changed lines with one line of context. Closing a compared workspace leaves this
-section with nothing to compare until two are selected again. To try it: `scripts/run.sh samples/compare/v1.xsdviewer.json`,
+section with nothing to compare until two are selected again. To try it: `scripts/linux/run.sh samples/compare/v1.xsdviewer.json`,
 then File ▸ Open workspace… `samples/compare/v2.xsdviewer.json` (what differs is listed in
 `samples/compare/README.md`).
 
@@ -664,7 +671,7 @@ can be found:
    the link is followed.
 
 Remote `schemaLocation`s (`http://…`) are never fetched. `samples/import/` is a
-schema split over four files to try this with: `scripts/run.sh samples/import/order.xsd`,
+schema split over four files to try this with: `scripts/linux/run.sh samples/import/order.xsd`,
 or start the tool from the project folder and open `order.xsd` from the browser.
 
 ### Logs
@@ -678,7 +685,7 @@ both in the page (toast) and in the log.
 ### Packaging
 
 ```bash
-scripts/package.sh            # or scripts\package.bat on Windows; runs: mvn package -Pdist
+scripts/linux/package.sh      # or scripts\windows\package.bat on Windows; runs: mvn clean package -Pdist
 ```
 
 builds self-contained distributions that need no Java installed, each with a **trimmed runtime**
@@ -695,22 +702,9 @@ By hand, `scripts/release.sh <version>` does the same from `releases/` (`--dry-r
 notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` or
 `~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
 
-The archives are not tracked in git: before packaging, download from
-<https://adoptium.net/temurin/releases/?version=25> Temurin 25's **jmods** archive for each platform (from 25 on,
-a JDK carries no `jmods`: they come apart) and put them in `jre/` at the root of the project, with, optionally, the
-**JDK** archive of the machine doing the build:
-
-```
-jre/
-├── OpenJDK25U-jmods_x64_windows_hotspot_<version>.zip
-├── OpenJDK25U-jmods_x64_linux_hotspot_<version>.tar.gz
-├── OpenJDK25U-jmods_aarch64_mac_hotspot_<version>.tar.gz
-└── OpenJDK25U-jdk_x64_linux_hotspot_<version>.tar.gz      (optional: this machine's, here Linux)
-```
-
-Only the platforms whose jmods are there are built. The `jlink` that links every runtime is that of this machine's
-JDK archive, whatever Java runs Maven — without it, that of the JDK running Maven, which must then be the jmods'
-version exactly (download them together: `jlink` refuses jmods of another version). JToolsFramework's `jtools-dist/build.xml` (Ant, driven by its parent pom's `dist` profile) finds
+The runtimes are linked from the jmods `scripts/linux/setup.sh` puts in `external/` — Temurin 25's, one archive per
+platform (`JMODS_LINUX`, `JMODS_WINDOWS`, `JMODS_MACOS` in `externals.conf`: from 25 on, a JDK carries no `jmods`,
+they come apart) — with the `jlink` of this machine's JDK archive, `external/jdk-linux.tar.gz`, of the same version. JToolsFramework's `jtools-dist/build.xml` (Ant, driven by its parent pom's `dist` profile) finds
 the modules the jar needs, does the unpacking, the linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
 
 ### Tests

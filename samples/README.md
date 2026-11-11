@@ -1,7 +1,7 @@
 # Samples
 
 One file, or one set of files, per thing the tool does. Open any of them with **File ▸ Open…**,
-by dropping it on the page, or on the command line: `scripts/run.sh samples/purchaseOrder.xsd`.
+by dropping it on the page, or on the command line: `scripts/linux/run.sh samples/purchaseOrder.xsd`.
 
 | Sample | What to look at |
 |---|---|
@@ -12,4 +12,4 @@ by dropping it on the page, or on the command line: `scripts/run.sh samples/purc
 | `longnames.xsd` | A schema whose declarations have deliberately long names: open `InternationalPurchaseOrderConfirmationType` in the Model view to see each name fill the top line of its box, up to the edge, with the type on the line below. |
 | `import/order.xsd` | A schema importing and including three others (`address.xsd`, `items.xsd`, `types.xsd`): open `order.xsd` alone and follow the links into the other files — they are found beside it and open in their own tabs, the graph resolving its external targets from them. |
 | `compare/` | Two versions of a small catalog schema set, one workspace each: what the comparison shows, file by file and declaration by declaration. See `compare/README.md`. |
-| `workspace.xsdviewer.json` | Every file of both catalog versions in one workspace, as a saved workspace file opens: `scripts/run.sh samples/workspace.xsdviewer.json`. |
+| `workspace.xsdviewer.json` | Every file of both catalog versions in one workspace, as a saved workspace file opens: `scripts/linux/run.sh samples/workspace.xsdviewer.json`. |

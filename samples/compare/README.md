@@ -2,7 +2,7 @@
 
 Two versions of a small catalog schema, one workspace file each:
 
-    scripts/run.sh samples/compare/v1.xsdviewer.json      # opens version 1 as a workspace
+    scripts/linux/run.sh samples/compare/v1.xsdviewer.json      # opens version 1 as a workspace
     File > Open workspace…  ->  samples/compare/v2.xsdviewer.json
     Ctrl+click the "v1" and "v2" chips of the workspace bar, then "⇄ Compare": the Files section
     lists the files of the two, paired by name. In the Objects section, put ProductType of each

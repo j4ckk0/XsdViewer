@@ -6,10 +6,13 @@ target/
 .classpath
 .project
 
-# JRE archives bundled by "mvn package -Pdist" (see README: Packaging)
-/jre/
+# The externals: JDK, Maven, Node.js, the jmods the distributions' runtimes are linked from (scripts/linux/setup.sh, README: Packaging)
+/external
+# your mirror and its credentials (setup reads it on top of externals.conf)
+/externals.local.conf
+tmp/
 
-# distributions built by "mvn package -Pdist" (scripts/package.sh); only the README is tracked
+# distributions built by "mvn package -Pdist" (scripts/linux/package.sh); only the README is tracked
 /releases/*
 !/releases/README.md
 

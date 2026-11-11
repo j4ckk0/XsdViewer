@@ -1,6 +1,6 @@
 # Build and test on every push and pull request: JDK 25 + Maven, then keep the jar
-# as a workflow artefact (the distributions with a bundled JRE are built locally by
-# scripts/package.sh, see README: Packaging).
+# as a workflow artefact (the distributions, with their runtimes, are release.yml's, or scripts/linux/package.sh's
+# locally: see README: Packaging).
 name: build
 
 on:
