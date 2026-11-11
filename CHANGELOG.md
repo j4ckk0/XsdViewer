@@ -2,9 +2,9 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
-## Unreleased
+## 6.0.0 — 2026-11-11
 
-The program around the schemas is now [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.4.1's — the
+The program around the schemas is now [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.5.0's — the
 command line, `xsdviewer.ini`, the Settings menu, the log, the server, the presence of the pages, the file dialogs,
 the distributions — shared with the other jtools programs. The schemas, the views and the comparisons are unchanged.
 What changes for whoever uses it:
@@ -32,6 +32,9 @@ What changes for whoever uses it:
   304s), and `.json` files say `charset=utf-8`.
 - The distributions' runtimes are linked by the jlink of the build machine's own JDK archive, whatever Java runs
   Maven, and carry `jdk.crypto.ec` besides.
+- **Building it from source** takes the scripts of JToolsFramework's devkit, in `scripts/linux/` and `scripts\windows\`
+  (`scripts/run.sh` is `scripts/linux/run.sh`): `scripts/linux/setup.sh` first puts the JDK 25, Maven, Node.js and the
+  jmods they build with into `external/`, nothing taken from the machine.
 
 ## 5.7.0 — 2026-09-06
 
