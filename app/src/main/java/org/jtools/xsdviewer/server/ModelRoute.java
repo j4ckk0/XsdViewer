@@ -44,7 +44,7 @@ import org.jtools.framework.support.Json;
  * uses read from the other files. Answers the tree as JSON, or {@code 400} when the home file is not a
  * schema or declares no such id.
  */
-final class ModelRoute implements WebServer.Route {
+final class ModelRoute implements WebServer.Endpoint {
 
     @Override
     public Object answer(Exchange ex) throws IOException {

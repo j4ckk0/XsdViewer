@@ -62,6 +62,6 @@ public final class XsdViewerApplication {
         return WebApp.named(APP_NAME).id(ID).defaultPort(DEFAULT_PORT).pageRoot(PAGE_ROOT)
                 .fileOperand(FILE_OPERAND, FILE_OPERAND_HELP, initialFile::set)
                 .aboutFields(about -> about.put(JsonKey.DIALOGS, FileDialogs.available()))
-                .routes(server -> XsdViewerApi.routes(server, initialFile::get));
+                .endpoints(server -> XsdViewerApi.routes(server, initialFile::get));
     }
 }

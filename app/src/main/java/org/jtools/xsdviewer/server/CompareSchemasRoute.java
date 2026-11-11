@@ -41,7 +41,7 @@ import org.jtools.framework.support.Json;
  * {@code {"schemas": false}} when either text is not a schema — the comparison then has only the
  * lines to say.
  */
-final class CompareSchemasRoute implements WebServer.Route {
+final class CompareSchemasRoute implements WebServer.Endpoint {
 
     @Override
     public Object answer(Exchange ex) throws IOException {

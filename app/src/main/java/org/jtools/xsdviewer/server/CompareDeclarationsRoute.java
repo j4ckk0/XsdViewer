@@ -49,7 +49,7 @@ import org.jtools.framework.support.Json;
  * marked ({@link ModelDiff}); a tree is null when its side declares nothing; and, for the graph view,
  * the links of each declaration's neighbourhood the other side does not have ({@link SchemaDiff}).
  */
-final class CompareDeclarationsRoute implements WebServer.Route {
+final class CompareDeclarationsRoute implements WebServer.Endpoint {
 
     @Override
     public Object answer(Exchange ex) throws IOException {

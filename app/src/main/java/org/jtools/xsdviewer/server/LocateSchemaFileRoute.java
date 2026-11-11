@@ -37,7 +37,7 @@ import org.jtools.framework.support.Json;
  * {@code POST /api/locate?name=}: finds on disk a file the user opened in the browser (which hides
  * its folder), by name and content under the served directories, so that its imports can be followed.
  */
-final class LocateSchemaFileRoute implements WebServer.Route {
+final class LocateSchemaFileRoute implements WebServer.Endpoint {
 
     private final ServedSchemaFiles files;
     private final SchemaFileFinder finder;

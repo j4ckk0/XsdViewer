@@ -36,7 +36,7 @@ import org.jtools.framework.server.WebServer;
 import org.jtools.framework.support.Json;
 
 /** {@code POST /api/choose}: the native "open files" dialog, so that the files chosen come with their location. 409 without a display. */
-final class ChooseFilesRoute implements WebServer.Route {
+final class ChooseFilesRoute implements WebServer.Endpoint {
 
     private static final String SCHEMA_EXTENSION = ".xsd";
     private static final String WSDL_EXTENSION = ".wsdl";

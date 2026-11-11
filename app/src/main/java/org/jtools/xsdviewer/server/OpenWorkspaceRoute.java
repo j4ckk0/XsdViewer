@@ -38,7 +38,7 @@ import org.jtools.framework.server.WebServer;
 import org.jtools.framework.support.Json;
 
 /** {@code POST /api/workspace/open}: the native "open" dialog for a workspace file, answered with its schemas. 409 without a display. */
-final class OpenWorkspaceRoute implements WebServer.Route {
+final class OpenWorkspaceRoute implements WebServer.Endpoint {
 
     private final ServedSchemaFiles files;
 

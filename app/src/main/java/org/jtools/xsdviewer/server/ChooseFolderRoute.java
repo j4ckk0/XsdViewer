@@ -34,7 +34,7 @@ import org.jtools.framework.server.WebServer;
 import org.jtools.framework.support.Json;
 
 /** {@code POST /api/choose-folder}: the native folder chooser, answering the schemas of the folder and its sub-folders. 409 without a display. */
-final class ChooseFolderRoute implements WebServer.Route {
+final class ChooseFolderRoute implements WebServer.Endpoint {
 
     private final ServedSchemaFiles files;
 

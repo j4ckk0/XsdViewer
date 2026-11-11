@@ -18,7 +18,7 @@
 
   <properties>
     <!-- this module is the program: its one jar, and with -Pdist its distributions (jtools-parent) -->
-    <jtools.program.skip>false</jtools.program.skip>
+    <jtools.app.skip>false</jtools.app.skip>
     <jtools.app.id>xsdviewer</jtools.app.id>
     <jtools.app.name>XsdViewer</jtools.app.name>
     <jtools.app.mainClass>org.jtools.xsdviewer.XsdViewerApplication</jtools.app.mainClass>

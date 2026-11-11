@@ -37,7 +37,7 @@ import org.jtools.framework.server.WebServer;
  * against the referencing file's directory — then, unless {@code strict}, the other served
  * directories and the working directory. Remote locations are refused: the tool never goes on the network.
  */
-final class OpenSchemaLocationRoute implements WebServer.Route {
+final class OpenSchemaLocationRoute implements WebServer.Endpoint {
 
     private static final String REMOTE_LOCATION_MARK = "://";
 

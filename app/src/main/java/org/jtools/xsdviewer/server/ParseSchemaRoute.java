@@ -34,7 +34,7 @@ import org.jtools.framework.server.WebServer;
 import org.jtools.framework.support.Json;
 
 /** {@code POST /api/parse}, body = the text of a schema file (XSD, WSDL or Schematron): answers the JSON graph, or 400 with the parse error. */
-final class ParseSchemaRoute implements WebServer.Route {
+final class ParseSchemaRoute implements WebServer.Endpoint {
 
     @Override
     public Object answer(Exchange ex) throws IOException {

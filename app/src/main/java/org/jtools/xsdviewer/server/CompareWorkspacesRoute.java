@@ -37,7 +37,7 @@ import org.jtools.framework.support.Json;
  * "businessOnly": bool}}: the files of two workspaces paired by name, each pair with its status
  * ({@link WorkspacePairing}). Answers {@code {"pairs": [{"name", "status"}...]}}, the names sorted.
  */
-final class CompareWorkspacesRoute implements WebServer.Route {
+final class CompareWorkspacesRoute implements WebServer.Endpoint {
 
     @Override
     public Object answer(Exchange ex) throws IOException {

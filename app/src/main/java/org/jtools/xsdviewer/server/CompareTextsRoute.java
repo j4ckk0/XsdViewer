@@ -39,7 +39,7 @@ import org.jtools.framework.support.Json;
  * each side with their number in the original text, the edit script (null when the texts are too
  * different to align), and whether the two differ only by moved blocks.
  */
-final class CompareTextsRoute implements WebServer.Route {
+final class CompareTextsRoute implements WebServer.Endpoint {
 
     @Override
     public Object answer(Exchange ex) throws IOException {

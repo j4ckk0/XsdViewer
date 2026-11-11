@@ -47,7 +47,7 @@ import org.jtools.framework.support.Json;
  * [{source, severity, line, column, message, location?, assertion?, rule?, pattern?, test?}],
  * truncated, phases?, phase?, checked?}}, or 400 when a schema cannot be compiled.
  */
-final class ValidateRoute implements WebServer.Route {
+final class ValidateRoute implements WebServer.Endpoint {
 
     /** The {@code source} of a problem: which validation found it. */
     static final String SOURCE_XSD = "xsd", SOURCE_SCHEMATRON = "schematron";

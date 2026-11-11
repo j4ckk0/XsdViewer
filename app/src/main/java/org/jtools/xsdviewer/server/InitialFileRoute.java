@@ -35,7 +35,7 @@ import org.jtools.framework.server.WebServer;
 import org.jtools.framework.support.Json;
 
 /** {@code GET /api/initial}: the file given on the command line — a schema, or a workspace with its schemas — so that the page opens it at start-up. */
-final class InitialFileRoute implements WebServer.Route {
+final class InitialFileRoute implements WebServer.Endpoint {
 
     private final ServedSchemaFiles files;
     /** The command line's file, known once the command line is read: after the routes are made. */

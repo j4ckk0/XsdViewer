@@ -41,7 +41,7 @@ import org.jtools.framework.server.WebServer;
 import org.jtools.framework.support.Json;
 
 /** {@code POST /api/workspace/save}: writes the workspace the page describes where the native "save as" dialog says (its own file proposed). 409 without a display. */
-final class SaveWorkspaceRoute implements WebServer.Route {
+final class SaveWorkspaceRoute implements WebServer.Endpoint {
 
     @Override
     public Object answer(Exchange ex) throws IOException {
