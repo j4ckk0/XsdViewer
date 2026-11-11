@@ -2,6 +2,35 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## Unreleased
+
+The program around the schemas is now [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.1's — the
+command line, `xsdviewer.ini`, the Settings menu, the log, the server, the presence of the pages, the file dialogs,
+the distributions — shared with the other jtools programs. The schemas, the views and the comparisons are unchanged.
+What changes for whoever uses it:
+
+- **The server refuses what does not come from its page.** A `POST` from another web site (its `Origin`) is refused,
+  as is any request naming a host other than this computer's or the `--host` given — the defence against DNS
+  rebinding. A page on another site could, until now, post to `/api/quit`.
+- **The log is kept in `~/.xsdviewer/logs/`**, no longer in the temporary directory the system empties; its lines
+  are in English (the requests' with their status and duration). `log.folder=` in `xsdviewer.ini` still moves it.
+  `--log-file FILE` writes it elsewhere for a run, `--log-level LEVEL` sets its detail.
+- **`xsdviewer.ini`: `log.level=FINE`** in place of `verbose=true`, which is no longer read. The file is read beside
+  the jar (a distribution's launcher folder), no longer from the working directory first.
+- **An unknown option is refused**, with the usage, instead of being taken for a file that then is not there. The
+  exit codes: 2 for a command line that cannot be run (an unknown option, a file that is not there — 1 until now),
+  3 for a server that cannot start. `--lang en|fr` sets the language of the console's messages; `--help` lists them.
+- **`xsdviewer.bat` runs in a console**, with the server's messages (`--console` is gone); `XsdViewer.exe` starts
+  without one, as before.
+- The native file dialogs' own texts — the "replace it?" question when saving a workspace over a file, the message
+  when a dialog fails — are in the machine's language, the desktop they open on, rather than the page's.
+- The HTTP API: `GET /api/capabilities` is `GET /api/about`, with the same fields and `name`; `/api/settings` also
+  answers `defaultPort` and `currentPort`; `/api/bye` answers 204; every refusal — a wrong method (405, with
+  `Allow`), an unknown `/api/` path (404) — is `{"error": …}` JSON; the page's files carry an ETag (a reload is mostly
+  304s), and `.json` files say `charset=utf-8`.
+- The distributions' runtimes are linked by the jlink of the build machine's own JDK archive, whatever Java runs
+  Maven, and carry `jdk.crypto.ec` besides.
+
 ## 5.7.0 — 2026-09-06
 
 - **The comparison's Text view exports too.** ⤓ PNG and ⤓ SVG were disabled there; they now save the three pictures the two other views save — each declaration's source alone, then the two side by side — the lines rebuilt in SVG with their numbers, the colours of the deleted, inserted and moved lines, and the folds.

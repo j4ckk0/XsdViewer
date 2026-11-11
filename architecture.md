@@ -120,20 +120,16 @@ Design choices that shape everything else:
 
 ### Server – `core/` and `app/src/main/java/org/jtools/xsdviewer/`
 
-The Java side is two Maven modules: **core** (`org.jtools:xsdviewer-core`), the parsers, the validators, the JSON writer and the messages — a library with no dependency but the JDK — and **app**, the server and the page, whose jar embeds core's classes so that `java -jar xsdviewer.jar` needs nothing else. The tests run with the root of the repository as working directory in both modules (the parent pom's surefire configuration), so they read `samples/` and `app/src/main/resources/web` from there.
+The Java side is two Maven modules: **core** (`org.jtools:xsdviewer-core`), the parsers, the validators, the JSON writer and the messages — a library with no dependency but the JDK — and **app**, the server and the page, whose jar embeds core's classes and [JToolsFramework](https://github.com/j4ckk0/JToolsFramework)'s so that `java -jar xsdviewer.jar` needs nothing else. The program around the schemas is the framework's — `WebApp` (the command line, `xsdviewer.ini`, the Settings menu, the log, the browser, the stop once the last page is closed), `WebServer` (the page from `web/`, the routes, the pages' presence, `/api/settings`, `/api/about`, `/api/quit`, the Host and Origin checks), `FileDialogs` —; the build's conventions are its `jtools-parent`. The tests run with the root of the repository as working directory in both modules (the parent pom's surefire configuration), so they read `samples/` and `app/src/main/resources/web` from there.
 
 Each class does one thing and is named for it; the packages follow the tiers of the diagram.
 
 | Class | Role |
 |---|---|
-| `XsdViewerApplication` | Entry point: takes the host, port and verbosity from `ConfigFile` and the saved port, parses the `CommandLineOptions` over them, checks the initial file, opens the log file where `ConfigFile` says, starts the `XsdViewerServer` (with the automatic stop unless `--keep-alive` / `--no-browser`), prints the URL and opens the browser. |
-| `CommandLineOptions` | Record of the options (`--port`, `--host`, `--no-browser`, `--keep-alive`, `--verbose`, `-h`, optional `file.xsd`) and their parser, which starts from given defaults so a command-line option overrides `xsdviewer.ini`; `stopWhenNoPage()` = neither `--keep-alive` nor `--no-browser`. |
-| `ConfigFile` | The optional `xsdviewer.ini` (working directory, else beside the jar): the host and port defaults, the verbosity and the folder of the log files (`none` for the console only), so the double-clicked launcher can be configured without a command line. A `key=value` line per setting; a bad value is warned about and the default kept. |
-| `BrowserLauncher` | Opens a URL with `java.awt.Desktop`, falling back to `xdg-open`. |
-| `Log` | The log (`java.util.logging`): console and, once `openFile` is called with the folder `ConfigFile` gives (the temporary directory by default, null for none), a pair of rotating `xsdviewer.%g.log` there; `INFO` and up — what happens to the server and what fails — or, with `--verbose` (`Log.setVerbose`), `FINE` too: each request received and each schema parsed; every handler failure is logged with its stack trace by `XsdViewerServer` and answered as a 500 with a message. |
-| `UserSettings` | The settings changed from the page's Settings menu, kept in the user's `java.util.prefs.Preferences` (`org/jtools/xsdviewer`): `autoStop`, and the `port` chosen for the next start (0 = the default). The command line wins for a run. |
-| `Messages`, `MessageKey` | The texts the server prints or sends to the page (console, API errors, generated documentation of placeholder nodes), read from `messages.properties` (English) / `messages_fr.properties` for the JVM locale; `MessageKey` holds the keys. |
-| `server.XmlValidator`, `server.ValidateHandler` | `POST /api/validate?schema=<xsd>&schematron=<sch>&phase=`: the JDK validator compiles the XSD from its file (a file the server served, never an arbitrary path; imports resolve next to it, files only) and validates the posted document; the Schematron goes through `SchematronValidator`; the problems of both are answered with their line and column (up to 200 each), tagged with their `source`. |
+| `XsdViewerApplication` | Entry point: the program as JToolsFramework's `WebApp` — named, its default port 8091, its page under `web/`, the file operand, `dialogs` added to `/api/about` — serving `XsdViewerApi`'s routes; `program()` is what `main` launches and what the tests start (`program().start("--port", "0", "--keep-alive")`: no `.ini`, no log, no browser, no exit). |
+| `Log` | The log as the code says it — `debug`, `info`, `warn` — over the logger `org.jtools.xsdviewer`, which `WebApp` sets up with the framework's: the console and `~/.xsdviewer/logs/xsdviewer.0.log` (two rotating files of 5 MB), `INFO` and up, or `FINE` too with `--verbose` / `--log-level FINE` / the `.ini`'s `log.level`: each request (with its status and duration) and each schema parsed. |
+| `Messages`, `MessageKey` | The texts the server prints or sends to the page (console, API errors, generated documentation of placeholder nodes), read from `messages.properties` (English) / `messages_fr.properties` in the page's language for a request (`XsdViewerApi`'s filter), the JVM's otherwise; `MessageKey` holds the keys. |
+| `server.XmlValidator`, `server.ValidateRoute` | `POST /api/validate?schema=<xsd>&schematron=<sch>&phase=`: the JDK validator compiles the XSD from its file (a file the server served, never an arbitrary path; imports resolve next to it, files only) and validates the posted document; the Schematron goes through `SchematronValidator`; the problems of both are answered with their line and column (up to 200 each), tagged with their `source`. |
 | `schema.SchematronValidator` | The Schematron evaluator over the JDK's XPath 1.0 engine (`javax.xml.xpath`): the `ns` prefixes, the phase (the one asked, else `defaultPhase`, else every pattern), abstract patterns instantiated by textual substitution of their `$param`s in every expression, abstract rules whose assertions and `let`s are collected by `extends` (recursively, each once), `let`s at the schema / pattern / rule levels (a node-set stays a `NodeList`). What an expression is evaluated with — the variables in force, the parameters of the abstract pattern being instantiated — travels down the calls as an immutable `Frame`; the variable resolver reads the frame of the expression being evaluated. A rule's context (an XSLT pattern) becomes a selection from the root: `//` before each top-level alternative not starting at `/`; a node fires the first rule of a pattern that selects it. An expression that does not compile is reported once as `unsupported`. Each problem names the assertion, rule and pattern that fired with the node ids of `SchematronParser` (`elementIds()`), which is what lets the page select them (`SchematronValidatorTest.problemsNameNodesOfTheGraph` pins that contract). `Severity` is the vocabulary: `error`, `warning`, `info` (from the `role` / `flag`), `unsupported`. |
 | `schema.SchematronDom`, `SchematronMessage`, `SchematronIncludes`, `LocatedDocument` | What the parser and the validator share. `SchematronDom`: walking a Schematron's own elements (children, descendants, by id; a foreign element is skipped). `SchematronMessage`: the text of an assertion or diagnostic, with a `Leaf` saying what a `value-of` and a `name` become — placeholders (`{select}`, `{name()}`) for the graph, the value on the node for the validator, which then appends the diagnostics the assertion names. `SchematronIncludes`: each `include` replaced in place by the root of the file next to the schema (files only, depth ≤ 16, nested ones relative to the included file), the unreadable ones reported. `LocatedDocument`: the document parsed SAX → DOM with the start-tag position kept as user data on each element (namespace declarations kept as attributes; comments and processing instructions dropped), so a problem carries the line and column of its context node and its path (`/po:purchaseOrder/po:items/po:item[2]/po:quantity`). |
 | `schema.SchemaParser` | Entry point for a file's text: an `xs:schema` root goes to `XsdParser`, a `wsdl:definitions` root to `WsdlParser`, a root in a Schematron namespace (`sch:schema`, or a fragment: a `pattern`, a `rule`…) to `SchematronParser`, anything else is refused. |
@@ -148,17 +144,15 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 | `schema.SchemaGraphJsonWriter` | `SchemaGraph` → JSON (keys in `json.JsonKey`). |
 | `schema.ContentModelBuilder`, `schema.ParticleKind` | The content model of a global declaration for the Model view: the tree of its particles and its attributes, walked from the DOM by `XsdParser`'s second pass with the parser's own resolution of names to node ids (`typeId()`), so that the tree names what the links name. A particle and an attribute are built by named factories (`Particle.compositor / element / reference / baseType / wildcard`), the records having more fields than a call site can read positionally. |
 | `json.JsonWriter`, `json.JsonStrings`, `json.JsonKey` | A minimal streaming JSON writer and the string escaping. The model is flat enough that a JSON library would be the only dependency of the project, so it was left out. `JsonKey` is the API contract, mirrored by the client. |
-| `server.XsdViewerServer` | Starts a `com.sun.net.httpserver.HttpServer` bound to `127.0.0.1:8091` by default and maps each path of `ApiPath` to its handler. Requests are handled on virtual threads (`Executors.newVirtualThreadPerTaskExecutor`). |
-| `server.ParseSchemaHandler`, `InitialFileHandler`, `OpenSchemaLocationHandler`, `LocateSchemaFileHandler`, `QuitHandler`, `StaticResourceHandler` | One handler per path of the HTTP interface below. |
-| `server.SettingsHandler` | `GET` / `POST /api/settings`: `{"autoStop": bool, "port": n}`, each field optional in a `POST` — `autoStop` applied to `PageWatch.setEnabled` at once, `port` kept for the next start (a server keeps the port it already listens on) — both kept through `UserSettings`. |
-| `server.PageWatch`, `AliveHandler`, `ByeHandler` | The pages open on the server and the automatic stop. `/api/alive` is an event stream the page holds for its whole life (a `: ping` comment every 5 s; the write fails when the browser has dropped the page — no timer on the page, so background-tab throttling cannot fool it); `/api/bye` is the beacon a closing page sends. `PageWatch` counts them and, once a first page has been seen, stops the process (`stopAndExit`, like Quit) when none has been open for 15 s — a reload or a wake-up reconnects well within. Disabled by `--keep-alive` / `--no-browser` for a run, or from the Settings menu (kept). |
+| `server.XsdViewerApi` | Registers each path of `ApiPath` with its route on JToolsFramework's `WebServer` — `post` or `get`, a wrong method answered 405 — and a filter giving core's `Messages` the page's language (`Accept-Language`) while a request lasts. The framework's server answers on virtual threads, serves the page, and keeps the pages' presence: `/api/alive`, the event stream a page holds for its whole life (a `: ping` every 5 s), `/api/bye`, its beacon; no page left for 15 s stops the program — off with `--keep-alive` / `--no-browser`, or from the Settings menu (kept). |
+| `server.ParseSchemaRoute`, `InitialFileRoute`, `OpenSchemaLocationRoute`, `LocateSchemaFileRoute` | One route per path of the HTTP interface below: each returns its answer — core's JSON as `Json.raw`, written by core's writers — or throws a `WebServer.Refusal` with its status and message. |
 | `server.ServedSchemaFiles` | The files the server has read and handed to the page: the only directories `/api/open` and `/api/locate` look into. |
-| `server.FileDialogs` | The open / save / folder dialogs, one at a time: on Windows and macOS the native `java.awt.FileDialog` (on a platform thread; a Swing chooser for folders, which it cannot pick); elsewhere the desktop's own dialog through `kdialog` (KDE, LXQt) or `zenity` (GNOME and others) when the PATH holds one — exit 0 answers the paths, 1 is cancel, anything else falls back —, else a Swing chooser in the system look and feel. `available()` is false when the JVM is headless. |
-| `server.ChooseFilesHandler`, `SaveWorkspaceHandler`, `OpenWorkspaceHandler`, `CapabilitiesHandler`, `WorkspaceResponse` | The dialog-backed endpoints and the answer describing an opened workspace (its files read, the missing ones listed). |
+| `FileDialogs` (JToolsFramework's `jtools-desktop`) | The open / save / folder dialogs, one at a time: on Windows and macOS the native `java.awt.FileDialog` (on a platform thread; a Swing chooser for folders, which it cannot pick); elsewhere the desktop's own dialog through `kdialog` (KDE, LXQt) or `zenity` (GNOME and others) when the PATH holds one — exit 0 answers the paths, 1 is cancel, anything else falls back —, else a Swing chooser in the system look and feel. `available()` is false when the JVM is headless. |
+| `server.ChooseFilesRoute`, `ChooseFolderRoute`, `SaveWorkspaceRoute`, `OpenWorkspaceRoute`, `WorkspaceResponse` | The dialog-backed endpoints and the answer describing an opened workspace (its files read, the missing ones listed). |
 | `workspace.Workspace` | The workspace record (file paths + active tab) and its `*.xsdviewer.json` form: paths relative to the workspace file when they share its root. |
 | `json.JsonReader` | Minimal parser (objects, arrays, strings, numbers, booleans, null) for workspace files and the page's requests. |
 | `server.SchemaFileFinder` | Bounded walk looking for a file with a given name and content (`/api/locate`). |
-| `server.HttpResponses`, `QueryString`, `ContentType`, `HttpMethod`, `HttpStatus` | Reading the request, writing text / JSON / error answers, query parameters, MIME types by extension. |
+| `server.JsonRequest`, `HttpStatus` | A JSON request's body parsed by core's reader (a malformed one refused with 400 and where it went wrong); the statuses the routes refuse with. |
 
 #### Parsing passes (`XsdParser`, on the file's `xs:schema` or on each one inline in a WSDL)
 
@@ -254,12 +248,12 @@ Two rules apply to both tiers:
 - **User-visible texts come from resource files, one per language.** Server side,
   `Messages.get(MessageKey.X, args…)` reads `messages.properties` (English, the base file) or
   `messages_<language>.properties` (`MessageFormat` patterns) for the locale of the request
-  being handled — the page sends its language in `Accept-Language`, `XsdViewerServer`
+  being handled — the page sends its language in `Accept-Language`, `XsdViewerApi`'s filter
   applies it to `Messages` for the duration of the request (a `ThreadLocal`, one virtual
   thread per request); console messages use the JVM locale. A language without a file gets
   the base file, never the JVM's language. Client side, `t(MSG.X, args…)` reads
   `i18n/<language>.json`, chosen from `?lang=`, else the choice remembered from the top-bar
-  drop-list (`js/language-selector.js`), else the machine's locale (`GET /api/capabilities`
+  drop-list (`js/language-selector.js`), else the machine's locale (`GET /api/about`
   reports the JVM's language), English as fallback;
   each file names its language under `language.name`, which is what the drop-list shows.
   Switching re-binds the static labels (`data-i18n*` attributes, `translate()`) and redraws
@@ -351,14 +345,14 @@ node. The selected node's line is highlighted and scrolled into view.
 
 | Method & path | Request | Response |
 |---|---|---|
-| `GET /`, `/style.css`, `/js/*.js`, `/i18n/*.json` | – | the static asset (classpath `web/`, `Cache-Control: no-cache`). Paths are restricted to `(/[A-Za-z0-9._-]+)+` without `..`. |
+| `GET /`, `/style.css`, `/js/*.js`, `/i18n/*.json` | – | the static asset (classpath `web/`, `Cache-Control: no-cache` and an ETag: `304` when unchanged). Paths are restricted to `(/[A-Za-z0-9._-]+)+` without `..`; a missing file is a `404`. |
 | `POST /api/parse` | body: the text of the file (XSD, WSDL or Schematron; UTF-8) | `200` + the JSON model, or `400` + `{"error": "…"}` (not XML, root not `xs:schema` / `wsdl:definitions` / Schematron, …). |
 | `GET /api/initial` | – | `200` + `{"name", "path", "text"}` of the file given on the command line, `404` otherwise. The page calls it once at load. |
-| `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit). |
+| `POST /api/quit` | – | `200` + `{"ok":true}`, then the server stops and the process exits (File ▸ Quit; JToolsFramework's). |
 | `GET /api/alive?id=…` | query: the page's random id | `200` `text/event-stream`, kept open: `: ping` every 5 s until the page goes away. The page is counted as open meanwhile (`PageWatch`). `400` without an id. |
-| `POST /api/bye?id=…` | query: the page's id (sent as a beacon from `pagehide`) | `200` + `{"ok":true}`; the page is no longer counted. |
-| `GET /api/settings`, `POST /api/settings` | `POST` body: `{"autoStop": bool}` | `200` + `{"autoStop": bool}`, the current settings; a `POST` applies them first (the automatic stop is armed or disarmed at once) and keeps them for the next runs. `400` for another body. |
-| `GET /api/capabilities` | – | `{"dialogs": bool, "language": "fr", "version": "3.6.1", "javaVersion": "21.0.12"}`: whether the server can show native file dialogs (not headless) — the page disables the workspace commands and falls back to the browser's file dialog otherwise — the language of the machine's locale (the page's default language), and the versions shown by Help ▸ About (`BuildInfo`: the jar manifest's `Implementation-Version`, "dev" without one). |
+| `POST /api/bye?id=…` | query: the page's id (sent as a beacon from `pagehide`) | `204`; the page is no longer counted. |
+| `GET /api/settings`, `POST /api/settings` | `POST` body: `{"autoStop": bool, "port": n}`, each field optional | `200` + `{"autoStop", "port", "defaultPort", "currentPort"}`, the current settings; a `POST` applies them first — the automatic stop armed or disarmed at once, the port kept for the next start (0 forgets it) — and keeps them in the user's preferences. `400` for another body (JToolsFramework's). |
+| `GET /api/about` | – | `{"name", "version", "javaVersion", "language": "fr", "logFile", "dialogs": bool}`: JToolsFramework's answer — the versions shown by Help ▸ About (the jar manifest's `Implementation-Version`, "dev" without one), the language of the machine's locale (the page's default language), the log file — and XsdViewer's `dialogs`: whether the server can show native file dialogs (not headless); the page disables the workspace commands and falls back to the browser's file dialog otherwise. |
 | `POST /api/choose` | – | shows the native "open files" dialog; `200` + `{"files": [{"name", "path", "text"}…]}` (empty when cancelled), `409` without a display. |
 | `POST /api/choose-folder` | – | shows a folder chooser (Swing `JFileChooser`: the native dialog cannot pick folders); `200` + `{"folder", "files": [{"name", "path", "text"}…], "truncated"}` — the `.xsd` / `.wsdl` / `.sch` files of the folder and its whole sub-tree (symbolic links followed, depth ≤ 64, at most 2000, hidden and unreadable directories skipped, sorted), or `{"cancelled": true}`; `409` without a display. |
 | `POST /api/workspace/save` | body: `{"files": [paths…], "active": n, "path": …}` (`path`, optional: the workspace file to propose) | shows the native "save as" dialog, writes the workspace there (`.xsdviewer.json` appended if missing); `200` + `{"path"}` or `{"cancelled": true}`, `400` for a bad body, `409` without a display. |
@@ -374,7 +368,10 @@ node. The selected node's line is highlighted and scrolled into view.
 | `POST /api/compare/workspaces` | body: `{"left": [{"name", "text"}…], "right": […], "businessOnly": bool}` | `200` + `{"pairs": [{"name", "status"}…]}`, the names sorted, a status being `same`, `moved`, `different`, `only-left` or `only-right`. |
 
 The server binds to `127.0.0.1` unless `--host` says otherwise: it is a local tool, not a
-service, and it parses whatever is posted to it.
+service, and it parses whatever is posted to it. Every refusal is `{"error": "…"}` — a wrong method
+`405` with `Allow`, an unknown path under `/api/` `404` — and two checks guard every request: a
+`Host` that is not this computer's (or the `--host` given) is refused, the defence against DNS
+rebinding, and so is a `POST` whose `Origin` is another site's.
 
 ### JSON model
 
@@ -430,11 +427,13 @@ Runtime – all part of the JDK (21):
 
 | Library / API | Module | Used for |
 |---|---|---|
-| `com.sun.net.httpserver` | `jdk.httpserver` | the HTTP server, static files and API routing |
+| `com.sun.net.httpserver` | `jdk.httpserver` | the HTTP server under JToolsFramework's `WebServer` |
 | `javax.xml.parsers` DOM (`DocumentBuilder`) | `java.xml` | walking the schema structure |
 | `javax.xml.parsers` SAX (`SAXParser`, `Locator`) | `java.xml` | line numbers of the global declarations |
 | `java.awt.Desktop`, `java.awt.FileDialog` | `java.desktop` | opening the browser at start-up; the native file dialogs (both guarded: headless JVMs fall back) |
 | virtual threads (`Executors.newVirtualThreadPerTaskExecutor`) | `java.base` | one thread per request |
+
+JToolsFramework (`org.jtools.framework`, Apache 2.0, the JDK only): `jtools-launcher`, `jtools-server`, `jtools-support`, `jtools-desktop` — embedded in the jar.
 
 Browser side: plain ES2020 JavaScript, DOM, SVG, `fetch`, the File and Drag-and-Drop APIs.
 No external script or stylesheet is loaded.
@@ -443,26 +442,26 @@ Build and test:
 
 | Tool | Version | Role |
 |---|---|---|
+| JToolsFramework's `jtools-parent` | 1.1.0 | the parent pom: Java 21, JUnit, the plugins' versions, the tests from the root, the Apache header, the `publish` profile, and in `app` the program's one jar and the `dist` profile |
 | Maven | 3.9 | build of the two modules; `mvn package` produces `core/target/xsdviewer-core-<version>.jar`, the library, and `app/target/xsdviewer.jar`, the tool |
 | maven-compiler-plugin | 3.13.0 | `--release 21` |
-| maven-shade-plugin | 3.6.0 | `app` only: merges core's classes and messages into the application jar once it is made (its module descriptor left out), so the one jar runs alone; the jar plugin's manifest is kept |
-| maven-source-plugin, maven-javadoc-plugin, maven-gpg-plugin, central-publishing-maven-plugin | 3.3.1, 3.6.3, 3.2.4, 0.7.0 | `publish` profile only: the library's sources and javadoc jars, their signatures, and the upload to Maven Central's portal (PUBLISHING.md §7); `app` skips the publication |
-| maven-jar-plugin | 3.4.1 | sets `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` and the implementation entries About shows |
+| maven-shade-plugin | 3.6.0 | `app` only (jtools-parent's `jtools-embed`): merges core's and JToolsFramework's classes into the application jar once it is made (core's module descriptor left out), so the one jar runs alone, `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` |
+| maven-source-plugin, maven-javadoc-plugin, maven-gpg-plugin, central-publishing-maven-plugin | 3.3.1, 3.6.3, 3.2.4, 0.11.0 | jtools-parent's `publish` profile only: the library's sources and javadoc jars, their signatures, and the upload to Maven Central's portal (PUBLISHING.md §7); `app` skips the publication |
+| maven-jar-plugin | 3.4.1 | the implementation entries About shows |
 | maven-surefire-plugin | 3.2.5 | runs the tests, from the root of the repository (`maven.multiModuleProjectDirectory`, pinned by the `.mvn/` directory) |
-| JUnit Jupiter | 5.8.2 (test scope) | `XsdParserTest`, `WsdlParserTest`, `SchematronParserTest`, `SchematronValidatorTest` and `SchemaGraphJsonWriterTest` (against the samples), `PageContractTest` (the vocabulary shared with `js/constants.js`: node kinds, link labels, API paths), `JavaScriptTestsTest` (runs `src/test/js/*.test.mjs` — the page's pure modules: diff, business lines, cardinalities, schema diff… — under Node when it is installed, skipped otherwise; the CI installs it), and `scripts/screenshots.py` (a visual smoke test with headless Firefox: the samples opened in the built jar, a few facts checked on the page, one screenshot per scene; the scenes carrying a `doc` name are the README's pictures, written as JPEG in `screenshots/` by `--docs`; `--only=a,b` runs named scenes, and a duplicate scene name is refused, a name being a file name and a result key), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `CommandLineOptionsTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` (the HTTP interface on an ephemeral port) |
+| JUnit Jupiter | 5.12.2 (test scope) | `XsdParserTest`, `WsdlParserTest`, `SchematronParserTest`, `SchematronValidatorTest` and `SchemaGraphJsonWriterTest` (against the samples), `PageContractTest` (the vocabulary shared with `js/constants.js`: node kinds, link labels, API paths), `JavaScriptTestsTest` (runs `src/test/js/*.test.mjs` — the page's pure modules: diff, business lines, cardinalities, schema diff… — under Node when it is installed, skipped otherwise; the CI installs it), and `scripts/screenshots.py` (a visual smoke test with headless Firefox: the samples opened in the built jar, a few facts checked on the page, one screenshot per scene; the scenes carrying a `doc` name are the README's pictures, written as JPEG in `screenshots/` by `--docs`; `--only=a,b` runs named scenes, and a duplicate scene name is refused, a name being a file name and a result key), `JsonWriterTest`, `JsonReaderTest`, `WorkspaceTest`, `TranslationsTest`, `SchemaFolderTest`, and `XsdViewerServerTest` and `CompareApiTest` (the HTTP interface on an ephemeral port, the program started as `main` would start it); the command line, the `.ini`, the log, the presence and the file dialogs are tested in JToolsFramework |
 | `scripts/run.sh` / `scripts\run.bat` | – | rebuilds the jar when sources are newer, then runs it (Linux/macOS, Windows) |
-| `app/src/dist/xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions; on Windows the `.bat` starts `javaw.exe` from a command line (`--console` to keep one) |
-| launch4j-maven-plugin | 2.7.0 | `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
+| `xsdviewer.sh` / `xsdviewer.bat` | – | launchers of the distributions (JToolsFramework's `jtools-dist`); on Windows the `.bat` runs in a console, `XsdViewer.exe` without one |
+| launch4j-maven-plugin | 2.7.0 | jtools-parent's `dist` profile only: builds `XsdViewer.exe`, a GUI-subsystem Windows launcher (no console window) running the bundled `jre\` with `xsdviewer.jar`; arguments are passed through |
 | `scripts/build.sh` / `scripts\build.bat` | – | `mvn package` |
-| `scripts/package.sh` / `scripts\package.bat` | – | `mvn package -Pdist`, after checking the JRE archives are present |
-| maven-clean-plugin | 3.2.0 | `dist` profile only (in `app`): empties `releases/` at the root (previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` / `-macos.tar.gz` / `.jar`) and deletes `app/target/jre` before the build |
-| maven-antrun-plugin | 3.1.0 | `dist` profile only: runs `app/src/build/runtimes.xml`, which unpacks the JDK archives of `jre/` (root), links a runtime per platform, and packs the archives into `releases/` with the jar, a launcher, `samples/` and `README.md` from the root |
+| `scripts/package.sh` / `scripts\package.bat` | – | `mvn package -Pdist`, after checking the JDK archives are present |
+| maven-clean-plugin | 3.4.0 | `dist` profile only (in `app`): empties `releases/` at the root of the previous `xsdviewer-*-windows.zip` / `-linux.tar.gz` / `-macos.tar.gz` / `.jar` before the build |
+| maven-antrun-plugin | 3.1.0 | `dist` profile only: runs JToolsFramework's `jtools-dist/build.xml`, which finds the modules the jar needs (jdeps), unpacks the JDK archives of `jre/` (root), links a runtime per platform with the jlink of this machine's own archive, and packs the archives into `releases/` with the jar, the launchers, `xsdviewer.ini`, `samples/`, `README.md`, `LICENSE` and `NOTICE`; then `app` copies the jar alone beside them |
 
 `mvn package -Pdist` produces `releases/xsdviewer-<version>-windows.zip`,
-`-linux.tar.gz` and `.jar` (git-ignored directory). The JRE archives under `jre/` (a build input, kept out of `src/`) are
-git-ignored (downloaded by hand, see README); the antrun step fails when one is missing. The Linux descriptor restores the
-executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's
-`untar` drops.
+`-linux.tar.gz`, `-macos.tar.gz` and `.jar` (git-ignored directory). The JDK archives under `jre/` (a build input, kept out
+of `src/`) are git-ignored (downloaded by hand, see README); a platform whose archive is missing is not built. The archives
+set the executable bits on `jre/bin/*`, `lib/jspawnhelper` and `lib/jexec` that Ant's `untar` drops.
 
 ## Repository layout
 
@@ -480,15 +479,13 @@ XsdViewer/
 │       └── json/                         JsonWriter, JsonReader, JsonStrings, JsonKey
 │   └── src/test/java/                    the parser, validator and JSON tests
 ├── app/                          org.jtools:xsdviewer — the tool (its jar embeds core)
-│   ├── pom.xml                   the dist profile lives here
-│   ├── src/build/runtimes.xml    Ant: unpacking the JDKs, jlink, the archives
-│   ├── src/dist/                 xsdviewer.bat, xsdviewer.sh launchers
+│   ├── pom.xml                   the program's jtools.app.* and what its dist adds (the jar alone)
 │   └── src/main/java/org/jtools/xsdviewer/
-│       ├── XsdViewerApplication, CommandLineOptions, ConfigFile, BrowserLauncher, Log, UserSettings, BuildInfo
-│       ├── server/                       XsdViewerServer, ApiPath, *Handler, XmlValidator, ServedSchemaFiles, SchemaFileFinder, FileDialogs, ...
+│       ├── XsdViewerApplication, Log
+│       ├── server/                       XsdViewerApi, ApiPath, *Route, XmlValidator, ServedSchemaFiles, SchemaFileFinder, ...
 │       └── workspace/                    Workspace
 │   ├── src/main/resources/web/           the page: index.html, style.css, js/, i18n/
-│   ├── src/test/java/                    the server, workspace, command line, log and translation tests, the page's contract
+│   ├── src/test/java/                    the server, workspace and translation tests, the page's contract
 │   └── src/test/js/                      the tests of the page's pure modules
 ├── examples/                     org.jtools:xsdviewer-examples — programs on the library (src/main/java, run by ExamplesTest) and JavaScript programs on the API (api/*.mjs), on samples/
 ├── .github/workflows/            build.yml (mvn package on JDK 21, the jar kept as artefact), release.yml (a pushed tag → the release)
@@ -506,14 +503,14 @@ XsdViewer/
   the client from one tab per file (links followed on demand, linked schemas opened
   automatically when the file's location is known, workspaces to reopen a set). A merged
   single graph would need the parser to take several texts keyed by target namespace.
-- **Packaging**: `src/build/runtimes.xml` (Ant, called by the pom's `dist` profile) unpacks the
-  Temurin JDK archives of `jre/`, links a trimmed runtime per platform with `jlink` and packs the
-  archives; `.github/workflows/release.yml` runs it on a pushed tag and publishes the release.
+- **Packaging**: JToolsFramework's `jtools-dist/build.xml` (Ant, called by jtools-parent's `dist`
+  profile) unpacks the Temurin JDK archives of `jre/`, links a trimmed runtime per platform with
+  `jlink` and packs the archives; `.github/workflows/release.yml` runs it on a pushed tag and publishes the release.
 - **More link kinds** are a new `case` in `XsdParser.collect()` plus a `LinkLabel`; the
   client needs nothing (labels are free text). **More node kinds** (as the WSDL or Schematron ones) need
   their `NodeKind`, a colour (light and dark), a legend chip and the `kind.` / `group.` texts on the page.
   **Another vocabulary** is a `*Vocabulary` + `*Parser` pair dispatched from `SchemaParser`; the
-  `.ext` goes to `ChooseFilesHandler`, `SchemaFolder`, the page's file patterns and the file input.
+  `.ext` goes to `ChooseFilesRoute`, `SchemaFolder`, the page's file patterns and the file input.
 - **Other graph layouts** only touch `js/graph.js`; the rest of the client depends on
   `select()` and the tab state, not on how the SVG is built.
 - **Node details** (e.g. facets, cardinalities) would extend `SchemaGraph.Node`,

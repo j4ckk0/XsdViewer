@@ -91,7 +91,7 @@ Each archive holds a launcher taking the same options; the jar is for a machine 
 
 | Archive | Launcher |
 |---|---|
-| `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled runtime, no console window at all. `xsdviewer.bat` does the same from a command line (a `.bat` briefly flashes a console); `xsdviewer.bat --console …` keeps the console, with the server's messages |
+| `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled runtime, no console window at all. `xsdviewer.bat` does the same in a console, with the server's messages |
 | `releases/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
 | `releases/xsdviewer-<version>-macos.tar.gz` | `xsdviewer.sh` — Apple silicon; a downloaded archive is quarantined by macOS, so once: `xattr -dr com.apple.quarantine xsdviewer-<version>` |
 | `releases/xsdviewer-<version>.jar` | for a machine that has [Java 21](#installing-java-21): `java -jar xsdviewer-<version>.jar` |
@@ -100,7 +100,8 @@ When started without a console (the Windows launcher, a double-clicked jar), a s
 failure such as a port already in use is shown in a dialog instead of being lost.
 
 ```
-XsdViewer.exe / xsdviewer.sh [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd | workspace.xsdviewer.json]
+XsdViewer.exe / xsdviewer.sh [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose | --log-level LEVEL]
+                             [--log-file FILE] [--lang LANG] [--help] [file.xsd | workspace.xsdviewer.json]
 ```
 
 Passing a file opens it at start-up; `samples/purchaseOrder.xsd` of this repository is a small schema
@@ -123,11 +124,15 @@ is indistinguishable from closing it — the visible tab is never discarded; if 
 a background tab for hours, add `127.0.0.1` to *Settings ▸ Performance ▸ Always keep these sites
 active*, or use `--keep-alive`.
 
-The log goes to the console and to `xsdviewer.0.log` in the temporary directory (its path is in
-*Help ▸ About*): what happens to the server and what fails. `--verbose` adds every request and
-every parse, for following what the page asks of the server. Both are also set from the
-`xsdviewer.ini` file beside the launcher: `verbose=true`, and `log.folder=` for another folder
-or `none` for the console only.
+The log goes to the console and to `~/.xsdviewer/logs/xsdviewer.0.log` (its path is in
+*Help ▸ About*), in English: what happens to the server and what fails. `--verbose` (or
+`--log-level FINE`) adds every request, with its status and duration, and every parse, for following
+what the page asks of the server; `--log-file FILE` writes it elsewhere for a run. Both are also set
+from the `xsdviewer.ini` file beside the launcher: `log.level=FINE`, and `log.folder=` for another
+folder or `none` for the console only. An unknown option is refused, with the usage; the exit code
+is 2 for a command line that cannot be run (an unknown option, a file that is not there), 3 for a
+server that cannot start (a port in use). `--lang fr` or `--lang en` sets the language of these
+console messages, the machine's by default.
 
 <a name="installing-java-21"></a>
 <details>
@@ -248,13 +253,17 @@ of each.
 
 ## 3. The open-source code
 
-XsdViewer is a Java 21 server serving a page written in plain JavaScript — no framework, no runtime
-dependency — over the library above. This part says what the code does, feature by feature, for
+XsdViewer is a Java 21 server serving a page written in plain JavaScript — no framework on the page —
+over the library above and [JToolsFramework](https://github.com/j4ckk0/JToolsFramework), which gives
+the program around the server (the command line, the settings, the log, the presence of the pages, the
+file dialogs, the distributions); the jar embeds both, and nothing else. This part says what the code does, feature by feature, for
 whoever reads it or changes it; [part 4](#4-the-architecture) says how it is built. Apache 2.0.
 
 ### Building and running from source
 
-Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)).
+Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)), and JToolsFramework 1.1.0,
+the parent pom and libraries the build resolves from Maven Central — until it is published there, from a
+clone of it: `scripts/install.sh` there puts it in `~/.m2`.
 
 ```bash
 scripts/run.sh                # builds app/target/xsdviewer.jar if needed, then starts the tool
@@ -271,10 +280,10 @@ java -jar app/target/xsdviewer.jar
 The server listens on <http://127.0.0.1:8091/> and opens it in the default browser. It is 8091 by
 default rather than the crowded 8080. Three ways to change it, in order of precedence: `--port N` on
 the command line; **Settings ▸ Server port…** in the page (kept for the next start); or a `port=` line
-in an `xsdviewer.ini` file beside the launcher — the way to configure the double-clicked `XsdViewer.exe`,
-which takes no command line. `host=` sets the bind address the same ways. The file also holds the log
-settings: `verbose=true` for the detail `--verbose` gives, `log.folder=` for the folder of the log
-files, or `none` to keep the log on the console.
+in an `xsdviewer.ini` file beside the jar (in a distribution, beside the launcher) — the way to configure
+the double-clicked `XsdViewer.exe`, which takes no command line. `host=` sets the bind address the same
+ways. The file also holds the log settings: `log.level=FINE` for the detail `--verbose` gives,
+`log.folder=` for the folder of the log files, or `none` to keep the log on the console.
 
 ```
 scripts/run.sh [--rebuild] [--port N] [--host H] [--no-browser] [--keep-alive] [--verbose] [file.xsd]   # Linux/macOS
@@ -659,9 +668,9 @@ or start the tool from the project folder and open `order.xsd` from the browser.
 
 ### Logs
 
-The server logs what it does and what fails on its console and in `xsdviewer.0.log` in the
-system's temporary directory (`/tmp` on Linux, `%TEMP%` on Windows; two rotating files of
-1 MB — the path is shown in Help ▸ About and printed at start-up). A request that fails is
+The server logs what it does and what fails on its console and in `xsdviewer.0.log` in
+`~/.xsdviewer/logs/` (two rotating files of 5 MB — the path is shown in Help ▸ About and printed at
+start-up), its lines in English whatever the machine's language. A request that fails is
 logged with its stack trace and answered to the page as an error message, so a problem shows
 both in the page (toast) and in the log.
 
@@ -697,9 +706,10 @@ jre/
 ```
 
 Only the platforms whose archive is there are built; the archive of the machine doing the build
-is required, since its `jlink` links every runtime (download them together: they must be the same
-version). `src/build/runtimes.xml` (Ant, driven by the `dist` profile) does the unpacking, the
-linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
+gives the `jlink` that links every runtime (download them together: they must be the same version),
+whatever Java runs Maven — without it, the `jlink` of the JDK running Maven, which must then be their
+version. JToolsFramework's `jtools-dist/build.xml` (Ant, driven by its parent pom's `dist` profile) finds
+the modules the jar needs, does the unpacking, the linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
 
 ### Tests
 
@@ -745,15 +755,14 @@ core/src/main/java/org/jtools/xsdviewer/
 core/src/main/resources/org/jtools/xsdviewer/   messages.properties, messages_fr.properties
 core/src/test/java/       parser, model, comparison, validator and JSON tests (against samples/)
 app/src/main/java/org/jtools/xsdviewer/
-  XsdViewerApplication   entry point: command line, server start-up, browser
-  CommandLineOptions, BrowserLauncher, Log, UserSettings, BuildInfo
-  server/                XsdViewerServer (JDK com.sun.net.httpserver) + one handler per path (ApiPath),
-                         FileDialogs (native dialog; kdialog / zenity on Linux), ParsedSchemas (the parse cache)
+  XsdViewerApplication   entry point: JToolsFramework's WebApp (command line, .ini, settings, log, browser, the stop)
+  Log                    the log as the code says it (debug / info / warn)
+  server/                XsdViewerApi (the routes on JToolsFramework's WebServer) + one route per path (ApiPath),
+                         ParsedSchemas (the parse cache); the native dialogs are JToolsFramework's FileDialogs
   workspace/             Workspace (the *.xsdviewer.json format)
 app/src/main/resources/web/   index.html, style.css, js/ (ES modules, one per concern), i18n/en.json, i18n/fr.json – the client, no framework
-app/src/test/java/        server, workspace, command line, log and translation tests; the page's contract
+app/src/test/java/        server, workspace and translation tests; the page's contract
 app/src/test/js/          the tests of the page's pure modules (Node's test runner, run from Maven when Node is found)
-app/src/dist/, app/src/build/   the launchers of the distributions and the Ant file building them (dist profile)
 examples/src/main/java/   four programs over the library; examples/api/ five over the HTTP API; a test runs the Java ones
 samples/                  one sample per thing the tool does: see samples/README.md
 ```

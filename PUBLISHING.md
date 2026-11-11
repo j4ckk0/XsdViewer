@@ -103,6 +103,12 @@ asked for on its own — what Central publishes can never be replaced or withdra
    `gpg --keyserver keyserver.ubuntu.com --send-keys <id>`); `maven-gpg-plugin` signs with the
    default key, or `-Dgpg.keyname=<id>`. Central refuses an unsigned bundle.
 
+The profile `publish` is JToolsFramework's: the root pom's parent is its `jtools-parent`, which holds the
+profile (sources, javadoc, signature, the portal) with the build's other conventions; `app` and `examples`
+keep themselves off Central (`skipPublishing`). **`org.jtools.framework:jtools-parent` must be on Central
+before `core` is**: whoever resolves `xsdviewer-core` resolves its parent's parent too (the framework's
+`PUBLISHING.md` says how it gets there).
+
 Then, for a version: `mvn -Ppublish -DskipTests -pl core -am deploy` builds core's jar, its sources and its
 javadoc, signs the three and uploads the bundle to the portal, where it is validated. Nothing is
 released until **Publish** is pressed there (`autoPublish` is off), so a mistake costs nothing.
