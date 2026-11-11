@@ -487,7 +487,7 @@ XsdViewer/
 │   └── src/test/js/                      the tests of the page's pure modules
 ├── examples/                     org.jtools:xsdviewer-examples — programs on the library (src/main/java, run by ExamplesTest) and JavaScript programs on the API (api/*.mjs), on samples/
 ├── .github/workflows/            build.yml (mvn package on JDK 25, the jar kept as artefact), release.yml (a pushed tag → the release)
-├── scripts/                      linux/ and windows/: JToolsFramework's devkit scripts and jtools; release.sh, screenshots.py, changelog-section.py
+├── scripts/                      linux/ and windows/: JToolsFramework's devkit scripts (release among them) and jtools; screenshots.py
 ├── jtools.conf, externals.conf   what the devkit's scripts know of XsdViewer; the externals' versions
 ├── README.md, architecture.md, CHANGELOG.md, PUBLISHING.md
 ├── external/                     the externals setup deploys: JDK, Maven, Node.js, the jmods the runtimes are linked from (git-ignored)

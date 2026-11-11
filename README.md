@@ -698,8 +698,9 @@ The archives and their launchers are described in [Running it](#running-it) abov
 
 A pushed tag `v<version>` makes GitHub Actions build and publish the release (`release.yml`: the
 runtimes, the archives, the notes from `CHANGELOG.md`'s section for that version, the checksums).
-By hand, `scripts/release.sh <version>` does the same from `releases/` (`--dry-run` prints the
-notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` or
+By hand, `scripts/linux/release.sh` (`scripts\windows\release.bat`), JToolsFramework's devkit's, does the same from
+`releases/` for the version `pom.xml` names, once its tag is pushed — `jtools.conf`'s `RELEASE_GITHUB` names this
+repository (`--dry-run` prints the notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` or
 `~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
 
 The runtimes are linked from the jmods `scripts/linux/setup.sh` puts in `external/` — Temurin 25's, one archive per

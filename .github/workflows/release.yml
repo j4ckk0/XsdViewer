@@ -1,6 +1,6 @@
 # A pushed tag vX.Y.Z publishes the release: the trimmed runtimes (jlink, from the jmods externals.conf names),
 # the archives, the notes from CHANGELOG.md's "## X.Y.Z" section, the checksums. The by-hand way
-# is scripts/linux/package.sh then scripts/release.sh (see PUBLISHING.md, section 5).
+# is scripts/linux/package.sh then scripts/linux/release.sh (see PUBLISHING.md, section 5).
 name: release
 
 on:
@@ -21,7 +21,7 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           grep -q "<version>$version</version>" pom.xml || { echo "pom.xml is not at version $version"; exit 1; }
-          scripts/changelog-section.py "$version" > /dev/null
+          grep -q "^## $version\( \|$\)" CHANGELOG.md || { echo "CHANGELOG.md has no \"## $version\" section"; exit 1; }
 
       - name: The externals externals.conf names (the JDK, Maven, Node.js, the jmods)
         run: scripts/linux/setup.sh
@@ -29,14 +29,7 @@ jobs:
       - name: Build and test, then package
         run: scripts/linux/package.sh -B --no-transfer-progress
 
-      - name: Release notes
-        run: scripts/release.sh --body "${GITHUB_REF_NAME#v}" > body.md && cat body.md
-
-      - name: Create the release with the archives
+      - name: The release, its notes from CHANGELOG.md, the archives attached (JToolsFramework's devkit)
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          gh release create "$GITHUB_REF_NAME" --title "XsdViewer $version" --notes-file body.md \
-            "releases/xsdviewer-$version.jar" "releases/xsdviewer-$version-windows.zip" \
-            "releases/xsdviewer-$version-linux.tar.gz" "releases/xsdviewer-$version-macos.tar.gz"
+          GITHUB_TOKEN: ${{ github.token }}
+        run: scripts/linux/release.sh
