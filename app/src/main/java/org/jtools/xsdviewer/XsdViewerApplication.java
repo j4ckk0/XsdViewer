@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.jtools.framework.desktop.FileDialogs;
-import org.jtools.framework.launcher.WebApp;
+import org.jtools.framework.app.WebApp;
 import org.jtools.xsdviewer.json.JsonKey;
 import org.jtools.xsdviewer.server.XsdViewerApi;
 

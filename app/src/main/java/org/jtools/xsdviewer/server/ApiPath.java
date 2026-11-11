@@ -20,7 +20,7 @@ package org.jtools.xsdviewer.server;
  * #L%
  */
 
-import org.jtools.framework.launcher.WebApp;
+import org.jtools.framework.app.WebApp;
 import org.jtools.framework.server.WebServer;
 
 /** The HTTP paths the page calls (mirrored by its {@code js/constants.js}): XsdViewer's routes ({@link XsdViewerApi}) and JToolsFramework's. */

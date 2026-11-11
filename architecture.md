@@ -433,7 +433,7 @@ Runtime – all part of the JDK (21):
 | `java.awt.Desktop`, `java.awt.FileDialog` | `java.desktop` | opening the browser at start-up; the native file dialogs (both guarded: headless JVMs fall back) |
 | virtual threads (`Executors.newVirtualThreadPerTaskExecutor`) | `java.base` | one thread per request |
 
-JToolsFramework (`org.jtools.framework`, Apache 2.0, the JDK only): `jtools-launcher`, `jtools-server`, `jtools-support`, `jtools-desktop` — embedded in the jar.
+JToolsFramework (`org.jtools.framework`, Apache 2.0, the JDK only): `jtools-app`, `jtools-server`, `jtools-support`, `jtools-desktop` — embedded in the jar.
 
 Browser side: plain ES2020 JavaScript, DOM, SVG, `fetch`, the File and Drag-and-Drop APIs.
 No external script or stylesheet is loaded.
@@ -442,7 +442,7 @@ Build and test:
 
 | Tool | Version | Role |
 |---|---|---|
-| JToolsFramework's `jtools-parent` | 1.1.0 | the parent pom: Java 21, JUnit, the plugins' versions, the tests from the root, the Apache header, the `publish` profile, and in `app` the program's one jar and the `dist` profile |
+| JToolsFramework's `jtools-parent` | 1.2.0 | the parent pom: Java 21, JUnit, the plugins' versions, the tests from the root, the Apache header, the `publish` profile, and in `app` the program's one jar and the `dist` profile |
 | Maven | 3.9 | build of the two modules; `mvn package` produces `core/target/xsdviewer-core-<version>.jar`, the library, and `app/target/xsdviewer.jar`, the tool |
 | maven-compiler-plugin | 3.13.0 | `--release 21` |
 | maven-shade-plugin | 3.6.0 | `app` only (jtools-parent's `jtools-embed`): merges core's and JToolsFramework's classes into the application jar once it is made (core's module descriptor left out), so the one jar runs alone, `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` |

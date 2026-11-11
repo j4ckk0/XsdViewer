@@ -34,7 +34,7 @@ import java.io.InputStream;
 
 import java.util.prefs.Preferences;
 
-import org.jtools.framework.launcher.UserSettings;
+import org.jtools.framework.app.UserSettings;
 import org.jtools.framework.server.WebServer;
 import org.jtools.xsdviewer.XsdViewerApplication;
 import org.junit.jupiter.api.AfterAll;

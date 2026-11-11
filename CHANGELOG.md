@@ -4,7 +4,7 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
-The program around the schemas is now [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.1's — the
+The program around the schemas is now [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.2's — the
 command line, `xsdviewer.ini`, the Settings menu, the log, the server, the presence of the pages, the file dialogs,
 the distributions — shared with the other jtools programs. The schemas, the views and the comparisons are unchanged.
 What changes for whoever uses it:

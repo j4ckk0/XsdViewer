@@ -261,7 +261,7 @@ whoever reads it or changes it; [part 4](#4-the-architecture) says how it is bui
 
 ### Building and running from source
 
-Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)), and JToolsFramework 1.1.0,
+Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)), and JToolsFramework 1.2.0,
 the parent pom and libraries the build resolves from Maven Central — until it is published there, from a
 clone of it: `scripts/install.sh` there puts it in `~/.m2`.
 
