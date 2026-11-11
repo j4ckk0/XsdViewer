@@ -261,12 +261,12 @@ whoever reads it or changes it; [part 4](#4-the-architecture) says how it is bui
 
 ### Building and running from source
 
-The development environment is [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.5.0's devkit: its
+The development environment is [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.6.1's devkit: its
 scripts, in `scripts/linux/` and `scripts\windows\`, take everything the build needs from `external/`, which
 `setup` fills from `externals.conf` — a JDK 25, Maven, Node.js (the page's tests), and the jmods the distributions'
 runtimes are linked from; nothing is taken from the machine. The framework's parent pom and libraries come from
 Maven Central — until they are published there, from its
-[delivery](https://github.com/j4ckk0/JToolsFramework/releases/tag/v1.5.0) (`install.sh --no-project` puts them in
+[delivery](https://github.com/j4ckk0/JToolsFramework/releases/tag/v1.6.1) (`install.sh --no-project` puts them in
 `~/.m2`), or from a clone of it (`scripts/install-locally.sh`).
 
 ```bash

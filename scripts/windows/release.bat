@@ -48,16 +48,33 @@ if not defined VERSION_LINE goto :own_version
 set "VERSION=%VERSION_LINE:*<revision>=%"
 set "VERSION=%VERSION:</revision>=%"
 goto :versioned
+:own_version
+rem a pom with no ${revision}: its own <version>, the first one before or after its <parent>, found by line numbers
+set "PARENT_START="
+set "PARENT_END="
+for /f "delims=:" %%n in ('findstr /n /c:"<parent>" pom.xml') do if not defined PARENT_START set "PARENT_START=%%n"
+for /f "delims=:" %%n in ('findstr /n /c:"</parent>" pom.xml') do if not defined PARENT_END set "PARENT_END=%%n"
+if not defined PARENT_START set "PARENT_START=0"
+if not defined PARENT_END set "PARENT_END=0"
+for /f "tokens=1* delims=:" %%a in ('findstr /n /c:"<version>" pom.xml') do (
+  if not defined VERSION_LINE if %%a LSS %PARENT_START% set "VERSION_LINE=%%b"
+  if not defined VERSION_LINE if %%a GTR %PARENT_END% set "VERSION_LINE=%%b"
+)
+if not defined VERSION_LINE (
+  echo pom.xml names no version - its ^<revision^>, or its own ^<version^>: the scripts read it there >&2
+  exit /b 1
+)
+set "VERSION=%VERSION_LINE:*<version>=%"
+set "VERSION=%VERSION:</version>=%"
+:versioned
 set "TAG=v%VERSION%"
 set "BASE=%APP_ID%-%VERSION%"
 set "WORK=%TEMP%\jtools-release-%RANDOM%"
 mkdir "%WORK%" || exit /b 1
-rem the console in UTF-8 while the notes are read and written: CHANGELOG.md is UTF-8
-for /f "tokens=2 delims=:." %%c in ('chcp') do set "CODEPAGE=%%c"
-chcp 65001 >nul
+rem CHANGELOG.md's UTF-8 goes through as bytes, in the console's own code page: one character a byte, read and written
+rem back alike (in UTF-8, chcp 65001, set /p mangles what is not ASCII)
 call :release
 set "STATUS=%errorlevel%"
-chcp %CODEPAGE% >nul
 rd /s /q "%WORK%" 2>nul
 exit /b %STATUS%
 
@@ -90,7 +107,7 @@ if not defined START (
 if not defined END set "END=999999"
 set "FIRST="
 set "LAST="
-for /f "delims=:" %%n in ('findstr /n /r "[^ ]" CHANGELOG.md') do (
+for /f "delims=:" %%n in ('findstr /n /r /c:"[^ ]" CHANGELOG.md') do (
   if %%n GTR %START% if %%n LSS %END% (
     if not defined FIRST set "FIRST=%%n"
     set "LAST=%%n"

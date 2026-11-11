@@ -24,7 +24,7 @@
 set -euo pipefail
 
 # what `new` makes outside a project when JTOOLS_VERSION says nothing: this file's own version (scripts/check-versions.sh)
-JTOOLS_DEFAULT_VERSION=1.6.0
+JTOOLS_DEFAULT_VERSION=1.6.1
 CENTRAL=https://repo1.maven.org/maven2/org/jtools/framework/jtools-devkit
 
 die() { echo "jtools: $*" >&2; exit 1; }
