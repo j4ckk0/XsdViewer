@@ -25,7 +25,7 @@ for %%a in (%*) do (
 )
 
 where java >nul 2>nul || (
-  echo java not found in PATH ^(Java 21 required^) >&2
+  echo java not found in PATH ^(Java 25 required^) >&2
   exit /b 1
 )
 

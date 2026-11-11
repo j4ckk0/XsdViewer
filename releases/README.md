@@ -6,7 +6,7 @@ and a copy of the jar, ready to attach to a GitHub Release.
 ```
 xsdviewer-<version>-windows.zip    XsdViewer.exe + xsdviewer.bat, bundled JRE
 xsdviewer-<version>-linux.tar.gz   xsdviewer.sh, bundled JRE
-xsdviewer-<version>.jar            needs Java 21: java -jar xsdviewer-<version>.jar
+xsdviewer-<version>.jar            needs Java 25: java -jar xsdviewer-<version>.jar
 ```
 
 Everything here except this file is git-ignored; a build first deletes the artefacts

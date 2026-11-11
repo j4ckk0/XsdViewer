@@ -56,9 +56,9 @@ if ! $dry && ! git ls-remote --exit-code --tags github "refs/tags/$tag" >/dev/nu
   echo "tag $tag is not on GitHub - git push github $tag" >&2; exit 1
 fi
 
-# The bundled runtime's version, from the image's release file (JAVA_VERSION="21.0.12.1").
+# The bundled runtime's version, from the image's release file (JAVA_VERSION="25.0.5").
 jre_version=$(grep -h '^JAVA_VERSION=' app/target/jre/*/release 2>/dev/null | head -1 | cut -d'"' -f2)
-[ -n "$jre_version" ] || jre_version=21
+[ -n "$jre_version" ] || jre_version=25
 
 body=$(
   echo "XsdViewer $version — explore an XML Schema (\`.xsd\`) in the browser: a **Model** view of what a document of a declaration holds, a **Text** view of the source, a **Graph** view of the schema objects and their links (cardinalities, one or two levels, links followed across files), workspaces and comparison."
@@ -72,7 +72,7 @@ body=$(
   echo "| \`$zip\` | Windows x64, no Java needed — unzip and double-click \`XsdViewer.exe\` (a trimmed Temurin runtime is bundled) |"
   echo "| \`$tgz\` | Linux x64, no Java needed — untar and run \`xsdviewer.sh\` (a trimmed Temurin runtime is bundled) |"
   echo "| \`$mac\` | macOS on Apple silicon, no Java needed — untar, \`xattr -dr com.apple.quarantine xsdviewer-$version\` once (a download is quarantined), then \`./xsdviewer.sh\` (a trimmed Temurin runtime is bundled) |"
-  echo "| \`$jar\` | Any OS with Java 21 installed ([how to install it](https://github.com/$REPO#installing-java-21)) — \`java -jar $jar [--port 9090] [--keep-alive] [some.xsd]\` |"
+  echo "| \`$jar\` | Any OS with Java 25 installed ([how to install it](https://github.com/$REPO#installing-java-25)) — \`java -jar $jar [--port 9090] [--keep-alive] [some.xsd]\` |"
   echo
   echo "The bundled runtime is a jlink image of Eclipse Temurin $jre_version (the modules the tool needs), redistributed under the GPLv2 with Classpath Exception (notices in \`jre/legal\`). XsdViewer itself is Apache 2.0."
   echo

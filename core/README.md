@@ -2,7 +2,7 @@
 
 The library behind [XsdViewer](../README.md): it reads an XML Schema, a WSDL 1.1 or a Schematron
 and gives back a graph of its declarations, their links and their content models; it writes that
-graph as JSON; it validates a document against a schema and a Schematron. Java 21, the JDK and
+graph as JSON; it validates a document against a schema and a Schematron. Java 25, the JDK and
 nothing else. It is the Java module `org.jtools.xsdviewer.core`.
 
 ```xml

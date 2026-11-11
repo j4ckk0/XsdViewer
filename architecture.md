@@ -4,7 +4,7 @@ XsdViewer is a **library** and an **application built on it**. `xsdviewer-core` 
 WSDL 1.1 and Schematron files and answers questions about them — what a file declares, what a
 document of a declaration holds, how two of them differ, whether a document is valid. `xsdviewer`
 serves a page that asks those questions over HTTP and draws the answers. Everything ships in one jar;
-the only runtime requirement is a Java 21 runtime.
+the only runtime requirement is a Java 25 runtime.
 
 ```mermaid
 flowchart TB
@@ -126,7 +126,7 @@ Each class does one thing and is named for it; the packages follow the tiers of 
 
 | Class | Role |
 |---|---|
-| `XsdViewerApplication` | Entry point: the program as JToolsFramework's `WebApp` — named, its default port 8091, its page under `web/`, the file operand, `dialogs` added to `/api/about` — serving `XsdViewerApi`'s routes; `program()` is what `main` launches and what the tests start (`program().start("--port", "0", "--keep-alive")`: no `.ini`, no log, no browser, no exit). |
+| `XsdViewerApplication` | Entry point: the program as JToolsFramework's `WebApp` — named, its default port 8091, its page under `web/`, the file operand, `dialogs` added to `/api/about` — serving `XsdViewerApi`'s endpoints; `program()` is what `main` launches and what the tests start (`program().start("--port", "0", "--keep-alive")`: no `.ini`, no log, no browser, no exit). |
 | `Log` | The log as the code says it — `debug`, `info`, `warn` — over the logger `org.jtools.xsdviewer`, which `WebApp` sets up with the framework's: the console and `~/.xsdviewer/logs/xsdviewer.0.log` (two rotating files of 5 MB), `INFO` and up, or `FINE` too with `--verbose` / `--log-level FINE` / the `.ini`'s `log.level`: each request (with its status and duration) and each schema parsed. |
 | `Messages`, `MessageKey` | The texts the server prints or sends to the page (console, API errors, generated documentation of placeholder nodes), read from `messages.properties` (English) / `messages_fr.properties` in the page's language for a request (`XsdViewerApi`'s filter), the JVM's otherwise; `MessageKey` holds the keys. |
 | `server.XmlValidator`, `server.ValidateRoute` | `POST /api/validate?schema=<xsd>&schematron=<sch>&phase=`: the JDK validator compiles the XSD from its file (a file the server served, never an arbitrary path; imports resolve next to it, files only) and validates the posted document; the Schematron goes through `SchematronValidator`; the problems of both are answered with their line and column (up to 200 each), tagged with their `source`. |
@@ -423,7 +423,7 @@ Schematron rule or assertion is made of) are present only when there is somethin
 
 ## Libraries and tooling
 
-Runtime – all part of the JDK (21):
+Runtime – all part of the JDK (25):
 
 | Library / API | Module | Used for |
 |---|---|---|
@@ -442,9 +442,9 @@ Build and test:
 
 | Tool | Version | Role |
 |---|---|---|
-| JToolsFramework's `jtools-parent` | 1.2.0 | the parent pom: Java 21, JUnit, the plugins' versions, the tests from the root, the Apache header, the `publish` profile, and in `app` the program's one jar and the `dist` profile |
+| JToolsFramework's `jtools-parent` | 1.4.1 | the parent pom: Java 25, JUnit, the plugins' versions, the tests from the root, the Apache header, the `publish` profile, and in `app` the program's one jar and the `dist` profile |
 | Maven | 3.9 | build of the two modules; `mvn package` produces `core/target/xsdviewer-core-<version>.jar`, the library, and `app/target/xsdviewer.jar`, the tool |
-| maven-compiler-plugin | 3.13.0 | `--release 21` |
+| maven-compiler-plugin | 3.13.0 | `--release 25` |
 | maven-shade-plugin | 3.6.0 | `app` only (jtools-parent's `jtools-embed`): merges core's and JToolsFramework's classes into the application jar once it is made (core's module descriptor left out), so the one jar runs alone, `Main-Class: org.jtools.xsdviewer.XsdViewerApplication` |
 | maven-source-plugin, maven-javadoc-plugin, maven-gpg-plugin, central-publishing-maven-plugin | 3.3.1, 3.6.3, 3.2.4, 0.11.0 | jtools-parent's `publish` profile only: the library's sources and javadoc jars, their signatures, and the upload to Maven Central's portal (PUBLISHING.md §7); `app` skips the publication |
 | maven-jar-plugin | 3.4.1 | the implementation entries About shows |
@@ -488,7 +488,7 @@ XsdViewer/
 │   ├── src/test/java/                    the server, workspace and translation tests, the page's contract
 │   └── src/test/js/                      the tests of the page's pure modules
 ├── examples/                     org.jtools:xsdviewer-examples — programs on the library (src/main/java, run by ExamplesTest) and JavaScript programs on the API (api/*.mjs), on samples/
-├── .github/workflows/            build.yml (mvn package on JDK 21, the jar kept as artefact), release.yml (a pushed tag → the release)
+├── .github/workflows/            build.yml (mvn package on JDK 25, the jar kept as artefact), release.yml (a pushed tag → the release)
 ├── scripts/                      run, build, package, release, screenshots.py, changelog-section.py
 ├── README.md, architecture.md, CHANGELOG.md, PUBLISHING.md
 ├── jre/                          JDK archives the dist profile links runtimes from (git-ignored, downloaded by hand or by the workflow)

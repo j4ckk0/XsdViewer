@@ -23,7 +23,7 @@ for a in "$@"; do
   esac
 done
 
-command -v java >/dev/null || { echo "java not found in PATH (Java 21 required)" >&2; exit 1; }
+command -v java >/dev/null || { echo "java not found in PATH (Java 25 required)" >&2; exit 1; }
 
 # Rebuild when asked, when the jar is missing, or when any source is newer than it.
 if $rebuild || [ ! -f "$JAR" ] || [ -n "$(find pom.xml core app -name target -prune -o -newer "$JAR" -print -quit)" ]; then

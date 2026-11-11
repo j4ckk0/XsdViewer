@@ -69,7 +69,7 @@
         releases/xsdviewer-<version>-windows.zip    XsdViewer.exe (no console), xsdviewer.bat
         releases/xsdviewer-<version>-linux.tar.gz   xsdviewer.sh
         releases/xsdviewer-<version>-macos.tar.gz   xsdviewer.sh, Apple silicon
-        releases/xsdviewer-<version>.jar            the jar alone, for a machine that has Java 21
+        releases/xsdviewer-<version>.jar            the jar alone, for a machine that has Java 25
     -->
     <profile>
       <id>dist</id>

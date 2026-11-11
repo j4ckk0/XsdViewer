@@ -414,7 +414,7 @@ SCENES = [
                  'runtime': "String(window.__runtimeOpen) + '|' + String(window.__runtimeText) + '|' + window.__runtimeLinks"},
          expect={'items': 'menuGuide|menuShortcuts|menuApi|menuDocs|menuIssue|menuLicence|menuRuntime|menuAbout',
                  'licence': 'true|Licence|https://www.apache.org/licenses/LICENSE-2.0 https://github.com/j4ckk0/XsdViewer/blob/master/LICENSE',
-                 'runtime': 'true|true|https://adoptium.net/temurin/releases/?version=21 https://github.com/openjdk/jdk21u'}),
+                 'runtime': 'true|true|https://adoptium.net/temurin/releases/?version=25 https://github.com/openjdk/jdk25u'}),
     # the API access entry: a dialog listing the five endpoints and linking to the reference and examples
     dict(name='help-api', file='samples/purchaseOrder.xsd', theme='light',
          action="document.getElementById('helpMenuBtn').click(); document.getElementById('menuApi').click();",

@@ -87,14 +87,14 @@ declarations and links only on one side, then the two sources side by side.
 
 ### Running it
 
-Each archive holds a launcher taking the same options; the jar is for a machine that already has Java 21:
+Each archive holds a launcher taking the same options; the jar is for a machine that already has Java 25:
 
 | Archive | Launcher |
 |---|---|
 | `releases/xsdviewer-<version>-windows.zip` | `XsdViewer.exe` — double-click it (or drop an `.xsd` / workspace file on it, or run `XsdViewer.exe --port 9090 some.xsd`): starts the server with the bundled runtime, no console window at all. `xsdviewer.bat` does the same in a console, with the server's messages |
 | `releases/xsdviewer-<version>-linux.tar.gz` | `xsdviewer.sh` |
 | `releases/xsdviewer-<version>-macos.tar.gz` | `xsdviewer.sh` — Apple silicon; a downloaded archive is quarantined by macOS, so once: `xattr -dr com.apple.quarantine xsdviewer-<version>` |
-| `releases/xsdviewer-<version>.jar` | for a machine that has [Java 21](#installing-java-21): `java -jar xsdviewer-<version>.jar` |
+| `releases/xsdviewer-<version>.jar` | for a machine that has [Java 25](#installing-java-25): `java -jar xsdviewer-<version>.jar` |
 
 When started without a console (the Windows launcher, a double-clicked jar), a start-up
 failure such as a port already in use is shown in a dialog instead of being lost.
@@ -134,53 +134,53 @@ is 2 for a command line that cannot be run (an unknown option, a file that is no
 server that cannot start (a port in use). `--lang fr` or `--lang en` sets the language of these
 console messages, the machine's by default.
 
-<a name="installing-java-21"></a>
+<a name="installing-java-25"></a>
 <details>
-<summary><b>Installing Java 21</b> — only to run the jar, the archives need nothing</summary>
+<summary><b>Installing Java 25</b> — only to run the jar, the archives need nothing</summary>
 
 Only needed to run the jar (`xsdviewer-<version>.jar`) or to build from source ([part 3](#3-the-open-source-code)). The Windows
 zip and the Linux tarball bring their own JRE: unpack them anywhere and start the launcher,
 nothing to install.
 
 **What to get.** A *JRE* is enough to run the jar; a *JDK* is needed to build. Eclipse Temurin
-is the free, vendor-neutral build used here: <https://adoptium.net/temurin/releases/?version=21>
-— pick your OS and architecture, version 21 (LTS). Any other OpenJDK 21 (Microsoft, Amazon
+is the free, vendor-neutral build used here: <https://adoptium.net/temurin/releases/?version=25>
+— pick your OS and architecture, version 25 (LTS). Any other OpenJDK 25 (Microsoft, Amazon
 Corretto, Oracle, your distribution's package) works the same.
 
 **Windows.** Either the `.msi` installer — tick *Add to PATH* and *Set JAVA_HOME variable* in
 the *Custom Setup* screen — or the `.zip`: unzip it into a folder without spaces, e.g.
-`C:\Java\jdk-21`, then either add `C:\Java\jdk-21\bin` to the `Path` of your user
+`C:\Java\jdk-25`, then either add `C:\Java\jdk-25\bin` to the `Path` of your user
 (*Settings ▸ System ▸ About ▸ Advanced system settings ▸ Environment Variables*, log off and on
 again), or call it with its full path, no PATH change needed:
 
 ```bat
-"C:\Java\jdk-21\bin\java" -jar xsdviewer-<version>.jar
+"C:\Java\jdk-25\bin\java" -jar xsdviewer-<version>.jar
 ```
 
-**Linux.** Your distribution's package is the simplest — `sudo apt install openjdk-21-jre`
-(Debian/Ubuntu; `openjdk-21-jdk` to build), `sudo dnf install java-21-openjdk` (Fedora/RHEL) —
+**Linux.** Your distribution's package is the simplest — `sudo apt install openjdk-25-jre`
+(Debian/Ubuntu; `openjdk-25-jdk` to build), `sudo dnf install java-25-openjdk` (Fedora/RHEL) —
 otherwise the Temurin `.tar.gz`: unpack it under `/opt` (system-wide) or `~/java` (your user
 only) and either put its `bin` on the PATH in `~/.profile` or `~/.bashrc`,
 
 ```bash
-sudo tar xzf OpenJDK21U-jre_x64_linux_hotspot_*.tar.gz -C /opt   # → /opt/jdk-21.0.12.1+1-jre (name varies with the version)
-export PATH=/opt/jdk-21.0.12.1+1-jre/bin:$PATH                     # in ~/.profile to make it permanent
+sudo tar xzf OpenJDK25U-jre_x64_linux_hotspot_*.tar.gz -C /opt   # → /opt/jdk-25.0.5+8-jre (name varies with the version)
+export PATH=/opt/jdk-25.0.5+8-jre/bin:$PATH                       # in ~/.profile to make it permanent
 ```
 
-or call it with its full path: `/opt/jdk-21.0.12.1+1-jre/bin/java -jar xsdviewer-<version>.jar`.
+or call it with its full path: `/opt/jdk-25.0.5+8-jre/bin/java -jar xsdviewer-<version>.jar`.
 
-**macOS.** The Temurin `.pkg` installer, or `brew install --cask temurin@21`.
+**macOS.** The Temurin `.pkg` installer, or `brew install --cask temurin@25`.
 
 **Check.** A new terminal, then:
 
 ```
 java -version
-openjdk version "21.0.12" ...
+openjdk version "25.0.5" ...
 ```
 
 If it reports another major version, an older Java is first on the PATH: run the jar with the
-full path of the Java 21 `java` as above (under an older Java the jar fails at once with
-`UnsupportedClassVersionError … class file version 65.0`, which means exactly that). To build,
+full path of the Java 25 `java` as above (under an older Java the jar fails at once with
+`UnsupportedClassVersionError … class file version 69.0`, which means exactly that). To build,
 Maven uses the JDK of `JAVA_HOME` when it is set, the `java` of the PATH otherwise.
 
 **For packaging only** (`scripts/package.sh`), the JRE *archives* are not installed but copied
@@ -191,7 +191,7 @@ as they are into `jre/` — see [Packaging](#packaging).
 ## 2. A library on Maven Central
 
 The reading, the models, the comparison and the validation are a library of their own,
-**`org.jtools:xsdviewer-core`** — Java 21, the JDK and nothing else, the Java module
+**`org.jtools:xsdviewer-core`** — Java 25, the JDK and nothing else, the Java module
 `org.jtools.xsdviewer.core`:
 
 ```xml
@@ -210,7 +210,7 @@ implementation 'org.jtools:xsdviewer-core:5.4.2'
 
 It is [on Maven Central](https://central.sonatype.com/artifact/org.jtools/xsdviewer-core), current
 version **5.4.2** (the badge at the top of this page tracks the latest). It has no dependency of its
-own beyond a Java 21 runtime.
+own beyond a Java 25 runtime.
 
 What a program gets from it:
 
@@ -253,7 +253,7 @@ of each.
 
 ## 3. The open-source code
 
-XsdViewer is a Java 21 server serving a page written in plain JavaScript — no framework on the page —
+XsdViewer is a Java 25 server serving a page written in plain JavaScript — no framework on the page —
 over the library above and [JToolsFramework](https://github.com/j4ckk0/JToolsFramework), which gives
 the program around the server (the command line, the settings, the log, the presence of the pages, the
 file dialogs, the distributions); the jar embeds both, and nothing else. This part says what the code does, feature by feature, for
@@ -261,9 +261,10 @@ whoever reads it or changes it; [part 4](#4-the-architecture) says how it is bui
 
 ### Building and running from source
 
-Requires a JDK 21 and Maven (see [Installing Java 21](#installing-java-21)), and JToolsFramework 1.2.0,
-the parent pom and libraries the build resolves from Maven Central — until it is published there, from a
-clone of it: `scripts/install.sh` there puts it in `~/.m2`.
+Requires a JDK 25 and Maven (see [Installing Java 25](#installing-java-25)), and JToolsFramework 1.4.1,
+the parent pom and libraries the build resolves from Maven Central — until it is published there, from its
+[delivery](https://github.com/j4ckk0/JToolsFramework/releases/tag/v1.4.1) (`install.sh --no-project` puts it in
+`~/.m2`), or from a clone of it (`scripts/install-locally.sh`).
 
 ```bash
 scripts/run.sh                # builds app/target/xsdviewer.jar if needed, then starts the tool
@@ -681,7 +682,7 @@ scripts/package.sh            # or scripts\package.bat on Windows; runs: mvn pac
 ```
 
 builds self-contained distributions that need no Java installed, each with a **trimmed runtime**
-made with `jlink` from a Temurin JDK 21 — the modules the tool needs, about a third of a full JRE
+made with `jlink` from Temurin 25's jmods — the modules the tool needs, about a third of a full JRE
 (Eclipse Temurin, redistributed under the GPLv2 with Classpath Exception; its notices stay in
 `jre/legal`) — and a launcher taking the same options as above (the archives of previous builds,
 whatever their version, are deleted from `releases/` first).
@@ -694,21 +695,21 @@ By hand, `scripts/release.sh <version>` does the same from `releases/` (`--dry-r
 notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` or
 `~/.config/github/xsdviewer-release-token` — see `PUBLISHING.md`.
 
-The JDKs are not tracked in git: before packaging, download the Temurin **JDK** 21 archives
-(a JDK, for its `jmods`; a JRE has none) from <https://adoptium.net/temurin/releases/> and put
-them in `jre/` at the root of the project:
+The archives are not tracked in git: before packaging, download from
+<https://adoptium.net/temurin/releases/?version=25> Temurin 25's **jmods** archive for each platform (from 25 on,
+a JDK carries no `jmods`: they come apart), and the **JDK** archive of the machine doing the build, and put them in
+`jre/` at the root of the project:
 
 ```
 jre/
-├── OpenJDK21U-jdk_x64_windows_hotspot_<version>.zip
-├── OpenJDK21U-jdk_x64_linux_hotspot_<version>.tar.gz
-└── OpenJDK21U-jdk_aarch64_mac_hotspot_<version>.tar.gz
+├── OpenJDK25U-jmods_x64_windows_hotspot_<version>.zip
+├── OpenJDK25U-jmods_x64_linux_hotspot_<version>.tar.gz
+├── OpenJDK25U-jmods_aarch64_mac_hotspot_<version>.tar.gz
+└── OpenJDK25U-jdk_x64_linux_hotspot_<version>.tar.gz      (this machine's: here, Linux)
 ```
 
-Only the platforms whose archive is there are built; the archive of the machine doing the build
-gives the `jlink` that links every runtime (download them together: they must be the same version),
-whatever Java runs Maven — without it, the `jlink` of the JDK running Maven, which must then be their
-version. JToolsFramework's `jtools-dist/build.xml` (Ant, driven by its parent pom's `dist` profile) finds
+Only the platforms whose jmods are there are built; this machine's JDK archive gives the `jlink` that links every
+runtime (download them together: they must be the same version), whatever Java runs Maven. JToolsFramework's `jtools-dist/build.xml` (Ant, driven by its parent pom's `dist` profile) finds
 the modules the jar needs, does the unpacking, the linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
 
 ### Tests
@@ -733,7 +734,7 @@ flowchart LR
     you["you read schemas"] --> app
     dev["you write programs"] -. "org.jtools:xsdviewer-core" .-> core
     dev -. "POST /api/…" .-> app
-    subgraph jar["xsdviewer.jar — one download, a Java 21 runtime inside"]
+    subgraph jar["xsdviewer.jar — one download, a Java 25 runtime inside"]
         app["<b>the page and the server</b><br/>three views, workspaces,<br/>comparison, validation"] --> core["<b>xsdviewer-core</b><br/>reads XSD, WSDL, Schematron<br/>the JDK and nothing else"]
     end
 ```

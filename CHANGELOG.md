@@ -4,11 +4,13 @@ What each version brought, newest first. The GitHub Releases carry the same note
 
 ## Unreleased
 
-The program around the schemas is now [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.2's — the
+The program around the schemas is now [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.4.1's — the
 command line, `xsdviewer.ini`, the Settings menu, the log, the server, the presence of the pages, the file dialogs,
 the distributions — shared with the other jtools programs. The schemas, the views and the comparisons are unchanged.
 What changes for whoever uses it:
 
+- **Java 25.** The jar needs a Java 25 (it was 21), and the Windows, Linux and macOS archives bundle a runtime made
+  from Temurin 25; `org.jtools:xsdviewer-core` is compiled for Java 25 too.
 - **The server refuses what does not come from its page.** A `POST` from another web site (its `Origin`) is refused,
   as is any request naming a host other than this computer's or the `--host` given — the defence against DNS
   rebinding. A page on another site could, until now, post to `/api/quit`.

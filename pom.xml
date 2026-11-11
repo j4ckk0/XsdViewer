@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <!-- The build's conventions — Java 21, JUnit 5, the plugins' versions, the tests run from the root, the Apache
+  <!-- The build's conventions — Java 25, JUnit 5, the plugins' versions, the tests run from the root, the Apache
        header on every Java source, the Maven Central profile (publish) — are JToolsFramework's jtools-parent; this
        pom says what is XsdViewer's own: its coordinates, its modules, what Maven Central shows of it. -->
   <parent>

@@ -15,15 +15,15 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
           cache: maven
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
 
@@ -33,13 +33,14 @@ jobs:
           grep -q "<version>$version</version>" pom.xml || { echo "pom.xml is not at version $version"; exit 1; }
           scripts/changelog-section.py "$version" > /dev/null
 
-      - name: Download the Temurin JDK 21 archives (their jmods feed jlink)
+      - name: Download Temurin 25's jmods for each platform, and the Linux JDK whose jlink links them
         run: |
           mkdir -p jre
-          base=https://api.adoptium.net/v3/binary/latest/21/ga
-          curl -sSL -o jre/OpenJDK21U-jdk_x64_windows_hotspot.zip    "$base/windows/x64/jdk/hotspot/normal/eclipse"
-          curl -sSL -o jre/OpenJDK21U-jdk_x64_linux_hotspot.tar.gz   "$base/linux/x64/jdk/hotspot/normal/eclipse"
-          curl -sSL -o jre/OpenJDK21U-jdk_aarch64_mac_hotspot.tar.gz "$base/mac/aarch64/jdk/hotspot/normal/eclipse"
+          base=https://api.adoptium.net/v3/binary/latest/25/ga
+          curl -fsSL -o jre/OpenJDK25U-jmods_x64_windows_hotspot.zip    "$base/windows/x64/jmods/hotspot/normal/eclipse"
+          curl -fsSL -o jre/OpenJDK25U-jmods_x64_linux_hotspot.tar.gz   "$base/linux/x64/jmods/hotspot/normal/eclipse"
+          curl -fsSL -o jre/OpenJDK25U-jmods_aarch64_mac_hotspot.tar.gz "$base/mac/aarch64/jmods/hotspot/normal/eclipse"
+          curl -fsSL -o jre/OpenJDK25U-jdk_x64_linux_hotspot.tar.gz     "$base/linux/x64/jdk/hotspot/normal/eclipse"
           ls -la jre
 
       - name: Build and test, then package
