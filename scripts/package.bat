@@ -8,8 +8,8 @@ rem
 rem   scripts\package.bat
 rem   scripts\package.bat -DskipTests      extra arguments are passed to mvn
 rem
-rem Needs Temurin's jmods archives in jre\, and this machine's JDK archive, whose jlink links the runtimes (see
-rem README: Packaging).
+rem Needs Temurin's jmods archives in jre\; the jlink is that of this machine's JDK archive in jre\ when there is one,
+rem else that of the JDK running Maven, the jmods' version (see README: Packaging).
 rem
 cd /d "%~dp0.."
 where mvn >nul 2>nul || (
@@ -20,10 +20,6 @@ where mvn >nul 2>nul || (
 set "JRE=jre"
 if not exist "%JRE%\*jmods*" (
   echo no Temurin jmods archive in %JRE%\ - download them first ^(see README: Packaging^) >&2
-  exit /b 1
-)
-if not exist "%JRE%\*jdk_*windows*.zip" (
-  echo no Temurin JDK archive for this machine ^(*jdk_*windows*.zip^) in %JRE%\: its jlink links the runtimes ^(see README: Packaging^) >&2
   exit /b 1
 )
 

@@ -697,19 +697,20 @@ notes, `--draft` creates a draft); it reads a GitHub token from `$GITHUB_TOKEN` 
 
 The archives are not tracked in git: before packaging, download from
 <https://adoptium.net/temurin/releases/?version=25> Temurin 25's **jmods** archive for each platform (from 25 on,
-a JDK carries no `jmods`: they come apart), and the **JDK** archive of the machine doing the build, and put them in
-`jre/` at the root of the project:
+a JDK carries no `jmods`: they come apart) and put them in `jre/` at the root of the project, with, optionally, the
+**JDK** archive of the machine doing the build:
 
 ```
 jre/
 ├── OpenJDK25U-jmods_x64_windows_hotspot_<version>.zip
 ├── OpenJDK25U-jmods_x64_linux_hotspot_<version>.tar.gz
 ├── OpenJDK25U-jmods_aarch64_mac_hotspot_<version>.tar.gz
-└── OpenJDK25U-jdk_x64_linux_hotspot_<version>.tar.gz      (this machine's: here, Linux)
+└── OpenJDK25U-jdk_x64_linux_hotspot_<version>.tar.gz      (optional: this machine's, here Linux)
 ```
 
-Only the platforms whose jmods are there are built; this machine's JDK archive gives the `jlink` that links every
-runtime (download them together: they must be the same version), whatever Java runs Maven. JToolsFramework's `jtools-dist/build.xml` (Ant, driven by its parent pom's `dist` profile) finds
+Only the platforms whose jmods are there are built. The `jlink` that links every runtime is that of this machine's
+JDK archive, whatever Java runs Maven — without it, that of the JDK running Maven, which must then be the jmods'
+version exactly (download them together: `jlink` refuses jmods of another version). JToolsFramework's `jtools-dist/build.xml` (Ant, driven by its parent pom's `dist` profile) finds
 the modules the jar needs, does the unpacking, the linking and the packing. Extra arguments (e.g. `-DskipTests`) are passed to `mvn` by all four scripts.
 
 ### Tests
