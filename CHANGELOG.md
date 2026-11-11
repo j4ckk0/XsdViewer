@@ -2,6 +2,11 @@
 
 What each version brought, newest first. The GitHub Releases carry the same notes with the downloads and their checksums.
 
+## 6.0.1 — 2026-11-11
+
+Nothing changes in the program: it is the same as 6.0.0, built on [JToolsFramework](https://github.com/j4ckk0/JToolsFramework)
+1.6.1, whose devkit's `scripts/linux/release.sh` (`scripts\windows\release.bat`) now makes the GitHub Release.
+
 ## 6.0.0 — 2026-11-11
 
 The program around the schemas is now [JToolsFramework](https://github.com/j4ckk0/JToolsFramework) 1.5.0's — the
